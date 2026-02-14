@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarClaudia from "@/assets/avatar-claudia.jpg";
@@ -169,6 +169,17 @@ const WhatsAppScreen = ({ chat }: { chat: WhatsAppChat }) => (
 
 const StepWhatsAppProof = ({ onNext }: StepWhatsAppProps) => {
   const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  const next = useCallback(() => {
+    setCurrent((p) => (p + 1) % chats.length);
+  }, []);
+
+  useEffect(() => {
+    if (paused) return;
+    const interval = setInterval(next, 2000);
+    return () => clearInterval(interval);
+  }, [paused, next]);
 
   return (
     <StepContainer>
@@ -198,7 +209,7 @@ const StepWhatsAppProof = ({ onNext }: StepWhatsAppProps) => {
         {chats.map((_, i) => (
           <button
             key={i}
-            onClick={() => setCurrent(i)}
+            onClick={() => { setCurrent(i); setPaused(true); }}
             className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
               i === current ? "bg-primary w-6" : "bg-muted-foreground/30"
             }`}
@@ -209,16 +220,14 @@ const StepWhatsAppProof = ({ onNext }: StepWhatsAppProps) => {
       {/* Arrow buttons */}
       <div className="flex gap-3 w-full">
         <button
-          onClick={() => setCurrent((p) => Math.max(0, p - 1))}
-          disabled={current === 0}
-          className="flex-1 py-3 rounded-xl bg-secondary text-foreground font-semibold text-sm disabled:opacity-30 cursor-pointer"
+          onClick={() => { setCurrent((p) => (p - 1 + chats.length) % chats.length); setPaused(true); }}
+          className="flex-1 py-3 rounded-xl bg-secondary text-foreground font-semibold text-sm cursor-pointer"
         >
           Anterior
         </button>
         <button
-          onClick={() => setCurrent((p) => Math.min(chats.length - 1, p + 1))}
-          disabled={current === chats.length - 1}
-          className="flex-1 py-3 rounded-xl bg-secondary text-foreground font-semibold text-sm disabled:opacity-30 cursor-pointer"
+          onClick={() => { setCurrent((p) => (p + 1) % chats.length); setPaused(true); }}
+          className="flex-1 py-3 rounded-xl bg-secondary text-foreground font-semibold text-sm cursor-pointer"
         >
           Próximo
         </button>
