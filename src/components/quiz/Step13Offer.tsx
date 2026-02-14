@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Cpu, CheckCircle, BarChart3, Clock, Shield, ChevronDown } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { CTAButton, TrustBadge, VideoPlaceholder } from "./QuizUI";
@@ -378,6 +378,95 @@ const WhatsAppWelcome = ({ firstName }: { firstName: string }) => {
   );
 };
 
+/* ─── Video Testimonials Section ─── */
+const VIDEO_TESTIMONIALS = [
+  { id: "6844c2bcefb07ec7d1f69f35", padding: "56.42633228840125%", sdk: "v1" },
+  { id: "681528f68fced9179fa2e1c3", padding: "56.25%", sdk: "v1" },
+  { id: "68152914abe4fd17b1dc4ad1", padding: "56.25%", sdk: "v1" },
+  { id: "692bc7a9eb5ec5285cecf25c", padding: "56.25%", sdk: "v4" },
+];
+
+const VideoTestimonialsSection = () => {
+  useEffect(() => {
+    // Load v1 SDK
+    const s1 = document.createElement("script");
+    s1.src = "https://scripts.converteai.net/lib/js/smartplayer/v1/sdk.min.js";
+    s1.async = true;
+    document.head.appendChild(s1);
+
+    // Load v4 SDK
+    const s4 = document.createElement("script");
+    s4.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
+    s4.async = true;
+    document.head.appendChild(s4);
+
+    // Set iframe sources for v1 players
+    VIDEO_TESTIMONIALS.filter(v => v.sdk === "v1").forEach(v => {
+      const iframe = document.getElementById(`ifr_${v.id}`) as HTMLIFrameElement;
+      if (iframe) {
+        iframe.src =
+          `https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/${v.id}/embed.html` +
+          (window.location.search || "?") +
+          "&vl=" +
+          encodeURIComponent(window.location.href);
+      }
+    });
+
+    // v4 player uses onload
+    const v4 = VIDEO_TESTIMONIALS.find(v => v.sdk === "v4");
+    if (v4) {
+      const iframe = document.getElementById(`ifr_${v4.id}`) as HTMLIFrameElement;
+      if (iframe && iframe.src === "about:blank") {
+        iframe.src =
+          `https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/${v4.id}/v4/embed.html` +
+          (window.location.search || "?") +
+          "&vl=" +
+          encodeURIComponent(window.location.href);
+      }
+    }
+
+    return () => {
+      s1.remove();
+      s4.remove();
+    };
+  }, []);
+
+  return (
+    <div className="w-full space-y-4">
+      <h3 className="font-display text-xl font-bold text-foreground text-center">
+        Depoimentos em <span className="text-gradient-green">vídeo</span>
+      </h3>
+      <p className="text-sm text-muted-foreground text-center">
+        Assista quem já mudou de vida com o método:
+      </p>
+      <div className="w-full space-y-4">
+        {VIDEO_TESTIMONIALS.map((v) => (
+          <div key={v.id} className="w-full rounded-2xl overflow-hidden border border-border">
+            <div
+              id={`ifr_${v.id}_wrapper`}
+              style={{ margin: "0 auto", width: "100%" }}
+            >
+              <div
+                style={{ padding: `${v.padding} 0 0 0`, position: "relative" }}
+                id={`ifr_${v.id}_aspect`}
+              >
+                <iframe
+                  frameBorder="0"
+                  allowFullScreen
+                  src="about:blank"
+                  id={`ifr_${v.id}`}
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+                  referrerPolicy="origin"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 /* ─── Main Component ─── */
 const Step13Offer = ({ userName, answers }: Step13Props) => {
   const [showCTA, setShowCTA] = useState(false);
@@ -637,10 +726,12 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         {testimonials.map((t, i) => (
           <TestimonialCard key={i} {...t} />
         ))}
-
-        {/* Video testimonial placeholder */}
-        <VideoPlaceholder label="Depoimento em vídeo — Sebastião, 57 anos (2 min)" />
       </div>
+
+      <Divider />
+
+      {/* ═══ VIDEO TESTIMONIALS ═══ */}
+      <VideoTestimonialsSection />
 
       <Divider />
 
