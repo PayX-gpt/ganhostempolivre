@@ -7,6 +7,9 @@ import guaranteeSeal from "@/assets/guarantee-seal.jpg";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarClaudia from "@/assets/avatar-claudia.jpg";
 import avatarCarlos from "@/assets/avatar-carlos.jpg";
+import avatarJose from "@/assets/avatar-jose.jpg";
+import avatarLucia from "@/assets/avatar-lucia.jpg";
+import avatarRegina from "@/assets/avatar-regina.jpg";
 
 interface Step13Props {
   userName?: string;
@@ -414,9 +417,9 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   ];
 
   const testimonials = [
-     { name: "Antônio Ferreira", age: "45 anos", city: "Salvador, BA", avatar: avatarAntonio, text: "Eu tinha vergonha de pedir dinheiro emprestado no final do mês. Hoje sobra dinheiro e eu consigo ajudar meus netos. Esse método devolveu minha dignidade." },
-     { name: "Cláudia Nascimento", age: "53 anos", city: "Curitiba, PR", avatar: avatarClaudia, text: "Três anos com contas atrasadas. Em um mês quitei tudo. Luz, água, cartão. Hoje tenho paz de espírito. Não tenho palavras pra agradecer." },
-     { name: "Carlos Mendonça", age: "41 anos", city: "Recife, PE", avatar: avatarCarlos, text: "Já caí em dois golpes na internet. Quase não tentei de novo. Mas aqui é diferente. Tem gente real te ajudando. Hoje minha esposa e eu tiramos mais de R$200 por dia juntos." },
+     { name: "Sebastião Moreira", age: "57 anos", city: "Manaus, AM", avatar: avatarJose, text: "Minha aposentadoria não cobria nem o aluguel. Vivia contando moeda no final do mês. Hoje tenho uma renda extra que me deu de volta a dignidade de viver sem pedir nada a ninguém." },
+     { name: "Regina Aparecida", age: "44 anos", city: "Campinas, SP", avatar: avatarRegina, text: "Fui demitida depois de 18 anos na mesma empresa. Com dois filhos pra criar, o desespero bateu. Comecei sem acreditar e em duas semanas já tinha pagado a conta de luz que tava cortada." },
+     { name: "Luciana Borges", age: "50 anos", city: "Fortaleza, CE", avatar: avatarLucia, text: "Meu marido ria de mim quando eu disse que ia ganhar dinheiro pelo celular. Hoje ele me pede pra ensinar. A gente finalmente conseguiu marcar aquela viagem que sonhava há anos." },
   ];
 
   return (
@@ -612,7 +615,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         ))}
 
         {/* Video testimonial placeholder */}
-        <VideoPlaceholder label="Depoimento em vídeo — Antônio, 45 anos (2 min)" />
+        <VideoPlaceholder label="Depoimento em vídeo — Sebastião, 57 anos (2 min)" />
       </div>
 
       <Divider />
