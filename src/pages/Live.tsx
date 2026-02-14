@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Users, Eye, Activity, Clock, TrendingUp, BarChart3, ArrowDown } from "lucide-react";
+import { RefreshCw, Users, Eye, Activity, Clock, TrendingUp, BarChart3, ArrowDown, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar,
@@ -27,6 +27,13 @@ interface AuditRow {
   session_id: string;
   created_at: string;
   event_type: string;
+}
+
+interface FunnelEventRow {
+  event_name: string;
+  event_data: Record<string, unknown> | null;
+  session_id: string;
+  created_at: string;
 }
 
 // ─── 18 steps ─────────────────────────────────────────────
@@ -82,6 +89,7 @@ const Live = () => {
   const [totalOnline, setTotalOnline] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [auditData, setAuditData] = useState<AuditRow[]>([]);
+  const [funnelEvents, setFunnelEvents] = useState<FunnelEventRow[]>([]);
   const [timeRange, setTimeRange] = useState<"1h" | "6h" | "24h">("24h");
 
   // ─── Real-time presence ─────────────────────────────────
@@ -137,11 +145,27 @@ const Live = () => {
     setAuditData((data as AuditRow[]) || []);
   }, [timeRange]);
 
+  // ─── Funnel events fetch ────────────────────────────────
+  const fetchFunnelEvents = useCallback(async () => {
+    const hoursMap = { "1h": 1, "6h": 6, "24h": 24 };
+    const since = new Date(Date.now() - hoursMap[timeRange] * 60 * 60 * 1000).toISOString();
+
+    const { data } = await supabase
+      .from("funnel_events")
+      .select("event_name, event_data, session_id, created_at")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(200);
+
+    setFunnelEvents((data as FunnelEventRow[]) || []);
+  }, [timeRange]);
+
   useEffect(() => {
     fetchAuditData();
-    const interval = setInterval(fetchAuditData, 30000);
+    fetchFunnelEvents();
+    const interval = setInterval(() => { fetchAuditData(); fetchFunnelEvents(); }, 30000);
     return () => clearInterval(interval);
-  }, [fetchAuditData]);
+  }, [fetchAuditData, fetchFunnelEvents]);
 
   // ─── Computed analytics ─────────────────────────────────
   const { funnelChart, hourlyChart, uniqueSessions, dropoffData, conversionRate } = useMemo(() => {
@@ -447,6 +471,69 @@ const Live = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* ─── Event Intelligence Feed ─────────────── */}
+        <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
+          <h3 className="text-xs sm:text-sm font-semibold mb-3 flex items-center gap-2">
+            <Zap className="w-3.5 h-3.5 text-primary" /> Eventos do Funil ({timeRange})
+            <Badge variant="secondary" className="text-[10px] ml-auto">{funnelEvents.length} eventos</Badge>
+          </h3>
+
+          {/* Event summary cards */}
+          {(() => {
+            const counts: Record<string, number> = {};
+            funnelEvents.forEach(e => { counts[e.event_name] = (counts[e.event_name] || 0) + 1; });
+            const eventLabels: Record<string, { label: string; color: string }> = {
+              step_viewed: { label: "Visualizações", color: "text-blue-400" },
+              step_completed: { label: "Completas", color: "text-green-400" },
+              checkout_click: { label: "Cliques Checkout", color: "text-accent" },
+              lead_captured: { label: "Leads", color: "text-primary" },
+              offer_page_viewed: { label: "Viram Oferta", color: "text-yellow-400" },
+              offer_cta_revealed: { label: "CTA Revelado", color: "text-purple-400" },
+            };
+            return (
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 mb-3">
+                {Object.entries(eventLabels).map(([key, { label, color }]) => (
+                  <div key={key} className="text-center p-2 rounded-lg bg-secondary/30 border border-border/30">
+                    <p className={cn("text-lg font-bold tabular-nums", color)}>{counts[key] || 0}</p>
+                    <p className="text-[9px] text-muted-foreground leading-tight">{label}</p>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
+          {/* Recent events feed */}
+          <div className="max-h-64 overflow-y-auto space-y-1">
+            {funnelEvents.slice(0, 50).map((evt, i) => {
+              const data = evt.event_data as Record<string, unknown> | null;
+              const stepName = data?.step_name as string || "";
+              const answer = data?.answer_value as string || "";
+              const timeSpent = data?.time_spent_seconds as number || 0;
+
+              return (
+                <div key={i} className="flex items-center gap-2 text-xs px-2 py-1.5 rounded-md hover:bg-muted/20 transition-colors">
+                  <span className="text-[10px] text-muted-foreground tabular-nums w-14 shrink-0">
+                    {new Date(evt.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                  </span>
+                  <Badge variant={
+                    evt.event_name === "checkout_click" ? "destructive" :
+                    evt.event_name === "lead_captured" ? "default" : "secondary"
+                  } className="text-[9px] px-1.5 py-0 shrink-0">
+                    {evt.event_name.replace(/_/g, " ")}
+                  </Badge>
+                  {stepName && <span className="text-muted-foreground truncate">{stepName}</span>}
+                  {answer && <span className="text-primary font-medium truncate">→ {answer}</span>}
+                  {timeSpent > 0 && <span className="text-muted-foreground/60 shrink-0">{timeSpent}s</span>}
+                  <span className="text-muted-foreground/40 ml-auto shrink-0 truncate max-w-[60px]">{evt.session_id.slice(-6)}</span>
+                </div>
+              );
+            })}
+            {funnelEvents.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-4">Nenhum evento registrado neste período</p>
+            )}
           </div>
         </section>
       </main>

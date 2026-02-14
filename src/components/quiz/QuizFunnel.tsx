@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ProgressBar, type QuizAnswers } from "./QuizUI";
 import { usePagePresence } from "@/hooks/usePagePresence";
+import { saveFunnelEvent } from "@/lib/metricsClient";
 import Step1Intro from "./Step1Intro";
 import Step2Age from "./Step2Age";
 import StepName from "./StepName";
@@ -44,30 +45,64 @@ const STEP_SLUGS = [
 
 const TOTAL_STEPS = STEP_SLUGS.length;
 
+const STEP_NAMES: Record<string, string> = {
+  "step-1": "intro", "step-2": "idade", "step-3": "nome", "step-4": "prova_social",
+  "step-5": "tentou_online", "step-6": "meta_renda", "step-7": "obstaculo",
+  "step-8": "sonho_financeiro", "step-9": "video_mentor", "step-10": "dispositivo",
+  "step-11": "disponibilidade", "step-12": "demo_plataforma", "step-13": "loading",
+  "step-14": "prova_social_2", "step-15": "whatsapp_proof", "step-16": "metodo_contato",
+  "step-17": "input_contato", "step-18": "oferta_final",
+};
+
 const QuizFunnel = () => {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const currentSlug = slug || "step-1";
   const step = Math.max(1, (STEP_SLUGS.indexOf(currentSlug as any) + 1) || 1);
+  const stepEnteredAt = useRef<number>(Date.now());
 
   // Track presence for the current step
   usePagePresence(`/${currentSlug}`);
 
+  // Track time spent when step changes
+  useEffect(() => {
+    stepEnteredAt.current = Date.now();
+    saveFunnelEvent("step_viewed", {
+      step: currentSlug,
+      step_name: STEP_NAMES[currentSlug] || currentSlug,
+      step_number: step,
+    });
+  }, [currentSlug, step]);
+
+  const trackStepComplete = useCallback((answer?: { key: string; value: string }) => {
+    const timeSpentMs = Date.now() - stepEnteredAt.current;
+    saveFunnelEvent("step_completed", {
+      step: currentSlug,
+      step_name: STEP_NAMES[currentSlug] || currentSlug,
+      step_number: step,
+      time_spent_ms: timeSpentMs,
+      time_spent_seconds: Math.round(timeSpentMs / 1000),
+      ...(answer ? { answer_key: answer.key, answer_value: answer.value } : {}),
+    });
+  }, [currentSlug, step]);
+
   const goNext = useCallback(() => {
+    trackStepComplete();
     const nextStep = Math.min(step + 1, TOTAL_STEPS);
     navigate(`/${STEP_SLUGS[nextStep - 1]}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [step, navigate]);
+  }, [step, navigate, trackStepComplete]);
 
   const updateAndNext = useCallback(
     (key: keyof QuizAnswers, value: string) => {
+      trackStepComplete({ key, value });
       setAnswers((prev) => ({ ...prev, [key]: value }));
       const nextStep = Math.min(step + 1, TOTAL_STEPS);
       navigate(`/${STEP_SLUGS[nextStep - 1]}`);
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    [step, navigate]
+    [step, navigate, trackStepComplete]
   );
 
   const renderStep = () => {

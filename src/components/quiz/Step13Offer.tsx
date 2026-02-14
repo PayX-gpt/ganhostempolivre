@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Shield, Lock, Zap, ArrowRight, Star, Users, Clock, CheckCircle } from "lucide-react";
+import { saveFunnelEvent } from "@/lib/metricsClient";
 import { Separator } from "@/components/ui/separator";
 import { CTAButton, TrustBadge, VideoPlaceholder } from "./QuizUI";
 import type { QuizAnswers } from "./QuizUI";
@@ -35,7 +36,10 @@ const CTABlock = ({ showCTA, context }: { showCTA: boolean; context?: string }) 
         </p>
         <p className="text-sm text-muted-foreground">ou 12x de R$6,64</p>
       </div>
-      <CTAButton onClick={() => window.open("https://pay.kirvano.com/5e882c8e-e569-4d9b-b895-69cb1d1285f4", "_blank")} variant="accent" className="animate-bounce-subtle text-lg sm:text-xl tracking-wider">
+      <CTAButton onClick={() => {
+        saveFunnelEvent("checkout_click", { context: context || "default", product: "chave_token_chatgpt", amount: 66.83 });
+        window.open("https://pay.kirvano.com/5e882c8e-e569-4d9b-b895-69cb1d1285f4", "_blank");
+      }} variant="accent" className="animate-bounce-subtle text-lg sm:text-xl tracking-wider">
         🔑 ATIVAR MINHA CHAVE TOKEN — R$66,83
       </CTAButton>
       <div className="flex items-center justify-center gap-2">
@@ -457,7 +461,19 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   const [spotsLeft] = useState(() => Math.floor(Math.random() * 4) + 3); // 3-6
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowCTA(true), 4000);
+    saveFunnelEvent("offer_page_viewed", {
+      user_name: userName || "anonymous",
+      has_answers: !!answers,
+      answers_summary: answers ? {
+        age: answers.age, incomeGoal: answers.incomeGoal,
+        obstacle: answers.obstacle, device: answers.device,
+        financialDream: answers.financialDream, contactMethod: answers.contactMethod,
+      } : {},
+    });
+    const timer = setTimeout(() => {
+      setShowCTA(true);
+      saveFunnelEvent("offer_cta_revealed", { delay_ms: 4000 });
+    }, 4000);
     return () => clearTimeout(timer);
   }, []);
 

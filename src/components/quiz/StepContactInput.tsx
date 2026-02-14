@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton, TrustBadge } from "./QuizUI";
+import { saveFunnelEvent } from "@/lib/metricsClient";
 
 interface StepContactInputProps {
   method: string;
@@ -60,7 +61,13 @@ const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) =
           : "Seu número está protegido. Apenas a equipe de suporte terá acesso."}
       </TrustBadge>
 
-      <CTAButton onClick={() => onNext(value.trim())} disabled={!isValid}>
+      <CTAButton onClick={() => {
+        saveFunnelEvent("lead_captured", {
+          method,
+          has_value: !!value.trim(),
+        });
+        onNext(value.trim());
+      }} disabled={!isValid}>
         LIBERAR MEU ACESSO EXCLUSIVO
       </CTAButton>
     </StepContainer>
