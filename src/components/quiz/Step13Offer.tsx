@@ -548,23 +548,11 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         </div>
       </div>
 
-      {/* ═══ 3c. EXPLICAÇÃO DA TAXA ═══ */}
-      <div className="w-full funnel-card border-primary/25 bg-card space-y-3">
-        <div className="flex items-center gap-3">
-          <img src={chatgptLogo} alt="ChatGPT" className="w-9 h-9 object-contain rounded-lg shrink-0" />
-          <p className="text-sm font-bold text-foreground">Por que existe uma taxa de R$66?</p>
-        </div>
+      {/* ═══ 3c. EXPLICAÇÃO DA TAXA (compacta) ═══ */}
+      <div className="w-full text-center space-y-2">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          A plataforma usa a <span className="font-bold text-foreground">inteligência artificial do ChatGPT</span> pra fazer o trabalho pesado por você. Cada operação consome <span className="font-bold text-foreground">tokens de IA</span> — e esses tokens têm custo real cobrado pela OpenAI.
+          ⚠️ O valor de <span className="text-primary font-bold">R$66</span> é apenas a <span className="font-bold text-foreground">taxa dos tokens do ChatGPT</span> que a plataforma consome. Nós <span className="font-bold text-foreground">não ficamos com nenhum centavo</span> — só cobramos <span className="text-primary font-bold">2% dos seus lucros</span> após 30 dias.
         </p>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          Os <span className="text-primary font-bold">R$66 cobrem apenas essa taxa dos tokens</span>. Nós <span className="font-bold text-foreground">não ficamos com nenhum centavo</span> desse pagamento.
-        </p>
-        <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
-          <p className="text-sm text-foreground leading-relaxed">
-            <span className="font-bold">💰 Como ganhamos então?</span> Só depois de 30 dias, quando você já estiver lucrando, cobramos apenas <span className="text-primary font-bold">2% dos seus lucros</span>. Ou seja: <span className="font-bold">só ganhamos quando você ganha.</span>
-          </p>
-        </div>
       </div>
 
       {/* ═══ 5. MENTOR CREDIBILITY ═══ */}
