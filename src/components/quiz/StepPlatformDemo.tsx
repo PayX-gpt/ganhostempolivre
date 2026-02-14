@@ -430,9 +430,9 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
         {!isActive && (
           <div className="px-2.5 py-4 flex gap-1.5">
             <button onClick={() => setShowPopup(true)}
-              className={`flex-1 py-2.5 rounded-xl border ${plat.accentBorder} ${plat.accentBgSoft} ${plat.accent} font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-125 active:scale-[0.98] transition-all relative overflow-hidden`}>
+              className="flex-1 py-2.5 rounded-xl border border-[hsl(152,60%,42%,0.4)] bg-[hsl(152,60%,42%,0.15)] text-[hsl(152,60%,42%)] font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-125 active:scale-[0.98] transition-all relative overflow-hidden">
               {/* Pulse ring animation */}
-              <span className="absolute inset-0 rounded-xl animate-ping bg-[hsl(280,70%,65%,0.1)]" style={{ animationDuration: '2s' }} />
+              <span className="absolute inset-0 rounded-xl animate-ping bg-[hsl(152,60%,42%,0.1)]" style={{ animationDuration: '2s' }} />
               <Play className="w-3.5 h-3.5 relative z-10" fill="currentColor" />
               <span className="relative z-10">Iniciar Robô</span>
             </button>
