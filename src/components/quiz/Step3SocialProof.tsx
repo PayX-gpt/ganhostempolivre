@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton, VideoPlaceholder } from "./QuizUI";
-import mentorPhoto from "@/assets/mentor-photo.jpg";
 
 interface Step3Props {
   onNext: () => void;
 }
 
-const Step3MentorVideo = ({ onNext }: Step3Props) => {
+const Step3SocialProof = ({ onNext }: Step3Props) => {
   const [showCTA, setShowCTA] = useState(false);
 
   useEffect(() => {
@@ -16,45 +15,49 @@ const Step3MentorVideo = ({ onNext }: Step3Props) => {
 
   return (
     <StepContainer>
-      <div className="flex items-center gap-3 w-full">
-        <img
-          src={mentorPhoto}
-          alt="Especialista Ricardo"
-          className="w-12 h-12 rounded-full object-cover border-2 border-primary/40 shrink-0"
-        />
-        <div>
-          <p className="font-bold text-foreground text-base">Ricardo Almeida</p>
-          <p className="text-sm text-muted-foreground">Especialista em Renda Digital</p>
-        </div>
-      </div>
-
       <StepTitle>
         Mais de <span className="text-gradient-green">36.000 brasileiros</span> já descobriram como ter uma renda extra segura
       </StepTitle>
 
       <StepSubtitle>
-        Assista esta mensagem especial — são apenas 2 minutos que podem mudar a forma como você vê sua situação financeira:
+        Veja o depoimento de quem estava na mesma situação que você — e hoje vive com tranquilidade financeira:
       </StepSubtitle>
 
-      <VideoPlaceholder label="Mensagem do Especialista Ricardo (2 min)" />
+      {/* Video testimonial - 50+ person */}
+      <VideoPlaceholder label="Depoimento — Dona Márcia, 56 anos (2 min)" />
 
-      <div className="w-full funnel-card border-primary/20 bg-primary/5">
-        <p className="text-sm text-foreground/80 text-center leading-relaxed">
-          💬 <em>"A maioria dos meus melhores alunos tem mais de 50 anos. Eles não tinham experiência nenhuma com tecnologia. Mesmo assim, conseguiram."</em>
+      <div className="w-full funnel-card border-primary/25 bg-primary/5">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl shrink-0">
+            👩‍🦳
+          </div>
+          <div>
+            <p className="font-bold text-foreground text-base">Dona Márcia, 56 anos</p>
+            <p className="text-sm text-muted-foreground">Goiânia, GO • Aluna verificada ✅</p>
+          </div>
+        </div>
+        <p className="text-base text-foreground/90 italic leading-relaxed">
+          "Eu tinha vergonha de pedir dinheiro emprestado todo mês. Minha aposentadoria não cobria nem as contas básicas. Comecei com medo, mas o passo a passo me deu segurança. Hoje tiro R$180 por dia e não dependo mais de ninguém."
+        </p>
+      </div>
+
+      <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center">
+        <p className="text-sm text-foreground/80 leading-relaxed">
+          📊 <strong>Dado real:</strong> 73% dos nossos alunos acima de 50 anos conseguiram seus primeiros resultados na primeira semana.
         </p>
       </div>
 
       {showCTA ? (
         <CTAButton onClick={onNext} className="animate-fade-in">
-          ENTENDI, QUERO CONTINUAR →
+          QUERO DESCOBRIR SE É PRA MIM →
         </CTAButton>
       ) : (
         <p className="text-sm text-muted-foreground text-center animate-pulse">
-          ⏳ Assista o vídeo para continuar...
+          ⏳ Assista o depoimento para continuar...
         </p>
       )}
     </StepContainer>
   );
 };
 
-export default Step3MentorVideo;
+export default Step3SocialProof;
