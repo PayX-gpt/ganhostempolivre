@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Users, Eye, Activity, Clock, TrendingUp, BarChart3, ArrowDown, Zap } from "lucide-react";
+import { RefreshCw, Users, Eye, Activity, Clock, TrendingUp, BarChart3, ArrowDown, Zap, Table, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar,
@@ -92,6 +92,8 @@ const Live = () => {
   const [auditData, setAuditData] = useState<AuditRow[]>([]);
   const [funnelEvents, setFunnelEvents] = useState<FunnelEventRow[]>([]);
   const [timeRange, setTimeRange] = useState<"1h" | "6h" | "24h">("24h");
+  const [responsesPage, setResponsesPage] = useState(0);
+  const RESPONSES_PER_PAGE = 20;
 
   // ─── Real-time presence ─────────────────────────────────
   const processPresence = useCallback((state: Record<string, PresenceEntry[]>) => {
@@ -156,7 +158,7 @@ const Live = () => {
       .select("event_name, event_data, session_id, created_at")
       .gte("created_at", since)
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(1000);
 
     setFunnelEvents((data as FunnelEventRow[]) || []);
   }, [timeRange]);
@@ -212,11 +214,126 @@ const Live = () => {
     });
 
     const firstStep = stepSessions["step-1"]?.size || 0;
-    const lastStep = stepSessions["step-18"]?.size || 0;
+    const lastStep = stepSessions["step-19"]?.size || 0;
     const conversionRate = firstStep > 0 ? ((lastStep / firstStep) * 100).toFixed(1) : "0.0";
 
     return { funnelChart, hourlyChart, uniqueSessions: allSessions.size, dropoffData, conversionRate };
   }, [auditData]);
+
+  // ─── Build responses table data ─────────────────────────
+  const ANSWER_STEP_MAP: Record<string, string> = {
+    intro: "step-1", idade: "step-2", nome: "step-3", prova_social: "step-4",
+    tentou_online: "step-5", meta_renda: "step-6", obstaculo: "step-7",
+    sonho_financeiro: "step-8", saldo_conta: "step-9", video_mentor: "step-10",
+    dispositivo: "step-11", disponibilidade: "step-12", demo_plataforma: "step-13",
+    loading: "step-14", prova_social_2: "step-15", whatsapp_proof: "step-16",
+    metodo_contato: "step-17", input_contato: "step-18", oferta_final: "step-19",
+  };
+
+  const responsesData = useMemo(() => {
+    // Group events by session
+    const sessions: Record<string, {
+      id: string;
+      firstSeen: string;
+      lastStep: string;
+      answers: Record<string, string>;
+      stepsCompleted: Set<string>;
+    }> = {};
+
+    funnelEvents.forEach(evt => {
+      const data = evt.event_data as Record<string, unknown> | null;
+      if (!data) return;
+      const sid = evt.session_id;
+      if (!sessions[sid]) {
+        sessions[sid] = {
+          id: sid,
+          firstSeen: evt.created_at,
+          lastStep: "",
+          answers: {},
+          stepsCompleted: new Set(),
+        };
+      }
+      const s = sessions[sid];
+      // Track earlier timestamps
+      if (evt.created_at < s.firstSeen) s.firstSeen = evt.created_at;
+
+      const stepName = data.step_name as string || "";
+      const stepSlug = data.step as string || "";
+      const answer = data.answer_value as string || "";
+
+      if (evt.event_name === "step_viewed" || evt.event_name === "step_completed") {
+        if (stepSlug) s.stepsCompleted.add(stepSlug);
+      }
+      if (evt.event_name === "step_completed" && stepSlug) {
+        s.lastStep = stepSlug;
+        if (answer) {
+          s.answers[stepSlug] = answer;
+        } else {
+          // For steps without answer (click-through), mark as completed
+          s.answers[stepSlug] = "✓";
+        }
+      }
+      // Capture lead data
+      if (evt.event_name === "lead_captured") {
+        const contact = (data.contact_value || data.email || data.phone || "") as string;
+        if (contact) s.answers["contact"] = contact;
+      }
+      if (evt.event_name === "checkout_click") {
+        s.answers["checkout"] = "clicou";
+      }
+    });
+
+    // Convert to sorted array
+    return Object.values(sessions)
+      .sort((a, b) => b.firstSeen.localeCompare(a.firstSeen));
+  }, [funnelEvents]);
+
+  const totalResponses = responsesData.length;
+  const leadsCount = responsesData.filter(s => s.answers["contact"]).length;
+  const checkoutClicks = responsesData.filter(s => s.answers["checkout"]).length;
+  const completedFlows = responsesData.filter(s => s.stepsCompleted.has("step-19")).length;
+  const interactionRate = totalResponses > 0 ? ((responsesData.filter(s => s.stepsCompleted.size > 1).length / totalResponses) * 100).toFixed(1) : "0";
+
+  const totalPages = Math.ceil(totalResponses / RESPONSES_PER_PAGE);
+  const paginatedResponses = responsesData.slice(
+    responsesPage * RESPONSES_PER_PAGE,
+    (responsesPage + 1) * RESPONSES_PER_PAGE
+  );
+
+  // Steps that capture answers (columns for the table)
+  const ANSWER_COLUMNS = [
+    { slug: "step-1", label: "Intro", short: "Intro" },
+    { slug: "step-2", label: "Idade", short: "Idade" },
+    { slug: "step-3", label: "Nome", short: "Nome" },
+    { slug: "step-5", label: "Online?", short: "Online" },
+    { slug: "step-6", label: "Meta Renda", short: "Meta" },
+    { slug: "step-7", label: "Obstáculo", short: "Obstác." },
+    { slug: "step-8", label: "Sonho", short: "Sonho" },
+    { slug: "step-9", label: "Saldo", short: "Saldo" },
+    { slug: "step-11", label: "Dispositivo", short: "Device" },
+    { slug: "step-12", label: "Disponib.", short: "Tempo" },
+    { slug: "step-17", label: "Contato", short: "Contato" },
+  ];
+
+  const exportCSV = useCallback(() => {
+    const headers = ["#", "ID Lead", "Data", ...ANSWER_COLUMNS.map(c => c.label), "Contato", "Checkout"];
+    const rows = responsesData.map((s, i) => [
+      i + 1,
+      s.id.slice(-6),
+      new Date(s.firstSeen).toLocaleDateString("pt-BR"),
+      ...ANSWER_COLUMNS.map(c => s.answers[c.slug] || "—"),
+      s.answers["contact"] || "—",
+      s.answers["checkout"] || "—",
+    ]);
+    const csv = [headers.join(","), ...rows.map(r => r.map(v => `"${v}"`).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `respostas-funil-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [responsesData]);
 
   const tooltipStyle = {
     background: "hsl(var(--card))",
@@ -274,7 +391,7 @@ const Live = () => {
           <StatCard label="Online agora" value={totalOnline} icon={<Users className="w-3.5 h-3.5" />} accent />
           <StatCard label="Sessões" value={uniqueSessions} icon={<Activity className="w-3.5 h-3.5" />} />
           <StatCard label="Conversão" value={`${conversionRate}%`} icon={<TrendingUp className="w-3.5 h-3.5" />} />
-          <StatCard label="Na oferta" value={steps.find(s => s.id === "step-18")?.count || 0} icon={<Eye className="w-3.5 h-3.5" />} accent />
+          <StatCard label="Na oferta" value={steps.find(s => s.id === "step-19")?.count || 0} icon={<Eye className="w-3.5 h-3.5" />} accent />
         </div>
 
         {/* ─── Live Presence Grid ──────────────────── */}
@@ -536,6 +653,203 @@ const Live = () => {
               <p className="text-xs text-muted-foreground text-center py-4">Nenhum evento registrado neste período</p>
             )}
           </div>
+        </section>
+
+        {/* ─── RESPOSTAS DO FUNIL (spreadsheet view) ── */}
+        <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+            <h3 className="text-xs sm:text-sm font-semibold flex items-center gap-2">
+              <Table className="w-3.5 h-3.5 text-primary" /> Respostas do Funil
+              <Badge variant="secondary" className="text-[10px]">{totalResponses} leads</Badge>
+            </h3>
+            <Button size="sm" variant="outline" onClick={exportCSV} className="h-7 text-xs gap-1.5">
+              <Download className="w-3 h-3" /> Exportar CSV
+            </Button>
+          </div>
+
+          {/* Summary cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
+            <div className="text-center p-2.5 rounded-lg border border-border bg-secondary/20">
+              <p className="text-lg sm:text-xl font-bold tabular-nums text-foreground">{totalResponses}</p>
+              <p className="text-[10px] text-muted-foreground">Visitas</p>
+            </div>
+            <div className="text-center p-2.5 rounded-lg border border-border bg-secondary/20">
+              <p className="text-lg sm:text-xl font-bold tabular-nums text-foreground">{leadsCount}</p>
+              <p className="text-[10px] text-muted-foreground">Leads</p>
+            </div>
+            <div className="text-center p-2.5 rounded-lg border border-primary/30 bg-primary/5">
+              <p className="text-lg sm:text-xl font-bold tabular-nums text-primary">{interactionRate}%</p>
+              <p className="text-[10px] text-muted-foreground">Taxa interação</p>
+            </div>
+            <div className="text-center p-2.5 rounded-lg border border-border bg-secondary/20">
+              <p className="text-lg sm:text-xl font-bold tabular-nums text-foreground">{checkoutClicks}</p>
+              <p className="text-[10px] text-muted-foreground">Checkout</p>
+            </div>
+            <div className="text-center p-2.5 rounded-lg border border-border bg-secondary/20">
+              <p className="text-lg sm:text-xl font-bold tabular-nums text-foreground">{completedFlows}</p>
+              <p className="text-[10px] text-muted-foreground">Fluxos completos</p>
+            </div>
+          </div>
+
+          {/* Desktop: horizontal scroll table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-xs min-w-[900px]">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-2 px-2 text-muted-foreground font-medium sticky left-0 bg-card z-10 min-w-[40px]">#</th>
+                  <th className="text-left py-2 px-2 text-muted-foreground font-medium sticky left-[40px] bg-card z-10 min-w-[70px]">Lead</th>
+                  <th className="text-left py-2 px-2 text-muted-foreground font-medium min-w-[80px]">Data</th>
+                  {ANSWER_COLUMNS.map(col => {
+                    // Calculate completion % for this column
+                    const filled = responsesData.filter(s => s.answers[col.slug] && s.answers[col.slug] !== "—").length;
+                    const pct = totalResponses > 0 ? Math.round((filled / totalResponses) * 100) : 0;
+                    return (
+                      <th key={col.slug} className="text-left py-2 px-2 text-muted-foreground font-medium min-w-[90px]">
+                        <div className="flex flex-col gap-0.5">
+                          <span>{col.short}</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[9px] tabular-nums">{pct}%</span>
+                            <div className="w-8 h-1 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full bg-primary/60 rounded-full" style={{ width: `${pct}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      </th>
+                    );
+                  })}
+                  <th className="text-left py-2 px-2 text-muted-foreground font-medium min-w-[100px]">Contato</th>
+                  <th className="text-left py-2 px-2 text-muted-foreground font-medium min-w-[70px]">Checkout</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedResponses.map((session, i) => (
+                  <tr key={session.id} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
+                    <td className="py-2 px-2 text-muted-foreground tabular-nums sticky left-0 bg-card">
+                      {responsesPage * RESPONSES_PER_PAGE + i + 1}
+                    </td>
+                    <td className="py-2 px-2 font-mono text-muted-foreground sticky left-[40px] bg-card">
+                      {session.id.slice(-6)}
+                    </td>
+                    <td className="py-2 px-2 text-muted-foreground tabular-nums">
+                      {new Date(session.firstSeen).toLocaleDateString("pt-BR")}
+                    </td>
+                    {ANSWER_COLUMNS.map(col => {
+                      const val = session.answers[col.slug];
+                      return (
+                        <td key={col.slug} className="py-2 px-2">
+                          {val ? (
+                            val === "✓" ? (
+                              <span className="text-primary font-medium">✓</span>
+                            ) : (
+                              <span className="text-foreground font-medium truncate block max-w-[120px]" title={val}>
+                                {val}
+                              </span>
+                            )
+                          ) : (
+                            <span className="text-muted-foreground/30">—</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                    <td className="py-2 px-2">
+                      {session.answers["contact"] ? (
+                        <span className="text-primary font-medium truncate block max-w-[120px]" title={session.answers["contact"]}>
+                          {session.answers["contact"]}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground/30">—</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-2">
+                      {session.answers["checkout"] ? (
+                        <Badge variant="default" className="text-[9px] px-1.5 py-0">clicou</Badge>
+                      ) : (
+                        <span className="text-muted-foreground/30">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {paginatedResponses.length === 0 && (
+                  <tr>
+                    <td colSpan={ANSWER_COLUMNS.length + 4} className="py-8 text-center text-muted-foreground text-sm">
+                      Nenhuma resposta registrada neste período
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile: card list */}
+          <div className="sm:hidden space-y-2">
+            {paginatedResponses.map((session, i) => (
+              <div key={session.id} className="rounded-lg border border-border/40 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground tabular-nums">#{responsesPage * RESPONSES_PER_PAGE + i + 1}</span>
+                    <span className="text-xs font-mono text-muted-foreground">{session.id.slice(-6)}</span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">
+                    {new Date(session.firstSeen).toLocaleDateString("pt-BR")}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {ANSWER_COLUMNS.filter(col => session.answers[col.slug]).map(col => (
+                    <div key={col.slug} className="bg-secondary/30 rounded px-2 py-1">
+                      <p className="text-[9px] text-muted-foreground uppercase">{col.short}</p>
+                      <p className="text-xs font-medium text-foreground truncate">
+                        {session.answers[col.slug]}
+                      </p>
+                    </div>
+                  ))}
+                  {session.answers["contact"] && (
+                    <div className="bg-primary/10 rounded px-2 py-1 col-span-2">
+                      <p className="text-[9px] text-muted-foreground uppercase">Contato</p>
+                      <p className="text-xs font-medium text-primary truncate">{session.answers["contact"]}</p>
+                    </div>
+                  )}
+                </div>
+                {session.answers["checkout"] && (
+                  <Badge variant="default" className="text-[9px]">Clicou no checkout</Badge>
+                )}
+              </div>
+            ))}
+            {paginatedResponses.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-4">Nenhuma resposta neste período</p>
+            )}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/30">
+              <span className="text-[10px] text-muted-foreground">
+                {responsesPage * RESPONSES_PER_PAGE + 1}–{Math.min((responsesPage + 1) * RESPONSES_PER_PAGE, totalResponses)} de {totalResponses}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={responsesPage === 0}
+                  onClick={() => setResponsesPage(p => p - 1)}
+                  className="h-7 w-7 p-0"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </Button>
+                <span className="text-xs text-muted-foreground tabular-nums px-2">
+                  {responsesPage + 1}/{totalPages}
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={responsesPage >= totalPages - 1}
+                  onClick={() => setResponsesPage(p => p + 1)}
+                  className="h-7 w-7 p-0"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
         </section>
       </main>
     </div>
