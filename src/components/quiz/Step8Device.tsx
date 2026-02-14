@@ -11,16 +11,16 @@ const getFeedback = (answer: string, name?: string) => {
   const n = name || "você";
   const messages: Record<string, { title: string; message: string }> = {
     celular: {
-      title: `Perfeito, ${n}!`,
-      message: `93% dos nossos alunos usam apenas o celular — e conseguem resultados excelentes. Nosso sistema foi otimizado para funcionar na palma da sua mão. A IA roda na nuvem, então ${n} não precisa de um celular potente — qualquer smartphone serve.`,
+      title: `${n}, só o celular já resolve.`,
+      message: `E olha, não precisa ser um celular caro não. Qualquer smartphone que rode WhatsApp já serve. Sabe por quê? Porque todo o processamento pesado acontece na nuvem. O celular é só a tela onde você acompanha o dinheiro entrando. Simples assim.`,
     },
     computador: {
-      title: `Ótima escolha, ${n}!`,
-      message: `A tela grande facilita o acompanhamento, mas saiba que o sistema faz quase tudo sozinho. A inteligência artificial analisa o mercado e sugere as melhores operações — ${n} só precisa confirmar com um clique.`,
+      title: `Tá ótimo, ${n}.`,
+      message: `A tela grande ajuda a enxergar tudo com mais clareza, mas no fundo o sistema faz quase tudo sozinho. Você abre, dá uma olhada, e pronto. Não precisa ficar grudado na frente do computador — a IA cuida do resto enquanto você vive sua vida.`,
     },
     ambos: {
-      title: `Isso é uma vantagem, ${n}!`,
-      message: `Quem usa celular e computador consegue acompanhar de qualquer lugar. Nosso sistema sincroniza tudo automaticamente — ${n} pode iniciar no computador e acompanhar pelo celular, sem perder nada.`,
+      title: `Melhor ainda, ${n}.`,
+      message: `Isso significa que você pode começar no computador quando tiver mais tempo, e acompanhar pelo celular quando estiver na rua. Tudo sincroniza automaticamente. Sem perder nada, sem precisar repetir nada. Flexibilidade total.`,
     },
   };
   return messages[answer];
