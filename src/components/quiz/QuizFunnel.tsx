@@ -70,7 +70,7 @@ const QuizFunnel = () => {
           />
         );
       case 14:
-        return <Step13Offer userName={answers.name} />;
+        return <Step13Offer userName={answers.name} answers={answers} />;
       default:
         return null;
     }
