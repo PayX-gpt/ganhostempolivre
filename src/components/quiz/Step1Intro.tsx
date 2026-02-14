@@ -16,7 +16,7 @@ const Step1Intro = ({ onNext }: Step1Props) => {
           <p className="text-sm sm:text-base text-foreground leading-relaxed">
             <span className="text-funnel-warning font-bold">Atenção:</span>{" "}
             este teste rápido vai revelar se você pode usar a mesma tecnologia que já está gerando renda extra para{" "}
-            <span className="font-bold">milhares de brasileiros acima de 50 anos.</span>
+            <span className="font-bold">milhares de brasileiros acima de 40 anos.</span>
           </p>
         </div>
       </div>

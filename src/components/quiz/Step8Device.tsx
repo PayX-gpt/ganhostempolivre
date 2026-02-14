@@ -48,7 +48,7 @@ const Step8Device = ({ onNext }: Step8Props) => {
       <div className="flex items-center gap-2 justify-center mt-1">
         <CheckCircle className="w-4 h-4 text-primary shrink-0" />
         <p className="text-sm text-muted-foreground text-center">
-          <em>93% dos nossos alunos acima de 50 anos usam apenas o celular — e conseguem resultados normalmente.</em>
+          <em>93% dos nossos alunos acima de 40 anos usam apenas o celular — e conseguem resultados normalmente.</em>
         </p>
       </div>
     </StepContainer>

@@ -171,16 +171,16 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
 /* ─── People Like You ─── */
 const PeopleLikeYou = ({ answers }: { answers?: QuizAnswers }) => {
   const getAgePeople = (age?: string) => {
-    const data56 = [
-      { name: "José Almeida", age: "61", result: "R$147/dia em 2 semanas", avatar: avatarAntonio },
-      { name: "Cláudia Reis", age: "58", result: "R$89/dia no primeiro mês", avatar: avatarClaudia },
-      { name: "Marcos Oliveira", age: "63", result: "R$210/dia após 3 semanas", avatar: avatarCarlos },
-    ];
-    const data46 = [
-      { name: "Roberto Lima", age: "52", result: "R$180/dia em 10 dias", avatar: avatarCarlos },
-      { name: "Sandra Costa", age: "49", result: "R$95/dia no primeiro mês", avatar: avatarClaudia },
-      { name: "Paulo Mendes", age: "54", result: "R$230/dia após 2 semanas", avatar: avatarAntonio },
-    ];
+     const data56 = [
+       { name: "José Almeida", age: "55", result: "R$147/dia em 2 semanas", avatar: avatarAntonio },
+       { name: "Cláudia Reis", age: "48", result: "R$89/dia no primeiro mês", avatar: avatarClaudia },
+       { name: "Marcos Oliveira", age: "58", result: "R$210/dia após 3 semanas", avatar: avatarCarlos },
+     ];
+     const data46 = [
+       { name: "Roberto Lima", age: "43", result: "R$180/dia em 10 dias", avatar: avatarCarlos },
+       { name: "Sandra Costa", age: "40", result: "R$95/dia no primeiro mês", avatar: avatarClaudia },
+       { name: "Paulo Mendes", age: "47", result: "R$230/dia após 2 semanas", avatar: avatarAntonio },
+     ];
     if (age?.includes("56") || age?.includes("mais")) return data56;
     if (age?.includes("46")) return data46;
     if (age?.includes("36")) return data46;
@@ -194,7 +194,7 @@ const PeopleLikeYou = ({ answers }: { answers?: QuizAnswers }) => {
         testimonials: {
           t1: "\"Já tinha perdido dinheiro duas vezes na internet. Quase não entrei. Mas algo me dizia pra tentar mais uma vez... e foi a melhor decisão da minha vida. Hoje pago todas as contas e ainda sobra.\"",
           t2: "\"Minha filha insistiu pra eu tentar. Eu dizia que era golpe. Entrei desconfiado, com o pé atrás. Quando caiu o primeiro Pix, eu chorei. Não de alegria — de alívio.\"",
-          t3: "\"Perdi meu emprego com 59 anos. Ninguém contrata nessa idade. Tinha vergonha de pedir ajuda. Quando vi que dava pra fazer do celular, sem aparecer, sem falar com ninguém... mudou tudo.\"",
+          t3: "\"Perdi meu emprego com 52 anos. Ninguém contrata nessa idade. Tinha vergonha de pedir ajuda. Quando vi que dava pra fazer do celular, sem aparecer, sem falar com ninguém... mudou tudo.\"",
         },
       },
       tempo: {
@@ -414,9 +414,9 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   ];
 
   const testimonials = [
-    { name: "Antônio Ferreira", age: "62 anos", city: "Salvador, BA", avatar: avatarAntonio, text: "Eu tinha vergonha de pedir dinheiro emprestado no final do mês. Hoje sobra dinheiro e eu consigo ajudar meus netos. Esse método devolveu minha dignidade." },
-    { name: "Cláudia Nascimento", age: "58 anos", city: "Curitiba, PR", avatar: avatarClaudia, text: "Três anos com contas atrasadas. Em um mês quitei tudo. Luz, água, cartão. Hoje tenho paz de espírito. Não tenho palavras pra agradecer." },
-    { name: "Carlos Mendonça", age: "55 anos", city: "Recife, PE", avatar: avatarCarlos, text: "Já caí em dois golpes na internet. Quase não tentei de novo. Mas aqui é diferente. Tem gente real te ajudando. Hoje minha esposa e eu tiramos mais de R$200 por dia juntos." },
+     { name: "Antônio Ferreira", age: "45 anos", city: "Salvador, BA", avatar: avatarAntonio, text: "Eu tinha vergonha de pedir dinheiro emprestado no final do mês. Hoje sobra dinheiro e eu consigo ajudar meus netos. Esse método devolveu minha dignidade." },
+     { name: "Cláudia Nascimento", age: "53 anos", city: "Curitiba, PR", avatar: avatarClaudia, text: "Três anos com contas atrasadas. Em um mês quitei tudo. Luz, água, cartão. Hoje tenho paz de espírito. Não tenho palavras pra agradecer." },
+     { name: "Carlos Mendonça", age: "41 anos", city: "Recife, PE", avatar: avatarCarlos, text: "Já caí em dois golpes na internet. Quase não tentei de novo. Mas aqui é diferente. Tem gente real te ajudando. Hoje minha esposa e eu tiramos mais de R$200 por dia juntos." },
   ];
 
   return (
@@ -551,8 +551,8 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
         {[
           {
-            objection: '"Será que funciona pra mim? Já tenho mais de 50 anos..."',
-            response: "A maioria dos nossos alunos tem mais de 50 anos. O método foi criado pensando em quem não tem experiência com tecnologia. Se você sabe usar WhatsApp, você consegue.",
+             objection: '"Será que funciona pra mim? Já tenho mais de 40 anos..."',
+             response: "A maioria dos nossos alunos tem entre 40 e 58 anos. O método foi criado pensando em quem não tem experiência com tecnologia. Se você sabe usar WhatsApp, você consegue.",
           },
           {
             objection: '"Já fui enganado antes na internet..."',
@@ -603,16 +603,16 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         <h3 className="font-display text-xl font-bold text-foreground text-center">
           Pessoas reais. Resultados reais.
         </h3>
-        <p className="text-sm text-muted-foreground text-center">
-          Veja o que nossos alunos 50+ dizem sobre o método:
-        </p>
+         <p className="text-sm text-muted-foreground text-center">
+           Veja o que nossos alunos dizem sobre o método:
+         </p>
 
         {testimonials.map((t, i) => (
           <TestimonialCard key={i} {...t} />
         ))}
 
         {/* Video testimonial placeholder */}
-        <VideoPlaceholder label="Depoimento em vídeo — Antônio, 62 anos (2 min)" />
+        <VideoPlaceholder label="Depoimento em vídeo — Antônio, 45 anos (2 min)" />
       </div>
 
       <Divider />

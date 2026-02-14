@@ -26,13 +26,13 @@ const Step3SocialProof = ({ onNext }: Step3Props) => {
       </StepSubtitle>
 
       {/* Video testimonial - 50+ person */}
-      <VideoPlaceholder label="Depoimento — Dona Márcia, 56 anos (2 min)" />
+      <VideoPlaceholder label="Depoimento — Dona Márcia, 52 anos (2 min)" />
 
       <div className="w-full funnel-card border-primary/25 bg-primary/5">
         <div className="flex items-center gap-3 mb-3">
           <img src={avatarRegina} alt="Dona Márcia" className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
           <div className="min-w-0">
-            <p className="font-bold text-foreground text-sm sm:text-base">Dona Márcia, 56 anos</p>
+            <p className="font-bold text-foreground text-sm sm:text-base">Dona Márcia, 52 anos</p>
             <div className="flex items-center gap-1">
               <span className="text-xs sm:text-sm text-muted-foreground">Goiânia, GO • Aluna verificada</span>
               <CheckCircle className="w-3.5 h-3.5 text-primary" />
@@ -48,7 +48,7 @@ const Step3SocialProof = ({ onNext }: Step3Props) => {
         <div className="flex items-center justify-center gap-2">
           <BarChart3 className="w-4 h-4 text-accent shrink-0" />
           <p className="text-sm text-foreground/80 leading-relaxed">
-            <strong>Dado real:</strong> 73% dos nossos alunos acima de 50 anos conseguiram seus primeiros resultados na primeira semana.
+            <strong>Dado real:</strong> 73% dos nossos alunos acima de 40 anos conseguiram seus primeiros resultados na primeira semana.
           </p>
         </div>
       </div>
