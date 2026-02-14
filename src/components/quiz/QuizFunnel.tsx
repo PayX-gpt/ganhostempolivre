@@ -59,7 +59,12 @@ const STEP_NAMES: Record<string, string> = {
 const QuizFunnel = () => {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
-  const [answers, setAnswers] = useState<QuizAnswers>({});
+  const [answers, setAnswers] = useState<QuizAnswers>(() => {
+    try {
+      const saved = sessionStorage.getItem("quiz_answers");
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
   const currentSlug = slug || "step-1";
   const step = Math.max(1, (STEP_SLUGS.indexOf(currentSlug as any) + 1) || 1);
   const stepEnteredAt = useRef<number>(Date.now());
@@ -99,7 +104,11 @@ const QuizFunnel = () => {
   const updateAndNext = useCallback(
     (key: keyof QuizAnswers, value: string) => {
       trackStepComplete({ key, value });
-      setAnswers((prev) => ({ ...prev, [key]: value }));
+      setAnswers((prev) => {
+        const updated = { ...prev, [key]: value };
+        try { sessionStorage.setItem("quiz_answers", JSON.stringify(updated)); } catch {}
+        return updated;
+      });
       const nextStep = Math.min(step + 1, TOTAL_STEPS);
       navigate(`/${STEP_SLUGS[nextStep - 1]}`);
       window.scrollTo({ top: 0, behavior: "smooth" });
