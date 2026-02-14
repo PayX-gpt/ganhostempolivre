@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard } from "./QuizUI";
+import couple1825 from "@/assets/couple-18-25.jpg";
+import couple2635 from "@/assets/couple-26-35.jpg";
+import couple3645 from "@/assets/couple-36-45.jpg";
+import couple4655 from "@/assets/couple-46-55.jpg";
+import couple56plus from "@/assets/couple-56-plus.jpg";
 
 interface Step2Props {
   onNext: (age: string) => void;
 }
 
 const ageOptions = [
-  { label: "18 a 25 anos", sublabel: "Início de carreira", icon: "👩" },
-  { label: "26 a 35 anos", sublabel: "Fase de crescimento", icon: "👨" },
-  { label: "36 a 45 anos", sublabel: "Maturidade profissional", icon: "👩‍💼" },
-  { label: "46 a 55 anos", sublabel: "Experiência de vida", icon: "👨‍🦳" },
-  { label: "56 anos ou mais", sublabel: "Sabedoria e experiência", icon: "🧓" },
+  { label: "18 a 25 anos", sublabel: "Início de carreira", imageSrc: couple1825 },
+  { label: "26 a 35 anos", sublabel: "Fase de crescimento", imageSrc: couple2635 },
+  { label: "36 a 45 anos", sublabel: "Maturidade profissional", imageSrc: couple3645 },
+  { label: "46 a 55 anos", sublabel: "Experiência de vida", imageSrc: couple4655 },
+  { label: "56 anos ou mais", sublabel: "Sabedoria e experiência", imageSrc: couple56plus },
 ];
 
 const Step2Age = ({ onNext }: Step2Props) => {
@@ -34,7 +39,7 @@ const Step2Age = ({ onNext }: Step2Props) => {
             key={opt.label}
             label={opt.label}
             sublabel={opt.sublabel}
-            icon={opt.icon}
+            imageSrc={opt.imageSrc}
             selected={selected === opt.label}
             onClick={() => handleSelect(opt.label)}
           />
