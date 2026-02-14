@@ -1,4 +1,6 @@
 import { StepContainer, StepTitle, StepSubtitle, CTAButton, VideoPlaceholder } from "./QuizUI";
+import avatarJose from "@/assets/avatar-jose.jpg";
+import avatarLucia from "@/assets/avatar-lucia.jpg";
 
 interface Step11Props {
   onNext: () => void;
@@ -22,9 +24,7 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
       <div className="w-full space-y-3">
         <div className="funnel-card border-primary/25 bg-primary/5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl shrink-0">
-              👨‍🦳
-            </div>
+            <img src={avatarJose} alt="Antônio" className="w-12 h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
             <div>
               <p className="font-bold text-foreground text-base">Antônio, 58 anos</p>
               <p className="text-sm text-muted-foreground">São Paulo, SP • Aluno verificado ✅</p>
@@ -37,9 +37,7 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
 
         <div className="funnel-card border-primary/25 bg-primary/5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl shrink-0">
-              👩‍🦳
-            </div>
+            <img src={avatarLucia} alt="Dona Cláudia" className="w-12 h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
             <div>
               <p className="font-bold text-foreground text-base">Dona Cláudia, 62 anos</p>
               <p className="text-sm text-muted-foreground">Belo Horizonte, MG • Aluna verificada ✅</p>
