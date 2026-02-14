@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { ProgressBar, type QuizAnswers } from "./QuizUI";
 import Step1Intro from "./Step1Intro";
 import Step2Age from "./Step2Age";
+import StepName from "./StepName";
 import Step3SocialProof from "./Step3SocialProof";
 import Step4TriedOnline from "./Step4TriedOnline";
 import Step5IncomeGoal from "./Step5IncomeGoal";
@@ -12,10 +13,11 @@ import Step9Availability from "./Step9Availability";
 import Step10Loading from "./Step10Loading";
 import Step11SocialProof2 from "./Step11SocialProof2";
 import StepWhatsAppProof from "./StepWhatsAppProof";
-import Step12Capture from "./Step12Capture";
+import StepContactMethod from "./StepContactMethod";
+import StepContactInput from "./StepContactInput";
 import Step13Offer from "./Step13Offer";
 
-const TOTAL_STEPS = 14;
+const TOTAL_STEPS = 16;
 
 const QuizFunnel = () => {
   const [step, setStep] = useState(1);
@@ -41,35 +43,45 @@ const QuizFunnel = () => {
       case 2:
         return <Step2Age onNext={(v) => updateAndNext("age", v)} />;
       case 3:
-        return <Step3SocialProof onNext={goNext} />;
+        return <StepName onNext={(name) => updateAndNext("name", name)} />;
       case 4:
-        return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} />;
+        return <Step3SocialProof onNext={goNext} />;
       case 5:
-        return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} />;
+        return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} />;
       case 6:
-        return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} />;
+        return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} />;
       case 7:
-        return <Step7MentorVideo onNext={goNext} />;
+        return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} />;
       case 8:
-        return <Step8Device onNext={(v) => updateAndNext("device", v)} />;
+        return <Step7MentorVideo onNext={goNext} />;
       case 9:
-        return <Step9Availability onNext={(v) => updateAndNext("availability", v)} />;
+        return <Step8Device onNext={(v) => updateAndNext("device", v)} />;
       case 10:
-        return <Step10Loading onNext={goNext} />;
+        return <Step9Availability onNext={(v) => updateAndNext("availability", v)} />;
       case 11:
-        return <Step11SocialProof2 onNext={goNext} />;
+        return <Step10Loading onNext={goNext} />;
       case 12:
-        return <StepWhatsAppProof onNext={goNext} />;
+        return <Step11SocialProof2 onNext={goNext} />;
       case 13:
+        return <StepWhatsAppProof onNext={goNext} />;
+      case 14:
+        return <StepContactMethod userName={answers.name} onNext={(v) => updateAndNext("contactMethod", v)} />;
+      case 15:
         return (
-          <Step12Capture
-            onNext={(name, email, phone) => {
-              setAnswers((prev) => ({ ...prev, name, email, phone }));
+          <StepContactInput
+            method={answers.contactMethod || "email"}
+            userName={answers.name}
+            onNext={(value) => {
+              if (answers.contactMethod === "whatsapp") {
+                setAnswers((prev) => ({ ...prev, phone: value }));
+              } else {
+                setAnswers((prev) => ({ ...prev, email: value }));
+              }
               goNext();
             }}
           />
         );
-      case 14:
+      case 16:
         return <Step13Offer userName={answers.name} answers={answers} />;
       default:
         return null;
