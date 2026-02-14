@@ -175,11 +175,12 @@ const GoalPopup = ({ onSubmit, userName }: { onSubmit: (goal: number, time: stri
   );
 };
 
-/* ─── Analyzing Bar (faster) ─── */
-const AnalyzingBar = ({ onDone }: { onDone: () => void }) => {
+/* ─── Analyzing Bar (fixed height, no layout shift) ─── */
+const AnalyzingBar = ({ onDone, paused }: { onDone: () => void; paused?: boolean }) => {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
-    const duration = 1000 + Math.random() * 800; // 1-1.8s (faster)
+    if (paused) { setProgress(0); return; }
+    const duration = 1000 + Math.random() * 800;
     const start = Date.now();
     const interval = setInterval(() => {
       const pct = Math.min(100, ((Date.now() - start) / duration) * 100);
@@ -187,13 +188,15 @@ const AnalyzingBar = ({ onDone }: { onDone: () => void }) => {
       if (pct >= 100) { clearInterval(interval); setTimeout(onDone, 150); }
     }, 30);
     return () => clearInterval(interval);
-  }, [onDone]);
+  }, [onDone, paused]);
 
   return (
-    <div className="w-full py-2 px-3 animate-fade-in">
+    <div className="w-full py-2 px-3">
       <div className="flex items-center gap-2 mb-1.5">
-        <Loader2 className="w-3 h-3 text-[hsl(280,70%,65%)] animate-spin" />
-        <span className="text-[11px] font-semibold text-[hsl(280,70%,65%)]">Analisando mercado...</span>
+        <Loader2 className={`w-3 h-3 text-[hsl(280,70%,65%)] ${paused ? '' : 'animate-spin'}`} />
+        <span className="text-[11px] font-semibold text-[hsl(280,70%,65%)]">
+          {paused ? "Aguardando próxima operação..." : "Analisando mercado..."}
+        </span>
       </div>
       <div className="w-full h-1.5 bg-[hsl(260,22%,15%)] rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all duration-75 bg-gradient-to-r from-[hsl(280,70%,55%)] to-[hsl(260,70%,60%)]"
@@ -423,8 +426,8 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
           )}
         </div>
 
-        {/* Analyzing bar */}
-        {isAnalyzing && isActive && <AnalyzingBar onDone={handleAnalysisDone} />}
+        {/* Analyzing bar - always visible when active to prevent layout shift */}
+        {isActive && !goalReached && <AnalyzingBar key={isAnalyzing ? "analyzing" : "idle"} onDone={handleAnalysisDone} paused={!isAnalyzing} />}
 
         {/* Play button with animation (before start) */}
         {!isActive && (
