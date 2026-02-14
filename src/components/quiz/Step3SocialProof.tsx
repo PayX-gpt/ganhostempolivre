@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { StepContainer, StepTitle, StepSubtitle, CTAButton, VideoPlaceholder } from "./QuizUI";
+import { useState, useEffect, useRef } from "react";
+import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
 import { BarChart3, CheckCircle, Loader2 } from "lucide-react";
 import avatarRegina from "@/assets/avatar-regina.jpg";
 
@@ -15,6 +15,27 @@ const Step3SocialProof = ({ onNext }: Step3Props) => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://scripts.converteai.net/lib/js/smartplayer/v1/sdk.min.js";
+    script.dataset.id = "67d187e9fad7e51c45b357f2";
+    script.async = true;
+    document.head.appendChild(script);
+
+    const iframe = document.getElementById("ifr_67d187e9fad7e51c45b357f2") as HTMLIFrameElement;
+    if (iframe) {
+      iframe.src =
+        "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/67d187e9fad7e51c45b357f2/embed.html" +
+        (window.location.search || "?") +
+        "&vl=" +
+        encodeURIComponent(window.location.href);
+    }
+
+    return () => {
+      script.remove();
+    };
+  }, []);
+
   return (
     <StepContainer>
       <StepTitle>
@@ -26,7 +47,27 @@ const Step3SocialProof = ({ onNext }: Step3Props) => {
       </StepSubtitle>
 
       {/* Video testimonial - 50+ person */}
-      <VideoPlaceholder label="Depoimento — Dona Márcia, 52 anos (2 min)" />
+      {/* ConverteAI Video Player */}
+      <div className="w-full rounded-2xl overflow-hidden border border-border">
+        <div
+          id="ifr_67d187e9fad7e51c45b357f2_wrapper"
+          style={{ margin: "0 auto", width: "100%" }}
+        >
+          <div
+            style={{ padding: "56.25% 0 0 0", position: "relative" }}
+            id="ifr_67d187e9fad7e51c45b357f2_aspect"
+          >
+            <iframe
+              frameBorder="0"
+              allowFullScreen
+              src="about:blank"
+              id="ifr_67d187e9fad7e51c45b357f2"
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+              referrerPolicy="origin"
+            />
+          </div>
+        </div>
+      </div>
 
       <div className="w-full funnel-card border-primary/25 bg-primary/5">
         <div className="flex items-center gap-3 mb-3">
