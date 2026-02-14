@@ -10,6 +10,7 @@ import Step6Obstacle from "./Step6Obstacle";
 import Step7MentorVideo from "./Step7MentorVideo";
 import Step8Device from "./Step8Device";
 import Step9Availability from "./Step9Availability";
+import StepPlatformDemo from "./StepPlatformDemo";
 import Step10Loading from "./Step10Loading";
 import Step11SocialProof2 from "./Step11SocialProof2";
 import StepWhatsAppProof from "./StepWhatsAppProof";
@@ -17,7 +18,7 @@ import StepContactMethod from "./StepContactMethod";
 import StepContactInput from "./StepContactInput";
 import Step13Offer from "./Step13Offer";
 
-const TOTAL_STEPS = 16;
+const TOTAL_STEPS = 17;
 
 const QuizFunnel = () => {
   const [step, setStep] = useState(1);
@@ -59,14 +60,16 @@ const QuizFunnel = () => {
       case 10:
         return <Step9Availability onNext={(v) => updateAndNext("availability", v)} />;
       case 11:
-        return <Step10Loading onNext={goNext} />;
+        return <StepPlatformDemo onNext={goNext} userName={answers.name} />;
       case 12:
-        return <Step11SocialProof2 onNext={goNext} />;
+        return <Step10Loading onNext={goNext} />;
       case 13:
-        return <StepWhatsAppProof onNext={goNext} />;
+        return <Step11SocialProof2 onNext={goNext} />;
       case 14:
-        return <StepContactMethod userName={answers.name} onNext={(v) => updateAndNext("contactMethod", v)} />;
+        return <StepWhatsAppProof onNext={goNext} />;
       case 15:
+        return <StepContactMethod userName={answers.name} onNext={(v) => updateAndNext("contactMethod", v)} />;
+      case 16:
         return (
           <StepContactInput
             method={answers.contactMethod || "email"}
@@ -81,7 +84,7 @@ const QuizFunnel = () => {
             }}
           />
         );
-      case 16:
+      case 17:
         return <Step13Offer userName={answers.name} answers={answers} />;
       default:
         return null;
