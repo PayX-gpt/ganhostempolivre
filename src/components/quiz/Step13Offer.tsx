@@ -90,26 +90,26 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
   ];
 
   return (
-    <div className="w-full funnel-card border-primary/25 bg-primary/5 space-y-4">
+    <div className="w-full funnel-card border-primary/25 bg-primary/5 space-y-3 sm:space-y-4">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xl">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
         </div>
-        <div>
-          <p className="font-bold text-foreground text-lg">Análise do seu perfil</p>
-          <p className="text-sm text-primary font-medium">Compatibilidade: 97%</p>
+        <div className="min-w-0">
+          <p className="font-bold text-foreground text-base sm:text-lg">Análise do seu perfil</p>
+          <p className="text-xs sm:text-sm text-primary font-medium">Compatibilidade: 97%</p>
         </div>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1.5 sm:space-y-2">
         {profileItems.map((item, i) => (
-          <div key={i} className="flex justify-between items-center py-1.5 border-b border-border/50 last:border-0">
-            <span className="text-sm text-muted-foreground">{item.label}</span>
-            <span className="text-sm font-semibold text-foreground text-right max-w-[60%]">{item.value}</span>
+          <div key={i} className="flex justify-between items-start gap-2 py-1 sm:py-1.5 border-b border-border/50 last:border-0">
+            <span className="text-xs sm:text-sm text-muted-foreground shrink-0">{item.label}</span>
+            <span className="text-xs sm:text-sm font-semibold text-foreground text-right max-w-[55%] sm:max-w-[60%] break-words">{item.value}</span>
           </div>
         ))}
       </div>
-      <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
-        <p className="text-sm text-foreground leading-relaxed">
+      <div className="bg-primary/10 rounded-xl p-2.5 sm:p-3 border border-primary/20">
+        <p className="text-xs sm:text-sm text-foreground leading-relaxed">
           <span className="font-bold text-primary">Resultado da análise:</span>{" "}
           {firstName ? `${firstName}, seu` : "Seu"} perfil é ideal para o método. Com base nas suas respostas, 
           estimamos que você pode alcançar {getGoalLabel(answers?.incomeGoal)} nos primeiros 30 dias.
@@ -209,13 +209,15 @@ const PeopleLikeYou = ({ answers }: { answers?: QuizAnswers }) => {
       </p>
       <div className="space-y-3">
         {people.map((p, i) => (
-          <div key={i} className="flex items-center gap-3 bg-secondary/50 rounded-xl p-3">
-            <img src={p.avatar} alt={p.name} className="w-10 h-10 rounded-full object-cover border border-primary/30" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">{p.name}, {p.age} anos</p>
-              <p className="text-xs text-muted-foreground">{getObstacleMessage(answers?.obstacle)}</p>
+          <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-secondary/50 rounded-xl p-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <img src={p.avatar} alt={p.name} className="w-10 h-10 rounded-full object-cover border border-primary/30 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">{p.name}, {p.age} anos</p>
+                <p className="text-xs text-muted-foreground">{getObstacleMessage(answers?.obstacle)}</p>
+              </div>
             </div>
-            <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-full whitespace-nowrap">{p.result}</span>
+            <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-full self-start sm:self-center whitespace-nowrap">{p.result}</span>
           </div>
         ))}
       </div>
@@ -386,7 +388,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   ];
 
   return (
-    <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-5 py-6 gap-6">
+    <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-4 sm:px-5 py-5 sm:py-6 gap-5 sm:gap-6">
 
       {/* ═══ TIMER ═══ */}
       <div className="w-full funnel-card border-destructive/30 bg-destructive/5 text-center">
@@ -405,11 +407,11 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       {/* ═══ HEADLINE ═══ */}
       <div className="text-center space-y-3">
-        <h2 className="font-display text-2xl font-bold text-foreground leading-snug">
+        <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground leading-snug">
           {firstName ? `${firstName}, tudo pronto.` : "Tudo pronto."}{" "}
           <span className="text-gradient-green">Seu plano personalizado está aqui.</span>
         </h2>
-        <p className="text-base text-muted-foreground leading-relaxed">
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
           A plataforma que te guia, passo a passo, para gerar uma renda extra segura todos os dias — mesmo que você nunca tenha feito nada parecido na vida.
         </p>
       </div>
@@ -418,10 +420,10 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       <VideoPlaceholder label="Assista para entender como funciona (4 min)" />
 
       {/* ═══ MENTOR QUOTE ═══ */}
-      <div className="flex items-start gap-4 w-full funnel-card border-primary/20 bg-primary/5">
-        <img src={mentorPhoto} alt="Especialista" className="w-14 h-14 rounded-full object-cover border-2 border-primary/40 shrink-0 mt-1" />
-        <div>
-          <p className="text-base text-foreground/90 italic leading-relaxed">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 w-full funnel-card border-primary/20 bg-primary/5">
+        <img src={mentorPhoto} alt="Especialista" className="w-14 h-14 rounded-full object-cover border-2 border-primary/40 shrink-0" />
+        <div className="text-center sm:text-left">
+          <p className="text-sm sm:text-base text-foreground/90 italic leading-relaxed">
             "{firstName ? `${firstName}, se` : "Se"} você chegou até aqui, é porque realmente quer mudar sua vida financeira. Eu vou te acompanhar pessoalmente nessa jornada. Você não vai estar sozinho."
           </p>
           <p className="text-muted-foreground text-xs mt-2 not-italic font-medium">— Ricardo Almeida, criador do método</p>
@@ -488,7 +490,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       {/* ═══ PRICE ANCHOR ═══ */}
       <div className="w-full funnel-card border-accent/30 bg-card text-center space-y-3">
         <p className="text-sm text-muted-foreground">De <span className="line-through">R$297,00</span> por apenas:</p>
-        <p className="text-6xl font-display font-bold text-foreground">
+        <p className="text-5xl sm:text-6xl font-display font-bold text-foreground">
           R$<span className="text-gradient-green">66</span>
         </p>
         <p className="text-base text-muted-foreground">ou 12x de R$6,58 no cartão</p>
@@ -544,14 +546,14 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       {/* ═══ GUARANTEE ═══ */}
       <div className="w-full funnel-card border-accent/30 bg-accent/5 space-y-4">
-        <div className="flex items-center gap-4">
-          <img src={guaranteeSeal} alt="Garantia 30 dias" className="w-20 h-20 shrink-0 object-contain" />
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 text-center sm:text-left">
+          <img src={guaranteeSeal} alt="Garantia 30 dias" className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 object-contain" />
           <div>
-            <h3 className="font-display text-lg font-bold text-foreground">Garantia Incondicional de 30 Dias</h3>
+            <h3 className="font-display text-base sm:text-lg font-bold text-foreground">Garantia Incondicional de 30 Dias</h3>
             <p className="text-sm text-muted-foreground mt-1">Risco zero para você.</p>
           </div>
         </div>
-        <p className="text-base text-foreground/85 leading-relaxed">
+        <p className="text-sm sm:text-base text-foreground/85 leading-relaxed">
           Se nos próximos 30 dias você sentir que o método não é para você, basta enviar uma mensagem e devolvemos <strong>100% do seu dinheiro</strong>. Sem perguntas, sem burocracia, sem letras miúdas. Simples assim.
         </p>
         <p className="text-sm text-primary font-semibold">

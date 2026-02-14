@@ -43,11 +43,11 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
         <img
           src={mentorPhoto}
           alt="Especialista Ricardo"
-          className="w-14 h-14 rounded-full object-cover border-2 border-primary/40 shrink-0"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-primary/40 shrink-0"
         />
-        <div>
-          <p className="font-bold text-foreground text-base">Ricardo Almeida</p>
-          <p className="text-sm text-muted-foreground">Especialista em Renda Digital</p>
+        <div className="min-w-0">
+          <p className="font-bold text-foreground text-sm sm:text-base">Ricardo Almeida</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Especialista em Renda Digital</p>
         </div>
       </div>
 
