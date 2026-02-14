@@ -149,8 +149,9 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
 
   const getTriedLabel = (t?: string) => {
     const map: Record<string, string> = {
-      sim_resultado: "✅ Sim, com resultado", sim_sem: "⚠️ Sim, sem resultado",
-      nao: "🆕 Primeira vez",
+      sim_falhou: "⚠️ Sim, sem resultado",
+      sim_experiencia: "✅ Sim, com resultado",
+      nunca: "🆕 Primeira vez",
     };
     return map[t || ""] || "—";
   };
@@ -265,56 +266,55 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
   );
 };
 
-/* ─── Age-aware story ages helper ─── */
-const getAgeRange = (age?: string): { min: number; max: number; label: string } => {
-  const map: Record<string, { min: number; max: number; label: string }> = {
-    "18-25": { min: 19, max: 26, label: "jovens como você" },
-    "26-35": { min: 27, max: 36, label: "da sua faixa etária" },
-    "36-45": { min: 37, max: 46, label: "na casa dos 30 e 40" },
-    "46-55": { min: 44, max: 56, label: "acima dos 40" },
-    "56+": { min: 53, max: 62, label: "acima dos 50" },
-  };
-  return map[age || ""] || map["46-55"];
+/* ─── Fixed age sets per age group (no randomness) ─── */
+const AGE_SETS: Record<string, [string, string, string]> = {
+  "18-25": ["22", "24", "21"],
+  "26-35": ["29", "33", "31"],
+  "36-45": ["38", "42", "40"],
+  "46-55": ["48", "52", "50"],
+  "56+":   ["57", "60", "55"],
 };
 
-const randomAge = (min: number, max: number) => String(Math.floor(min + (max - min) * Math.random()));
+const getFixedAges = (age?: string): [string, string, string] => {
+  return AGE_SETS[age || ""] || AGE_SETS["46-55"];
+};
 
 /* ─── People Like You (dynamic social proof) ─── */
 const PeopleLikeYou = ({ answers }: { answers?: QuizAnswers }) => {
-  const ageRange = getAgeRange(answers?.age);
+  const ages = getFixedAges(answers?.age);
 
   const getObstacleContext = (obstacle?: string) => {
     const map: Record<string, { hook: string; stories: { name: string; age: string; avatar: string; text: string; result: string }[] }> = {
       medo: {
         hook: "também tinham medo de cair em golpe — até que arriscaram uma última vez:",
         stories: [
-          { name: "José Almeida", age: randomAge(ageRange.min, ageRange.max), avatar: avatarAntonio, result: "R$147/dia", text: "Já tinha perdido dinheiro duas vezes. Quase não entrei. Mas quando caiu o primeiro Pix, eu chorei. Não de alegria — de alívio." },
-          { name: "Cláudia Reis", age: randomAge(ageRange.min, ageRange.max), avatar: avatarClaudia, result: "R$89/dia", text: "Minha filha insistiu. Eu dizia que era golpe. Entrei desconfiada. Quando vi o resultado na primeira semana, pedi desculpas pra ela." },
-          { name: "Marcos Oliveira", age: randomAge(ageRange.min, ageRange.max), avatar: avatarCarlos, result: "R$210/dia", text: "Perdi meu emprego e ninguém contrata. Quando vi que dava pra fazer do celular, sem aparecer... mudou tudo." },
+          { name: "José Almeida", age: ages[0], avatar: avatarAntonio, result: "R$147/dia", text: "Já tinha perdido dinheiro duas vezes. Quase não entrei. Mas quando caiu o primeiro Pix, eu chorei. Não de alegria — de alívio." },
+          { name: "Cláudia Reis", age: ages[1], avatar: avatarClaudia, result: "R$89/dia", text: "Minha filha insistiu. Eu dizia que era golpe. Entrei desconfiada. Quando vi o resultado na primeira semana, pedi desculpas pra ela." },
+          { name: "Marcos Oliveira", age: ages[2], avatar: avatarCarlos, result: "R$210/dia", text: "Perdi meu emprego e ninguém contrata. Quando vi que dava pra fazer do celular, sem aparecer... mudou tudo." },
         ],
       },
       tempo: {
         hook: "também achavam que não tinham tempo — até descobrirem que 10 minutos bastam:",
         stories: [
-          { name: "Roberto Lima", age: randomAge(ageRange.min, ageRange.max), avatar: avatarCarlos, result: "R$180/dia", text: "Trabalho o dia inteiro. Faço tudo em 10 minutos antes de dormir. Minha esposa nem acredita que gera renda." },
-          { name: "Sandra Costa", age: randomAge(ageRange.min, ageRange.max), avatar: avatarClaudia, result: "R$95/dia", text: "Meu tempo livre é zero. Opero no intervalo do almoço e já não dependo de ninguém." },
-          { name: "Paulo Mendes", age: randomAge(ageRange.min, ageRange.max), avatar: avatarAntonio, result: "R$230/dia", text: "Achava que ia ser mais uma coisa estressante. Levo menos tempo que assistir uma novela." },
+          { name: "Roberto Lima", age: ages[0], avatar: avatarCarlos, result: "R$180/dia", text: "Trabalho o dia inteiro. Faço tudo em 10 minutos antes de dormir. Minha esposa nem acredita que gera renda." },
+          { name: "Sandra Costa", age: ages[1], avatar: avatarClaudia, result: "R$95/dia", text: "Meu tempo livre é zero. Opero no intervalo do almoço e já não dependo de ninguém." },
+          { name: "Paulo Mendes", age: ages[2], avatar: avatarAntonio, result: "R$230/dia", text: "Achava que ia ser mais uma coisa estressante. Levo menos tempo que assistir uma novela." },
         ],
       },
       inicio: {
         hook: "também se sentiam completamente perdidos — até receberem o suporte certo:",
         stories: [
-          { name: "José Almeida", age: randomAge(ageRange.min, ageRange.max), avatar: avatarAntonio, result: "R$147/dia", text: "Nunca mexi com nada online. O suporte me pegou pela mão. Hoje opero sozinho." },
-          { name: "Cláudia Reis", age: randomAge(ageRange.min, ageRange.max), avatar: avatarClaudia, result: "R$89/dia", text: "Tinha medo de apertar o botão errado. O suporte respondeu cada dúvida. Em 3 dias já tava fazendo sozinha." },
-          { name: "Marcos Oliveira", age: randomAge(ageRange.min, ageRange.max), avatar: avatarCarlos, result: "R$210/dia", text: "Me sentia burro. Mas aqui ninguém te julga. Te ensinam quantas vezes precisar. Hoje eu ajudo os novatos." },
+          { name: "José Almeida", age: ages[0], avatar: avatarAntonio, result: "R$147/dia", text: "Nunca mexi com nada online. O suporte me pegou pela mão. Hoje opero sozinho." },
+          { name: "Cláudia Reis", age: ages[1], avatar: avatarClaudia, result: "R$89/dia", text: "Tinha medo de apertar o botão errado. O suporte respondeu cada dúvida. Em 3 dias já tava fazendo sozinha." },
+          { name: "Marcos Oliveira", age: ages[2], avatar: avatarCarlos, result: "R$210/dia", text: "Me sentia burro. Mas aqui ninguém te julga. Te ensinam quantas vezes precisar. Hoje eu ajudo os novatos." },
         ],
       },
       dinheiro: {
         hook: "também achavam que precisavam de muito dinheiro — e se surpreenderam:",
         stories: [
-          { name: "Roberto Lima", age: randomAge(ageRange.min, ageRange.max), avatar: avatarCarlos, result: "R$180/dia", text: "Achei que precisava de milhares. Quando vi que dava pra começar com pouco, entendi que era pra gente como eu." },
-          { name: "Sandra Costa", age: randomAge(ageRange.min, ageRange.max), avatar: avatarClaudia, result: "R$95/dia", text: "Tava devendo o cartão. Juntei o pouco que tinha e arrisquei. No terceiro dia já tinha recuperado tudo." },
-          { name: "Paulo Mendes", age: randomAge(ageRange.min, ageRange.max), avatar: avatarAntonio, result: "R$230/dia", text: "Em uma semana já tava no positivo. Hoje vivo tranquilo." },
+          { name: "Roberto Lima", age: ages[0], avatar: avatarCarlos, result: "R$180/dia", text: "Achei que precisava de milhares. Quando vi que dava pra começar com pouco, entendi que era pra gente como eu." },
+          { name: "Sandra Costa", age: ages[1], avatar: avatarClaudia, result: "R$95/dia", text: "Tava devendo o cartão. Juntei o pouco que tinha e arrisquei. No terceiro dia já tinha recuperado tudo." },
+          { name: "Paulo Mendes", age: ages[2], avatar: avatarAntonio, result: "R$230/dia", text: "Em uma semana já tava no positivo. Hoje vivo tranquilo." },
         ],
       },
     };
@@ -591,11 +591,11 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
     { question: "Preciso investir mais dinheiro depois?", answer: "Não. O método ensina a gerar renda sem investimento. O único valor é R$" + formatPrice(pricing.price) + ". Depois disso, tudo que ganhar é lucro líquido." },
   ];
 
-  const ageRange = getAgeRange(answers?.age);
+  const fixedAges = getFixedAges(answers?.age);
   const testimonials = [
-    { name: "Sebastião Moreira", age: `${randomAge(ageRange.min, ageRange.max)} anos`, city: "Manaus, AM", avatar: avatarJose, text: "Minha renda não cobria o aluguel. Vivia contando moeda. Hoje tenho uma renda extra que me devolveu a dignidade de não precisar pedir nada a ninguém.", result: "R$147/dia" },
-    { name: "Regina Aparecida", age: `${randomAge(ageRange.min, ageRange.max)} anos`, city: "Campinas, SP", avatar: avatarRegina, text: "Fui demitida depois de anos. Com dois filhos, o desespero bateu. Em duas semanas já tinha pagado a conta de luz que tava cortada.", result: "R$210/dia" },
-    { name: "Luciana Borges", age: `${randomAge(ageRange.min, ageRange.max)} anos`, city: "Fortaleza, CE", avatar: avatarLucia, text: "Meu marido ria de mim quando disse que ia ganhar dinheiro pelo celular. Hoje ele me pede pra ensinar. Marcamos a viagem que sonhávamos há anos.", result: "R$180/dia" },
+    { name: "Sebastião Moreira", age: `${fixedAges[0]} anos`, city: "Manaus, AM", avatar: avatarJose, text: "Minha renda não cobria o aluguel. Vivia contando moeda. Hoje tenho uma renda extra que me devolveu a dignidade de não precisar pedir nada a ninguém.", result: "R$147/dia" },
+    { name: "Regina Aparecida", age: `${fixedAges[1]} anos`, city: "Campinas, SP", avatar: avatarRegina, text: "Fui demitida depois de anos. Com dois filhos, o desespero bateu. Em duas semanas já tinha pagado a conta de luz que tava cortada.", result: "R$210/dia" },
+    { name: "Luciana Borges", age: `${fixedAges[2]} anos`, city: "Fortaleza, CE", avatar: avatarLucia, text: "Meu marido ria de mim quando disse que ia ganhar dinheiro pelo celular. Hoje ele me pede pra ensinar. Marcamos a viagem que sonhávamos há anos.", result: "R$180/dia" },
   ];
 
   return (
