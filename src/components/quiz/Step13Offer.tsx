@@ -157,6 +157,177 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
   );
 };
 
+/* ─── People Like You ─── */
+const PeopleLikeYou = ({ answers }: { answers?: QuizAnswers }) => {
+  const getAgePeople = (age?: string) => {
+    const data: Record<string, { name: string; age: string; result: string; avatar: string }[]> = {
+      "56+": [
+        { name: "José Almeida", age: "61", result: "R$147/dia em 2 semanas", avatar: avatarAntonio },
+        { name: "Cláudia Reis", age: "58", result: "R$89/dia no primeiro mês", avatar: avatarClaudia },
+        { name: "Marcos Oliveira", age: "63", result: "R$210/dia após 3 semanas", avatar: avatarCarlos },
+      ],
+      "46-55": [
+        { name: "Roberto Lima", age: "52", result: "R$180/dia em 10 dias", avatar: avatarCarlos },
+        { name: "Sandra Costa", age: "49", result: "R$95/dia no primeiro mês", avatar: avatarClaudia },
+        { name: "Paulo Mendes", age: "54", result: "R$230/dia após 2 semanas", avatar: avatarAntonio },
+      ],
+    };
+    return data[age || ""] || data["56+"];
+  };
+
+  const getObstacleMessage = (obstacle?: string) => {
+    const map: Record<string, string> = {
+      money: "também achavam que não tinham dinheiro para investir",
+      time: "também tinham pouco tempo disponível",
+      knowledge: "também não tinham experiência com tecnologia",
+      trust: "também já tinham sido enganados antes",
+      age: "também achavam que já tinham passado da idade",
+    };
+    return map[obstacle || ""] || "tinham os mesmos desafios que você";
+  };
+
+  const people = getAgePeople(answers?.age);
+
+  return (
+    <div className="w-full funnel-card border-primary/15 space-y-4">
+      <h3 className="font-display text-lg font-bold text-foreground text-center leading-snug">
+        Pessoas com o <span className="text-gradient-green">mesmo perfil que você</span> já estão tendo resultados
+      </h3>
+      <p className="text-sm text-muted-foreground text-center">
+        Esses alunos {getObstacleMessage(answers?.obstacle)} — e hoje ganham renda extra todos os dias:
+      </p>
+      <div className="space-y-3">
+        {people.map((p, i) => (
+          <div key={i} className="flex items-center gap-3 bg-secondary/50 rounded-xl p-3">
+            <img src={p.avatar} alt={p.name} className="w-10 h-10 rounded-full object-cover border border-primary/30" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">{p.name}, {p.age} anos</p>
+              <p className="text-xs text-muted-foreground">{getObstacleMessage(answers?.obstacle)}</p>
+            </div>
+            <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-full whitespace-nowrap">{p.result}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ─── Earnings Projection ─── */
+const EarningsProjection = ({ answers, firstName }: { answers?: QuizAnswers; firstName: string }) => {
+  const getGoalValues = (goal?: string) => {
+    const map: Record<string, { daily: number; label: string }> = {
+      "50-100": { daily: 75, label: "R$50 a R$100" },
+      "100-200": { daily: 150, label: "R$100 a R$200" },
+      "200-300": { daily: 250, label: "R$200 a R$300" },
+      "300+": { daily: 350, label: "Mais de R$300" },
+    };
+    return map[goal || ""] || { daily: 150, label: "R$100 a R$200" };
+  };
+
+  const { daily } = getGoalValues(answers?.incomeGoal);
+  const projections = [
+    { period: "Semana 1", value: Math.round(daily * 0.3), bar: 15 },
+    { period: "Semana 2", value: Math.round(daily * 0.5), bar: 30 },
+    { period: "Mês 1", value: Math.round(daily * 0.7 * 30), bar: 55 },
+    { period: "Mês 2", value: Math.round(daily * 0.85 * 30), bar: 75 },
+    { period: "Mês 3", value: Math.round(daily * 1 * 30), bar: 100 },
+  ];
+
+  return (
+    <div className="w-full funnel-card border-primary/20 bg-card space-y-4">
+      <h3 className="font-display text-lg font-bold text-foreground text-center leading-snug">
+        {firstName ? `${firstName}, essa` : "Essa"} é sua <span className="text-gradient-green">projeção de ganhos</span>
+      </h3>
+      <p className="text-xs text-muted-foreground text-center">
+        Baseado na sua meta e disponibilidade informada no teste:
+      </p>
+      <div className="space-y-3">
+        {projections.map((p, i) => (
+          <div key={i} className="space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">{p.period}</span>
+              <span className="text-sm font-bold text-foreground">R${p.value.toLocaleString("pt-BR")}</span>
+            </div>
+            <div className="w-full h-3 bg-secondary rounded-full overflow-hidden">
+              <div
+                className="h-full progress-bar-fill rounded-full transition-all duration-1000 ease-out"
+                style={{ width: `${p.bar}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="bg-accent/10 rounded-xl p-3 border border-accent/20 text-center">
+        <p className="text-sm text-foreground">
+          <span className="font-bold text-accent">Potencial em 90 dias:</span>{" "}
+          até R${(daily * 30).toLocaleString("pt-BR")}/mês de renda extra
+        </p>
+      </div>
+      <p className="text-[11px] text-muted-foreground/60 text-center">
+        *Projeção baseada na média de resultados dos alunos com perfil semelhante. Resultados podem variar.
+      </p>
+    </div>
+  );
+};
+
+/* ─── WhatsApp Welcome Preview ─── */
+const WhatsAppWelcome = ({ firstName }: { firstName: string }) => {
+  const name = firstName || "Aluno(a)";
+  return (
+    <div className="w-full space-y-3">
+      <h3 className="font-display text-lg font-bold text-foreground text-center leading-snug">
+        Essa será sua <span className="text-gradient-green">mensagem de boas-vindas</span> no WhatsApp
+      </h3>
+      <p className="text-sm text-muted-foreground text-center">
+        Assim que confirmar seu acesso, você recebe isso no seu celular:
+      </p>
+      <div className="rounded-xl overflow-hidden border border-border shadow-xl" style={{ backgroundColor: "#111b21" }}>
+        {/* WhatsApp header */}
+        <div className="bg-[#1f2c34] px-3 py-2 flex items-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#aebac1"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" transform="rotate(180 12 12)"/></svg>
+          <img src={mentorPhoto} alt="Suporte" className="w-8 h-8 rounded-full object-cover" />
+          <div>
+            <p className="text-[#e9edef] text-sm font-normal">Suporte Alfa Híbrida</p>
+            <p className="text-[#8696a0] text-[11px]">online</p>
+          </div>
+        </div>
+        {/* Messages */}
+        <div className="px-3 py-3 space-y-1" style={{ backgroundColor: "#0b141a" }}>
+          <div className="flex justify-center mb-2">
+            <span className="bg-[#182229] text-[#8696a0] text-[11px] px-3 py-1 rounded-lg">HOJE</span>
+          </div>
+          {[
+            `Olá ${name}! Seja muito bem-vindo(a) à família Alfa Híbrida!`,
+            `Meu nome é Ana e vou ser sua mentora pessoal nos próximos dias.`,
+            `Já liberei seu acesso completo à plataforma. Vou te mandar o link agora.`,
+            `Qualquer dúvida, pode me chamar aqui a qualquer hora. Estou aqui pra te ajudar em cada passo.`,
+            `Vamos juntos! Amanhã já quero ver seu primeiro resultado!`,
+          ].map((text, i) => (
+            <div key={i} className="flex justify-start mb-[3px]">
+              <div className="max-w-[85%] bg-[#202c33] text-[#e9edef] px-[9px] py-[6px] rounded-[7.5px] rounded-tl-none text-[14px] leading-[19px]">
+                <span>{text}</span>
+                <span className="text-[11px] text-[#ffffff99] ml-2 float-right mt-[3px]">09:01</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Input */}
+        <div className="bg-[#1f2c34] px-2 py-2 flex items-center gap-2">
+          <div className="flex-1 bg-[#2a3942] rounded-full px-4 py-2">
+            <span className="text-[#8696a0] text-sm">Mensagem</span>
+          </div>
+          <div className="w-9 h-9 rounded-full bg-[#00a884] flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+          </div>
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground text-center italic">
+        O suporte real estará te esperando assim que você confirmar seu acesso
+      </p>
+    </div>
+  );
+};
+
 /* ─── Main Component ─── */
 const Step13Offer = ({ userName, answers }: Step13Props) => {
   const [showCTA, setShowCTA] = useState(false);
@@ -218,6 +389,9 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       {/* ═══ PROFILE ANALYSIS ═══ */}
       <ProfileAnalysis answers={answers} firstName={firstName} />
 
+      {/* ═══ PESSOAS COMO VOCÊ ═══ */}
+      <PeopleLikeYou answers={answers} />
+
       {/* ═══ HEADLINE ═══ */}
       <div className="text-center space-y-3">
         <h2 className="font-display text-2xl font-bold text-foreground leading-snug">
@@ -242,6 +416,9 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           <p className="text-muted-foreground text-xs mt-2 not-italic font-medium">— Ricardo Almeida, criador do método</p>
         </div>
       </div>
+
+      {/* ═══ EARNINGS PROJECTION ═══ */}
+      <EarningsProjection answers={answers} firstName={firstName} />
 
       {/* ═══ CTA 1 ═══ */}
       <CTABlock showCTA={showCTA} />
@@ -435,6 +612,11 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           <FAQItem key={i} {...faq} />
         ))}
       </div>
+
+      <Divider />
+
+      {/* ═══ WHATSAPP WELCOME PREVIEW ═══ */}
+      <WhatsAppWelcome firstName={firstName} />
 
       <Divider />
 
