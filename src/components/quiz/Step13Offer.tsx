@@ -191,9 +191,9 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
     { question: "Preciso ter experiência com internet?", answer: "Não. O método foi criado especialmente para pessoas que nunca fizeram nada online. Tudo é explicado do zero, passo a passo, com vídeos simples e suporte humano para te ajudar." },
     { question: "Funciona pelo celular mesmo?", answer: "Sim, 100%. A maioria dos nossos alunos usa apenas o celular. Não precisa de computador, não precisa de internet rápida. Se você consegue usar o WhatsApp, consegue usar a plataforma." },
     { question: "Em quanto tempo vejo resultado?", answer: "Muitos alunos fazem a primeira operação e veem resultado no mesmo dia. O método foi desenhado para gerar renda no curto prazo, não em meses ou anos." },
-    { question: "E se eu não gostar? Perco meu dinheiro?", answer: "De jeito nenhum. Você tem 7 dias de garantia total. Se por qualquer motivo não gostar ou achar que não é pra você, devolvemos 100% do valor. Sem perguntas, sem burocracia." },
+    { question: "E se eu não gostar? Perco meu dinheiro?", answer: "De jeito nenhum. Você tem 30 dias de garantia total. Se por qualquer motivo não gostar ou achar que não é pra você, devolvemos 100% do valor. Sem perguntas, sem burocracia." },
     { question: "R$66 é o preço final? Tem alguma taxa escondida?", answer: "R$66 é o valor total. Não existe mensalidade, não existe taxa extra, não existe venda dentro da plataforma. Você paga uma vez e tem acesso completo a tudo." },
-    { question: "É golpe? Já fui enganado antes na internet.", answer: "Entendemos sua desconfiança. Por isso oferecemos garantia de 7 dias, suporte humano real pelo WhatsApp, e mais de 36.000 alunos ativos. Você pode testar sem risco nenhum." },
+    { question: "É golpe? Já fui enganado antes na internet.", answer: "Entendemos sua desconfiança. Por isso oferecemos garantia de 30 dias, suporte humano real pelo WhatsApp, e mais de 36.000 alunos ativos. Você pode testar sem risco nenhum." },
     { question: "Preciso investir mais dinheiro depois?", answer: "Não. O método ensina a gerar renda sem investimento inicial. O único valor é o da plataforma (R$66). Depois disso, tudo o que você ganhar é lucro." },
   ];
 
@@ -334,7 +334,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           },
           {
             objection: '"Já fui enganado antes na internet..."',
-            response: "Entendemos sua desconfiança. Por isso você tem 7 dias pra testar sem risco. Se não gostar, devolvemos cada centavo. Sem perguntas.",
+            response: "Entendemos sua desconfiança. Por isso você tem 30 dias pra testar sem risco. Se não gostar, devolvemos cada centavo. Sem perguntas.",
           },
           {
             objection: '"Não tenho dinheiro sobrando..."',
@@ -357,14 +357,14 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       {/* ═══ GUARANTEE ═══ */}
       <div className="w-full funnel-card border-accent/30 bg-accent/5 space-y-4">
         <div className="flex items-center gap-4">
-          <img src={guaranteeSeal} alt="Garantia 7 dias" className="w-20 h-20 shrink-0 object-contain" />
+          <img src={guaranteeSeal} alt="Garantia 30 dias" className="w-20 h-20 shrink-0 object-contain" />
           <div>
-            <h3 className="font-display text-lg font-bold text-foreground">Garantia Incondicional de 7 Dias</h3>
+            <h3 className="font-display text-lg font-bold text-foreground">Garantia Incondicional de 30 Dias</h3>
             <p className="text-sm text-muted-foreground mt-1">Risco zero para você.</p>
           </div>
         </div>
         <p className="text-base text-foreground/85 leading-relaxed">
-          Se nos próximos 7 dias você sentir que o método não é para você, basta enviar uma mensagem e devolvemos <strong>100% do seu dinheiro</strong>. Sem perguntas, sem burocracia, sem letras miúdas. Simples assim.
+          Se nos próximos 30 dias você sentir que o método não é para você, basta enviar uma mensagem e devolvemos <strong>100% do seu dinheiro</strong>. Sem perguntas, sem burocracia, sem letras miúdas. Simples assim.
         </p>
         <p className="text-sm text-primary font-semibold">
           Você literalmente não tem nada a perder.
@@ -455,7 +455,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         {/* ═══ FINAL CTA ═══ */}
         <CTABlock showCTA={showCTA} />
 
-        <TrustBadge>Pagamento 100% seguro · Garantia de 7 dias · Suporte em português</TrustBadge>
+        <TrustBadge>Pagamento 100% seguro · Garantia de 30 dias · Suporte em português</TrustBadge>
 
         <div className="flex flex-wrap justify-center gap-3 opacity-60 pt-2">
           {["Visa", "Mastercard", "Pix", "Boleto", "Elo"].map((b) => (
