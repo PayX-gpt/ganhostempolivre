@@ -21,24 +21,24 @@ const ageOptions = [
 
 const feedbackMessages: Record<string, { title: string; message: string }> = {
   "18 a 25 anos": {
-    title: "Excelente escolha começar cedo!",
-    message: "A maioria das pessoas só descobre esse método depois dos 40. Você está saindo na frente. Nosso sistema foi feito para ser simples — independente da sua experiência. Vamos juntos nessa!",
+    title: "Olha, pouca gente começa tão cedo.",
+    message: "E isso é bom pra você. Enquanto a maioria só descobre isso lá pelos 40, depois de muito perrengue, você tem a chance de construir essa base agora. O sistema é tão simples que a idade nem importa — o que importa é dar o primeiro passo. E você já tá dando.",
   },
   "26 a 35 anos": {
-    title: "Essa é uma fase poderosa!",
-    message: "Você está na fase ideal para construir uma renda extra que cresce com o tempo. Nosso sistema aproveita a inteligência artificial para fazer o trabalho pesado — você só precisa dedicar alguns minutos por dia.",
+    title: "Fase boa pra construir algo sólido.",
+    message: "Você tá naquele ponto da vida onde ainda dá tempo de montar uma renda extra antes de realmente precisar dela. A maioria das pessoas só corre atrás quando a água bate no pescoço. Você tá se antecipando — e isso faz toda a diferença.",
   },
   "36 a 45 anos": {
-    title: "Sua experiência é uma vantagem!",
-    message: "Com a maturidade que você já tem, aprender o método vai ser mais fácil do que imagina. Nosso sistema é diferente porque não exige conhecimento técnico — a tecnologia trabalha por você.",
+    title: "Sabe o que faz diferença na sua idade?",
+    message: "Você já passou por muita coisa. Já viu promessa que não se cumpriu. E é exatamente por isso que esse sistema funciona tão bem pra quem tem sua vivência — porque ele não pede que você acredite cegamente. Ele te mostra o resultado primeiro. Você decide depois.",
   },
   "46 a 55 anos": {
-    title: "Você está no perfil ideal!",
-    message: "Sabia que a maioria dos nossos alunos com melhores resultados tem entre 46 e 55 anos? Sua experiência de vida é uma vantagem real. O sistema foi desenhado pensando em pessoas como você — simples, direto e sem complicação.",
+    title: "Você tá exatamente no perfil que mais gera resultado aqui.",
+    message: "Não é papo de venda, é estatística. As pessoas entre 46 e 55 anos são as que mais se dedicam e mais colhem resultado. Sabe por quê? Porque não tão atrás de ficarem ricas da noite pro dia. Querem pagar as contas com dignidade. E é isso que o sistema entrega.",
   },
   "56 anos ou mais": {
-    title: "Sua sabedoria é o seu maior ativo!",
-    message: "Mais de 60% dos nossos alunos acima de 56 anos nunca tinham usado tecnologia para ganhar dinheiro. Mesmo assim, conseguiram resultados reais na primeira semana. Nosso sistema faz o trabalho pesado — você só acompanha.",
+    title: "Deixa eu te falar uma coisa com sinceridade.",
+    message: "Muita gente na sua faixa de idade acha que 'já passou da hora'. Mas os nossos melhores resultados vêm justamente de pessoas com 56, 60, 65 anos. Gente que nunca mexeu com nada online — mas que seguiu o passo a passo e hoje dorme tranquila sabendo que tem uma renda entrando todo dia.",
   },
 };
 

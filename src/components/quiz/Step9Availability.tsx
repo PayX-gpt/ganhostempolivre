@@ -11,20 +11,20 @@ const getFeedback = (answer: string, name?: string) => {
   const n = name || "você";
   const messages: Record<string, { title: string; message: string }> = {
     menos30: {
-      title: `${n}, isso já é mais que suficiente!`,
-      message: `Nosso sistema foi criado justamente para quem tem pouco tempo. Em menos de 30 minutos, a IA já analisa, identifica e executa as melhores oportunidades. ${n} só precisa dar uma olhada e confirmar — é como ter um assistente trabalhando por você.`,
+      title: `${n}, quer saber a verdade?`,
+      message: `Menos de 30 minutos é mais do que a maioria dos nossos alunos com resultado usa. Tem gente que dedica 10 minutos antes de dormir e acorda com dinheiro na conta. Não tô exagerando. A IA trabalha o dia inteiro — você só precisa de alguns minutos pra acompanhar o que ela já fez.`,
     },
     "30-60": {
-      title: `Tempo ideal, ${n}!`,
-      message: `Com 30 minutos a 1 hora por dia, ${n} consegue acompanhar tudo com calma e ainda aprender como o sistema funciona nos bastidores. É o tempo perfeito para quem quer segurança e consistência nos resultados.`,
+      title: `${n}, esse tempo é ouro.`,
+      message: `Com meia hora a uma hora, você consegue não só acompanhar os resultados, mas entender por que eles tão acontecendo. Isso gera confiança. E confiança gera consistência. É exatamente a faixa de tempo que a maioria dos nossos alunos mais satisfeitos dedica.`,
     },
     "1-2h": {
-      title: `${n}, você vai voar com esse tempo!`,
-      message: `Com 1 a 2 horas disponíveis, ${n} consegue não só operar, mas entender profundamente como a IA toma decisões. Isso acelera demais seus resultados — nossos alunos com esse tempo disponível atingem as metas mais rápido.`,
+      title: `${n}, com esse tempo você vai longe.`,
+      message: `Quem dedica 1 a 2 horas consegue ir além do básico. Dá pra entender como a IA pensa, otimizar suas operações, e acelerar os resultados. Nossos alunos nessa faixa costumam ser os que atingem as metas mais rápido — simplesmente porque têm tempo de absorver o processo.`,
     },
     "2h+": {
-      title: `Impressionante, ${n}!`,
-      message: `Com mais de 2 horas por dia, ${n} tem potencial para resultados acima da média. Nosso sistema escala com você — quanto mais tempo dedicar, mais oportunidades a IA identifica e mais ${n} aprende a otimizar seus ganhos.`,
+      title: `${n}, eu vou ser honesto.`,
+      message: `Com mais de 2 horas por dia, você tem mais tempo disponível do que a maioria dos nossos alunos. E isso é uma vantagem real. Mas aqui vai um conselho: não precisa usar tudo de uma vez. Comece com calma, ganhe confiança, e aumente aos poucos. O sistema acompanha seu ritmo.`,
     },
   };
   return messages[answer];

@@ -12,23 +12,23 @@ const getObstacleMessages = (name?: string) => {
   return {
     medo: {
       icon: <Heart className="w-8 h-8 text-accent" />,
-      title: `${n}, nós entendemos você.`,
-      message: `Saiba que 7 em cada 10 dos nossos melhores alunos sentiam exatamente o mesmo medo. Eles já tinham perdido dinheiro antes, já tinham desconfiado de tudo... mas nosso sistema é diferente porque a IA faz o trabalho pesado — ${n}, você nunca opera no escuro. Cada decisão é guiada pela tecnologia.`,
+      title: `${n}, eu sei exatamente o que você tá sentindo.`,
+      message: `Já perdeu dinheiro, já se sentiu enganado, e agora qualquer coisa nova parece golpe. Faz sentido desconfiar. Mas deixa eu te contar: 7 em cada 10 dos nossos melhores alunos estavam exatamente onde você tá agora. Mesma desconfiança, mesmo medo. A diferença? Eles decidiram dar mais uma chance — mas dessa vez, com uma tecnologia que não depende de sorte, de guru, nem de promessa. A IA mostra o caminho. Você decide se segue.`,
     },
     tempo: {
       icon: <Clock className="w-8 h-8 text-accent" />,
-      title: `${n}, sua rotina é corrida — e tudo bem.`,
-      message: `A maioria dos nossos alunos trabalha o dia todo, cuida da casa e da família. Por isso, nosso sistema foi criado para funcionar com apenas 10 minutos por dia. A IA trabalha enquanto ${n} vive a vida — e você só acompanha quando puder.`,
+      title: `${n}, você trabalha o dia todo. Eu sei.`,
+      message: `Chega em casa cansado, tem mil coisas pra resolver, e a última coisa que quer é mais uma obrigação. Por isso que esse sistema não foi feito pra tomar seu tempo. São 10 minutos. Literalmente. Pode ser antes de dormir, no intervalo do almoço, enquanto espera o café. A IA trabalha o dia inteiro — você só dá uma olhada quando puder.`,
     },
     inicio: {
       icon: <Compass className="w-8 h-8 text-accent" />,
-      title: `${n}, é normal se sentir assim.`,
-      message: `Muita gente chega até aqui se sentindo perdida com tanta informação. Nosso sistema é diferente porque é 100% passo a passo — ${n} nunca fica sozinho(a) e nunca fica perdido(a). A tecnologia guia cada etapa automaticamente.`,
+      title: `${n}, todo mundo começa sem saber nada.`,
+      message: `A internet tá cheia de informação — e isso paralisa. Você não sabe em quem confiar, não sabe por onde começar, e acaba não fazendo nada. Aqui é diferente. Não tem 500 vídeos pra assistir. É passo 1, passo 2, passo 3. Você segue a ordem, e o sistema te guia. Ninguém fica perdido porque não tem como se perder.`,
     },
     dinheiro: {
       icon: <Wallet className="w-8 h-8 text-accent" />,
-      title: `${n}, nós pensamos nisso por você.`,
-      message: `Entendemos que o dinheiro está curto. O investimento é mínimo e acessível — e muitos alunos como ${n} recuperaram o valor já nos primeiros dias. Nosso sistema foi desenhado para gerar retorno rápido, justamente porque sabemos que cada real conta.`,
+      title: `${n}, eu entendo. Cada real importa.`,
+      message: `Quando o dinheiro tá curto, qualquer gasto parece um risco enorme. E é mesmo. Por isso que o investimento aqui é mínimo — e muita gente recupera já nos primeiros dias. Não tô pedindo pra você apostar tudo. Tô te mostrando uma porta que milhares de pessoas na mesma situação que você já passaram — e do outro lado, encontraram uma tranquilidade que não tinham há anos.`,
     },
   };
 };

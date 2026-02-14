@@ -11,16 +11,16 @@ const getFeedback = (answer: string, name?: string) => {
   const n = name || "você";
   const messages: Record<string, { title: string; message: string }> = {
     sim_falhou: {
-      title: `${n}, isso não foi culpa sua.`,
-      message: `A maioria das "oportunidades" na internet são complicadas demais ou simplesmente não funcionam. Nosso sistema é diferente porque usa inteligência artificial de verdade — a mesma tecnologia das maiores empresas do mundo — adaptada para ser simples e acessível. Dessa vez, ${n}, vai ser diferente.`,
+      title: `${n}, eu preciso te dizer uma coisa.`,
+      message: `Se não deu certo antes, o problema não foi você. A internet tá cheia de coisa que parece boa e não entrega nada. Você tentou, perdeu tempo, talvez perdeu dinheiro — e ficou com aquele gosto amargo. Eu entendo. Mas o que eu vou te mostrar aqui é diferente de tudo que você já viu. Não depende de sorte, não depende de você saber mexer em nada. A tecnologia faz o trabalho. Você só acompanha.`,
     },
     sim_experiencia: {
-      title: `Ótimo, ${n}! Sua experiência conta muito.`,
-      message: `Quem já tem alguma noção de como a internet funciona consegue resultados ainda mais rápido com o nosso sistema. A diferença aqui é que a IA faz 90% do trabalho — você só precisa acompanhar e ajustar. Vamos potencializar o que você já sabe, ${n}.`,
+      title: `Bom, ${n}. Então você já sabe que funciona.`,
+      message: `A diferença é que até agora você provavelmente fez tudo sozinho, no braço. Aqui a inteligência artificial cuida de 90% do processo. Você já tem a base — agora imagina o que acontece quando você junta sua experiência com uma tecnologia que trabalha 24 horas sem parar? Os resultados aceleram de um jeito que você vai se perguntar por que não encontrou isso antes.`,
     },
     nunca: {
-      title: `${n}, isso é na verdade uma vantagem!`,
-      message: `Pode parecer estranho, mas quem nunca tentou nada costuma ter os melhores resultados. Sabe por quê? Porque não tem vícios de métodos antigos. Nosso sistema foi feito do zero para ser simples — qualquer pessoa consegue usar, mesmo sem experiência nenhuma.`,
+      title: `${n}, e sabe o que é curioso?`,
+      message: `Quem nunca tentou nada costuma ter os melhores resultados. Parece estranho, mas faz sentido: você não tem vícios, não tem aquele "ah, já sei como funciona". Você começa do zero, segue o passo a passo direitinho, e a coisa acontece. Não precisa entender de tecnologia. Se você sabe usar o WhatsApp, já sabe o suficiente.`,
     },
   };
   return messages[answer];

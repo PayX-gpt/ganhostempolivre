@@ -11,20 +11,20 @@ const getFeedback = (answer: string, name?: string) => {
   const n = name || "você";
   const messages: Record<string, { title: string; message: string }> = {
     "50-100": {
-      title: `${n}, essa meta é muito alcançável!`,
-      message: `R$50 a R$100 por dia pode parecer pouco, mas são R$1.500 a R$3.000 por mês — o suficiente para pagar contas com tranquilidade. Nosso sistema foi feito exatamente para entregar esse tipo de resultado de forma consistente, sem riscos desnecessários.`,
+      title: `Sabe o que são R$50 a R$100 por dia, ${n}?`,
+      message: `São R$1.500 a R$3.000 por mês. É aquele valor que paga a conta de luz, o mercado, o remédio — e ainda sobra pra você respirar. Não é sobre ficar rico. É sobre parar de apertar. E é exatamente isso que o sistema entrega pra maioria das pessoas que seguem o passo a passo.`,
     },
     "100-300": {
-      title: `Perfeito, ${n}! Essa é a meta mais comum.`,
-      message: `A maioria dos nossos alunos que atinge R$100 a R$300 por dia diz que foi o momento em que a vida mudou de verdade. É o valor que traz segurança real — e nosso sistema é calibrado para entregar isso com apenas alguns minutos por dia.`,
+      title: `${n}, essa faixa muda a vida de verdade.`,
+      message: `R$100 a R$300 por dia é quando a pessoa para de sobreviver e começa a viver. É a faixa onde a maioria dos nossos alunos diz: "agora eu durmo tranquilo". E o mais interessante? É totalmente alcançável com poucos minutos por dia. Não precisa largar o que faz hoje — é um complemento que faz diferença real.`,
     },
     "300-500": {
-      title: `${n}, você pensa grande — e isso é bom!`,
-      message: `R$300 a R$500 por dia é totalmente possível com dedicação. O diferencial do nosso sistema é que a inteligência artificial escala junto com você — quanto mais você opera, mais ela aprende e otimiza os resultados.`,
+      title: `${n}, você sabe o que quer. E isso é raro.`,
+      message: `R$300 a R$500 por dia exige um pouco mais de dedicação, mas é perfeitamente possível. A diferença é que aqui a tecnologia escala com você — conforme você ganha confiança, os resultados acompanham. Não é promessa vazia. É matemática: mais tempo no sistema, mais oportunidades a IA encontra.`,
     },
     "500+": {
-      title: `${n}, esse é um objetivo ambicioso — e realista!`,
-      message: `Temos alunos que ultrapassam R$500 por dia. A chave? Constância e confiança no sistema. A IA trabalha 24 horas para identificar as melhores oportunidades — você só precisa acompanhar e confirmar. Vamos construir isso juntos!`,
+      title: `${n}, vou ser direto com você.`,
+      message: `Mais de R$500 por dia não é pra todo mundo — mas é pra quem se dedica de verdade. Temos alunos nessa faixa, sim. E a maioria começou achando que R$100 já seria muito. O sistema vai crescendo com você. Primeiro a confiança vem, depois os resultados maiores vêm naturalmente.`,
     },
   };
   return messages[answer];
