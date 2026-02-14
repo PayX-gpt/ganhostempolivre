@@ -29,7 +29,7 @@ const CTABlock = ({ showCTA }: { showCTA: boolean }) =>
   showCTA ? (
     <div className="w-full space-y-3">
       <CTAButton onClick={() => window.open("#", "_blank")} variant="accent" className="animate-bounce-subtle text-xl">
-        GARANTIR MEU ACESSO POR R$66
+        ATIVAR MINHA CHAVE AGORA
       </CTAButton>
       <p className="text-xs text-muted-foreground text-center">
         Pagamento 100% seguro via cartão, Pix ou boleto
