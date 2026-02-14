@@ -61,7 +61,7 @@ const Step1Intro = ({ onNext }: Step1Props) => {
       {/* CTA */}
       <div className="w-full space-y-3">
         <CTAButton onClick={onNext} className="animate-bounce-subtle text-lg sm:text-xl">
-          QUERO VER COMO FUNCIONA →
+          INICIAR TESTE →
         </CTAButton>
         <div className="flex items-center gap-2 justify-center">
           <Lock className="w-3.5 h-3.5 text-primary shrink-0" />
