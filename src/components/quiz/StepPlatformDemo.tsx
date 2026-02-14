@@ -510,6 +510,14 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
         </div>
       </div>
 
+      {/* Skip / Continue button */}
+      <button
+        onClick={onNext}
+        className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4 cursor-pointer py-1"
+      >
+        Continuar sem testar →
+      </button>
+
       {showPopup && <GoalPopup onSubmit={handleGoalSubmit} userName={userName} />}
       {showGoalReached && <GoalReachedPopup goal={goal} profit={profit} onContinue={onNext} userName={userName} />}
       {notification && <NotificationToast text={notification} onDone={dismissNotification} />}
