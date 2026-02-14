@@ -588,7 +588,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           <p className="text-sm text-muted-foreground mt-1">Inclusos no seu acesso. Sem pagar nada a mais.</p>
         </div>
 
-        <img src={bonusStack} alt="Bônus" className="w-full rounded-2xl border border-border" />
+        
 
         {bonuses.map((b, i) => (
           <BonusCard key={i} number={i + 1} {...b} />
