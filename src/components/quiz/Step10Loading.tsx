@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { StepContainer } from "./QuizUI";
 import { Search, Settings, BarChart3, Target, MapPin, Sparkles, CheckCircle, Square, Lock, Loader2 } from "lucide-react";
-import mentorPhoto from "@/assets/mentor-photo.jpg";
+import mentorPhoto from "@/assets/mentor-new.webp";
 
 interface Step10Props {
   onNext: () => void;
