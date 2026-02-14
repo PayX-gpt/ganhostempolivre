@@ -520,7 +520,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       </div>
 
       {/* ═══ 4. VSL VIDEO ═══ */}
-      <VideoPlaceholder label="▶ Toque para assistir (4 min)" />
+      
 
       {/* ═══ 5. MENTOR CREDIBILITY ═══ */}
       <div className="flex gap-4 w-full funnel-card border-primary/20 bg-primary/5">
