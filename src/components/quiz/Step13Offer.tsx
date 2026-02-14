@@ -45,28 +45,39 @@ const Divider = () => (
 /* ─── Profile Analysis Card ─── */
 const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstName: string }) => {
   const getAgeLabel = (age?: string) => {
-    const map: Record<string, string> = {
-      "18-25": "18 a 25 anos", "26-35": "26 a 35 anos", "36-45": "36 a 45 anos",
-      "46-55": "46 a 55 anos", "56+": "acima de 56 anos",
-    };
-    return map[age || ""] || "não informada";
+    // Step2Age passes the full label directly
+    return age || "não informada";
   };
 
   const getObstacleLabel = (o?: string) => {
     const map: Record<string, string> = {
-      money: "Falta de dinheiro para investir", time: "Falta de tempo",
-      knowledge: "Falta de conhecimento técnico", trust: "Medo de ser enganado",
-      age: "Achar que já passou da idade",
+      medo: "Medo de errar de novo", tempo: "Falta de tempo",
+      inicio: "Não sabe por onde começar", dinheiro: "Falta de dinheiro para investir",
     };
     return map[o || ""] || "não informado";
   };
 
   const getGoalLabel = (g?: string) => {
     const map: Record<string, string> = {
-      "50-100": "R$50 a R$100 por dia", "100-200": "R$100 a R$200 por dia",
-      "200-300": "R$200 a R$300 por dia", "300+": "Mais de R$300 por dia",
+      "50-100": "R$50 a R$100 por dia", "100-300": "R$100 a R$300 por dia",
+      "300-500": "R$300 a R$500 por dia", "500+": "Mais de R$500 por dia",
     };
     return map[g || ""] || "renda extra diária";
+  };
+
+  const getDeviceLabel = (d?: string) => {
+    const map: Record<string, string> = {
+      celular: "Celular / Smartphone", computador: "Computador ou Notebook", ambos: "Celular e computador",
+    };
+    return map[d || ""] || "Celular";
+  };
+
+  const getAvailabilityLabel = (a?: string) => {
+    const map: Record<string, string> = {
+      menos30: "Menos de 30 minutos", "30-60": "30 minutos a 1 hora",
+      "1-2h": "1 a 2 horas por dia", "2h+": "Mais de 2 horas por dia",
+    };
+    return map[a || ""] || "Algumas horas por dia";
   };
 
   const profileItems = [
@@ -74,8 +85,8 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
     { label: "Faixa etária", value: getAgeLabel(answers?.age) },
     { label: "Meta de renda", value: getGoalLabel(answers?.incomeGoal) },
     { label: "Principal desafio", value: getObstacleLabel(answers?.obstacle) },
-    { label: "Dispositivo", value: answers?.device === "phone" ? "Celular" : answers?.device === "computer" ? "Computador" : answers?.device === "both" ? "Celular e computador" : "Celular" },
-    { label: "Disponibilidade", value: answers?.availability === "1-2h" ? "1 a 2 horas por dia" : answers?.availability === "2-4h" ? "2 a 4 horas por dia" : answers?.availability === "4h+" ? "Mais de 4 horas por dia" : "Algumas horas por dia" },
+    { label: "Dispositivo", value: getDeviceLabel(answers?.device) },
+    { label: "Disponibilidade", value: getAvailabilityLabel(answers?.availability) },
   ];
 
   return (
@@ -160,28 +171,28 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
 /* ─── People Like You ─── */
 const PeopleLikeYou = ({ answers }: { answers?: QuizAnswers }) => {
   const getAgePeople = (age?: string) => {
-    const data: Record<string, { name: string; age: string; result: string; avatar: string }[]> = {
-      "56+": [
-        { name: "José Almeida", age: "61", result: "R$147/dia em 2 semanas", avatar: avatarAntonio },
-        { name: "Cláudia Reis", age: "58", result: "R$89/dia no primeiro mês", avatar: avatarClaudia },
-        { name: "Marcos Oliveira", age: "63", result: "R$210/dia após 3 semanas", avatar: avatarCarlos },
-      ],
-      "46-55": [
-        { name: "Roberto Lima", age: "52", result: "R$180/dia em 10 dias", avatar: avatarCarlos },
-        { name: "Sandra Costa", age: "49", result: "R$95/dia no primeiro mês", avatar: avatarClaudia },
-        { name: "Paulo Mendes", age: "54", result: "R$230/dia após 2 semanas", avatar: avatarAntonio },
-      ],
-    };
-    return data[age || ""] || data["56+"];
+    const data56 = [
+      { name: "José Almeida", age: "61", result: "R$147/dia em 2 semanas", avatar: avatarAntonio },
+      { name: "Cláudia Reis", age: "58", result: "R$89/dia no primeiro mês", avatar: avatarClaudia },
+      { name: "Marcos Oliveira", age: "63", result: "R$210/dia após 3 semanas", avatar: avatarCarlos },
+    ];
+    const data46 = [
+      { name: "Roberto Lima", age: "52", result: "R$180/dia em 10 dias", avatar: avatarCarlos },
+      { name: "Sandra Costa", age: "49", result: "R$95/dia no primeiro mês", avatar: avatarClaudia },
+      { name: "Paulo Mendes", age: "54", result: "R$230/dia após 2 semanas", avatar: avatarAntonio },
+    ];
+    if (age?.includes("56") || age?.includes("mais")) return data56;
+    if (age?.includes("46")) return data46;
+    if (age?.includes("36")) return data46;
+    return data56;
   };
 
   const getObstacleMessage = (obstacle?: string) => {
     const map: Record<string, string> = {
-      money: "também achavam que não tinham dinheiro para investir",
-      time: "também tinham pouco tempo disponível",
-      knowledge: "também não tinham experiência com tecnologia",
-      trust: "também já tinham sido enganados antes",
-      age: "também achavam que já tinham passado da idade",
+      medo: "também tinham medo de errar de novo",
+      tempo: "também tinham pouco tempo disponível",
+      inicio: "também não sabiam por onde começar",
+      dinheiro: "também achavam que não tinham dinheiro para investir",
     };
     return map[obstacle || ""] || "tinham os mesmos desafios que você";
   };
@@ -217,11 +228,11 @@ const EarningsProjection = ({ answers, firstName }: { answers?: QuizAnswers; fir
   const getGoalValues = (goal?: string) => {
     const map: Record<string, { daily: number; label: string }> = {
       "50-100": { daily: 75, label: "R$50 a R$100" },
-      "100-200": { daily: 150, label: "R$100 a R$200" },
-      "200-300": { daily: 250, label: "R$200 a R$300" },
-      "300+": { daily: 350, label: "Mais de R$300" },
+      "100-300": { daily: 200, label: "R$100 a R$300" },
+      "300-500": { daily: 400, label: "R$300 a R$500" },
+      "500+": { daily: 600, label: "Mais de R$500" },
     };
-    return map[goal || ""] || { daily: 150, label: "R$100 a R$200" };
+    return map[goal || ""] || { daily: 200, label: "R$100 a R$300" };
   };
 
   const { daily } = getGoalValues(answers?.incomeGoal);
