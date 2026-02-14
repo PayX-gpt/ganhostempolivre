@@ -1,12 +1,13 @@
 export interface QuizAnswers {
   age?: string;
+  name?: string;
   triedOnline?: string;
   incomeGoal?: string;
   obstacle?: string;
   device?: string;
   availability?: string;
   investment?: string;
-  name?: string;
+  contactMethod?: string;
   email?: string;
   phone?: string;
 }
