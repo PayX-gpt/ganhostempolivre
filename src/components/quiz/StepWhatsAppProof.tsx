@@ -81,7 +81,7 @@ const chats: WhatsAppChat[] = [
 const WhatsAppBubble = ({ msg }: { msg: WhatsAppMessage }) => (
   <div className={`flex ${msg.sent ? "justify-end" : "justify-start"} mb-[3px]`}>
     <div
-      className={`max-w-[82%] px-[9px] py-[6px] text-[14.2px] leading-[19px] relative ${
+      className={`max-w-[85%] sm:max-w-[82%] px-[9px] py-[6px] text-[13.5px] sm:text-[14.2px] leading-[18px] sm:leading-[19px] relative ${
         msg.sent
           ? "bg-[#005c4b] text-[#e9edef] rounded-[7.5px] rounded-tr-none"
           : "bg-[#202c33] text-[#e9edef] rounded-[7.5px] rounded-tl-none"
@@ -134,7 +134,7 @@ const WhatsAppScreen = ({ chat }: { chat: WhatsAppChat }) => (
 
     {/* Chat body */}
     <div
-      className="px-[12px] py-[8px] space-y-0 min-h-[260px]"
+      className="px-[10px] sm:px-[12px] py-[8px] space-y-0 min-h-[240px] sm:min-h-[260px]"
       style={{
         backgroundColor: "#0b141a",
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='400' height='400' viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23111b21' fill-opacity='0.4'%3E%3Cpath d='M20 20h4v4h-4zM60 20h4v4h-4zM100 20h4v4h-4zM140 60h4v4h-4zM180 40h4v4h-4zM220 80h4v4h-4zM260 20h4v4h-4zM300 60h4v4h-4zM340 40h4v4h-4zM380 80h4v4h-4zM40 100h4v4h-4zM80 140h4v4h-4zM120 100h4v4h-4zM160 140h4v4h-4zM200 120h4v4h-4zM240 160h4v4h-4zM280 100h4v4h-4zM320 140h4v4h-4zM360 120h4v4h-4zM20 180h4v4h-4zM60 220h4v4h-4zM100 200h4v4h-4zM140 240h4v4h-4zM180 180h4v4h-4zM220 220h4v4h-4zM260 200h4v4h-4zM300 240h4v4h-4zM340 180h4v4h-4zM380 220h4v4h-4zM40 260h4v4h-4zM80 300h4v4h-4zM120 280h4v4h-4zM160 320h4v4h-4zM200 260h4v4h-4zM240 300h4v4h-4zM280 280h4v4h-4zM320 320h4v4h-4zM360 260h4v4h-4zM20 340h4v4h-4zM60 380h4v4h-4zM100 360h4v4h-4zM140 380h4v4h-4zM180 340h4v4h-4zM220 380h4v4h-4zM260 360h4v4h-4zM300 380h4v4h-4zM340 340h4v4h-4zM380 380h4v4h-4z'/%3E%3C/g%3E%3C/svg%3E")`,

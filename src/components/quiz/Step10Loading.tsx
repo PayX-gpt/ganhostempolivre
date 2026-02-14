@@ -59,11 +59,11 @@ const Step10Loading = ({ onNext }: Step10Props) => {
     <StepContainer>
       {/* Mentor photo + spinner */}
       <div className="relative mx-auto">
-        <div className={`w-28 h-28 rounded-full border-4 ${showResult ? "border-primary" : "border-primary/30 border-t-primary animate-spin"} absolute inset-0`} />
+        <div className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 ${showResult ? "border-primary" : "border-primary/30 border-t-primary animate-spin"} absolute inset-0`} />
         <img
           src={mentorPhoto}
           alt="Especialista"
-          className="w-28 h-28 rounded-full object-cover relative z-10 border-4 border-transparent"
+          className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover relative z-10 border-4 border-transparent"
         />
       </div>
 
@@ -101,7 +101,7 @@ const Step10Loading = ({ onNext }: Step10Props) => {
           return (
             <div
               key={i}
-              className={`flex items-start gap-3 p-3 rounded-xl transition-all duration-500 ${
+              className={`flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl transition-all duration-500 ${
                 isDone
                   ? "bg-primary/5 border border-primary/20"
                   : isCurrent
@@ -109,7 +109,7 @@ const Step10Loading = ({ onNext }: Step10Props) => {
                   : "opacity-30"
               }`}
             >
-              <span className="text-lg shrink-0 mt-0.5">
+              <span className="text-base sm:text-lg shrink-0 mt-0.5 leading-none">
                 {isDone ? "✅" : isCurrent ? step.icon : "⬜"}
               </span>
               <div className="flex-1 min-w-0">

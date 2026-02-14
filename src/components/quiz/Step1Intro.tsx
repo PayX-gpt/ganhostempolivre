@@ -18,27 +18,27 @@ const Step1Intro = ({ onNext }: Step1Props) => {
       </div>
 
       {/* Mentor trust card */}
-      <div className="flex items-center gap-4 w-full funnel-card border-primary/25 bg-primary/5">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 w-full funnel-card border-primary/25 bg-primary/5 text-center sm:text-left">
         <img
           src={mentorPhoto}
           alt="Especialista Ricardo"
-          className="w-16 h-16 rounded-full object-cover border-2 border-primary/40 shrink-0"
+          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-primary/40 shrink-0"
         />
         <div>
-          <p className="text-base text-foreground leading-snug italic">
+          <p className="text-sm sm:text-base text-foreground leading-snug italic">
             "Eu ajudei mais de <span className="font-bold text-primary">36.000 pessoas</span> a encontrarem segurança financeira. Deixe-me mostrar como."
           </p>
-          <p className="text-sm text-muted-foreground mt-1 font-medium">— Ricardo Almeida, Especialista</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 font-medium">— Ricardo Almeida, Especialista</p>
         </div>
       </div>
 
       {/* Main copy */}
       <div className="text-center space-y-4 mt-1">
-        <h3 className="font-display text-xl font-bold text-foreground leading-snug">
+        <h3 className="font-display text-lg sm:text-xl font-bold text-foreground leading-snug">
           TEM <span className="funnel-highlight">10 MINUTOS LIVRE</span> POR DIA?
         </h3>
 
-        <p className="text-lg font-semibold text-foreground leading-relaxed">
+        <p className="text-base sm:text-lg font-semibold text-foreground leading-relaxed">
           As próximas perguntas vão mostrar,{" "}
           <span className="funnel-highlight">em menos de 2 minutos</span>, o caminho para você gerar uma{" "}
           <span className="text-gradient-green font-extrabold">renda extra segura de R$50 a R$300 por dia</span>{" "}
@@ -60,7 +60,7 @@ const Step1Intro = ({ onNext }: Step1Props) => {
       </div>
 
       {/* CTA */}
-      <CTAButton onClick={onNext} className="mt-3 animate-bounce-subtle text-xl">
+      <CTAButton onClick={onNext} className="mt-3 animate-bounce-subtle text-lg sm:text-xl">
         INICIAR TESTE GRATUITO →
       </CTAButton>
 
