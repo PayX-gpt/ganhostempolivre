@@ -462,6 +462,19 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   }, []);
 
   useEffect(() => {
+    const s = document.createElement("script");
+    s.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
+    s.async = true;
+    document.head.appendChild(s);
+    const iframe = document.getElementById("ifr_687c23666137406f142acebc") as HTMLIFrameElement;
+    if (iframe && iframe.src === "about:blank") {
+      iframe.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/687c23666137406f142acebc/v4/embed.html" +
+        (window.location.search || "?") + "&vl=" + encodeURIComponent(window.location.href);
+    }
+    return () => { s.remove(); };
+  }, []);
+
+  useEffect(() => {
     const countdown = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
@@ -517,6 +530,22 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         <p className="text-sm text-muted-foreground">
           Assista o vídeo abaixo e entenda como funciona em 4 minutos:
         </p>
+      </div>
+
+      {/* ═══ 3b. VSL VIDEO (ConverteAI) ═══ */}
+      <div className="w-full rounded-2xl overflow-hidden border border-border">
+        <div id="ifr_687c23666137406f142acebc_wrapper" style={{ margin: "0 auto", width: "100%" }}>
+          <div style={{ position: "relative", padding: "56.25% 0 0 0" }} id="ifr_687c23666137406f142acebc_aspect">
+            <iframe
+              frameBorder="0"
+              allowFullScreen
+              src="about:blank"
+              id="ifr_687c23666137406f142acebc"
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+              referrerPolicy="origin"
+            />
+          </div>
+        </div>
       </div>
 
       {/* ═══ 4. VSL VIDEO ═══ */}
