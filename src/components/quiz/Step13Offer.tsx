@@ -31,12 +31,12 @@ const CTABlock = ({ showCTA, context }: { showCTA: boolean; context?: string }) 
       <div className="text-center space-y-1">
         <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">CHAVE TOKEN CHATGPT</p>
         <p className="text-3xl sm:text-4xl font-display font-bold text-foreground">
-          R$<span className="text-gradient-green">66</span>
+          R$<span className="text-gradient-green">66,83</span>
         </p>
-        <p className="text-sm text-muted-foreground">ou 12x de R$6,58</p>
+        <p className="text-sm text-muted-foreground">ou 12x de R$6,64</p>
       </div>
       <CTAButton onClick={() => window.open("#", "_blank")} variant="accent" className="animate-bounce-subtle text-lg sm:text-xl tracking-wider">
-        🔑 ATIVAR MINHA CHAVE TOKEN — R$66
+        🔑 ATIVAR MINHA CHAVE TOKEN — R$66,83
       </CTAButton>
       <div className="flex items-center justify-center gap-2">
         <Lock className="w-3.5 h-3.5 text-muted-foreground" />
@@ -73,7 +73,7 @@ const UrgencyStrip = ({ minutes, seconds, show }: { minutes: number; seconds: nu
       </div>
       <div className="bg-destructive/5 px-4 py-2">
         <p className="text-xs text-muted-foreground text-center">
-          Sua condição especial de <span className="font-bold text-foreground">R$66</span> expira quando o timer zerar. Depois disso, volta para R$297.
+          Sua condição especial de <span className="font-bold text-foreground">R$66,83</span> expira quando o timer zerar. Depois disso, volta para R$297.
         </p>
       </div>
     </div>
@@ -499,9 +499,9 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
     { question: "Funciona pelo celular mesmo?", answer: "Sim, 100%. A maioria dos nossos 36.000 alunos usa apenas o celular. Não precisa de computador nem internet rápida." },
     { question: "Em quanto tempo vejo resultado?", answer: "Muitos alunos fazem a primeira operação e veem resultado no mesmo dia. O método foi feito pra gerar renda no curto prazo." },
     { question: "E se eu não gostar? Perco meu dinheiro?", answer: "Impossível. Você tem 30 dias de garantia total. Se não gostar, devolvemos cada centavo. Sem perguntas, sem burocracia." },
-    { question: "R$66 é o preço final? Tem taxa escondida?", answer: "R$66 é o valor total. Não existe mensalidade, taxa extra, ou venda dentro da plataforma. Pagou uma vez, acesso completo." },
+    { question: "R$66,83 é o preço final? Tem taxa escondida?", answer: "R$66,83 é o valor total. Não existe mensalidade, taxa extra, ou venda dentro da plataforma. Pagou uma vez, acesso completo." },
     { question: "Já fui enganado na internet. Isso é golpe?", answer: "Entendemos. Por isso: garantia de 30 dias, suporte humano real, +36.000 alunos ativos, e você pode testar sem risco nenhum." },
-    { question: "Preciso investir mais dinheiro depois?", answer: "Não. O método ensina a gerar renda sem investimento. O único valor é R$66. Depois disso, tudo que ganhar é lucro líquido." },
+    { question: "Preciso investir mais dinheiro depois?", answer: "Não. O método ensina a gerar renda sem investimento. O único valor é R$66,83. Depois disso, tudo que ganhar é lucro líquido." },
   ];
 
   const testimonials = [
@@ -551,7 +551,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       {/* ═══ 3c. EXPLICAÇÃO DA TAXA (compacta) ═══ */}
       <div className="w-full text-center space-y-2">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          ⚠️ O valor de <span className="text-primary font-bold">R$66</span> é apenas a <span className="font-bold text-foreground">taxa dos tokens do ChatGPT</span> que a plataforma consome. Nós <span className="font-bold text-foreground">não ficamos com nenhum centavo</span> — só cobramos <span className="text-primary font-bold">2% dos seus lucros</span> após 30 dias.
+          ⚠️ O valor de <span className="text-primary font-bold">R$66,83</span> é apenas a <span className="font-bold text-foreground">taxa dos tokens do ChatGPT</span> que a plataforma consome. Nós <span className="font-bold text-foreground">não ficamos com nenhum centavo</span> — só cobramos <span className="text-primary font-bold">2% dos seus lucros</span> após 30 dias.
         </p>
       </div>
 
@@ -694,12 +694,12 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           <div className="space-y-2">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">Você paga apenas:</p>
             <p className="text-5xl sm:text-6xl font-display font-bold text-foreground">
-              R$<span className="text-gradient-green">66</span>
+              R$<span className="text-gradient-green">66,83</span>
             </p>
-            <p className="text-base text-muted-foreground">ou <span className="font-semibold text-foreground">12x de R$6,58</span></p>
+            <p className="text-base text-muted-foreground">ou <span className="font-semibold text-foreground">12x de R$6,64</span></p>
             <div className="bg-secondary/50 rounded-xl p-3">
               <p className="text-sm text-foreground font-medium">
-                Isso dá <span className="text-primary font-bold">menos de R$2,20 por dia</span> — o preço de uma bala.
+                Isso dá <span className="text-primary font-bold">menos de R$2,23 por dia</span> — o preço de uma bala.
               </p>
             </div>
           </div>
@@ -758,7 +758,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           },
           {
             objection: '"Não tenho dinheiro sobrando..."',
-            response: "São R$66 uma única vez. Muitos alunos recuperam esse valor no primeiro dia. E se não recuperar em 30 dias, você recebe tudo de volta. Risco zero.",
+            response: "São R$66,83 uma única vez. Muitos alunos recuperam esse valor no primeiro dia. E se não recuperar em 30 dias, você recebe tudo de volta. Risco zero.",
           },
           {
             objection: '"Tenho medo de tecnologia..."',
@@ -880,7 +880,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             <p className="text-sm font-bold text-destructive uppercase tracking-wider">Última chance</p>
           </div>
           <p className="text-base font-bold text-foreground leading-snug">
-            Essa condição de R$66 é exclusiva pra quem completou a análise agora.
+            Essa condição de R$66,83 é exclusiva pra quem completou a análise agora.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Ao sair desta página, o valor volta para R$297 e os bônus são removidos.
