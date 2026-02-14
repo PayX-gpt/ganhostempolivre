@@ -36,10 +36,10 @@ interface FunnelEventRow {
   created_at: string;
 }
 
-// ─── 18 steps ─────────────────────────────────────────────
+// ─── 19 steps ─────────────────────────────────────────────
 const STEP_SLUGS = [
   "step-1","step-2","step-3","step-4","step-5","step-6","step-7","step-8","step-9",
-  "step-10","step-11","step-12","step-13","step-14","step-15","step-16","step-17","step-18",
+  "step-10","step-11","step-12","step-13","step-14","step-15","step-16","step-17","step-18","step-19",
 ];
 
 const STEP_META: Record<string, { label: string; short: string; emoji: string }> = {
@@ -51,16 +51,17 @@ const STEP_META: Record<string, { label: string; short: string; emoji: string }>
   "step-6":  { label: "Meta de Renda",   short: "Meta",    emoji: "💰" },
   "step-7":  { label: "Obstáculo",       short: "Obstác.", emoji: "🧱" },
   "step-8":  { label: "Sonho Financeiro",short: "Sonho",   emoji: "✨" },
-  "step-9":  { label: "Vídeo Mentor",    short: "Vídeo",   emoji: "🎬" },
-  "step-10": { label: "Dispositivo",     short: "Device",  emoji: "📱" },
-  "step-11": { label: "Disponibilidade", short: "Tempo",   emoji: "⏰" },
-  "step-12": { label: "Demo Plataforma", short: "Demo",    emoji: "💻" },
-  "step-13": { label: "Loading",         short: "Load",    emoji: "⚙️" },
-  "step-14": { label: "Prova Social 2",  short: "Social2", emoji: "🏆" },
-  "step-15": { label: "WhatsApp Proof",  short: "WA",      emoji: "📲" },
-  "step-16": { label: "Método Contato",  short: "Contato", emoji: "📧" },
-  "step-17": { label: "Input Contato",   short: "Input",   emoji: "📝" },
-  "step-18": { label: "Oferta Final",    short: "Oferta",  emoji: "🎯" },
+  "step-9":  { label: "Saldo na Conta",  short: "Saldo",   emoji: "🏦" },
+  "step-10": { label: "Vídeo Mentor",    short: "Vídeo",   emoji: "🎬" },
+  "step-11": { label: "Dispositivo",     short: "Device",  emoji: "📱" },
+  "step-12": { label: "Disponibilidade", short: "Tempo",   emoji: "⏰" },
+  "step-13": { label: "Demo Plataforma", short: "Demo",    emoji: "💻" },
+  "step-14": { label: "Loading",         short: "Load",    emoji: "⚙️" },
+  "step-15": { label: "Prova Social 2",  short: "Social2", emoji: "🏆" },
+  "step-16": { label: "WhatsApp Proof",  short: "WA",      emoji: "📲" },
+  "step-17": { label: "Método Contato",  short: "Contato", emoji: "📧" },
+  "step-18": { label: "Input Contato",   short: "Input",   emoji: "📝" },
+  "step-19": { label: "Oferta Final",    short: "Oferta",  emoji: "🎯" },
 };
 
 // ─── Stat Card ────────────────────────────────────────────
