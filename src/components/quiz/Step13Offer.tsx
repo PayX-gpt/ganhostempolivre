@@ -35,7 +35,7 @@ const CTABlock = ({ showCTA, context }: { showCTA: boolean; context?: string }) 
         </p>
         <p className="text-sm text-muted-foreground">ou 12x de R$6,64</p>
       </div>
-      <CTAButton onClick={() => window.open("#", "_blank")} variant="accent" className="animate-bounce-subtle text-lg sm:text-xl tracking-wider">
+      <CTAButton onClick={() => window.open("https://pay.kirvano.com/5e882c8e-e569-4d9b-b895-69cb1d1285f4", "_blank")} variant="accent" className="animate-bounce-subtle text-lg sm:text-xl tracking-wider">
         🔑 ATIVAR MINHA CHAVE TOKEN — R$66,83
       </CTAButton>
       <div className="flex items-center justify-center gap-2">
