@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { StepContainer, StepTitle, StepSubtitle, CTAButton, VideoPlaceholder } from "./QuizUI";
+import { useState, useEffect, useRef } from "react";
+import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
 import mentorPhoto from "@/assets/mentor-photo.jpg";
 
 interface Step7Props {
@@ -8,10 +8,33 @@ interface Step7Props {
 
 const Step7MentorVideo = ({ onNext }: Step7Props) => {
   const [showCTA, setShowCTA] = useState(false);
+  const videoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowCTA(true), 5000);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Load ConverteAI SDK
+    const script = document.createElement("script");
+    script.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
+    script.async = true;
+    document.head.appendChild(script);
+
+    // Set iframe src after mount
+    const iframe = document.getElementById("ifr_692056147cc713fc76f6135f") as HTMLIFrameElement;
+    if (iframe) {
+      iframe.src =
+        "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/692056147cc713fc76f6135f/v4/embed.html" +
+        (window.location.search || "?") +
+        "&vl=" +
+        encodeURIComponent(window.location.href);
+    }
+
+    return () => {
+      script.remove();
+    };
   }, []);
 
   return (
@@ -36,7 +59,27 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
         Ricardo já ajudou mais de 36.000 pessoas a conquistarem segurança financeira. Ouça o que ele tem a dizer — são apenas 3 minutos:
       </StepSubtitle>
 
-      <VideoPlaceholder label="Mensagem do Especialista Ricardo (3 min)" />
+      {/* ConverteAI Video Player */}
+      <div className="w-full rounded-2xl overflow-hidden border border-border" ref={videoRef}>
+        <div
+          id="ifr_692056147cc713fc76f6135f_wrapper"
+          style={{ margin: "0 auto", width: "100%", maxWidth: "400px" }}
+        >
+          <div
+            style={{ position: "relative", paddingTop: "177.77777777777777%", width: "100%" }}
+            id="ifr_692056147cc713fc76f6135f_aspect"
+          >
+            <iframe
+              frameBorder="0"
+              allowFullScreen
+              src="about:blank"
+              id="ifr_692056147cc713fc76f6135f"
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+              referrerPolicy="origin"
+            />
+          </div>
+        </div>
+      </div>
 
       <div className="w-full funnel-card border-primary/20 bg-primary/5">
         <p className="text-sm text-foreground/80 text-center leading-relaxed italic">
