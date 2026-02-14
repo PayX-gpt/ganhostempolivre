@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
 import { MessageSquare, Loader2 } from "lucide-react";
-import mentorPhoto from "@/assets/mentor-photo.jpg";
+import mentorPhoto from "@/assets/mentor-new.webp";
 
 interface Step7Props {
   onNext: () => void;

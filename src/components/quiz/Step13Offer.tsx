@@ -3,7 +3,7 @@ import { Shield, Lock, Zap, ArrowRight, Star, Users, Clock, CheckCircle } from "
 import { Separator } from "@/components/ui/separator";
 import { CTAButton, TrustBadge, VideoPlaceholder } from "./QuizUI";
 import type { QuizAnswers } from "./QuizUI";
-import mentorPhoto from "@/assets/mentor-photo.jpg";
+import mentorPhoto from "@/assets/mentor-new.webp";
 import bonusStack from "@/assets/bonus-stack.jpg";
 import guaranteeSeal from "@/assets/guarantee-seal.jpg";
 import giftBox from "@/assets/gift-box.jpg";

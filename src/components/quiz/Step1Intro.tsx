@@ -1,6 +1,6 @@
 import { StepContainer, CTAButton } from "./QuizUI";
 import { AlertTriangle, Lock, Globe } from "lucide-react";
-import mentorPhoto from "@/assets/mentor-photo.jpg";
+import mentorPhoto from "@/assets/mentor-new.webp";
 
 interface Step1Props {
   onNext: () => void;
