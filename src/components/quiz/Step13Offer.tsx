@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Cpu, CheckCircle, BarChart3, Clock, Shield, ChevronDown } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { CTAButton, TrustBadge, VideoPlaceholder } from "./QuizUI";
 import type { QuizAnswers } from "./QuizUI";
 import mentorPhoto from "@/assets/mentor-photo.jpg";
@@ -523,15 +525,37 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       <Divider />
 
       {/* ═══ PRICE ANCHOR ═══ */}
-      <div className="w-full funnel-card border-accent/30 bg-card text-center space-y-3">
-        <p className="text-sm text-muted-foreground">De <span className="line-through">R$297,00</span> por apenas:</p>
+      <div className="w-full funnel-card border-accent/30 bg-card text-center space-y-4">
+        <div className="flex items-center justify-center gap-2">
+          <Cpu className="w-5 h-5 text-primary" />
+          <p className="text-sm font-semibold text-foreground">Por que existe essa taxa?</p>
+        </div>
+        <p className="text-sm text-muted-foreground leading-relaxed text-left">
+          A nossa plataforma utiliza a inteligência artificial do <span className="font-bold text-foreground">ChatGPT</span> para funcionar. 
+          Cada operação que a IA faz por você consome <span className="font-bold text-foreground">tokens</span> — e esses tokens têm um custo real que precisamos cobrir.
+        </p>
+        <p className="text-sm text-muted-foreground leading-relaxed text-left">
+          O valor abaixo é <span className="font-bold text-foreground">apenas a taxa do token da IA</span>. 
+          Nós <span className="text-primary font-bold">não ganhamos nada</span> com esse pagamento. Zero. Nenhum centavo.
+        </p>
+        <div className="bg-primary/10 rounded-xl p-3 border border-primary/20 text-left">
+          <p className="text-sm text-foreground leading-relaxed">
+            <span className="font-bold">Como ganhamos então?</span> Só depois de 30 dias, quando você já estiver lucrando, 
+            cobramos apenas <span className="text-primary font-bold">2% dos seus lucros</span> na plataforma. 
+            Ou seja: <span className="font-bold">só ganhamos quando você ganha.</span> Se você não lucrar, não pagamos nada.
+          </p>
+        </div>
+
+        <Separator className="my-2" />
+
+        <p className="text-sm text-muted-foreground">Taxa única do token ChatGPT:</p>
         <p className="text-5xl sm:text-6xl font-display font-bold text-foreground">
           R$<span className="text-gradient-green">66</span>
         </p>
         <p className="text-base text-muted-foreground">ou 12x de R$6,58 no cartão</p>
-        <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
+        <div className="bg-secondary/50 rounded-xl p-3">
           <p className="text-sm text-foreground font-medium">
-            Isso dá menos de R$2,20 por dia. Menos que um cafezinho. E pode mudar sua vida financeira para sempre.
+            Isso dá menos de R$2,20 por dia — apenas o custo da IA trabalhando por você.
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-2 pt-2">
