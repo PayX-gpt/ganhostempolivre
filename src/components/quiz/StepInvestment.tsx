@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard } from "./QuizUI";
+import { Sprout, TrendingUp, Gem, HelpCircle } from "lucide-react";
 
 interface StepProps {
   onNext: (answer: string) => void;
@@ -24,28 +25,28 @@ const StepInvestment = ({ onNext }: StepProps) => {
         <OptionCard
           label="Menos de R$100"
           sublabel="Quero começar com pouco e ir aumentando"
-          icon="🌱"
+          icon={<Sprout className="w-5 h-5" />}
           selected={selected === "menos100"}
           onClick={() => handleSelect("menos100")}
         />
         <OptionCard
           label="Entre R$100 e R$500"
           sublabel="Posso fazer um investimento moderado"
-          icon="📈"
+          icon={<TrendingUp className="w-5 h-5" />}
           selected={selected === "100-500"}
           onClick={() => handleSelect("100-500")}
         />
         <OptionCard
           label="Mais de R$500"
           sublabel="Estou pronto(a) para investir sério"
-          icon="💎"
+          icon={<Gem className="w-5 h-5" />}
           selected={selected === "500+"}
           onClick={() => handleSelect("500+")}
         />
         <OptionCard
           label="Depende dos resultados possíveis"
           sublabel="Preciso entender melhor antes de decidir"
-          icon="🤔"
+          icon={<HelpCircle className="w-5 h-5" />}
           selected={selected === "depende"}
           onClick={() => handleSelect("depende")}
         />

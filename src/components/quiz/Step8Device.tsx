@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard } from "./QuizUI";
+import { Smartphone, Laptop, MonitorSmartphone, CheckCircle } from "lucide-react";
 
 interface Step8Props {
   onNext: (answer: string) => void;
@@ -24,29 +25,32 @@ const Step8Device = ({ onNext }: Step8Props) => {
         <OptionCard
           label="Celular / Smartphone"
           sublabel="Uso o celular para quase tudo"
-          icon="📱"
+          icon={<Smartphone className="w-5 h-5" />}
           selected={selected === "celular"}
           onClick={() => handleSelect("celular")}
         />
         <OptionCard
           label="Computador ou Notebook"
           sublabel="Prefiro usar na tela grande"
-          icon="💻"
+          icon={<Laptop className="w-5 h-5" />}
           selected={selected === "computador"}
           onClick={() => handleSelect("computador")}
         />
         <OptionCard
           label="Uso os dois"
           sublabel="Celular e computador, depende do momento"
-          icon="📱💻"
+          icon={<MonitorSmartphone className="w-5 h-5" />}
           selected={selected === "ambos"}
           onClick={() => handleSelect("ambos")}
         />
       </div>
 
-      <p className="text-sm text-muted-foreground text-center mt-1">
-        ✅ <em>93% dos nossos alunos acima de 50 anos usam apenas o celular — e conseguem resultados normalmente.</em>
-      </p>
+      <div className="flex items-center gap-2 justify-center mt-1">
+        <CheckCircle className="w-4 h-4 text-primary shrink-0" />
+        <p className="text-sm text-muted-foreground text-center">
+          <em>93% dos nossos alunos acima de 50 anos usam apenas o celular — e conseguem resultados normalmente.</em>
+        </p>
+      </div>
     </StepContainer>
   );
 };

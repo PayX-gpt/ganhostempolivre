@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { StepContainer } from "./QuizUI";
+import { Search, Settings, BarChart3, Target, MapPin, Sparkles, CheckCircle, Square, Lock, Loader2 } from "lucide-react";
 import mentorPhoto from "@/assets/mentor-photo.jpg";
 
 interface Step10Props {
@@ -7,12 +8,12 @@ interface Step10Props {
 }
 
 const loadingSteps = [
-  { text: "Cruzando suas respostas com nosso banco de dados...", icon: "🔍", detail: "Perfil, idade, disponibilidade e objetivos" },
-  { text: "Verificando compatibilidade com o método...", icon: "⚙️", detail: "Analisando histórico e nível de experiência" },
-  { text: "Calculando seu potencial de ganho diário...", icon: "📊", detail: "Com base na sua faixa de renda desejada" },
-  { text: "Selecionando o plano ideal para o seu perfil...", icon: "🎯", detail: "Considerando seu tempo disponível e dispositivo" },
-  { text: "Consultando vagas disponíveis na sua região...", icon: "📍", detail: "Verificando disponibilidade em tempo real" },
-  { text: "Gerando seu acesso personalizado...", icon: "✨", detail: "Tudo pronto! Preparando seus resultados" },
+  { text: "Cruzando suas respostas com nosso banco de dados...", icon: <Search className="w-4 h-4" />, detail: "Perfil, idade, disponibilidade e objetivos" },
+  { text: "Verificando compatibilidade com o método...", icon: <Settings className="w-4 h-4" />, detail: "Analisando histórico e nível de experiência" },
+  { text: "Calculando seu potencial de ganho diário...", icon: <BarChart3 className="w-4 h-4" />, detail: "Com base na sua faixa de renda desejada" },
+  { text: "Selecionando o plano ideal para o seu perfil...", icon: <Target className="w-4 h-4" />, detail: "Considerando seu tempo disponível e dispositivo" },
+  { text: "Consultando vagas disponíveis na sua região...", icon: <MapPin className="w-4 h-4" />, detail: "Verificando disponibilidade em tempo real" },
+  { text: "Gerando seu acesso personalizado...", icon: <Sparkles className="w-4 h-4" />, detail: "Tudo pronto! Preparando seus resultados" },
 ];
 
 const Step10Loading = ({ onNext }: Step10Props) => {
@@ -70,9 +71,12 @@ const Step10Loading = ({ onNext }: Step10Props) => {
       {/* Title changes based on state */}
       {showResult ? (
         <div className="text-center space-y-2 animate-fade-in">
-          <h2 className="font-display text-2xl font-bold text-foreground leading-snug">
-            🎉 Análise concluída!
-          </h2>
+          <div className="flex items-center justify-center gap-2">
+            <Sparkles className="w-6 h-6 text-accent" />
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground leading-snug">
+              Análise concluída!
+            </h2>
+          </div>
           <p className="text-lg text-primary font-semibold">
             Seu perfil é altamente compatível!
           </p>
@@ -82,10 +86,10 @@ const Step10Loading = ({ onNext }: Step10Props) => {
         </div>
       ) : (
         <div className="text-center space-y-2">
-          <h2 className="font-display text-2xl font-bold text-foreground leading-snug">
+          <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground leading-snug">
             Analisando suas respostas...
           </h2>
-          <p className="text-base text-muted-foreground leading-relaxed">
+          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
             Nosso sistema está cruzando seus dados com o perfil dos nossos <span className="text-primary font-semibold">36.000+ alunos</span> de sucesso.
           </p>
         </div>
@@ -109,11 +113,11 @@ const Step10Loading = ({ onNext }: Step10Props) => {
                   : "opacity-30"
               }`}
             >
-              <span className="text-base sm:text-lg shrink-0 mt-0.5 leading-none">
-                {isDone ? "✅" : isCurrent ? step.icon : "⬜"}
-              </span>
+              <div className={`shrink-0 mt-0.5 ${isDone ? "text-primary" : isCurrent ? "text-accent" : "text-muted-foreground"}`}>
+                {isDone ? <CheckCircle className="w-4 h-4" /> : isCurrent ? step.icon : <Square className="w-4 h-4" />}
+              </div>
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-semibold leading-snug ${isDone ? "text-foreground" : isCurrent ? "text-foreground" : "text-muted-foreground"}`}>
+                <p className={`text-xs sm:text-sm font-semibold leading-snug ${isDone ? "text-foreground" : isCurrent ? "text-foreground" : "text-muted-foreground"}`}>
                   {step.text}
                 </p>
                 {(isDone || isCurrent) && (
@@ -123,7 +127,7 @@ const Step10Loading = ({ onNext }: Step10Props) => {
                 )}
               </div>
               {isCurrent && (
-                <div className="w-4 h-4 rounded-full border-2 border-accent/50 border-t-accent animate-spin shrink-0 mt-1" />
+                <Loader2 className="w-4 h-4 text-accent animate-spin shrink-0 mt-0.5" />
               )}
             </div>
           );
@@ -139,18 +143,28 @@ const Step10Loading = ({ onNext }: Step10Props) => {
           />
         </div>
         <div className="flex justify-between items-center mt-2">
-          <p className="text-xs text-muted-foreground">
-            {showResult ? "✅ Análise completa" : "⏳ Processando..."}
-          </p>
+          <div className="flex items-center gap-1">
+            {showResult ? (
+              <CheckCircle className="w-3.5 h-3.5 text-primary" />
+            ) : (
+              <Loader2 className="w-3.5 h-3.5 text-muted-foreground animate-spin" />
+            )}
+            <p className="text-xs text-muted-foreground">
+              {showResult ? "Análise completa" : "Processando..."}
+            </p>
+          </div>
           <p className="text-sm text-foreground font-bold">{Math.min(Math.round(progress), 100)}%</p>
         </div>
       </div>
 
       {/* Trust element */}
       <div className="w-full text-center mt-1">
-        <p className="text-xs text-muted-foreground">
-          🔒 Seus dados estão protegidos e criptografados
-        </p>
+        <div className="flex items-center gap-1.5 justify-center">
+          <Lock className="w-3.5 h-3.5 text-primary" />
+          <p className="text-xs text-muted-foreground">
+            Seus dados estão protegidos e criptografados
+          </p>
+        </div>
       </div>
     </StepContainer>
   );

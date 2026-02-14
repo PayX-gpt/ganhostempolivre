@@ -1,3 +1,5 @@
+import { Lock } from "lucide-react";
+
 export interface QuizAnswers {
   age?: string;
   name?: string;
@@ -38,7 +40,7 @@ export const ProgressBar = ({ current, total }: ProgressBarProps) => {
 interface OptionCardProps {
   label: string;
   sublabel?: string;
-  icon?: string;
+  icon?: React.ReactNode;
   selected?: boolean;
   onClick: () => void;
   imageSrc?: string;
@@ -55,7 +57,9 @@ export const OptionCard = ({ label, sublabel, icon, selected, onClick, imageSrc 
       <img src={imageSrc} alt={label} className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl object-cover shrink-0" />
     )}
     {icon && !imageSrc && (
-      <span className="text-2xl sm:text-3xl shrink-0 leading-none">{icon}</span>
+      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
+        {icon}
+      </div>
     )}
     <div className="flex-1 min-w-0">
       <p className="font-bold text-foreground text-sm sm:text-base leading-snug">{label}</p>
@@ -115,7 +119,7 @@ export const StepSubtitle = ({ children }: { children: React.ReactNode }) => (
 
 export const TrustBadge = ({ children }: { children: React.ReactNode }) => (
   <div className="flex items-center gap-2 justify-center">
-    <span className="text-primary text-lg">🔒</span>
+    <Lock className="w-4 h-4 text-primary shrink-0" />
     <p className="text-sm text-muted-foreground">{children}</p>
   </div>
 );
