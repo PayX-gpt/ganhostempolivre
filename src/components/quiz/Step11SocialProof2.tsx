@@ -1,4 +1,5 @@
-import { StepContainer, StepTitle, StepSubtitle, CTAButton, VideoPlaceholder } from "./QuizUI";
+import { useEffect } from "react";
+import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
 import avatarJose from "@/assets/avatar-jose.jpg";
 import avatarLucia from "@/assets/avatar-lucia.jpg";
 
@@ -7,6 +8,17 @@ interface Step11Props {
 }
 
 const Step11SocialProof2 = ({ onNext }: Step11Props) => {
+  useEffect(() => {
+    // Load ConverteAI SDK
+    const s = document.createElement("script");
+    s.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
+    s.async = true;
+    document.head.appendChild(s);
+    return () => {
+      document.head.removeChild(s);
+    };
+  }, []);
+
   return (
     <StepContainer>
       <div className="text-center space-y-1">
@@ -18,8 +30,25 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
         Pessoas com o mesmo perfil que o seu já estão tendo resultados reais. Veja o que elas dizem:
       </StepSubtitle>
 
-      {/* Video testimonial placeholder */}
-      <VideoPlaceholder label="Depoimento em vídeo — Seu Antônio, 58 anos" />
+      {/* ConverteAI Video Player */}
+      <div className="w-full">
+        <div id="ifr_690fc5f5da9cb48e0b5df28c_wrapper" style={{ margin: "0 auto", width: "100%", maxWidth: "400px" }}>
+          <div style={{ position: "relative", paddingTop: "177.78%" }} id="ifr_690fc5f5da9cb48e0b5df28c_aspect">
+            <iframe
+              frameBorder="0"
+              allowFullScreen
+              src="about:blank"
+              id="ifr_690fc5f5da9cb48e0b5df28c"
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+              referrerPolicy="origin"
+              onLoad={(e) => {
+                const iframe = e.currentTarget;
+                iframe.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/690fc5f5da9cb48e0b5df28c/v4/embed.html" + (window.location.search || "?") + "&vl=" + encodeURIComponent(window.location.href);
+              }}
+            />
+          </div>
+        </div>
+      </div>
 
       <div className="w-full space-y-3">
         <div className="funnel-card border-primary/25 bg-primary/5">
