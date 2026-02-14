@@ -6,6 +6,7 @@ export interface QuizAnswers {
   triedOnline?: string;
   incomeGoal?: string;
   obstacle?: string;
+  financialDream?: string;
   device?: string;
   availability?: string;
   investment?: string;
