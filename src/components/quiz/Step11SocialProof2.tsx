@@ -86,7 +86,7 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
       {/* CTA - appears after 100 seconds, between video and testimonials */}
       {showCTA ? (
         <CTAButton onClick={onNext} className="animate-fade-in">
-          QUERO VER COMO FUNCIONA →
+          PEGAR MEU ACESSO →
         </CTAButton>
       ) : (
         <div className="flex items-center gap-2 justify-center">
