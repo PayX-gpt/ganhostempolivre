@@ -169,8 +169,13 @@ const QuizFunnel = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="w-full bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-center">
-          <h1 className="font-display font-bold text-xl text-foreground tracking-tight">
-            <span className="text-gradient-green">ALFA</span> HÍBRIDA
+          <h1 className="font-bold text-lg sm:text-xl text-foreground tracking-tight flex items-center gap-1.5">
+            <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">G</span>
+            <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">anhos com</span>
+            <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">T</span>
+            <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">empo</span>
+            <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">L</span>
+            <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">ivre</span>
           </h1>
         </div>
         {step > 1 && step < TOTAL_STEPS && <ProgressBar current={step - 1} total={TOTAL_STEPS - 2} />}
