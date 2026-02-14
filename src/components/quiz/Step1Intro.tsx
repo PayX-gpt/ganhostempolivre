@@ -44,6 +44,21 @@ const Step1Intro = ({ onNext }: Step1Props) => {
         </div>
       </div>
 
+      {/* CTA - appears after 100 seconds, between video and copy */}
+      {showButton && (
+        <div className="w-full animate-fade-in space-y-3">
+          <CTAButton onClick={onNext} className="animate-bounce-subtle text-lg sm:text-xl">
+            QUERO VER COMO FUNCIONA →
+          </CTAButton>
+          <div className="flex items-center gap-2 justify-center">
+            <Lock className="w-3.5 h-3.5 text-primary shrink-0" />
+            <p className="text-sm text-muted-foreground text-center">
+              Teste 100% gratuito • Sem compromisso • Leva menos de 2 minutos
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Main copy */}
       <div className="text-center space-y-4 mt-1">
         <h3 className="font-display text-lg sm:text-xl font-bold text-foreground leading-snug">
@@ -71,22 +86,6 @@ const Step1Intro = ({ onNext }: Step1Props) => {
           <span className="text-xs font-medium">Usado em 6+ países</span>
         </div>
       </div>
-
-      {/* CTA - appears after 100 seconds */}
-      {showButton && (
-        <div className="w-full animate-fade-in space-y-3 mt-3">
-          <CTAButton onClick={onNext} className="animate-bounce-subtle text-lg sm:text-xl">
-            QUERO VER COMO FUNCIONA →
-          </CTAButton>
-
-          <div className="flex items-center gap-2 justify-center">
-            <Lock className="w-3.5 h-3.5 text-primary shrink-0" />
-            <p className="text-sm text-muted-foreground text-center">
-              Teste 100% gratuito • Sem compromisso • Leva menos de 2 minutos
-            </p>
-          </div>
-        </div>
-      )}
     </StepContainer>
   );
 };
