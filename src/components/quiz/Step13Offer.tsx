@@ -610,7 +610,18 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       <Divider />
 
-      {/* ═══ 11. BONUS STACKING ═══ */}
+      {/* ═══ VIDEO TESTIMONIALS (após acesso completo) ═══ */}
+      <div className="w-full space-y-3">
+        <h3 className="font-display text-lg font-bold text-foreground text-center">
+          Depoimentos em <span className="text-gradient-green">vídeo</span>
+        </h3>
+        <p className="text-sm text-muted-foreground text-center">
+          Assista quem já mudou de vida:
+        </p>
+        <VideoTestimonialsSection />
+      </div>
+
+      <Divider />
       <div className="w-full space-y-4">
         <div className="text-center">
           <img src={giftBox} alt="Presente" className="w-20 h-20 object-contain mx-auto mb-2" />
@@ -793,19 +804,6 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         {testimonials.map((t, i) => (
           <TestimonialCard key={i} {...t} />
         ))}
-      </div>
-
-      <Divider />
-
-      {/* ═══ 18. VIDEO TESTIMONIALS ═══ */}
-      <div className="w-full space-y-3">
-        <h3 className="font-display text-lg font-bold text-foreground text-center">
-          Depoimentos em <span className="text-gradient-green">vídeo</span>
-        </h3>
-        <p className="text-sm text-muted-foreground text-center">
-          Assista quem já mudou de vida:
-        </p>
-        <VideoTestimonialsSection />
       </div>
 
       <Divider />
