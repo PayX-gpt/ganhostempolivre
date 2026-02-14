@@ -130,11 +130,48 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
     return map[a || ""] || "Flexível";
   };
 
+  const getAgeLabel = (a?: string) => {
+    const map: Record<string, string> = {
+      "18-25": "18–25 anos", "26-35": "26–35 anos",
+      "36-45": "36–45 anos", "46-55": "46–55 anos", "56+": "56+ anos",
+    };
+    return map[a || ""] || "—";
+  };
+
+  const getDreamLabel = (d?: string) => {
+    const map: Record<string, string> = {
+      contas: "Pagar contas em dia", dividas: "Quitar dívidas",
+      viagem: "Viajar com a família", independencia: "Independência financeira",
+      aposentadoria: "Complementar aposentadoria", negocio: "Ter próprio negócio",
+    };
+    return map[d || ""] || "—";
+  };
+
+  const getTriedLabel = (t?: string) => {
+    const map: Record<string, string> = {
+      sim_resultado: "✅ Sim, com resultado", sim_sem: "⚠️ Sim, sem resultado",
+      nao: "🆕 Primeira vez",
+    };
+    return map[t || ""] || "—";
+  };
+
+  const getBalanceLabel = (b?: string) => {
+    const map: Record<string, string> = {
+      "menos100": "Até R$100", "100-500": "R$100–R$500",
+      "500-2000": "R$500–R$2.000", "2000-10000": "R$2.000–R$10.000", "10000+": "+R$10.000",
+    };
+    return map[b || ""] || "—";
+  };
+
   const items = [
-    { label: "Meta", value: getGoalLabel(answers?.incomeGoal), highlight: true },
-    { label: "Desafio", value: getObstacleLabel(answers?.obstacle) },
-    { label: "Dispositivo", value: getDeviceLabel(answers?.device) },
-    { label: "Tempo", value: getAvailabilityLabel(answers?.availability) },
+    { label: "Faixa etária", value: getAgeLabel(answers?.age), highlight: false },
+    { label: "Meta de renda", value: getGoalLabel(answers?.incomeGoal), highlight: true },
+    { label: "Maior desafio", value: getObstacleLabel(answers?.obstacle), highlight: false },
+    { label: "Sonho financeiro", value: getDreamLabel(answers?.financialDream), highlight: false },
+    { label: "Dispositivo", value: getDeviceLabel(answers?.device), highlight: false },
+    { label: "Tempo disponível", value: getAvailabilityLabel(answers?.availability), highlight: false },
+    { label: "Experiência online", value: getTriedLabel(answers?.triedOnline), highlight: false },
+    { label: "Capital atual", value: getBalanceLabel(answers?.accountBalance), highlight: false },
   ];
 
   return (
@@ -155,7 +192,7 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
           {items.map((item, i) => (
             <div key={i} className={`rounded-xl p-3 text-center ${item.highlight ? "bg-primary/10 border border-primary/20" : "bg-secondary/50"}`}>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{item.label}</p>
-              <p className={`text-sm font-bold ${item.highlight ? "text-primary" : "text-foreground"}`}>{item.value}</p>
+              <p className={`text-xs sm:text-sm font-bold ${item.highlight ? "text-primary" : "text-foreground"}`}>{item.value}</p>
             </div>
           ))}
         </div>
@@ -361,7 +398,7 @@ const WhatsAppWelcome = ({ firstName }: { firstName: string }) => {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="#aebac1"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" transform="rotate(180 12 12)"/></svg>
           <img src={mentorPhoto} alt="Suporte" className="w-8 h-8 rounded-full object-cover" />
           <div>
-            <p className="text-[#e9edef] text-sm font-normal">Suporte Alfa Híbrida</p>
+            <p className="text-[#e9edef] text-sm font-normal">Suporte Ganhos Tempo Livre</p>
             <p className="text-[#8696a0] text-[11px]">online</p>
           </div>
         </div>
@@ -370,7 +407,7 @@ const WhatsAppWelcome = ({ firstName }: { firstName: string }) => {
             <span className="bg-[#182229] text-[#8696a0] text-[11px] px-3 py-1 rounded-lg">HOJE</span>
           </div>
           {[
-            `Olá ${name}! Seja muito bem-vindo(a) à família Alfa Híbrida! 🎉`,
+            `Olá ${name}! Seja muito bem-vindo(a) à família Ganhos Tempo Livre! 🎉`,
             `Meu nome é Ana e vou ser sua mentora pessoal.`,
             `Já liberei seu acesso completo. Vou te mandar o link agora 👇`,
             `Qualquer dúvida, me chama aqui. Estou aqui pra te ajudar em cada passo.`,
@@ -739,12 +776,12 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           <div className="space-y-2">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">Você paga apenas:</p>
             <p className="text-5xl sm:text-6xl font-display font-bold text-foreground">
-              R$<span className="text-gradient-green">66,83</span>
+              R$<span className="text-gradient-green">{formatPrice(pricing.price)}</span>
             </p>
-            <p className="text-base text-muted-foreground">ou <span className="font-semibold text-foreground">12x de R$6,64</span></p>
+            <p className="text-base text-muted-foreground">ou <span className="font-semibold text-foreground">{pricing.installments}x de R${formatPrice(pricing.installment)}</span></p>
             <div className="bg-secondary/50 rounded-xl p-3">
               <p className="text-sm text-foreground font-medium">
-                Isso dá <span className="text-primary font-bold">menos de R$2,23 por dia</span> — o preço de uma bala.
+                Isso dá <span className="text-primary font-bold">menos de R${formatPrice(pricing.price / 30)} por dia</span> — o preço de uma bala.
               </p>
             </div>
           </div>
@@ -803,7 +840,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           },
           {
             objection: '"Não tenho dinheiro sobrando..."',
-            response: "São R$66,83 uma única vez. Muitos alunos recuperam esse valor no primeiro dia. E se não recuperar em 30 dias, você recebe tudo de volta. Risco zero.",
+            response: `São R$${formatPrice(pricing.price)} uma única vez. Muitos alunos recuperam esse valor no primeiro dia. E se não recuperar em 30 dias, você recebe tudo de volta. Risco zero.`,
           },
           {
             objection: '"Tenho medo de tecnologia..."',
@@ -881,7 +918,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           ))}
         </div>
         <p className="text-sm text-muted-foreground text-center italic pt-2">
-          Tudo isso pode começar <span className="text-primary font-bold not-italic">hoje</span>. Por menos de R$2,20 por dia.
+          Tudo isso pode começar <span className="text-primary font-bold not-italic">hoje</span>. Por menos de R${formatPrice(pricing.price / 30)} por dia.
         </p>
       </div>
 
@@ -912,7 +949,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             <p className="text-sm font-bold text-destructive uppercase tracking-wider">Última chance</p>
           </div>
           <p className="text-base font-bold text-foreground leading-snug">
-            Essa condição de R$66,83 é exclusiva pra quem completou a análise agora.
+            {firstName ? `${firstName}, essa` : "Essa"} condição de R${formatPrice(pricing.price)} é exclusiva pra quem completou a análise agora.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Ao sair desta página, o valor volta para R$297 e os bônus são removidos.
