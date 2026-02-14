@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { StepContainer, CTAButton } from "./QuizUI";
 import { AlertTriangle, Lock, Globe } from "lucide-react";
 import mentorPhoto from "@/assets/mentor-photo.jpg";
@@ -7,6 +8,13 @@ interface Step1Props {
 }
 
 const Step1Intro = ({ onNext }: Step1Props) => {
+  const [showButton, setShowButton] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowButton(true), 100_000); // 100 seconds
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <StepContainer>
       {/* Alert bar */}
@@ -64,17 +72,21 @@ const Step1Intro = ({ onNext }: Step1Props) => {
         </div>
       </div>
 
-      {/* CTA */}
-      <CTAButton onClick={onNext} className="mt-3 animate-bounce-subtle text-lg sm:text-xl">
-        INICIAR TESTE GRATUITO →
-      </CTAButton>
+      {/* CTA - appears after 100 seconds */}
+      {showButton && (
+        <div className="w-full animate-fade-in space-y-3 mt-3">
+          <CTAButton onClick={onNext} className="animate-bounce-subtle text-lg sm:text-xl">
+            QUERO VER COMO FUNCIONA →
+          </CTAButton>
 
-      <div className="flex items-center gap-2 justify-center">
-        <Lock className="w-3.5 h-3.5 text-primary shrink-0" />
-        <p className="text-sm text-muted-foreground text-center">
-          Teste 100% gratuito • Sem compromisso • Leva menos de 2 minutos
-        </p>
-      </div>
+          <div className="flex items-center gap-2 justify-center">
+            <Lock className="w-3.5 h-3.5 text-primary shrink-0" />
+            <p className="text-sm text-muted-foreground text-center">
+              Teste 100% gratuito • Sem compromisso • Leva menos de 2 minutos
+            </p>
+          </div>
+        </div>
+      )}
     </StepContainer>
   );
 };
