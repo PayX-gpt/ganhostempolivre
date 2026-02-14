@@ -1,15 +1,27 @@
 import { useState } from "react";
-import { StepContainer, StepTitle, StepSubtitle, OptionCard } from "./QuizUI";
+import { StepContainer, StepTitle, StepSubtitle, OptionCard, CTAButton } from "./QuizUI";
 
 interface Step6Props {
   onNext: (answer: string) => void;
 }
 
-const obstacleMessages: Record<string, string> = {
-  medo: "Entendido. Saiba que 7 em cada 10 dos nossos melhores alunos sentiam exatamente o mesmo medo que você. Eles superaram — e você também pode. Continue para ver como.",
-  tempo: "Perfeito. A maioria dos nossos alunos tem uma rotina cheia. Por isso, o método foi criado para funcionar com apenas 10 minutos por dia. Continue para ver como.",
-  inicio: "Normal. Muita gente se sente assim no começo. É por isso que o método é 100% passo a passo — você nunca fica perdido. Continue para ver como funciona.",
-  dinheiro: "Entendemos. O investimento inicial é mínimo e acessível — e muitos alunos recuperaram o valor já nos primeiros dias. Continue para ver os detalhes.",
+const obstacleMessages: Record<string, { title: string; message: string }> = {
+  medo: {
+    title: "Nós entendemos você. 💛",
+    message: "Saiba que 7 em cada 10 dos nossos melhores alunos sentiam exatamente o mesmo medo que você. Eles já tinham perdido dinheiro antes, já tinham desconfiado de tudo... mas decidiram dar mais uma chance — e dessa vez, deu certo. Continue para ver como eles superaram isso.",
+  },
+  tempo: {
+    title: "Sua rotina é corrida, e tudo bem. ⏰",
+    message: "A maioria dos nossos alunos trabalha o dia todo, cuida da casa e da família. Por isso, o método foi criado para funcionar com apenas 10 minutos por dia — no horário que você escolher. Continue para ver como encaixar na sua rotina.",
+  },
+  inicio: {
+    title: "É normal se sentir assim. 🧭",
+    message: "Muita gente chega até aqui se sentindo perdida com tanta informação na internet. É por isso que o método é 100% passo a passo — você nunca fica sozinho(a) e nunca fica perdido(a). Continue para ver como funciona na prática.",
+  },
+  dinheiro: {
+    title: "Nós pensamos nisso por você. 🌱",
+    message: "Entendemos que dinheiro está curto. O investimento inicial é mínimo e acessível — e muitos alunos recuperaram o valor já nos primeiros dias de operação. Continue para ver os detalhes e se surpreender.",
+  },
 };
 
 const Step6Obstacle = ({ onNext }: Step6Props) => {
@@ -19,8 +31,34 @@ const Step6Obstacle = ({ onNext }: Step6Props) => {
   const handleSelect = (answer: string) => {
     setSelected(answer);
     setShowValidation(true);
-    setTimeout(() => onNext(answer), 2500);
   };
+
+  if (showValidation && selected) {
+    const msg = obstacleMessages[selected];
+    return (
+      <StepContainer>
+        <div className="w-full flex flex-col items-center gap-6 py-4">
+          <div className="w-20 h-20 rounded-full bg-primary/15 flex items-center justify-center border-2 border-primary/30">
+            <span className="text-4xl">✅</span>
+          </div>
+
+          <h2 className="font-display text-2xl font-bold text-foreground text-center leading-snug">
+            {msg.title}
+          </h2>
+
+          <p className="text-lg text-muted-foreground text-center leading-relaxed max-w-md">
+            {msg.message}
+          </p>
+
+          <div className="w-full mt-4">
+            <CTAButton onClick={() => onNext(selected)}>
+              Continuar →
+            </CTAButton>
+          </div>
+        </div>
+      </StepContainer>
+    );
+  }
 
   return (
     <StepContainer>
@@ -59,14 +97,6 @@ const Step6Obstacle = ({ onNext }: Step6Props) => {
           onClick={() => handleSelect("dinheiro")}
         />
       </div>
-
-      {showValidation && selected && (
-        <div className="w-full funnel-card border-primary/40 bg-primary/5 animate-fade-in mt-2">
-          <p className="text-base text-foreground text-center leading-relaxed">
-            ✅ {obstacleMessages[selected]}
-          </p>
-        </div>
-      )}
     </StepContainer>
   );
 };
