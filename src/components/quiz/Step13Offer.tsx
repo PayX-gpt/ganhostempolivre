@@ -6,6 +6,12 @@ import type { QuizAnswers } from "./QuizUI";
 import mentorPhoto from "@/assets/mentor-photo.jpg";
 import bonusStack from "@/assets/bonus-stack.jpg";
 import guaranteeSeal from "@/assets/guarantee-seal.jpg";
+import giftBox from "@/assets/gift-box.jpg";
+import chatgptLogo from "@/assets/chatgpt-logo.webp";
+import feedback1 from "@/assets/feedback-1.png";
+import feedback2 from "@/assets/feedback-2.jpg";
+import feedback3 from "@/assets/feedback-3.jpg";
+import feedback4 from "@/assets/feedback-4.jpg";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarClaudia from "@/assets/avatar-claudia.jpg";
 import avatarCarlos from "@/assets/avatar-carlos.jpg";
@@ -588,6 +594,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       {/* ═══ BONUS STACKING ═══ */}
       <div className="w-full space-y-4">
+        <img src={giftBox} alt="Presente especial" className="w-24 h-24 object-contain mx-auto" />
         <h3 className="font-display text-xl font-bold text-foreground text-center">
           E mais: <span className="text-accent">6 bônus exclusivos</span> para você
         </h3>
@@ -615,6 +622,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       {/* ═══ PRICE ANCHOR ═══ */}
       <div className="w-full funnel-card border-accent/30 bg-card text-center space-y-4">
+        <img src={chatgptLogo} alt="ChatGPT" className="w-12 h-12 object-contain mx-auto rounded-xl" />
         <div className="flex items-center justify-center gap-2">
           <Cpu className="w-5 h-5 text-primary" />
           <p className="text-sm font-semibold text-foreground">Por que existe essa taxa?</p>
@@ -732,6 +740,25 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       {/* ═══ VIDEO TESTIMONIALS ═══ */}
       <VideoTestimonialsSection />
+
+      <Divider />
+
+      {/* ═══ CLIENT FEEDBACK SCREENSHOTS ═══ */}
+      <div className="w-full space-y-4">
+        <h3 className="font-display text-xl font-bold text-foreground text-center">
+          Resultados direto do <span className="text-gradient-green">WhatsApp</span> dos nossos alunos
+        </h3>
+        <p className="text-sm text-muted-foreground text-center">
+          Prints reais de conversas com alunos da plataforma:
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          {[feedback1, feedback2, feedback3, feedback4].map((img, i) => (
+            <div key={i} className="rounded-xl overflow-hidden border border-border shadow-md">
+              <img src={img} alt={`Feedback de aluno ${i + 1}`} className="w-full h-auto object-cover" />
+            </div>
+          ))}
+        </div>
+      </div>
 
       <Divider />
 
