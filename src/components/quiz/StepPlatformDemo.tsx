@@ -332,11 +332,11 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
   return (
     <StepContainer>
       <StepTitle>
-        {firstName ? `${firstName}, essa` : "Essa"} é a <span className="text-gradient-green">plataforma real</span>
+        {firstName ? `${firstName}, essa` : "Essa"} é a <span className="text-gradient-green">plataforma de ganhos</span> com tempo livre
       </StepTitle>
       <StepSubtitle>
         {!isActive
-          ? "Vou te mostrar como ela funciona. Toque no botão abaixo e veja a IA operando sozinha:"
+          ? "Basta apertar no botão Iniciar Robô, que o sistema começa a gerar lucros para você automático."
           : goalReached
             ? "Viu como é simples? Agora imagine isso caindo na sua conta todos os dias."
             : "A IA está operando em tempo real. Acompanhe:"}
