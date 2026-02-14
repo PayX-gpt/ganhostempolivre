@@ -14,7 +14,216 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      funnel_audit_logs: {
+        Row: {
+          conversion_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          page_id: string | null
+          payment_id: string | null
+          redirect_url: string | null
+          session_id: string
+          status: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          conversion_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          page_id?: string | null
+          payment_id?: string | null
+          redirect_url?: string | null
+          session_id: string
+          status?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          conversion_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          page_id?: string | null
+          payment_id?: string | null
+          redirect_url?: string | null
+          session_id?: string
+          status?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      funnel_events: {
+        Row: {
+          created_at: string
+          event_data: Json | null
+          event_name: string
+          id: string
+          page_url: string | null
+          session_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_name: string
+          id?: string
+          page_url?: string | null
+          session_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_name?: string
+          id?: string
+          page_url?: string | null
+          session_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      purchase_tracking: {
+        Row: {
+          amount: number | null
+          conversion_api_sent: boolean | null
+          created_at: string
+          email: string | null
+          event_id: string | null
+          failure_reason: string | null
+          fbc: string | null
+          fbclid: string | null
+          fbp: string | null
+          funnel_step: string | null
+          gclid: string | null
+          id: string
+          landing_page: string | null
+          pixel_sent: boolean | null
+          plan_id: string | null
+          product_name: string | null
+          redirect_completed: boolean | null
+          redirect_completed_at: string | null
+          redirect_source: string | null
+          referrer: string | null
+          session_id: string | null
+          status: string | null
+          transaction_id: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          utmify_sent: boolean | null
+          vsl_variant: string | null
+          whop_payment_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          conversion_api_sent?: boolean | null
+          created_at?: string
+          email?: string | null
+          event_id?: string | null
+          failure_reason?: string | null
+          fbc?: string | null
+          fbclid?: string | null
+          fbp?: string | null
+          funnel_step?: string | null
+          gclid?: string | null
+          id?: string
+          landing_page?: string | null
+          pixel_sent?: boolean | null
+          plan_id?: string | null
+          product_name?: string | null
+          redirect_completed?: boolean | null
+          redirect_completed_at?: string | null
+          redirect_source?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          status?: string | null
+          transaction_id?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          utmify_sent?: boolean | null
+          vsl_variant?: string | null
+          whop_payment_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          conversion_api_sent?: boolean | null
+          created_at?: string
+          email?: string | null
+          event_id?: string | null
+          failure_reason?: string | null
+          fbc?: string | null
+          fbclid?: string | null
+          fbp?: string | null
+          funnel_step?: string | null
+          gclid?: string | null
+          id?: string
+          landing_page?: string | null
+          pixel_sent?: boolean | null
+          plan_id?: string | null
+          product_name?: string | null
+          redirect_completed?: boolean | null
+          redirect_completed_at?: string | null
+          redirect_source?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          status?: string | null
+          transaction_id?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          utmify_sent?: boolean | null
+          vsl_variant?: string | null
+          whop_payment_id?: string | null
+        }
+        Relationships: []
+      }
+      redirect_metrics: {
+        Row: {
+          created_at: string
+          from_page: string
+          id: string
+          redirect_duration_ms: number
+          session_id: string
+          to_page: string
+        }
+        Insert: {
+          created_at?: string
+          from_page: string
+          id?: string
+          redirect_duration_ms: number
+          session_id: string
+          to_page: string
+        }
+        Update: {
+          created_at?: string
+          from_page?: string
+          id?: string
+          redirect_duration_ms?: number
+          session_id?: string
+          to_page?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

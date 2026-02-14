@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ProgressBar, type QuizAnswers } from "./QuizUI";
+import { usePagePresence } from "@/hooks/usePagePresence";
 import Step1Intro from "./Step1Intro";
 import Step2Age from "./Step2Age";
 import StepName from "./StepName";
@@ -45,8 +46,11 @@ const QuizFunnel = () => {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const [answers, setAnswers] = useState<QuizAnswers>({});
+  const currentSlug = slug || "step-1";
+  const step = Math.max(1, (STEP_SLUGS.indexOf(currentSlug as any) + 1) || 1);
 
-  const step = Math.max(1, (STEP_SLUGS.indexOf(slug as any) + 1) || 1);
+  // Track presence for the current step
+  usePagePresence(`/${currentSlug}`);
 
   const goNext = useCallback(() => {
     const nextStep = Math.min(step + 1, TOTAL_STEPS);
