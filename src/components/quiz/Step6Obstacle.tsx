@@ -12,7 +12,7 @@ const Step6Obstacle = ({ onNext }: Step6Props) => {
   const handleSelect = (answer: string) => {
     setSelected(answer);
     setShowValidation(true);
-    setTimeout(() => onNext(answer), 1500);
+    setTimeout(() => onNext(answer), 2000);
   };
 
   return (
@@ -53,7 +53,7 @@ const Step6Obstacle = ({ onNext }: Step6Props) => {
 
       {showValidation && (
         <div className="w-full funnel-card border-primary/40 bg-primary/5 animate-fade-in mt-2">
-          <p className="text-sm text-foreground text-center">
+          <p className="text-sm text-foreground text-center leading-relaxed">
             ✅ Entendido. Saiba que{" "}
             <span className="font-bold text-primary">7 em cada 10</span>{" "}
             dos nossos melhores alunos sentiam exatamente o mesmo que você. Continue para ver como eles superaram isso.
