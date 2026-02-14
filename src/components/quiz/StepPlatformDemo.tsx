@@ -47,7 +47,7 @@ const TutorialTip = ({ icon: Icon, text }: { icon: React.ElementType; text: stri
       <div className="w-6 h-6 rounded-md bg-[hsl(280,70%,65%,0.15)] flex items-center justify-center shrink-0 mt-0.5">
         <Icon className="w-3 h-3 text-[hsl(280,70%,65%)]" />
       </div>
-      <p className="text-[11px] text-foreground leading-snug flex-1">{text}</p>
+      <p className="text-[11px] text-[hsl(45,90%,65%)] font-semibold leading-snug flex-1">{text}</p>
     </div>
   </div>
 );
