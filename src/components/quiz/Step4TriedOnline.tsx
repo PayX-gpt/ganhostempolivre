@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard } from "./QuizUI";
+import { Frown, ThumbsUp, HelpCircle } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 
 interface Step4Props {
   onNext: (answer: string) => void;
@@ -24,29 +26,32 @@ const Step4TriedOnline = ({ onNext }: Step4Props) => {
         <OptionCard
           label="Sim, mas não deu certo"
           sublabel="Tentei e acabei perdendo dinheiro, tempo ou os dois"
-          icon="😔"
+          icon={<Frown className="w-5 h-5" />}
           selected={selected === "sim_falhou"}
           onClick={() => handleSelect("sim_falhou")}
         />
         <OptionCard
           label="Sim, tenho alguma experiência"
           sublabel="Já tive alguns resultados, mas quero melhorar"
-          icon="👍"
+          icon={<ThumbsUp className="w-5 h-5" />}
           selected={selected === "sim_experiencia"}
           onClick={() => handleSelect("sim_experiencia")}
         />
         <OptionCard
           label="Não, nunca tentei"
           sublabel="Sempre tive vontade, mas nunca dei o primeiro passo"
-          icon="🤷"
+          icon={<HelpCircle className="w-5 h-5" />}
           selected={selected === "nunca"}
           onClick={() => handleSelect("nunca")}
         />
       </div>
 
-      <p className="text-sm text-muted-foreground text-center mt-1">
-        📊 <em>68% dos nossos alunos responderam "Sim, mas não deu certo" — e mesmo assim conseguiram resultados.</em>
-      </p>
+      <div className="flex items-center gap-2 justify-center mt-1">
+        <BarChart3 className="w-4 h-4 text-primary shrink-0" />
+        <p className="text-sm text-muted-foreground text-center">
+          <em>68% dos nossos alunos responderam "Sim, mas não deu certo" — e mesmo assim conseguiram resultados.</em>
+        </p>
+      </div>
     </StepContainer>
   );
 };

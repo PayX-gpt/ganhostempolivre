@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
+import { MessageSquare, Loader2 } from "lucide-react";
 import mentorPhoto from "@/assets/mentor-photo.jpg";
 
 interface Step7Props {
@@ -16,13 +17,11 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
   }, []);
 
   useEffect(() => {
-    // Load ConverteAI SDK
     const script = document.createElement("script");
     script.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
     script.async = true;
     document.head.appendChild(script);
 
-    // Set iframe src after mount
     const iframe = document.getElementById("ifr_692056147cc713fc76f6135f") as HTMLIFrameElement;
     if (iframe) {
       iframe.src =
@@ -82,9 +81,12 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
       </div>
 
       <div className="w-full funnel-card border-primary/20 bg-primary/5">
-        <p className="text-sm text-foreground/80 text-center leading-relaxed italic">
-          💬 "A maioria dos meus melhores alunos tem mais de 50 anos. Eles não tinham experiência nenhuma com tecnologia. Mesmo assim, conseguiram. Se eles conseguiram, você também consegue."
-        </p>
+        <div className="flex items-start gap-2">
+          <MessageSquare className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+          <p className="text-sm text-foreground/80 text-center leading-relaxed italic">
+            "A maioria dos meus melhores alunos tem mais de 50 anos. Eles não tinham experiência nenhuma com tecnologia. Mesmo assim, conseguiram. Se eles conseguiram, você também consegue."
+          </p>
+        </div>
       </div>
 
       {showCTA ? (
@@ -92,9 +94,12 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
           ENTENDI, QUERO CONTINUAR →
         </CTAButton>
       ) : (
-        <p className="text-sm text-muted-foreground text-center animate-pulse">
-          ⏳ Assista o vídeo para continuar...
-        </p>
+        <div className="flex items-center gap-2 justify-center">
+          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+          <p className="text-sm text-muted-foreground animate-pulse">
+            Assista o vídeo para continuar...
+          </p>
+        </div>
       )}
     </StepContainer>
   );

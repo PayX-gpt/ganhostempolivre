@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
+import { Banknote, DollarSign, BarChart3, Lock, Loader2, TrendingUp } from "lucide-react";
 
 interface StepPlatformDemoProps {
   onNext: () => void;
@@ -62,7 +63,7 @@ const NotificationToast = ({ text, onDone }: { text: string; onDone: () => void 
     <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-xs z-50 animate-slide-up">
       <div className="bg-card border border-primary/30 rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-          <span className="text-sm">💸</span>
+          <Banknote className="w-4 h-4 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold text-primary">Transação confirmada</p>
@@ -75,10 +76,10 @@ const NotificationToast = ({ text, onDone }: { text: string; onDone: () => void 
 
 /* ─── Stat Card ─── */
 const StatCard = ({ icon, label, value, pulse }: {
-  icon: string; label: string; value: string; pulse?: boolean;
+  icon: React.ReactNode; label: string; value: string; pulse?: boolean;
 }) => (
   <div className="funnel-card p-3 sm:p-4 flex-1 min-w-0 text-center space-y-1">
-    <span className="text-xl sm:text-2xl">{icon}</span>
+    <div className="flex justify-center">{icon}</div>
     <p className={`text-lg sm:text-xl font-bold text-foreground leading-tight ${pulse ? "animate-pulse" : ""}`}>
       {value}
     </p>
@@ -196,13 +197,13 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
       {/* ─── Stats Row ─── */}
       <div className="w-full flex gap-2 sm:gap-3">
         <StatCard
-          icon="🟢"
+          icon={<div className="w-3 h-3 rounded-full bg-primary animate-pulse" />}
           label="Lucrando agora"
           value={onlineCount.toLocaleString("pt-BR")}
           pulse
         />
         <StatCard
-          icon="💰"
+          icon={<DollarSign className="w-5 h-5 text-accent" />}
           label="Sacado em 24h"
           value={`R$${(totalSaque / 1000).toFixed(0)}mil`}
         />
@@ -211,7 +212,7 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
       {/* ─── Mini Chart ─── */}
       <div className="w-full funnel-card p-3 sm:p-4 space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold text-foreground">📊 Lucros do dia (tempo real)</p>
+          <div className="flex items-center gap-1.5"><BarChart3 className="w-3.5 h-3.5 text-primary" /><span className="text-xs font-semibold text-foreground">Lucros do dia (tempo real)</span></div>
           <span className="text-[10px] text-primary font-medium bg-primary/10 px-2 py-0.5 rounded-full">
             AO VIVO
           </span>
@@ -257,10 +258,10 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
         {/* Quick actions */}
         <div className="px-3 sm:px-4 py-2.5 flex gap-2 border-b border-border">
           <div className="flex-1 bg-primary/10 rounded-xl py-2 text-center cursor-default">
-            <span className="text-xs font-semibold text-primary">💸 Sacar via Pix</span>
+            <span className="text-xs font-semibold text-primary flex items-center justify-center gap-1"><Banknote className="w-3.5 h-3.5" /> Sacar via Pix</span>
           </div>
           <div className="flex-1 bg-secondary rounded-xl py-2 text-center cursor-default">
-            <span className="text-xs font-semibold text-foreground">📊 Relatório</span>
+            <span className="text-xs font-semibold text-foreground flex items-center justify-center gap-1"><BarChart3 className="w-3.5 h-3.5" /> Relatório</span>
           </div>
         </div>
 
@@ -287,10 +288,12 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
 
       {/* ─── Trust line ─── */}
       <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center p-3">
-        <p className="text-xs sm:text-sm text-foreground font-medium leading-relaxed">
-          🔒 Plataforma <strong>100% automática</strong>. Basta ativar e acompanhar os resultados no seu celular.
-          Sem experiência necessária.
-        </p>
+        <div className="flex items-center justify-center gap-2">
+          <Lock className="w-4 h-4 text-primary shrink-0" />
+          <p className="text-xs sm:text-sm text-foreground font-medium leading-relaxed">
+            Plataforma <strong>100% automática</strong>. Basta ativar e acompanhar os resultados no seu celular.
+          </p>
+        </div>
       </div>
 
       {/* ─── CTA ─── */}
@@ -299,8 +302,8 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
           ENTENDI, QUERO CONTINUAR →
         </CTAButton>
       ) : (
-        <div className="text-center space-y-2">
-          <div className="w-8 h-8 rounded-full border-[3px] border-primary/30 border-t-primary animate-spin mx-auto" />
+        <div className="flex items-center gap-2 justify-center">
+          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
           <p className="text-sm text-muted-foreground animate-pulse">
             Observe a plataforma funcionando...
           </p>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
+import { Target, CheckCircle, Loader2 } from "lucide-react";
 import avatarJose from "@/assets/avatar-jose.jpg";
 import avatarLucia from "@/assets/avatar-lucia.jpg";
 
@@ -16,13 +17,11 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
   }, []);
 
   useEffect(() => {
-    // Load ConverteAI SDK
     const s = document.createElement("script");
     s.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
     s.async = true;
     document.head.appendChild(s);
 
-    // Set iframe src after mount
     const iframe = document.getElementById("ifr_690fc5f5da9cb48e0b5df28c") as HTMLIFrameElement;
     if (iframe) {
       iframe.src =
@@ -39,8 +38,10 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
 
   return (
     <StepContainer>
-      <div className="text-center space-y-1">
-        <p className="text-3xl">🎯</p>
+      <div className="text-center space-y-2">
+        <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center mx-auto">
+          <Target className="w-6 h-6 text-primary" />
+        </div>
         <StepTitle>Ótima notícia: seu perfil é compatível!</StepTitle>
       </div>
 
@@ -48,7 +49,7 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
         Pessoas com o mesmo perfil que o seu já estão tendo resultados reais. Veja o que elas dizem:
       </StepSubtitle>
 
-      {/* ─── Headline Copy ─── */}
+      {/* Headline Copy */}
       <div className="w-full funnel-card border-accent/30 bg-accent/5 text-center space-y-2">
         <p className="text-sm sm:text-base text-foreground font-bold leading-snug">
           Nos próximos <span className="text-accent">30 SEGUNDOS</span> vou te explicar como você pode se tornar
@@ -60,7 +61,7 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
         </p>
       </div>
 
-      {/* ─── ConverteAI Video Player ─── */}
+      {/* ConverteAI Video Player */}
       <div className="w-full rounded-2xl overflow-hidden border border-border shadow-xl">
         <div
           id="ifr_690fc5f5da9cb48e0b5df28c_wrapper"
@@ -82,14 +83,17 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
         </div>
       </div>
 
-      {/* ─── Testimonials ─── */}
+      {/* Testimonials */}
       <div className="w-full space-y-3">
         <div className="funnel-card border-primary/25 bg-primary/5">
           <div className="flex items-center gap-3 mb-3">
             <img src={avatarJose} alt="Antônio" className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
             <div className="min-w-0">
               <p className="font-bold text-foreground text-sm sm:text-base">Antônio, 58 anos</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">São Paulo, SP • Aluno verificado ✅</p>
+              <div className="flex items-center gap-1">
+                <span className="text-xs sm:text-sm text-muted-foreground">São Paulo, SP • Aluno verificado</span>
+                <CheckCircle className="w-3.5 h-3.5 text-primary" />
+              </div>
             </div>
           </div>
           <p className="text-sm sm:text-base text-foreground/90 italic leading-relaxed">
@@ -102,7 +106,10 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
             <img src={avatarLucia} alt="Dona Cláudia" className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
             <div className="min-w-0">
               <p className="font-bold text-foreground text-sm sm:text-base">Dona Cláudia, 62 anos</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Belo Horizonte, MG • Aluna verificada ✅</p>
+              <div className="flex items-center gap-1">
+                <span className="text-xs sm:text-sm text-muted-foreground">Belo Horizonte, MG • Aluna verificada</span>
+                <CheckCircle className="w-3.5 h-3.5 text-primary" />
+              </div>
             </div>
           </div>
           <p className="text-sm sm:text-base text-foreground/90 italic leading-relaxed">
@@ -111,7 +118,7 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
         </div>
       </div>
 
-      {/* ─── Emotional CTA ─── */}
+      {/* Emotional CTA */}
       <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center">
         <p className="text-sm sm:text-base text-foreground font-semibold leading-relaxed">
           Você merece terminar cada mês com a <span className="text-primary font-bold">tranquilidade</span> de quem tem as contas pagas e dinheiro sobrando.{" "}
@@ -119,16 +126,16 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
         </p>
       </div>
 
-      {/* ─── CTA ─── */}
+      {/* CTA */}
       {showCTA ? (
         <CTAButton onClick={onNext} className="animate-fade-in">
           QUERO VER COMO FUNCIONA →
         </CTAButton>
       ) : (
-        <div className="text-center space-y-2">
-          <div className="w-8 h-8 rounded-full border-[3px] border-primary/30 border-t-primary animate-spin mx-auto" />
+        <div className="flex items-center gap-2 justify-center">
+          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
           <p className="text-sm text-muted-foreground animate-pulse">
-            ⏳ Assista o vídeo para continuar...
+            Assista o vídeo para continuar...
           </p>
         </div>
       )}

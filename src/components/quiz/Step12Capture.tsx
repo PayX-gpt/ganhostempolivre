@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton, TrustBadge } from "./QuizUI";
+import { PartyPopper, Zap } from "lucide-react";
 
 interface Step12Props {
   onNext: (name: string, email: string, phone: string) => void;
@@ -15,7 +16,9 @@ const Step12Capture = ({ onNext }: Step12Props) => {
   return (
     <StepContainer>
       <div className="text-center space-y-2">
-        <p className="text-4xl">🎉</p>
+        <div className="w-14 h-14 rounded-full bg-primary/15 flex items-center justify-center mx-auto">
+          <PartyPopper className="w-7 h-7 text-primary" />
+        </div>
         <StepTitle>Parabéns! Você foi aprovado(a)!</StepTitle>
       </div>
 
@@ -62,9 +65,12 @@ const Step12Capture = ({ onNext }: Step12Props) => {
         LIBERAR MEU ACESSO EXCLUSIVO →
       </CTAButton>
 
-      <p className="text-sm text-muted-foreground text-center">
-        ⚡ Vagas limitadas — não perca sua oportunidade
-      </p>
+      <div className="flex items-center gap-1.5 justify-center">
+        <Zap className="w-4 h-4 text-accent" />
+        <p className="text-sm text-muted-foreground text-center">
+          Vagas limitadas — não perca sua oportunidade
+        </p>
+      </div>
     </StepContainer>
   );
 };

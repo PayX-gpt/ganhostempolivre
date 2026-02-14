@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard } from "./QuizUI";
+import { Timer, Clock, Clock2, Clock3 } from "lucide-react";
 
 interface Step9Props {
   onNext: (answer: string) => void;
@@ -24,28 +25,28 @@ const Step9Availability = ({ onNext }: Step9Props) => {
         <OptionCard
           label="Menos de 30 minutos"
           sublabel="Tenho pouquinho tempo, mas quero aproveitar"
-          icon="⏱️"
+          icon={<Timer className="w-5 h-5" />}
           selected={selected === "menos30"}
           onClick={() => handleSelect("menos30")}
         />
         <OptionCard
           label="30 minutos a 1 hora"
           sublabel="Consigo encaixar no meu dia com tranquilidade"
-          icon="🕐"
+          icon={<Clock className="w-5 h-5" />}
           selected={selected === "30-60"}
           onClick={() => handleSelect("30-60")}
         />
         <OptionCard
           label="1 a 2 horas"
           sublabel="Tenho um bom tempo livre disponível"
-          icon="🕑"
+          icon={<Clock2 className="w-5 h-5" />}
           selected={selected === "1-2h"}
           onClick={() => handleSelect("1-2h")}
         />
         <OptionCard
           label="Mais de 2 horas"
           sublabel="Tenho bastante tempo e quero dedicar"
-          icon="🕒"
+          icon={<Clock3 className="w-5 h-5" />}
           selected={selected === "2h+"}
           onClick={() => handleSelect("2h+")}
         />

@@ -1,4 +1,5 @@
 import { StepContainer, CTAButton } from "./QuizUI";
+import { AlertTriangle, Lock, Globe } from "lucide-react";
 import mentorPhoto from "@/assets/mentor-photo.jpg";
 
 interface Step1Props {
@@ -10,11 +11,14 @@ const Step1Intro = ({ onNext }: Step1Props) => {
     <StepContainer>
       {/* Alert bar */}
       <div className="w-full funnel-card border-funnel-warning/30 bg-funnel-warning/5">
-        <p className="text-base text-foreground leading-relaxed">
-          <span className="text-funnel-warning font-bold">⚠️ Atenção:</span>{" "}
-          este teste rápido vai revelar se você pode usar a mesma tecnologia que já está gerando renda extra para{" "}
-          <span className="font-bold">milhares de brasileiros acima de 50 anos.</span>
-        </p>
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-funnel-warning shrink-0 mt-0.5" />
+          <p className="text-sm sm:text-base text-foreground leading-relaxed">
+            <span className="text-funnel-warning font-bold">Atenção:</span>{" "}
+            este teste rápido vai revelar se você pode usar a mesma tecnologia que já está gerando renda extra para{" "}
+            <span className="font-bold">milhares de brasileiros acima de 50 anos.</span>
+          </p>
+        </div>
       </div>
 
       {/* Mentor trust card */}
@@ -52,11 +56,12 @@ const Step1Intro = ({ onNext }: Step1Props) => {
         </p>
       </div>
 
-      {/* Flags */}
-      <div className="flex justify-center gap-3 mt-1">
-        {["🇧🇷", "🇺🇸", "🇬🇧", "🇫🇷", "🇵🇹", "🇩🇪"].map((flag, i) => (
-          <span key={i} className="text-2xl">{flag}</span>
-        ))}
+      {/* Global trust */}
+      <div className="flex justify-center gap-2 mt-1">
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Globe className="w-4 h-4 text-primary" />
+          <span className="text-xs font-medium">Usado em 6+ países</span>
+        </div>
       </div>
 
       {/* CTA */}
@@ -64,9 +69,12 @@ const Step1Intro = ({ onNext }: Step1Props) => {
         INICIAR TESTE GRATUITO →
       </CTAButton>
 
-      <p className="text-sm text-muted-foreground text-center">
-        🔒 Teste 100% gratuito • Sem compromisso • Leva menos de 2 minutos
-      </p>
+      <div className="flex items-center gap-2 justify-center">
+        <Lock className="w-3.5 h-3.5 text-primary shrink-0" />
+        <p className="text-sm text-muted-foreground text-center">
+          Teste 100% gratuito • Sem compromisso • Leva menos de 2 minutos
+        </p>
+      </div>
     </StepContainer>
   );
 };
