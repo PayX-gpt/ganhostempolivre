@@ -12,7 +12,7 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
   const videoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowCTA(true), 5000);
+    const timer = setTimeout(() => setShowCTA(true), 100_000); // 100 seconds
     return () => clearTimeout(timer);
   }, []);
 
