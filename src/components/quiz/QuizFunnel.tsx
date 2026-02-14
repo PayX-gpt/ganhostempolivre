@@ -11,10 +11,11 @@ import Step8Device from "./Step8Device";
 import Step9Availability from "./Step9Availability";
 import Step10Loading from "./Step10Loading";
 import Step11SocialProof2 from "./Step11SocialProof2";
+import StepWhatsAppProof from "./StepWhatsAppProof";
 import Step12Capture from "./Step12Capture";
 import Step13Offer from "./Step13Offer";
 
-const TOTAL_STEPS = 13;
+const TOTAL_STEPS = 14;
 
 const QuizFunnel = () => {
   const [step, setStep] = useState(1);
@@ -58,6 +59,8 @@ const QuizFunnel = () => {
       case 11:
         return <Step11SocialProof2 onNext={goNext} />;
       case 12:
+        return <StepWhatsAppProof onNext={goNext} />;
+      case 13:
         return (
           <Step12Capture
             onNext={(name, email, phone) => {
@@ -66,7 +69,7 @@ const QuizFunnel = () => {
             }}
           />
         );
-      case 13:
+      case 14:
         return <Step13Offer userName={answers.name} />;
       default:
         return null;
