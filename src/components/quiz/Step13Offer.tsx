@@ -25,22 +25,37 @@ interface Step13Props {
   answers?: QuizAnswers;
 }
 
+/* ─── Dynamic Pricing Engine ─── */
+const PRICING_TIERS: Record<string, { price: number; installment: number; installments: number; checkoutUrl: string }> = {
+  "menos100":  { price: 37.00,  installment: 3.88,  installments: 12, checkoutUrl: "https://pay.kirvano.com/5e882c8e-e569-4d9b-b895-69cb1d1285f4" },
+  "100-500":   { price: 47.00,  installment: 4.67,  installments: 12, checkoutUrl: "https://pay.kirvano.com/5e882c8e-e569-4d9b-b895-69cb1d1285f4" },
+  "500-2000":  { price: 66.83,  installment: 6.64,  installments: 12, checkoutUrl: "https://pay.kirvano.com/5e882c8e-e569-4d9b-b895-69cb1d1285f4" },
+  "2000-10000":{ price: 97.00,  installment: 9.64,  installments: 12, checkoutUrl: "https://pay.kirvano.com/5e882c8e-e569-4d9b-b895-69cb1d1285f4" },
+  "10000+":    { price: 147.00, installment: 14.61, installments: 12, checkoutUrl: "https://pay.kirvano.com/5e882c8e-e569-4d9b-b895-69cb1d1285f4" },
+};
+
+const getPricing = (accountBalance?: string) => {
+  return PRICING_TIERS[accountBalance || ""] || PRICING_TIERS["500-2000"];
+};
+
+const formatPrice = (price: number) => price.toFixed(2).replace(".", ",");
+
 /* ─── Reusable CTA Block ─── */
-const CTABlock = ({ showCTA, context }: { showCTA: boolean; context?: string }) =>
+const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: string; pricing: { price: number; installment: number; installments: number; checkoutUrl: string } }) =>
   showCTA ? (
     <div className="w-full space-y-3">
       <div className="text-center space-y-1">
         <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">CHAVE TOKEN CHATGPT</p>
         <p className="text-3xl sm:text-4xl font-display font-bold text-foreground">
-          R$<span className="text-gradient-green">66,83</span>
+          R$<span className="text-gradient-green">{formatPrice(pricing.price)}</span>
         </p>
-        <p className="text-sm text-muted-foreground">ou 12x de R$6,64</p>
+        <p className="text-sm text-muted-foreground">ou {pricing.installments}x de R${formatPrice(pricing.installment)}</p>
       </div>
       <CTAButton onClick={() => {
-        saveFunnelEvent("checkout_click", { context: context || "default", product: "chave_token_chatgpt", amount: 66.83 });
-        window.open("https://pay.kirvano.com/5e882c8e-e569-4d9b-b895-69cb1d1285f4", "_blank");
+        saveFunnelEvent("checkout_click", { context: context || "default", product: "chave_token_chatgpt", amount: pricing.price });
+        window.open(pricing.checkoutUrl, "_blank");
       }} variant="accent" className="animate-bounce-subtle text-lg sm:text-xl tracking-wider">
-        🔑 ATIVAR MINHA CHAVE TOKEN — R$66,83
+        🔑 ATIVAR MINHA CHAVE TOKEN — R${formatPrice(pricing.price)}
       </CTAButton>
       <div className="flex items-center justify-center gap-2">
         <Lock className="w-3.5 h-3.5 text-muted-foreground" />
@@ -59,7 +74,7 @@ const CTABlock = ({ showCTA, context }: { showCTA: boolean; context?: string }) 
   );
 
 /* ─── Urgency Strip (sticky) ─── */
-const UrgencyStrip = ({ minutes, seconds, show }: { minutes: number; seconds: number; show: boolean }) => {
+const UrgencyStrip = ({ minutes, seconds, show, priceLabel }: { minutes: number; seconds: number; show: boolean; priceLabel: string }) => {
   if (!show) return null;
   return (
     <div className="w-full rounded-2xl overflow-hidden border border-destructive/40">
@@ -77,7 +92,7 @@ const UrgencyStrip = ({ minutes, seconds, show }: { minutes: number; seconds: nu
       </div>
       <div className="bg-destructive/5 px-4 py-2">
         <p className="text-xs text-muted-foreground text-center">
-          Sua condição especial de <span className="font-bold text-foreground">R$66,83</span> expira quando o timer zerar. Depois disso, volta para R$297.
+          Sua condição especial de <span className="font-bold text-foreground">R${priceLabel}</span> expira quando o timer zerar. Depois disso, volta para R$297.
         </p>
       </div>
     </div>
@@ -468,7 +483,9 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         age: answers.age, incomeGoal: answers.incomeGoal,
         obstacle: answers.obstacle, device: answers.device,
         financialDream: answers.financialDream, contactMethod: answers.contactMethod,
+        accountBalance: answers.accountBalance,
       } : {},
+      dynamic_price: getPricing(answers?.accountBalance).price,
     });
     const timer = setTimeout(() => {
       setShowCTA(true);
@@ -500,6 +517,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const firstName = userName?.split(" ")[0] || "";
+  const pricing = getPricing(answers?.accountBalance);
 
   const bonuses = [
     { title: "Guia: Primeiro Resultado em 24h", value: "R$97", description: "Passo a passo simplificado pra você ver dinheiro na conta ainda hoje. Sem enrolação." },
@@ -515,9 +533,9 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
     { question: "Funciona pelo celular mesmo?", answer: "Sim, 100%. A maioria dos nossos 36.000 alunos usa apenas o celular. Não precisa de computador nem internet rápida." },
     { question: "Em quanto tempo vejo resultado?", answer: "Muitos alunos fazem a primeira operação e veem resultado no mesmo dia. O método foi feito pra gerar renda no curto prazo." },
     { question: "E se eu não gostar? Perco meu dinheiro?", answer: "Impossível. Você tem 30 dias de garantia total. Se não gostar, devolvemos cada centavo. Sem perguntas, sem burocracia." },
-    { question: "R$66,83 é o preço final? Tem taxa escondida?", answer: "R$66,83 é o valor total. Não existe mensalidade, taxa extra, ou venda dentro da plataforma. Pagou uma vez, acesso completo." },
+    { question: `R$${formatPrice(pricing.price)} é o preço final? Tem taxa escondida?`, answer: `R$${formatPrice(pricing.price)} é o valor total. Não existe mensalidade, taxa extra, ou venda dentro da plataforma. Pagou uma vez, acesso completo.` },
     { question: "Já fui enganado na internet. Isso é golpe?", answer: "Entendemos. Por isso: garantia de 30 dias, suporte humano real, +36.000 alunos ativos, e você pode testar sem risco nenhum." },
-    { question: "Preciso investir mais dinheiro depois?", answer: "Não. O método ensina a gerar renda sem investimento. O único valor é R$66,83. Depois disso, tudo que ganhar é lucro líquido." },
+    { question: "Preciso investir mais dinheiro depois?", answer: "Não. O método ensina a gerar renda sem investimento. O único valor é R$" + formatPrice(pricing.price) + ". Depois disso, tudo que ganhar é lucro líquido." },
   ];
 
   const testimonials = [
@@ -530,7 +548,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
     <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-4 sm:px-5 py-5 sm:py-6 gap-5 sm:gap-6">
 
       {/* ═══ 1. URGENCY TIMER ═══ */}
-      <UrgencyStrip minutes={minutes} seconds={seconds} show={true} />
+      <UrgencyStrip minutes={minutes} seconds={seconds} show={true} priceLabel={formatPrice(pricing.price)} />
 
       {/* ═══ 2. PROFILE ANALYSIS (approved status) ═══ */}
       <ProfileAnalysis answers={answers} firstName={firstName} />
@@ -567,7 +585,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       {/* ═══ 3c. EXPLICAÇÃO DA TAXA (compacta) ═══ */}
       <div className="w-full text-center space-y-2">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          ⚠️ O valor de <span className="text-primary font-bold">R$66,83</span> é apenas a <span className="font-bold text-foreground">taxa dos tokens do ChatGPT</span> que a plataforma consome. Nós <span className="font-bold text-foreground">não ficamos com nenhum centavo</span> — só cobramos <span className="text-primary font-bold">2% dos seus lucros</span> após 30 dias.
+          ⚠️ O valor de <span className="text-primary font-bold">R${formatPrice(pricing.price)}</span> é apenas a <span className="font-bold text-foreground">taxa dos tokens do ChatGPT</span> que a plataforma consome. Nós <span className="font-bold text-foreground">não ficamos com nenhum centavo</span> — só cobramos <span className="text-primary font-bold">2% dos seus lucros</span> após 30 dias.
         </p>
       </div>
 
@@ -583,7 +601,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       </div>
 
       {/* ═══ 6. CTA 1 ═══ */}
-      <CTABlock showCTA={showCTA} context="Restam apenas poucas vagas hoje" />
+      <CTABlock showCTA={showCTA} context="Restam apenas poucas vagas hoje" pricing={pricing} />
 
       <Divider />
 
@@ -594,7 +612,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       <EarningsProjection answers={answers} firstName={firstName} />
 
       {/* ═══ 9. CTA 2 ═══ */}
-      <CTABlock showCTA={showCTA} />
+      <CTABlock showCTA={showCTA} pricing={pricing} />
 
       <Divider />
 
@@ -662,7 +680,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       </div>
 
       {/* ═══ 12. CTA 3 ═══ */}
-      <CTABlock showCTA={showCTA} />
+      <CTABlock showCTA={showCTA} pricing={pricing} />
 
       <Divider />
 
@@ -740,7 +758,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       </div>
 
       {/* ═══ 14. CTA 4 ═══ */}
-      <CTABlock showCTA={showCTA} context="Garantia incondicional de 30 dias" />
+      <CTABlock showCTA={showCTA} context="Garantia incondicional de 30 dias" pricing={pricing} />
 
       <Divider />
 
@@ -839,7 +857,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       </div>
 
       {/* ═══ 20. CTA 5 ═══ */}
-      <CTABlock showCTA={showCTA} />
+      <CTABlock showCTA={showCTA} pricing={pricing} />
 
       <Divider />
 
@@ -904,7 +922,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           </p>
         </div>
 
-        <CTABlock showCTA={showCTA} context="Garantia de 30 dias · Acesso imediato · Suporte humano" />
+        <CTABlock showCTA={showCTA} context="Garantia de 30 dias · Acesso imediato · Suporte humano" pricing={pricing} />
 
         <TrustBadge>Pagamento 100% seguro · Garantia de 30 dias · Suporte em português</TrustBadge>
 
