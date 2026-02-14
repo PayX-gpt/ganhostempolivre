@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { ProgressBar, type QuizAnswers } from "./QuizUI";
 import Step1Intro from "./Step1Intro";
 import Step2Age from "./Step2Age";
@@ -18,23 +19,49 @@ import StepContactMethod from "./StepContactMethod";
 import StepContactInput from "./StepContactInput";
 import Step13Offer from "./Step13Offer";
 
-const TOTAL_STEPS = 17;
+const STEP_SLUGS = [
+  "inicio",
+  "idade",
+  "nome",
+  "depoimentos",
+  "experiencia",
+  "meta",
+  "obstaculos",
+  "especialista",
+  "dispositivo",
+  "disponibilidade",
+  "demonstracao",
+  "analise",
+  "resultados",
+  "conversas",
+  "contato",
+  "dados",
+  "oferta",
+] as const;
+
+const TOTAL_STEPS = STEP_SLUGS.length;
 
 const QuizFunnel = () => {
-  const [step, setStep] = useState(1);
+  const navigate = useNavigate();
+  const { slug } = useParams<{ slug: string }>();
   const [answers, setAnswers] = useState<QuizAnswers>({});
 
+  const step = Math.max(1, (STEP_SLUGS.indexOf(slug as any) + 1) || 1);
+
   const goNext = useCallback(() => {
-    setStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
+    const nextStep = Math.min(step + 1, TOTAL_STEPS);
+    navigate(`/${STEP_SLUGS[nextStep - 1]}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  }, [step, navigate]);
 
   const updateAndNext = useCallback(
     (key: keyof QuizAnswers, value: string) => {
       setAnswers((prev) => ({ ...prev, [key]: value }));
-      goNext();
+      const nextStep = Math.min(step + 1, TOTAL_STEPS);
+      navigate(`/${STEP_SLUGS[nextStep - 1]}`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    [goNext]
+    [step, navigate]
   );
 
   const renderStep = () => {
