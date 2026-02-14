@@ -12,7 +12,7 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
   const [showCTA, setShowCTA] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowCTA(true), 8000);
+    const timer = setTimeout(() => setShowCTA(true), 100_000); // 100 seconds
     return () => clearTimeout(timer);
   }, []);
 
@@ -83,6 +83,20 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
         </div>
       </div>
 
+      {/* CTA - appears after 100 seconds, between video and testimonials */}
+      {showCTA ? (
+        <CTAButton onClick={onNext} className="animate-fade-in">
+          QUERO VER COMO FUNCIONA →
+        </CTAButton>
+      ) : (
+        <div className="flex items-center gap-2 justify-center">
+          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+          <p className="text-sm text-muted-foreground animate-pulse">
+            Assista o vídeo para continuar...
+          </p>
+        </div>
+      )}
+
       {/* Testimonials */}
       <div className="w-full space-y-3">
         <div className="funnel-card border-primary/25 bg-primary/5">
@@ -125,20 +139,6 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
           <span className="font-bold">Chega de viver no limite.</span>
         </p>
       </div>
-
-      {/* CTA */}
-      {showCTA ? (
-        <CTAButton onClick={onNext} className="animate-fade-in">
-          QUERO VER COMO FUNCIONA →
-        </CTAButton>
-      ) : (
-        <div className="flex items-center gap-2 justify-center">
-          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
-          <p className="text-sm text-muted-foreground animate-pulse">
-            Assista o vídeo para continuar...
-          </p>
-        </div>
-      )}
     </StepContainer>
   );
 };
