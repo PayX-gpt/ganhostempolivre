@@ -1,12 +1,164 @@
 import { useState, useEffect } from "react";
-import { StepContainer, StepTitle, StepSubtitle, CTAButton, TrustBadge, VideoPlaceholder } from "./QuizUI";
+import { CTAButton, TrustBadge, VideoPlaceholder } from "./QuizUI";
+import type { QuizAnswers } from "./QuizUI";
 import mentorPhoto from "@/assets/mentor-photo.jpg";
+import bonusStack from "@/assets/bonus-stack.jpg";
+import guaranteeSeal from "@/assets/guarantee-seal.jpg";
+import avatarAntonio from "@/assets/avatar-antonio.jpg";
+import avatarClaudia from "@/assets/avatar-claudia.jpg";
+import avatarCarlos from "@/assets/avatar-carlos.jpg";
 
 interface Step13Props {
   userName?: string;
+  answers?: QuizAnswers;
 }
 
-const Step13Offer = ({ userName }: Step13Props) => {
+/* ─── Reusable CTA Block ─── */
+const CTABlock = ({ showCTA }: { showCTA: boolean }) =>
+  showCTA ? (
+    <div className="w-full space-y-3">
+      <CTAButton onClick={() => window.open("#", "_blank")} variant="accent" className="animate-bounce-subtle text-xl">
+        GARANTIR MEU ACESSO POR R$66
+      </CTAButton>
+      <p className="text-xs text-muted-foreground text-center">
+        Pagamento 100% seguro via cartão, Pix ou boleto
+      </p>
+    </div>
+  ) : (
+    <div className="text-center space-y-2">
+      <div className="w-10 h-10 rounded-full border-[3px] border-primary/30 border-t-primary animate-spin mx-auto" />
+      <p className="text-base text-muted-foreground animate-pulse">
+        Assista o vídeo para liberar seu acesso...
+      </p>
+    </div>
+  );
+
+/* ─── Section Divider ─── */
+const Divider = () => (
+  <div className="w-full flex items-center gap-4 py-2">
+    <div className="flex-1 h-px bg-border" />
+    <span className="text-muted-foreground/40 text-lg">•</span>
+    <div className="flex-1 h-px bg-border" />
+  </div>
+);
+
+/* ─── Profile Analysis Card ─── */
+const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstName: string }) => {
+  const getAgeLabel = (age?: string) => {
+    const map: Record<string, string> = {
+      "18-25": "18 a 25 anos", "26-35": "26 a 35 anos", "36-45": "36 a 45 anos",
+      "46-55": "46 a 55 anos", "56+": "acima de 56 anos",
+    };
+    return map[age || ""] || "não informada";
+  };
+
+  const getObstacleLabel = (o?: string) => {
+    const map: Record<string, string> = {
+      money: "Falta de dinheiro para investir", time: "Falta de tempo",
+      knowledge: "Falta de conhecimento técnico", trust: "Medo de ser enganado",
+      age: "Achar que já passou da idade",
+    };
+    return map[o || ""] || "não informado";
+  };
+
+  const getGoalLabel = (g?: string) => {
+    const map: Record<string, string> = {
+      "50-100": "R$50 a R$100 por dia", "100-200": "R$100 a R$200 por dia",
+      "200-300": "R$200 a R$300 por dia", "300+": "Mais de R$300 por dia",
+    };
+    return map[g || ""] || "renda extra diária";
+  };
+
+  const profileItems = [
+    { label: "Nome", value: firstName || "Aluno(a)" },
+    { label: "Faixa etária", value: getAgeLabel(answers?.age) },
+    { label: "Meta de renda", value: getGoalLabel(answers?.incomeGoal) },
+    { label: "Principal desafio", value: getObstacleLabel(answers?.obstacle) },
+    { label: "Dispositivo", value: answers?.device === "phone" ? "Celular" : answers?.device === "computer" ? "Computador" : answers?.device === "both" ? "Celular e computador" : "Celular" },
+    { label: "Disponibilidade", value: answers?.availability === "1-2h" ? "1 a 2 horas por dia" : answers?.availability === "2-4h" ? "2 a 4 horas por dia" : answers?.availability === "4h+" ? "Mais de 4 horas por dia" : "Algumas horas por dia" },
+  ];
+
+  return (
+    <div className="w-full funnel-card border-primary/25 bg-primary/5 space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xl">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        </div>
+        <div>
+          <p className="font-bold text-foreground text-lg">Análise do seu perfil</p>
+          <p className="text-sm text-primary font-medium">Compatibilidade: 97%</p>
+        </div>
+      </div>
+      <div className="space-y-2">
+        {profileItems.map((item, i) => (
+          <div key={i} className="flex justify-between items-center py-1.5 border-b border-border/50 last:border-0">
+            <span className="text-sm text-muted-foreground">{item.label}</span>
+            <span className="text-sm font-semibold text-foreground text-right max-w-[60%]">{item.value}</span>
+          </div>
+        ))}
+      </div>
+      <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
+        <p className="text-sm text-foreground leading-relaxed">
+          <span className="font-bold text-primary">Resultado da análise:</span>{" "}
+          {firstName ? `${firstName}, seu` : "Seu"} perfil é ideal para o método. Com base nas suas respostas, 
+          estimamos que você pode alcançar {getGoalLabel(answers?.incomeGoal)} nos primeiros 30 dias.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Bonus Card ─── */
+const BonusCard = ({ number, title, value, description }: { number: number; title: string; value: string; description: string }) => (
+  <div className="funnel-card border-accent/20 bg-accent/5 space-y-2">
+    <div className="flex items-center justify-between">
+      <span className="text-xs font-bold text-accent bg-accent/15 px-2.5 py-1 rounded-full">
+        BÔNUS #{number}
+      </span>
+      <span className="text-xs text-muted-foreground line-through">{value}</span>
+    </div>
+    <p className="font-bold text-foreground text-base">{title}</p>
+    <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+  </div>
+);
+
+/* ─── Testimonial Card ─── */
+const TestimonialCard = ({ name, age, city, avatar, text }: { name: string; age: string; city: string; avatar: string; text: string }) => (
+  <div className="funnel-card border-primary/15 space-y-3">
+    <div className="flex items-center gap-3">
+      <img src={avatar} alt={name} className="w-12 h-12 rounded-full object-cover border-2 border-primary/30" />
+      <div>
+        <p className="font-bold text-base text-foreground">{name}, {age}</p>
+        <p className="text-sm text-muted-foreground">{city}</p>
+      </div>
+    </div>
+    <p className="text-base text-foreground/85 italic leading-relaxed">"{text}"</p>
+  </div>
+);
+
+/* ─── FAQ Item ─── */
+const FAQItem = ({ question, answer }: { question: string; answer: string }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border border-border rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3.5 text-left cursor-pointer hover:bg-secondary/50 transition-colors"
+      >
+        <span className="font-semibold text-foreground text-sm pr-4">{question}</span>
+        <span className="text-muted-foreground text-xl shrink-0 transition-transform" style={{ transform: open ? "rotate(45deg)" : "rotate(0)" }}>+</span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 animate-fade-in">
+          <p className="text-sm text-muted-foreground leading-relaxed">{answer}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ─── Main Component ─── */
+const Step13Offer = ({ userName, answers }: Step13Props) => {
   const [showCTA, setShowCTA] = useState(false);
   const [timeLeft, setTimeLeft] = useState(900);
 
@@ -24,140 +176,294 @@ const Step13Offer = ({ userName }: Step13Props) => {
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
-
   const firstName = userName?.split(" ")[0] || "";
 
+  const bonuses = [
+    { title: "Guia Rápido: Primeiro Resultado em 24h", value: "R$97", description: "Um passo a passo simplificado para você fazer sua primeira operação e ver dinheiro na conta ainda hoje." },
+    { title: "Comunidade VIP no WhatsApp", value: "R$147", description: "Acesso ao grupo exclusivo com mais de 36.000 alunos que se ajudam diariamente. Tire dúvidas em tempo real." },
+    { title: "Planilha de Controle Financeiro", value: "R$47", description: "Acompanhe seus ganhos diários, semanais e mensais de forma simples. Feita especialmente para quem não entende de planilha." },
+    { title: "Aulas Extras: Segurança Digital para Iniciantes", value: "R$97", description: "Aprenda a se proteger de golpes online, criar senhas seguras e usar o celular com confiança total." },
+    { title: "Suporte Humano por 90 Dias", value: "R$197", description: "Atendimento individualizado com nossa equipe. Sem robô, sem espera. Gente de verdade te ajudando em cada etapa." },
+    { title: "Acompanhamento Personalizado do Seu Perfil", value: "R$297", description: "Com base nas suas respostas do teste, criamos um plano sob medida para sua rotina, dispositivo e meta de renda." },
+  ];
+
+  const faqs = [
+    { question: "Preciso ter experiência com internet?", answer: "Não. O método foi criado especialmente para pessoas que nunca fizeram nada online. Tudo é explicado do zero, passo a passo, com vídeos simples e suporte humano para te ajudar." },
+    { question: "Funciona pelo celular mesmo?", answer: "Sim, 100%. A maioria dos nossos alunos usa apenas o celular. Não precisa de computador, não precisa de internet rápida. Se você consegue usar o WhatsApp, consegue usar a plataforma." },
+    { question: "Em quanto tempo vejo resultado?", answer: "Muitos alunos fazem a primeira operação e veem resultado no mesmo dia. O método foi desenhado para gerar renda no curto prazo, não em meses ou anos." },
+    { question: "E se eu não gostar? Perco meu dinheiro?", answer: "De jeito nenhum. Você tem 7 dias de garantia total. Se por qualquer motivo não gostar ou achar que não é pra você, devolvemos 100% do valor. Sem perguntas, sem burocracia." },
+    { question: "R$66 é o preço final? Tem alguma taxa escondida?", answer: "R$66 é o valor total. Não existe mensalidade, não existe taxa extra, não existe venda dentro da plataforma. Você paga uma vez e tem acesso completo a tudo." },
+    { question: "É golpe? Já fui enganado antes na internet.", answer: "Entendemos sua desconfiança. Por isso oferecemos garantia de 7 dias, suporte humano real pelo WhatsApp, e mais de 36.000 alunos ativos. Você pode testar sem risco nenhum." },
+    { question: "Preciso investir mais dinheiro depois?", answer: "Não. O método ensina a gerar renda sem investimento inicial. O único valor é o da plataforma (R$66). Depois disso, tudo o que você ganhar é lucro." },
+  ];
+
+  const testimonials = [
+    { name: "Antônio Ferreira", age: "62 anos", city: "Salvador, BA", avatar: avatarAntonio, text: "Eu tinha vergonha de pedir dinheiro emprestado no final do mês. Hoje sobra dinheiro e eu consigo ajudar meus netos. Esse método devolveu minha dignidade." },
+    { name: "Cláudia Nascimento", age: "58 anos", city: "Curitiba, PR", avatar: avatarClaudia, text: "Três anos com contas atrasadas. Em um mês quitei tudo. Luz, água, cartão. Hoje tenho paz de espírito. Não tenho palavras pra agradecer." },
+    { name: "Carlos Mendonça", age: "55 anos", city: "Recife, PE", avatar: avatarCarlos, text: "Já caí em dois golpes na internet. Quase não tentei de novo. Mas aqui é diferente. Tem gente real te ajudando. Hoje minha esposa e eu tiramos mais de R$200 por dia juntos." },
+  ];
+
   return (
-    <StepContainer>
-      {/* Timer */}
+    <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-5 py-6 gap-6">
+
+      {/* ═══ TIMER ═══ */}
       <div className="w-full funnel-card border-destructive/30 bg-destructive/5 text-center">
-        <p className="text-sm text-destructive font-bold">⏰ SUA CONDIÇÃO ESPECIAL EXPIRA EM</p>
+        <p className="text-sm text-destructive font-bold">SUA CONDIÇÃO ESPECIAL EXPIRA EM</p>
         <p className="text-3xl font-display font-bold text-foreground mt-1">
           {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
         </p>
-        <p className="text-sm text-muted-foreground mt-1">Depois disso, o valor volta ao preço original.</p>
+        <p className="text-xs text-muted-foreground mt-1">Depois disso, o valor volta para R$297,00</p>
       </div>
 
-      {/* Headline */}
-      <div className="text-center space-y-2">
-        <StepTitle>
-          {firstName ? `${firstName}, seu plano personalizado está pronto!` : "Seu plano personalizado está pronto!"}
-        </StepTitle>
-        <StepSubtitle>
-          A plataforma que te guia, passo a passo, para gerar uma renda extra segura todos os dias — mesmo que você nunca tenha feito nada parecido.
-        </StepSubtitle>
-      </div>
+      {/* ═══ PROFILE ANALYSIS ═══ */}
+      <ProfileAnalysis answers={answers} firstName={firstName} />
 
-      {/* VSL Video */}
-      <VideoPlaceholder label="Assista para entender como funciona (4 min)" />
-
-      {/* Mentor endorsement */}
-      <div className="flex items-center gap-4 w-full funnel-card border-primary/20 bg-primary/5">
-        <img
-          src={mentorPhoto}
-          alt="Ricardo Almeida"
-          className="w-14 h-14 rounded-full object-cover border-2 border-primary/40 shrink-0"
-        />
-        <p className="text-sm text-foreground/90 italic leading-snug">
-          "Se você chegou até aqui, é porque realmente quer mudar. Eu vou te acompanhar pessoalmente nessa jornada."
-          <span className="block text-muted-foreground text-xs mt-1 not-italic font-medium">— Ricardo Almeida</span>
+      {/* ═══ HEADLINE ═══ */}
+      <div className="text-center space-y-3">
+        <h2 className="font-display text-2xl font-bold text-foreground leading-snug">
+          {firstName ? `${firstName}, tudo pronto.` : "Tudo pronto."}{" "}
+          <span className="text-gradient-green">Seu plano personalizado está aqui.</span>
+        </h2>
+        <p className="text-base text-muted-foreground leading-relaxed">
+          A plataforma que te guia, passo a passo, para gerar uma renda extra segura todos os dias — mesmo que você nunca tenha feito nada parecido na vida.
         </p>
       </div>
 
-      {/* What you get */}
-      <div className="w-full space-y-1">
-        <p className="text-base font-bold text-foreground mb-3">O que você recebe hoje:</p>
+      {/* ═══ VSL VIDEO ═══ */}
+      <VideoPlaceholder label="Assista para entender como funciona (4 min)" />
+
+      {/* ═══ MENTOR QUOTE ═══ */}
+      <div className="flex items-start gap-4 w-full funnel-card border-primary/20 bg-primary/5">
+        <img src={mentorPhoto} alt="Especialista" className="w-14 h-14 rounded-full object-cover border-2 border-primary/40 shrink-0 mt-1" />
+        <div>
+          <p className="text-base text-foreground/90 italic leading-relaxed">
+            "{firstName ? `${firstName}, se` : "Se"} você chegou até aqui, é porque realmente quer mudar sua vida financeira. Eu vou te acompanhar pessoalmente nessa jornada. Você não vai estar sozinho."
+          </p>
+          <p className="text-muted-foreground text-xs mt-2 not-italic font-medium">— Ricardo Almeida, criador do método</p>
+        </div>
+      </div>
+
+      {/* ═══ CTA 1 ═══ */}
+      <CTABlock showCTA={showCTA} />
+
+      <Divider />
+
+      {/* ═══ WHAT YOU GET ═══ */}
+      <div className="w-full space-y-2">
+        <h3 className="font-display text-xl font-bold text-foreground text-center">O que você recebe hoje:</h3>
         {[
-          { icon: "✅", text: "Acesso completo à plataforma Alfa Híbrida" },
-          { icon: "✅", text: "Método passo a passo — do zero ao primeiro resultado" },
-          { icon: "✅", text: "Suporte humano em tempo real via WhatsApp" },
-          { icon: "✅", text: "Comunidade exclusiva com +36.000 alunos" },
-          { icon: "✅", text: "Acompanhamento personalizado para o seu perfil" },
-          { icon: "🛡️", text: "Garantia incondicional de 7 dias — não gostou, devolvemos 100% do valor" },
-        ].map((benefit, i) => (
+          "Acesso completo à plataforma Alfa Híbrida",
+          "Método passo a passo — do zero ao primeiro resultado",
+          "Vídeo-aulas didáticas gravadas em linguagem simples",
+          "Suporte humano em tempo real via WhatsApp",
+          "Comunidade exclusiva com mais de 36.000 alunos",
+          "Acompanhamento personalizado para o seu perfil",
+        ].map((text, i) => (
           <div key={i} className="flex items-start gap-3 py-2">
-            <span className="text-lg shrink-0">{benefit.icon}</span>
-            <p className="text-base text-foreground leading-snug">{benefit.text}</p>
+            <svg className="w-5 h-5 text-primary shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            <p className="text-base text-foreground leading-snug">{text}</p>
           </div>
         ))}
       </div>
 
-      {/* Price anchor */}
-      <div className="w-full funnel-card border-accent/30 bg-accent/5 text-center space-y-2">
-        <p className="text-sm text-muted-foreground">Valor normal da plataforma:</p>
-        <p className="text-xl text-muted-foreground line-through font-semibold">R$ 297,00</p>
-        <p className="text-sm text-primary font-bold">🎁 Condição especial para quem completou o teste:</p>
-        <p className="text-5xl font-display font-bold text-foreground mt-1">
+      <Divider />
+
+      {/* ═══ BONUS STACKING ═══ */}
+      <div className="w-full space-y-4">
+        <h3 className="font-display text-xl font-bold text-foreground text-center">
+          E mais: <span className="text-accent">6 bônus exclusivos</span> para você
+        </h3>
+        <p className="text-sm text-muted-foreground text-center">
+          Tudo isso incluso no seu acesso, sem pagar nada a mais:
+        </p>
+
+        <img src={bonusStack} alt="Pacote completo de bônus" className="w-full rounded-2xl border border-border" />
+
+        {bonuses.map((b, i) => (
+          <BonusCard key={i} number={i + 1} {...b} />
+        ))}
+
+        <div className="funnel-card border-accent/30 bg-accent/5 text-center space-y-1">
+          <p className="text-sm text-muted-foreground">Valor total dos bônus:</p>
+          <p className="text-xl text-muted-foreground line-through font-semibold">R$882,00</p>
+          <p className="text-lg font-bold text-accent">Hoje: GRÁTIS com seu acesso</p>
+        </div>
+      </div>
+
+      {/* ═══ CTA 2 ═══ */}
+      <CTABlock showCTA={showCTA} />
+
+      <Divider />
+
+      {/* ═══ PRICE ANCHOR ═══ */}
+      <div className="w-full funnel-card border-accent/30 bg-card text-center space-y-3">
+        <p className="text-sm text-muted-foreground">De <span className="line-through">R$297,00</span> por apenas:</p>
+        <p className="text-6xl font-display font-bold text-foreground">
           R$<span className="text-gradient-green">66</span>
         </p>
         <p className="text-base text-muted-foreground">ou 12x de R$6,58 no cartão</p>
-        <p className="text-sm text-primary font-medium mt-1">
-          💡 Menos de R$2,20 por dia — o preço de um cafezinho.
-        </p>
+        <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
+          <p className="text-sm text-foreground font-medium">
+            Isso dá menos de R$2,20 por dia. Menos que um cafezinho. E pode mudar sua vida financeira para sempre.
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2 pt-2">
+          {["Pix", "Cartão de Crédito", "Boleto"].map((m) => (
+            <span key={m} className="text-xs bg-secondary px-3 py-1.5 rounded-full text-muted-foreground font-medium">{m}</span>
+          ))}
+        </div>
       </div>
 
-      {/* Real testimonials */}
-      <div className="w-full space-y-3">
-        <p className="text-sm text-muted-foreground text-center font-bold uppercase tracking-wider">
-          O que nossos alunos 50+ dizem:
-        </p>
+      {/* ═══ CTA 3 ═══ */}
+      <CTABlock showCTA={showCTA} />
+
+      <Divider />
+
+      {/* ═══ OBJECTION BREAKING ═══ */}
+      <div className="w-full space-y-4">
+        <h3 className="font-display text-xl font-bold text-foreground text-center">
+          Eu sei o que você está pensando...
+        </h3>
 
         {[
           {
-            name: "Seu José, 61 anos",
-            city: "Salvador, BA",
-            icon: "👨‍🦳",
-            text: "Finalmente tenho tranquilidade financeira. O suporte é excelente, me ajudaram em cada passo. Já não preciso pedir dinheiro emprestado no final do mês.",
+            objection: '"Será que funciona pra mim? Já tenho mais de 50 anos..."',
+            response: "A maioria dos nossos alunos tem mais de 50 anos. O método foi criado pensando em quem não tem experiência com tecnologia. Se você sabe usar WhatsApp, você consegue.",
           },
           {
-            name: "Dona Maria, 54 anos",
-            city: "Curitiba, PR",
-            icon: "👩‍🦳",
-            text: "Paguei todas as minhas contas atrasadas no primeiro mês. Não acreditava que era possível na minha idade. Hoje tenho paz de espírito e dignidade.",
+            objection: '"Já fui enganado antes na internet..."',
+            response: "Entendemos sua desconfiança. Por isso você tem 7 dias pra testar sem risco. Se não gostar, devolvemos cada centavo. Sem perguntas.",
           },
           {
-            name: "Seu Carlos, 67 anos",
-            city: "Recife, PE",
-            icon: "👨‍🦳",
-            text: "Eu tinha medo porque já perdi dinheiro na internet. Mas aqui é diferente — tem gente de verdade te ajudando. Comecei devagar, e hoje minha esposa também usa. Juntos tiramos mais de R$200 por dia.",
+            objection: '"Não tenho dinheiro sobrando..."',
+            response: "São R$66 uma única vez. Sem mensalidade, sem taxa escondida. Muitos alunos recuperam esse valor já no primeiro dia de uso.",
           },
-        ].map((t, i) => (
-          <div key={i} className="funnel-card border-primary/15">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl">{t.icon}</span>
-              <div>
-                <p className="font-bold text-base text-foreground">{t.name}</p>
-                <p className="text-sm text-muted-foreground">{t.city} ✅</p>
-              </div>
-            </div>
-            <p className="text-base text-foreground/85 italic leading-relaxed">"{t.text}"</p>
+          {
+            objection: '"Tenho medo de mexer com tecnologia..."',
+            response: "Nosso suporte te acompanha em cada clique. Literalmente. Você manda mensagem no WhatsApp e alguém te responde em minutos. Você nunca vai ficar perdido.",
+          },
+        ].map((item, i) => (
+          <div key={i} className="funnel-card border-border space-y-2">
+            <p className="text-base text-foreground/70 italic">{item.objection}</p>
+            <p className="text-base text-foreground font-medium leading-relaxed">{item.response}</p>
           </div>
         ))}
       </div>
 
-      {/* CTA */}
-      {showCTA ? (
-        <CTAButton onClick={() => window.open("#", "_blank")} variant="accent" className="animate-fade-in text-xl animate-bounce-subtle">
-          🔥 GARANTIR MEU ACESSO POR R$66
-        </CTAButton>
-      ) : (
-        <div className="text-center space-y-2">
-          <div className="w-10 h-10 rounded-full border-3 border-primary/30 border-t-primary animate-spin mx-auto" />
-          <p className="text-base text-muted-foreground animate-pulse">
-            Assista o vídeo para liberar o botão de acesso...
-          </p>
+      <Divider />
+
+      {/* ═══ GUARANTEE ═══ */}
+      <div className="w-full funnel-card border-accent/30 bg-accent/5 space-y-4">
+        <div className="flex items-center gap-4">
+          <img src={guaranteeSeal} alt="Garantia 7 dias" className="w-20 h-20 shrink-0 object-contain" />
+          <div>
+            <h3 className="font-display text-lg font-bold text-foreground">Garantia Incondicional de 7 Dias</h3>
+            <p className="text-sm text-muted-foreground mt-1">Risco zero para você.</p>
+          </div>
         </div>
-      )}
-
-      <TrustBadge>Pagamento 100% seguro • Garantia de 7 dias • Suporte em português</TrustBadge>
-
-      {/* Final urgency */}
-      <div className="w-full funnel-card border-border text-center">
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          ⚠️ <strong>Atenção:</strong> esta condição especial de R$66 é válida apenas para quem completou o teste agora. Ao sair desta página, o valor volta para R$297.
+        <p className="text-base text-foreground/85 leading-relaxed">
+          Se nos próximos 7 dias você sentir que o método não é para você, basta enviar uma mensagem e devolvemos <strong>100% do seu dinheiro</strong>. Sem perguntas, sem burocracia, sem letras miúdas. Simples assim.
+        </p>
+        <p className="text-sm text-primary font-semibold">
+          Você literalmente não tem nada a perder.
         </p>
       </div>
-    </StepContainer>
+
+      {/* ═══ CTA 4 ═══ */}
+      <CTABlock showCTA={showCTA} />
+
+      <Divider />
+
+      {/* ═══ TESTIMONIALS ═══ */}
+      <div className="w-full space-y-4">
+        <h3 className="font-display text-xl font-bold text-foreground text-center">
+          Pessoas reais. Resultados reais.
+        </h3>
+        <p className="text-sm text-muted-foreground text-center">
+          Veja o que nossos alunos 50+ dizem sobre o método:
+        </p>
+
+        {testimonials.map((t, i) => (
+          <TestimonialCard key={i} {...t} />
+        ))}
+
+        {/* Video testimonial placeholder */}
+        <VideoPlaceholder label="Depoimento em vídeo — Antônio, 62 anos (2 min)" />
+      </div>
+
+      <Divider />
+
+      {/* ═══ EMOTIONAL DECISION ═══ */}
+      <div className="w-full funnel-card border-primary/20 bg-primary/5 space-y-4 text-center">
+        <h3 className="font-display text-xl font-bold text-foreground leading-snug">
+          {firstName ? `${firstName}, imagine` : "Imagine"} daqui a 30 dias...
+        </h3>
+        <div className="space-y-3 text-left">
+          {[
+            "Acordar e ver que já ganhou dinheiro antes mesmo de tomar café",
+            "Pagar todas as suas contas em dia, sem apertar",
+            "Ter dinheiro sobrando pra fazer algo bom pela sua família",
+            "Olhar pro seu extrato bancário e sentir orgulho",
+            "Não depender de ninguém financeiramente",
+          ].map((text, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <span className="text-primary text-base shrink-0 mt-0.5">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              </span>
+              <p className="text-base text-foreground leading-snug">{text}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-base text-muted-foreground italic pt-2">
+          Tudo isso pode começar hoje. Por menos de R$2,20 por dia.
+        </p>
+      </div>
+
+      {/* ═══ CTA 5 ═══ */}
+      <CTABlock showCTA={showCTA} />
+
+      <Divider />
+
+      {/* ═══ FAQ ═══ */}
+      <div className="w-full space-y-3">
+        <h3 className="font-display text-xl font-bold text-foreground text-center">
+          Perguntas Frequentes
+        </h3>
+        {faqs.map((faq, i) => (
+          <FAQItem key={i} {...faq} />
+        ))}
+      </div>
+
+      <Divider />
+
+      {/* ═══ FINAL URGENCY ═══ */}
+      <div className="w-full space-y-4 text-center">
+        <div className="funnel-card border-destructive/30 bg-destructive/5 space-y-2">
+          <p className="text-base font-bold text-foreground">
+            Essa condição especial de R$66 é apenas para quem completou a análise agora.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Ao sair desta página, o valor volta para R$297 e os bônus são removidos. Essa é sua única chance.
+          </p>
+          <p className="text-2xl font-display font-bold text-foreground mt-2">
+            {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+          </p>
+        </div>
+
+        {/* ═══ FINAL CTA ═══ */}
+        <CTABlock showCTA={showCTA} />
+
+        <TrustBadge>Pagamento 100% seguro · Garantia de 7 dias · Suporte em português</TrustBadge>
+
+        <div className="flex flex-wrap justify-center gap-3 opacity-60 pt-2">
+          {["Visa", "Mastercard", "Pix", "Boleto", "Elo"].map((b) => (
+            <span key={b} className="text-xs text-muted-foreground bg-secondary px-3 py-1 rounded-md">{b}</span>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };
 
