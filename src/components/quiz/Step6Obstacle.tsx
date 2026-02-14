@@ -4,32 +4,36 @@ import { AlertCircle, Clock, Compass, Wallet, Heart, CheckCircle } from "lucide-
 
 interface Step6Props {
   onNext: (answer: string) => void;
+  userName?: string;
 }
 
-const obstacleMessages: Record<string, { title: string; icon: React.ReactNode; message: string }> = {
-  medo: {
-    icon: <Heart className="w-8 h-8 text-accent" />,
-    title: "Nós entendemos você.",
-    message: "Saiba que 7 em cada 10 dos nossos melhores alunos sentiam exatamente o mesmo medo que você. Eles já tinham perdido dinheiro antes, já tinham desconfiado de tudo... mas decidiram dar mais uma chance — e dessa vez, deu certo. Continue para ver como eles superaram isso.",
-  },
-  tempo: {
-    icon: <Clock className="w-8 h-8 text-accent" />,
-    title: "Sua rotina é corrida, e tudo bem.",
-    message: "A maioria dos nossos alunos trabalha o dia todo, cuida da casa e da família. Por isso, o método foi criado para funcionar com apenas 10 minutos por dia — no horário que você escolher. Continue para ver como encaixar na sua rotina.",
-  },
-  inicio: {
-    icon: <Compass className="w-8 h-8 text-accent" />,
-    title: "É normal se sentir assim.",
-    message: "Muita gente chega até aqui se sentindo perdida com tanta informação na internet. É por isso que o método é 100% passo a passo — você nunca fica sozinho(a) e nunca fica perdido(a). Continue para ver como funciona na prática.",
-  },
-  dinheiro: {
-    icon: <Wallet className="w-8 h-8 text-accent" />,
-    title: "Nós pensamos nisso por você.",
-    message: "Entendemos que dinheiro está curto. O investimento inicial é mínimo e acessível — e muitos alunos recuperaram o valor já nos primeiros dias de operação. Continue para ver os detalhes e se surpreender.",
-  },
+const getObstacleMessages = (name?: string) => {
+  const n = name || "você";
+  return {
+    medo: {
+      icon: <Heart className="w-8 h-8 text-accent" />,
+      title: `${n}, nós entendemos você.`,
+      message: `Saiba que 7 em cada 10 dos nossos melhores alunos sentiam exatamente o mesmo medo. Eles já tinham perdido dinheiro antes, já tinham desconfiado de tudo... mas nosso sistema é diferente porque a IA faz o trabalho pesado — ${n}, você nunca opera no escuro. Cada decisão é guiada pela tecnologia.`,
+    },
+    tempo: {
+      icon: <Clock className="w-8 h-8 text-accent" />,
+      title: `${n}, sua rotina é corrida — e tudo bem.`,
+      message: `A maioria dos nossos alunos trabalha o dia todo, cuida da casa e da família. Por isso, nosso sistema foi criado para funcionar com apenas 10 minutos por dia. A IA trabalha enquanto ${n} vive a vida — e você só acompanha quando puder.`,
+    },
+    inicio: {
+      icon: <Compass className="w-8 h-8 text-accent" />,
+      title: `${n}, é normal se sentir assim.`,
+      message: `Muita gente chega até aqui se sentindo perdida com tanta informação. Nosso sistema é diferente porque é 100% passo a passo — ${n} nunca fica sozinho(a) e nunca fica perdido(a). A tecnologia guia cada etapa automaticamente.`,
+    },
+    dinheiro: {
+      icon: <Wallet className="w-8 h-8 text-accent" />,
+      title: `${n}, nós pensamos nisso por você.`,
+      message: `Entendemos que o dinheiro está curto. O investimento é mínimo e acessível — e muitos alunos como ${n} recuperaram o valor já nos primeiros dias. Nosso sistema foi desenhado para gerar retorno rápido, justamente porque sabemos que cada real conta.`,
+    },
+  };
 };
 
-const Step6Obstacle = ({ onNext }: Step6Props) => {
+const Step6Obstacle = ({ onNext, userName }: Step6Props) => {
   const [selected, setSelected] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
 
@@ -38,8 +42,10 @@ const Step6Obstacle = ({ onNext }: Step6Props) => {
     setShowValidation(true);
   };
 
+  const obstacleMessages = getObstacleMessages(userName);
+
   if (showValidation && selected) {
-    const msg = obstacleMessages[selected];
+    const msg = obstacleMessages[selected as keyof typeof obstacleMessages];
     return (
       <StepContainer>
         <div className="w-full flex flex-col items-center gap-6 py-4">

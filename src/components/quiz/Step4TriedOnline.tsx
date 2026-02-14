@@ -1,19 +1,65 @@
 import { useState } from "react";
-import { StepContainer, StepTitle, StepSubtitle, OptionCard } from "./QuizUI";
-import { Frown, ThumbsUp, HelpCircle } from "lucide-react";
-import { BarChart3 } from "lucide-react";
+import { StepContainer, StepTitle, StepSubtitle, OptionCard, CTAButton } from "./QuizUI";
+import { Frown, ThumbsUp, HelpCircle, CheckCircle, BarChart3 } from "lucide-react";
 
 interface Step4Props {
   onNext: (answer: string) => void;
+  userName?: string;
 }
 
-const Step4TriedOnline = ({ onNext }: Step4Props) => {
+const getFeedback = (answer: string, name?: string) => {
+  const n = name || "você";
+  const messages: Record<string, { title: string; message: string }> = {
+    sim_falhou: {
+      title: `${n}, isso não foi culpa sua.`,
+      message: `A maioria das "oportunidades" na internet são complicadas demais ou simplesmente não funcionam. Nosso sistema é diferente porque usa inteligência artificial de verdade — a mesma tecnologia das maiores empresas do mundo — adaptada para ser simples e acessível. Dessa vez, ${n}, vai ser diferente.`,
+    },
+    sim_experiencia: {
+      title: `Ótimo, ${n}! Sua experiência conta muito.`,
+      message: `Quem já tem alguma noção de como a internet funciona consegue resultados ainda mais rápido com o nosso sistema. A diferença aqui é que a IA faz 90% do trabalho — você só precisa acompanhar e ajustar. Vamos potencializar o que você já sabe, ${n}.`,
+    },
+    nunca: {
+      title: `${n}, isso é na verdade uma vantagem!`,
+      message: `Pode parecer estranho, mas quem nunca tentou nada costuma ter os melhores resultados. Sabe por quê? Porque não tem vícios de métodos antigos. Nosso sistema foi feito do zero para ser simples — qualquer pessoa consegue usar, mesmo sem experiência nenhuma.`,
+    },
+  };
+  return messages[answer];
+};
+
+const Step4TriedOnline = ({ onNext, userName }: Step4Props) => {
   const [selected, setSelected] = useState<string | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const handleSelect = (answer: string) => {
     setSelected(answer);
-    setTimeout(() => onNext(answer), 500);
+    setShowFeedback(true);
   };
+
+  if (showFeedback && selected) {
+    const fb = getFeedback(selected, userName);
+    if (fb) {
+      return (
+        <StepContainer>
+          <div className="w-full flex flex-col items-center gap-5 py-4">
+            <div className="w-16 h-16 rounded-full bg-primary/15 flex items-center justify-center border-2 border-primary/30">
+              <CheckCircle className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground text-center leading-snug">
+              {fb.title}
+            </h2>
+            <p className="text-base sm:text-lg text-muted-foreground text-center leading-relaxed max-w-md">
+              {fb.message}
+            </p>
+            <div className="w-full mt-2">
+              <CTAButton onClick={() => onNext(selected)}>
+                Continuar →
+              </CTAButton>
+            </div>
+          </div>
+        </StepContainer>
+      );
+    }
+  }
 
   return (
     <StepContainer>
