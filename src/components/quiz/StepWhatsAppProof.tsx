@@ -79,7 +79,7 @@ const chats: WhatsAppChat[] = [
 ];
 
 const WhatsAppBubble = ({ msg }: { msg: WhatsAppMessage }) => (
-  <div className={`flex ${msg.sent ? "justify-end" : "justify-start"} mb-[3px]`}>
+  <div className={`flex ${msg.sent ? "justify-end" : "justify-start"} mb-[6px]`}>
     <div
       className={`max-w-[85%] sm:max-w-[82%] px-[9px] py-[6px] text-[13.5px] sm:text-[14.2px] leading-[18px] sm:leading-[19px] relative ${
         msg.sent
@@ -187,7 +187,7 @@ const StepWhatsAppProof = ({ onNext }: StepWhatsAppProps) => {
         Veja o que nossos alunos estão dizendo <span className="text-gradient-green">agora mesmo</span>
       </StepTitle>
       <StepSubtitle>
-        Conversas reais do nosso grupo de alunos no WhatsApp:
+        Prints direto do grupo de alunos no WhatsApp:
       </StepSubtitle>
 
       {/* Carousel */}
