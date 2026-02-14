@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton, VideoPlaceholder } from "./QuizUI";
-
+import avatarRegina from "@/assets/avatar-regina.jpg";
 interface Step3Props {
   onNext: () => void;
 }
@@ -28,9 +28,7 @@ const Step3SocialProof = ({ onNext }: Step3Props) => {
 
       <div className="w-full funnel-card border-primary/25 bg-primary/5">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl shrink-0">
-            👩‍🦳
-          </div>
+          <img src={avatarRegina} alt="Dona Márcia" className="w-12 h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
           <div>
             <p className="font-bold text-foreground text-base">Dona Márcia, 56 anos</p>
             <p className="text-sm text-muted-foreground">Goiânia, GO • Aluna verificada ✅</p>
