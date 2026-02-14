@@ -2,11 +2,11 @@ import { useState, useCallback } from "react";
 import { ProgressBar, type QuizAnswers } from "./QuizUI";
 import Step1Intro from "./Step1Intro";
 import Step2Age from "./Step2Age";
-import Step3MentorVideo from "./Step3SocialProof";
+import Step3SocialProof from "./Step3SocialProof";
 import Step4TriedOnline from "./Step4TriedOnline";
 import Step5IncomeGoal from "./Step5IncomeGoal";
 import Step6Obstacle from "./Step6Obstacle";
-import StepInvestment from "./StepInvestment";
+import Step7MentorVideo from "./Step7MentorVideo";
 import Step8Device from "./Step8Device";
 import Step9Availability from "./Step9Availability";
 import Step10Loading from "./Step10Loading";
@@ -40,7 +40,7 @@ const QuizFunnel = () => {
       case 2:
         return <Step2Age onNext={(v) => updateAndNext("age", v)} />;
       case 3:
-        return <Step3MentorVideo onNext={goNext} />;
+        return <Step3SocialProof onNext={goNext} />;
       case 4:
         return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} />;
       case 5:
@@ -48,7 +48,7 @@ const QuizFunnel = () => {
       case 6:
         return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} />;
       case 7:
-        return <StepInvestment onNext={(v) => updateAndNext("investment", v)} />;
+        return <Step7MentorVideo onNext={goNext} />;
       case 8:
         return <Step8Device onNext={(v) => updateAndNext("device", v)} />;
       case 9:
