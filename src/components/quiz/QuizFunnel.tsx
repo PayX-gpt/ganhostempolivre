@@ -75,17 +75,17 @@ const QuizFunnel = () => {
       case 4:
         return <Step3SocialProof onNext={goNext} />;
       case 5:
-        return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} />;
+        return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} userName={answers.name} />;
       case 6:
-        return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} />;
+        return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} userName={answers.name} />;
       case 7:
-        return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} />;
+        return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} userName={answers.name} />;
       case 8:
         return <Step7MentorVideo onNext={goNext} />;
       case 9:
-        return <Step8Device onNext={(v) => updateAndNext("device", v)} />;
+        return <Step8Device onNext={(v) => updateAndNext("device", v)} userName={answers.name} />;
       case 10:
-        return <Step9Availability onNext={(v) => updateAndNext("availability", v)} />;
+        return <Step9Availability onNext={(v) => updateAndNext("availability", v)} userName={answers.name} />;
       case 11:
         return <StepPlatformDemo onNext={goNext} userName={answers.name} />;
       case 12:
