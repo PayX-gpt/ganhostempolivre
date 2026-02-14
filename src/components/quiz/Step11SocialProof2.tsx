@@ -89,7 +89,7 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
           <div className="flex items-center gap-3 mb-3">
             <img src={avatarJose} alt="Antônio" className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
             <div className="min-w-0">
-              <p className="font-bold text-foreground text-sm sm:text-base">Antônio, 58 anos</p>
+              <p className="font-bold text-foreground text-sm sm:text-base">Antônio, 45 anos</p>
               <div className="flex items-center gap-1">
                 <span className="text-xs sm:text-sm text-muted-foreground">São Paulo, SP • Aluno verificado</span>
                 <CheckCircle className="w-3.5 h-3.5 text-primary" />
@@ -105,7 +105,7 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
           <div className="flex items-center gap-3 mb-3">
             <img src={avatarLucia} alt="Dona Cláudia" className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
             <div className="min-w-0">
-              <p className="font-bold text-foreground text-sm sm:text-base">Dona Cláudia, 62 anos</p>
+              <p className="font-bold text-foreground text-sm sm:text-base">Dona Cláudia, 53 anos</p>
               <div className="flex items-center gap-1">
                 <span className="text-xs sm:text-sm text-muted-foreground">Belo Horizonte, MG • Aluna verificada</span>
                 <CheckCircle className="w-3.5 h-3.5 text-primary" />
