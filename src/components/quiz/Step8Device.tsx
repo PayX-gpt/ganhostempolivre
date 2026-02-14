@@ -10,37 +10,43 @@ const Step8Device = ({ onNext }: Step8Props) => {
 
   const handleSelect = (answer: string) => {
     setSelected(answer);
-    setTimeout(() => onNext(answer), 400);
+    setTimeout(() => onNext(answer), 500);
   };
 
   return (
     <StepContainer>
-      <StepTitle>Qual dispositivo você mais usa no dia a dia?</StepTitle>
-      <StepSubtitle>O método funciona em qualquer um deles.</StepSubtitle>
+      <StepTitle>Qual aparelho você mais usa no dia a dia?</StepTitle>
+      <StepSubtitle>
+        O método funciona em qualquer um deles. Não precisa de computador caro nem de internet rápida.
+      </StepSubtitle>
 
       <div className="w-full space-y-3 mt-2">
         <OptionCard
-          label="Celular"
+          label="Celular / Smartphone"
           sublabel="Uso o celular para quase tudo"
           icon="📱"
           selected={selected === "celular"}
           onClick={() => handleSelect("celular")}
         />
         <OptionCard
-          label="Computador / Notebook"
-          sublabel="Prefiro usar no computador"
+          label="Computador ou Notebook"
+          sublabel="Prefiro usar na tela grande"
           icon="💻"
           selected={selected === "computador"}
           onClick={() => handleSelect("computador")}
         />
         <OptionCard
-          label="Ambos"
-          sublabel="Uso celular e computador"
+          label="Uso os dois"
+          sublabel="Celular e computador, depende do momento"
           icon="📱💻"
           selected={selected === "ambos"}
           onClick={() => handleSelect("ambos")}
         />
       </div>
+
+      <p className="text-sm text-muted-foreground text-center mt-1">
+        ✅ <em>93% dos nossos alunos acima de 50 anos usam apenas o celular — e conseguem resultados normalmente.</em>
+      </p>
     </StepContainer>
   );
 };

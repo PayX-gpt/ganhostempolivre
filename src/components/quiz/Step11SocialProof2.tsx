@@ -1,4 +1,4 @@
-import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
+import { StepContainer, StepTitle, StepSubtitle, CTAButton, VideoPlaceholder } from "./QuizUI";
 
 interface Step11Props {
   onNext: () => void;
@@ -7,46 +7,59 @@ interface Step11Props {
 const Step11SocialProof2 = ({ onNext }: Step11Props) => {
   return (
     <StepContainer>
-      <StepTitle>Pessoas como você já estão tendo resultados</StepTitle>
+      <div className="text-center space-y-1">
+        <p className="text-3xl">🎯</p>
+        <StepTitle>Ótima notícia: seu perfil é compatível!</StepTitle>
+      </div>
+
+      <StepSubtitle>
+        Pessoas com o mesmo perfil que o seu já estão tendo resultados reais. Veja o que elas dizem:
+      </StepSubtitle>
+
+      {/* Video testimonial placeholder */}
+      <VideoPlaceholder label="Depoimento em vídeo — Seu Antônio, 58 anos" />
 
       <div className="w-full space-y-3">
-        <div className="funnel-card border-primary/30 bg-primary/5">
+        <div className="funnel-card border-primary/25 bg-primary/5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl">
+            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl shrink-0">
               👨‍🦳
             </div>
             <div>
-              <p className="font-bold text-foreground text-sm">Antônio, 58 anos</p>
-              <p className="text-xs text-muted-foreground">Aluno verificado ✅</p>
+              <p className="font-bold text-foreground text-base">Antônio, 58 anos</p>
+              <p className="text-sm text-muted-foreground">São Paulo, SP • Aluno verificado ✅</p>
             </div>
           </div>
-          <p className="text-sm text-foreground/90 italic leading-relaxed">
-            "Eu tinha muito medo de perder dinheiro de novo. Já tinha caído em golpe antes. Mas desta vez foi diferente — comecei devagar, seguindo o passo a passo, e no terceiro dia já tinha feito R$87. Hoje consigo pagar minhas contas com tranquilidade."
+          <p className="text-base text-foreground/90 italic leading-relaxed">
+            "Eu tinha muito medo de perder dinheiro de novo. Já tinha caído em golpe antes. Mas desta vez foi diferente — comecei devagar, seguindo o passo a passo, e no terceiro dia já tinha feito R$87. Hoje pago minhas contas com tranquilidade e ainda sobra."
           </p>
         </div>
 
-        <div className="funnel-card border-primary/30 bg-primary/5">
+        <div className="funnel-card border-primary/25 bg-primary/5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl">
+            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl shrink-0">
               👩‍🦳
             </div>
             <div>
-              <p className="font-bold text-foreground text-sm">Dona Cláudia, 62 anos</p>
-              <p className="text-xs text-muted-foreground">Aluna verificada ✅</p>
+              <p className="font-bold text-foreground text-base">Dona Cláudia, 62 anos</p>
+              <p className="text-sm text-muted-foreground">Belo Horizonte, MG • Aluna verificada ✅</p>
             </div>
           </div>
-          <p className="text-sm text-foreground/90 italic leading-relaxed">
-            "Minha aposentadoria não dava pra nada. Hoje complemento com mais R$150 por dia e finalmente durmo sem preocupação. O suporte me ajudou em cada passo."
+          <p className="text-base text-foreground/90 italic leading-relaxed">
+            "Minha aposentadoria não dava pra nada. Vivia no limite. Hoje complemento com R$150 por dia e finalmente durmo sem preocupação. O suporte me ajudou em cada passo, como se eu tivesse um professor particular."
           </p>
         </div>
       </div>
 
-      <StepSubtitle>
-        Você merece terminar cada mês com a tranquilidade de quem tem as contas pagas e dinheiro sobrando. Chega de viver no limite.
-      </StepSubtitle>
+      <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center">
+        <p className="text-base text-foreground font-semibold leading-relaxed">
+          Você merece terminar cada mês com a <span className="text-primary font-bold">tranquilidade</span> de quem tem as contas pagas e dinheiro sobrando.{" "}
+          <span className="font-bold">Chega de viver no limite.</span>
+        </p>
+      </div>
 
       <CTAButton onClick={onNext}>
-        QUERO VER MEUS RESULTADOS →
+        QUERO VER COMO FUNCIONA →
       </CTAButton>
     </StepContainer>
   );

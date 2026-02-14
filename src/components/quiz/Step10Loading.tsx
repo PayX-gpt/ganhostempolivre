@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
-import { StepContainer, StepTitle } from "./QuizUI";
+import { StepContainer, StepTitle, StepSubtitle } from "./QuizUI";
 
 interface Step10Props {
   onNext: () => void;
 }
 
 const loadingSteps = [
-  { text: "Analisando seu perfil...", icon: "🔍" },
-  { text: "Verificando compatibilidade...", icon: "⚙️" },
-  { text: "Calculando seu potencial de ganho...", icon: "📊" },
-  { text: "Preparando seu plano personalizado...", icon: "✨" },
+  { text: "Analisando seu perfil e suas respostas...", icon: "🔍" },
+  { text: "Verificando compatibilidade com o método...", icon: "⚙️" },
+  { text: "Calculando seu potencial de ganho diário...", icon: "📊" },
+  { text: "Identificando o melhor plano para você...", icon: "🎯" },
+  { text: "Preparando seu acesso personalizado...", icon: "✨" },
 ];
 
 const Step10Loading = ({ onNext }: Step10Props) => {
@@ -21,12 +22,12 @@ const Step10Loading = ({ onNext }: Step10Props) => {
       setCurrentStep((prev) => {
         if (prev >= loadingSteps.length - 1) {
           clearInterval(stepInterval);
-          setTimeout(onNext, 800);
+          setTimeout(onNext, 1000);
           return prev;
         }
         return prev + 1;
       });
-    }, 1200);
+    }, 1400);
 
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
@@ -34,9 +35,9 @@ const Step10Loading = ({ onNext }: Step10Props) => {
           clearInterval(progressInterval);
           return 100;
         }
-        return prev + 2;
+        return prev + 1.5;
       });
-    }, 90);
+    }, 100);
 
     return () => {
       clearInterval(stepInterval);
@@ -46,34 +47,35 @@ const Step10Loading = ({ onNext }: Step10Props) => {
 
   return (
     <StepContainer>
-      <div className="w-20 h-20 rounded-full border-4 border-primary/30 border-t-primary animate-spin mx-auto" />
+      <div className="w-24 h-24 rounded-full border-4 border-primary/30 border-t-primary animate-spin mx-auto" />
 
       <StepTitle>Analisando suas respostas...</StepTitle>
+      <StepSubtitle>Estamos montando um plano personalizado com base no seu perfil.</StepSubtitle>
 
-      <div className="w-full space-y-3 mt-4">
+      <div className="w-full space-y-4 mt-4">
         {loadingSteps.map((step, i) => (
           <div
             key={i}
-            className={`flex items-center gap-3 transition-all duration-500 ${
-              i <= currentStep ? "opacity-100" : "opacity-20"
+            className={`flex items-center gap-4 transition-all duration-500 ${
+              i <= currentStep ? "opacity-100" : "opacity-15"
             }`}
           >
-            <span className="text-lg">
+            <span className="text-xl shrink-0">
               {i < currentStep ? "✅" : i === currentStep ? step.icon : "⬜"}
             </span>
-            <p className="text-sm text-foreground">{step.text}</p>
+            <p className="text-base text-foreground">{step.text}</p>
           </div>
         ))}
       </div>
 
-      <div className="w-full mt-4">
-        <div className="w-full h-3 bg-secondary rounded-full overflow-hidden">
+      <div className="w-full mt-5">
+        <div className="w-full h-4 bg-secondary rounded-full overflow-hidden">
           <div
             className="h-full progress-bar-fill rounded-full transition-all duration-200"
-            style={{ width: `${progress}%` }}
+            style={{ width: `${Math.min(progress, 100)}%` }}
           />
         </div>
-        <p className="text-xs text-muted-foreground mt-1 text-center">{progress}%</p>
+        <p className="text-sm text-muted-foreground mt-2 text-center font-medium">{Math.min(Math.round(progress), 100)}%</p>
       </div>
     </StepContainer>
   );

@@ -6,6 +6,7 @@ import Step3MentorVideo from "./Step3SocialProof";
 import Step4TriedOnline from "./Step4TriedOnline";
 import Step5IncomeGoal from "./Step5IncomeGoal";
 import Step6Obstacle from "./Step6Obstacle";
+import StepInvestment from "./StepInvestment";
 import Step8Device from "./Step8Device";
 import Step9Availability from "./Step9Availability";
 import Step10Loading from "./Step10Loading";
@@ -13,7 +14,7 @@ import Step11SocialProof2 from "./Step11SocialProof2";
 import Step12Capture from "./Step12Capture";
 import Step13Offer from "./Step13Offer";
 
-const TOTAL_STEPS = 12;
+const TOTAL_STEPS = 13;
 
 const QuizFunnel = () => {
   const [step, setStep] = useState(1);
@@ -47,14 +48,16 @@ const QuizFunnel = () => {
       case 6:
         return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} />;
       case 7:
-        return <Step8Device onNext={(v) => updateAndNext("device", v)} />;
+        return <StepInvestment onNext={(v) => updateAndNext("investment", v)} />;
       case 8:
-        return <Step9Availability onNext={(v) => updateAndNext("availability", v)} />;
+        return <Step8Device onNext={(v) => updateAndNext("device", v)} />;
       case 9:
-        return <Step10Loading onNext={goNext} />;
+        return <Step9Availability onNext={(v) => updateAndNext("availability", v)} />;
       case 10:
-        return <Step11SocialProof2 onNext={goNext} />;
+        return <Step10Loading onNext={goNext} />;
       case 11:
+        return <Step11SocialProof2 onNext={goNext} />;
+      case 12:
         return (
           <Step12Capture
             onNext={(name, email, phone) => {
@@ -63,7 +66,7 @@ const QuizFunnel = () => {
             }}
           />
         );
-      case 12:
+      case 13:
         return <Step13Offer userName={answers.name} />;
       default:
         return null;
@@ -73,8 +76,8 @@ const QuizFunnel = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="w-full bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-        <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-center">
-          <h1 className="font-display font-bold text-lg text-foreground tracking-tight">
+        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-center">
+          <h1 className="font-display font-bold text-xl text-foreground tracking-tight">
             <span className="text-gradient-green">ALFA</span> HÍBRIDA
           </h1>
         </div>
@@ -86,8 +89,8 @@ const QuizFunnel = () => {
       </main>
 
       <footer className="w-full py-4 border-t border-border">
-        <p className="text-xs text-muted-foreground text-center">
-          © 2026 - Alfa Híbrida • Todos os direitos reservados
+        <p className="text-sm text-muted-foreground text-center">
+          © 2026 — Alfa Híbrida • Todos os direitos reservados
         </p>
       </footer>
     </div>
