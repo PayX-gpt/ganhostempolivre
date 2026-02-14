@@ -3,6 +3,7 @@ import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
 import {
   Play, Power, Bot, TrendingUp, Banknote, Bell,
   BarChart3, Lock, Loader2, Target, Clock, Trophy, Sparkles,
+  ArrowRight, Wallet, Zap, Eye, MousePointer,
 } from "lucide-react";
 
 interface StepPlatformDemoProps {
@@ -10,12 +11,13 @@ interface StepPlatformDemoProps {
   userName?: string;
 }
 
-/* ─── Platform color classes (pink/purple theme inline) ─── */
+/* ─── Platform color classes (pink/purple theme) ─── */
 const plat = {
   bg: "bg-[hsl(260,30%,8%)]",
   card: "bg-[hsl(260,25%,12%)]",
   border: "border-[hsl(270,30%,22%)]",
   accent: "text-[hsl(280,70%,65%)]",
+  accentHsl: "hsl(280,70%,65%)",
   accentBg: "bg-[hsl(280,70%,65%)]",
   accentBgSoft: "bg-[hsl(280,70%,65%,0.12)]",
   accentBorder: "border-[hsl(280,70%,65%,0.3)]",
@@ -40,62 +42,114 @@ const precos = [
   "0.85612", "0.61234", "0.87654",
 ];
 
-/* ─── Goal Reached Popup ─── */
+/* ─── Tutorial tips that appear during operation ─── */
+const tutorialTips = [
+  { icon: Eye, text: "Veja! A IA acabou de identificar uma oportunidade e entrou automaticamente.", delay: 4000 },
+  { icon: Zap, text: "Cada operação dura segundos. Você não precisa fazer nada — só acompanhar.", delay: 12000 },
+  { icon: TrendingUp, text: "Olha o saldo subindo! Na conta real, esse valor já estaria disponível para saque via Pix.", delay: 22000 },
+  { icon: Wallet, text: "Na conta real, você pode sacar a qualquer momento direto pro seu banco ou Pix.", delay: 35000 },
+  { icon: MousePointer, text: "Perceba: você não clicou em nada. A IA faz tudo sozinha. Imagina isso rodando o dia inteiro...", delay: 50000 },
+  { icon: Banknote, text: "Nossos alunos fazem isso diariamente e sacam entre R$100 e R$300 por dia. Em conta real.", delay: 65000 },
+];
+
+/* ─── Tutorial Tip Component ─── */
+const TutorialTip = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
+  <div className="w-full animate-fade-in">
+    <div className={`${plat.card} ${plat.border} border rounded-xl px-3 py-2.5 flex items-start gap-2.5`}>
+      <div className="w-7 h-7 rounded-lg bg-[hsl(280,70%,65%,0.15)] flex items-center justify-center shrink-0 mt-0.5">
+        <Icon className="w-3.5 h-3.5 text-[hsl(280,70%,65%)]" />
+      </div>
+      <p className="text-xs text-foreground leading-relaxed flex-1">{text}</p>
+    </div>
+  </div>
+);
+
+/* ─── Goal Reached Popup (PURPLE theme, no green) ─── */
 const GoalReachedPopup = ({ goal, profit, onContinue, userName }: {
   goal: number; profit: number; onContinue: () => void; userName?: string;
 }) => {
   const firstName = userName?.split(" ")[0] || "";
+  const displayProfit = Math.max(profit, goal);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 backdrop-blur-sm animate-fade-in px-4">
-      <div className="w-full max-w-sm bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
-        {/* Celebration header */}
-        <div className="bg-primary/10 border-b border-border px-5 py-6 text-center">
-          <div className="w-16 h-16 rounded-full bg-accent/20 border-2 border-accent/40 flex items-center justify-center mx-auto mb-4 animate-bounce-subtle">
-            <Trophy className="w-8 h-8 text-accent" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[hsl(260,30%,4%,0.9)] backdrop-blur-sm animate-fade-in px-4">
+      <div className={`w-full max-w-sm ${plat.card} ${plat.border} border rounded-2xl shadow-2xl overflow-hidden animate-scale-in`}>
+        {/* Header */}
+        <div className="bg-[hsl(280,70%,65%,0.1)] border-b border-[hsl(270,30%,22%)] px-5 py-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-[hsl(280,70%,65%,0.2)] border-2 border-[hsl(280,70%,65%,0.4)] flex items-center justify-center mx-auto mb-4 animate-bounce-subtle">
+            <Trophy className="w-8 h-8 text-[hsl(280,70%,65%)]" />
           </div>
           <h3 className="font-display font-bold text-xl text-foreground">
             META BATIDA!
           </h3>
-          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-            {firstName ? `${firstName}, a` : "A"} IA atingiu sua meta de{" "}
+          <p className="text-sm text-[hsl(260,15%,65%)] mt-2 leading-relaxed">
+            {firstName ? `${firstName}, a` : "A"} IA bateu sua meta de{" "}
             <span className="font-bold text-foreground">R${goal.toLocaleString("pt-BR")}</span> em apenas 2 minutos.
           </p>
         </div>
 
-        {/* Result */}
+        {/* Body */}
         <div className="px-5 py-5 space-y-4">
-          <div className="funnel-card text-center p-4 border-primary/30">
-            <p className="text-xs text-muted-foreground mb-1">Se fosse conta real, você teria ganho:</p>
-            <p className="text-3xl font-display font-bold text-foreground">
-              R$<span className="text-gradient-green">{Math.max(profit, goal).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+          {/* Value box */}
+          <div className={`${plat.bg} rounded-xl p-4 text-center border ${plat.accentBorder}`}>
+            <p className="text-xs text-[hsl(260,15%,55%)] mb-1">Se estivesse na conta real com acesso à plataforma, você teria ganho:</p>
+            <p className="text-3xl font-display font-bold text-foreground mt-2">
+              R$ <span className="text-[hsl(280,70%,65%)]">{displayProfit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
             </p>
-            <p className="text-xs text-primary mt-2 font-medium">
-              Em apenas 2 minutos, no automático
+            <p className="text-xs text-[hsl(280,70%,65%)] mt-2 font-medium">
+              E poderia sacar agora mesmo via Pix
             </p>
           </div>
 
-          <div className="bg-accent/10 rounded-xl p-3 border border-accent/20">
+          {/* Urgency block */}
+          <div className="bg-[hsl(280,70%,65%,0.08)] rounded-xl p-3 border border-[hsl(280,70%,65%,0.2)]">
             <p className="text-xs text-foreground leading-relaxed text-center">
-              <span className="font-bold">Imagine isso todos os dias.</span> Seus alunos já fazem isso com conta real e sacam direto pro Pix.
+              <span className="font-bold">Isso foi apenas uma demonstração.</span> Na conta real, o dinheiro cai direto na sua conta bancária. 
+              Nossos alunos fazem isso <span className="font-bold text-[hsl(280,70%,65%)]">todos os dias</span> e sacam entre R$100 e R$300.
             </p>
           </div>
 
+          {/* What you're missing */}
+          <div className={`${plat.bg} rounded-xl p-3 border ${plat.border} space-y-2`}>
+            <p className="text-xs font-bold text-foreground text-center">Com acesso real, você teria:</p>
+            <div className="space-y-1.5">
+              {[
+                "Saques ilimitados via Pix, Nubank, ou qualquer banco",
+                "Robô operando 24h por dia sem parar",
+                "Suporte exclusivo no WhatsApp",
+                "Lucros reais caindo na sua conta",
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-[hsl(280,70%,65%,0.2)] flex items-center justify-center shrink-0">
+                    <ArrowRight className="w-2.5 h-2.5 text-[hsl(280,70%,65%)]" />
+                  </div>
+                  <span className="text-[11px] text-[hsl(260,15%,65%)]">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
           <button
             onClick={onContinue}
-            className="w-full py-4 rounded-2xl font-extrabold text-base tracking-wide bg-primary text-primary-foreground funnel-glow-button hover:brightness-110 active:scale-[0.98] cursor-pointer transition-all duration-300"
+            className="w-full py-4 rounded-2xl font-extrabold text-base tracking-wide text-white cursor-pointer hover:brightness-110 active:scale-[0.98] transition-all duration-300 bg-gradient-to-r from-[hsl(280,70%,55%)] to-[hsl(260,60%,55%)]"
+            style={{ boxShadow: `0 0 25px hsl(280 70% 65% / 0.3), 0 0 50px hsl(280 70% 65% / 0.15)` }}
           >
             <span className="flex items-center justify-center gap-2">
               <Sparkles className="w-5 h-5" />
-              QUERO ACESSAR A PLATAFORMA REAL
+              QUERO A CONTA REAL AGORA
             </span>
           </button>
+          <p className="text-[10px] text-[hsl(260,15%,45%)] text-center">
+            Enquanto você espera, outros já estão lucrando com conta real.
+          </p>
         </div>
       </div>
     </div>
   );
 };
 
-/* ─── Config Popup ─── */
+/* ─── Config Popup (PURPLE theme) ─── */
 const GoalPopup = ({ onSubmit, userName }: { onSubmit: (goal: number, time: string) => void; userName?: string }) => {
   const [goal, setGoal] = useState("");
   const [time, setTime] = useState("");
@@ -118,38 +172,40 @@ const GoalPopup = ({ onSubmit, userName }: { onSubmit: (goal: number, time: stri
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in px-4">
-      <div className="w-full max-w-sm bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
-        <div className="bg-primary/10 border-b border-border px-5 py-4 text-center">
-          <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center mx-auto mb-3">
-            <Target className="w-6 h-6 text-primary" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[hsl(260,30%,4%,0.9)] backdrop-blur-sm animate-fade-in px-4">
+      <div className={`w-full max-w-sm ${plat.card} ${plat.border} border rounded-2xl shadow-2xl overflow-hidden animate-scale-in`}>
+        <div className="bg-[hsl(280,70%,65%,0.1)] border-b border-[hsl(270,30%,22%)] px-5 py-4 text-center">
+          <div className="w-12 h-12 rounded-full bg-[hsl(280,70%,65%,0.2)] border border-[hsl(280,70%,65%,0.3)] flex items-center justify-center mx-auto mb-3">
+            <Target className="w-6 h-6 text-[hsl(280,70%,65%)]" />
           </div>
           <h3 className="font-display font-bold text-lg text-foreground">
             {firstName ? `${firstName}, configure` : "Configure"} sua meta
           </h3>
-          <p className="text-xs text-muted-foreground mt-1">A IA vai operar até bater sua meta automaticamente</p>
+          <p className="text-xs text-[hsl(260,15%,55%)] mt-1">A IA vai operar até bater sua meta automaticamente</p>
         </div>
         <div className="px-5 py-5 space-y-5">
           <div className="space-y-2">
             <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-              <Banknote className="w-4 h-4 text-primary" /> Qual sua meta de ganho?
+              <Banknote className="w-4 h-4 text-[hsl(280,70%,65%)]" /> Qual sua meta de ganho?
             </label>
             <input
               type="text" inputMode="numeric" placeholder="Ex: R$ 500"
               value={goal} onChange={(e) => setGoal(formatGoal(e.target.value))}
-              className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-foreground text-lg font-bold placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              className="w-full bg-[hsl(260,22%,15%)] border border-[hsl(270,30%,22%)] rounded-xl px-4 py-3 text-foreground text-lg font-bold placeholder:text-[hsl(260,15%,40%)] focus:outline-none focus:ring-2 focus:ring-[hsl(280,70%,65%,0.5)] transition-all"
             />
-            <p className="text-[10px] text-muted-foreground">Mínimo R$10 — sem limite máximo</p>
+            <p className="text-[10px] text-[hsl(260,15%,55%)]">Mínimo R$10 — sem limite máximo</p>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-primary" /> Tempo disponível hoje?
+              <Clock className="w-4 h-4 text-[hsl(280,70%,65%)]" /> Tempo disponível hoje?
             </label>
             <div className="grid grid-cols-2 gap-2">
               {timeOptions.map((opt) => (
                 <button key={opt.value} onClick={() => setTime(opt.value)}
                   className={`py-2.5 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                    time === opt.value ? "border-primary bg-primary/15 text-primary" : "border-border bg-secondary text-muted-foreground hover:border-muted-foreground/40"
+                    time === opt.value
+                      ? "border-[hsl(280,70%,65%)] bg-[hsl(280,70%,65%,0.15)] text-[hsl(280,70%,65%)]"
+                      : "border-[hsl(270,30%,22%)] bg-[hsl(260,22%,15%)] text-[hsl(260,15%,55%)] hover:border-[hsl(260,15%,40%)]"
                   }`}
                 >{opt.label}</button>
               ))}
@@ -157,8 +213,11 @@ const GoalPopup = ({ onSubmit, userName }: { onSubmit: (goal: number, time: stri
           </div>
           <button onClick={() => canSubmit && onSubmit(goalNum, time)} disabled={!canSubmit}
             className={`w-full py-4 rounded-2xl font-extrabold text-base tracking-wide transition-all duration-300 ${
-              canSubmit ? "bg-primary text-primary-foreground funnel-glow-button hover:brightness-110 active:scale-[0.98] cursor-pointer" : "bg-muted text-muted-foreground cursor-not-allowed"
-            }`}>
+              canSubmit
+                ? "text-white cursor-pointer hover:brightness-110 active:scale-[0.98] bg-gradient-to-r from-[hsl(280,70%,55%)] to-[hsl(260,60%,55%)]"
+                : "bg-[hsl(260,22%,18%)] text-[hsl(260,15%,40%)] cursor-not-allowed"
+            }`}
+            style={canSubmit ? { boxShadow: `0 0 25px hsl(280 70% 65% / 0.3), 0 0 50px hsl(280 70% 65% / 0.15)` } : {}}>
             <span className="flex items-center justify-center gap-2"><Play className="w-5 h-5" fill="currentColor" /> INICIAR ROBÔ</span>
           </button>
         </div>
@@ -195,17 +254,17 @@ const AnalyzingBar = ({ onDone }: { onDone: () => void }) => {
   );
 };
 
-/* ─── Notification Toast ─── */
+/* ─── Notification Toast (purple themed) ─── */
 const NotificationToast = ({ text, onDone }: { text: string; onDone: () => void }) => {
   useEffect(() => { const t = setTimeout(onDone, 3500); return () => clearTimeout(t); }, [onDone]);
   return (
     <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-xs z-50 animate-slide-up">
-      <div className="bg-card border border-primary/30 rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-          <Banknote className="w-4 h-4 text-primary" />
+      <div className={`${plat.card} border border-[hsl(280,70%,65%,0.3)] rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3`}>
+        <div className="w-8 h-8 rounded-full bg-[hsl(280,70%,65%,0.2)] flex items-center justify-center shrink-0">
+          <Banknote className="w-4 h-4 text-[hsl(280,70%,65%)]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-primary">Operação concluída</p>
+          <p className="text-xs font-bold text-[hsl(280,70%,65%)]">Operação concluída</p>
           <p className="text-xs text-foreground mt-0.5">{text}</p>
         </div>
       </div>
@@ -232,9 +291,11 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
     hora: string; par: string; preco: string; lucro: number; tipo: "win" | "loss";
   }>>([]);
   const [notification, setNotification] = useState<string | null>(null);
+  const [visibleTips, setVisibleTips] = useState<number[]>([]);
 
   const historyRef = useRef<HTMLDivElement>(null);
   const opTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tipTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const totalOpsRef = useRef(0);
   const accumulatedRef = useRef(0);
   const startTimeRef = useRef(0);
@@ -251,6 +312,18 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
     startTimeRef.current = Date.now();
   };
 
+  // Schedule tutorial tips when active
+  useEffect(() => {
+    if (!isActive) return;
+    tutorialTips.forEach((tip, index) => {
+      const timer = setTimeout(() => {
+        setVisibleTips(prev => [...prev.slice(-1), index]); // Show only latest tip
+      }, tip.delay);
+      tipTimersRef.current.push(timer);
+    });
+    return () => tipTimersRef.current.forEach(t => clearTimeout(t));
+  }, [isActive]);
+
   const runNextOperation = useCallback(() => {
     if (accumulatedRef.current >= goal && goal > 0) {
       setShowGoalReached(true);
@@ -265,18 +338,15 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
     const elapsed = Date.now() - startTimeRef.current;
     const remaining = goal - accumulatedRef.current;
     const timeLeft = Math.max(1, GOAL_TIME_MS - elapsed);
-    // Each cycle ~2.5-3.5s => estimate remaining ops
     const estOpsLeft = Math.max(1, Math.floor(timeLeft / 3000));
 
     const isWin = Math.random() < 0.85;
 
     let lucro: number;
     if (isWin) {
-      // Distribute remaining evenly with variance, accelerate near end
       const base = remaining / estOpsLeft;
       const variance = base * (0.5 + Math.random() * 1.0);
       lucro = Math.max(3, Math.min(remaining * 0.25, variance));
-      // If very close to deadline, push harder
       if (timeLeft < 15000 && remaining > 0) {
         lucro = Math.max(lucro, remaining * 0.4);
       }
@@ -316,6 +386,7 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
 
   const goalReached = showGoalReached;
   const progressPct = goal > 0 ? Math.min(100, Math.round((Math.max(0, profit) / goal) * 100)) : 0;
+  const currentTipIndex = visibleTips.length > 0 ? visibleTips[visibleTips.length - 1] : -1;
 
   return (
     <StepContainer>
@@ -330,10 +401,19 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
             : "A IA está operando em tempo real. Acompanhe:"}
       </StepSubtitle>
 
+      {/* ═══ TUTORIAL TIP (appears above platform) ═══ */}
+      {isActive && !goalReached && currentTipIndex >= 0 && (
+        <TutorialTip
+          key={currentTipIndex}
+          icon={tutorialTips[currentTipIndex].icon}
+          text={tutorialTips[currentTipIndex].text}
+        />
+      )}
+
       {/* ═══ PLATFORM SCREEN (Pink/Purple theme) ═══ */}
       <div className={`w-full rounded-2xl overflow-hidden shadow-2xl ${plat.bg} ${plat.border} border`}>
 
-        {/* ── Top bar with ALFA HÍBRIDA logo ── */}
+        {/* ── Top bar ── */}
         <div className={`${plat.headerBg} px-3 sm:px-4 py-2.5 flex items-center justify-between ${plat.border} border-b`}>
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 flex items-center justify-center">
@@ -347,7 +427,7 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
             <div className={`w-7 h-7 rounded-full ${plat.secondary} ${plat.border} border flex items-center justify-center`}>
               <span className="text-[10px]">🇧🇷</span>
             </div>
-            <div className={`w-7 h-7 rounded-full bg-[hsl(280,60%,50%)] flex items-center justify-center`}>
+            <div className="w-7 h-7 rounded-full bg-[hsl(280,60%,50%)] flex items-center justify-center">
               <Bell className="w-3.5 h-3.5 text-white" />
             </div>
           </div>
@@ -393,7 +473,7 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
           {!isActive ? (
             <p className="text-sm text-[hsl(260,15%,55%)] font-medium">robô parado</p>
           ) : goalReached ? (
-            <p className={`text-sm font-bold ${plat.green} animate-pulse`}>META BATIDA!</p>
+            <p className={`text-sm font-bold ${plat.accent} animate-pulse`}>META BATIDA!</p>
           ) : (
             <div className="space-y-2">
               <p className={`text-sm ${plat.accent} font-semibold`}>robô operando</p>
@@ -431,7 +511,6 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
 
         {/* ── History table ── */}
         <div className={`${plat.border} border-t`}>
-          {/* Tabs */}
           <div className={`flex ${plat.border} border-b`}>
             <div className={`flex-1 py-2.5 text-center text-xs font-bold text-white ${plat.tabActive} border-b-2 ${plat.tabBorder}`}>
               Tabela
@@ -441,7 +520,6 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
             </div>
           </div>
 
-          {/* Table header */}
           <div className={`px-3 sm:px-4 py-2.5 flex items-center justify-between ${plat.border} border-b`}>
             <div className="flex items-center gap-2">
               <p className="text-xs font-bold text-foreground">Histórico de Operações</p>
@@ -457,7 +535,6 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
             </div>
           </div>
 
-          {/* Column headers */}
           <div className={`px-3 sm:px-4 py-2 grid grid-cols-4 gap-1 ${plat.border} border-b ${plat.secondary}`}>
             <span className="text-[10px] font-semibold text-[hsl(260,15%,55%)]">Hora</span>
             <span className="text-[10px] font-semibold text-[hsl(260,15%,55%)]">Par</span>
@@ -465,7 +542,6 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
             <span className="text-[10px] font-semibold text-[hsl(260,15%,55%)] text-right">Lucro</span>
           </div>
 
-          {/* Rows */}
           <div ref={historyRef} className="max-h-[200px] sm:max-h-[240px] overflow-y-auto" style={{ scrollBehavior: "smooth" }}>
             {history.length === 0 && (
               <div className="py-8 text-center">
