@@ -187,15 +187,45 @@ const PeopleLikeYou = ({ answers }: { answers?: QuizAnswers }) => {
     return data56;
   };
 
-  const getObstacleMessage = (obstacle?: string) => {
-    const map: Record<string, string> = {
-      medo: "também tinham medo de errar de novo",
-      tempo: "também tinham pouco tempo disponível",
-      inicio: "também não sabiam por onde começar",
-      dinheiro: "também achavam que não tinham dinheiro para investir",
+  const getObstacleContext = (obstacle?: string) => {
+    const map: Record<string, { subtitle: string; testimonials: Record<string, string> }> = {
+      medo: {
+        subtitle: "passaram pela mesma desconfiança que você — e hoje vivem uma realidade diferente:",
+        testimonials: {
+          t1: "\"Já tinha perdido dinheiro duas vezes na internet. Quase não entrei. Mas algo me dizia pra tentar mais uma vez... e foi a melhor decisão da minha vida. Hoje pago todas as contas e ainda sobra.\"",
+          t2: "\"Minha filha insistiu pra eu tentar. Eu dizia que era golpe. Entrei desconfiado, com o pé atrás. Quando caiu o primeiro Pix, eu chorei. Não de alegria — de alívio.\"",
+          t3: "\"Perdi meu emprego com 59 anos. Ninguém contrata nessa idade. Tinha vergonha de pedir ajuda. Quando vi que dava pra fazer do celular, sem aparecer, sem falar com ninguém... mudou tudo.\"",
+        },
+      },
+      tempo: {
+        subtitle: "também achavam que não tinham tempo — até descobrirem que 10 minutos por dia já bastam:",
+        testimonials: {
+          t1: "\"Trabalho o dia inteiro e chego morto em casa. Achei que não ia dar conta. Mas faço tudo em 10 minutos antes de dormir. Minha esposa nem acredita que gera renda.\"",
+          t2: "\"Sou mãe solo, cuido de dois filhos. Meu tempo livre é zero. Mas consigo operar no intervalo do almoço e já tiro o suficiente pra não depender de ninguém.\"",
+          t3: "\"Aposentei mas faço bico pra complementar. Achava que ia ser mais uma coisa pra me estressar. Na verdade levo menos tempo que assistir uma novela.\"",
+        },
+      },
+      inicio: {
+        subtitle: "também se sentiam perdidos no começo — até receberem o suporte certo:",
+        testimonials: {
+          t1: "\"Nunca mexi com nada online. Mal sei usar WhatsApp direito. Mas o suporte me pegou pela mão, passo a passo. Hoje opero sozinho e ensino minha esposa.\"",
+          t2: "\"Tinha medo de apertar o botão errado e perder tudo. O suporte respondeu cada dúvida minha com paciência. Em 3 dias eu já tava fazendo sozinha.\"",
+          t3: "\"Me sentia burro por não entender as coisas de primeira. Mas aqui ninguém te julga. Te ensinam quantas vezes precisar. Hoje sou eu que ajudo os novatos do grupo.\"",
+        },
+      },
+      dinheiro: {
+        subtitle: "também pensavam que precisavam de muito dinheiro pra começar — e se surpreenderam:",
+        testimonials: {
+          t1: "\"Achei que precisava de milhares pra investir. Quando vi que dava pra começar com pouco e ir crescendo, entendi que era pra gente como eu.\"",
+          t2: "\"Tava devendo o cartão e mal tinha pra comer. Juntei o pouco que tinha e arrisquei. No terceiro dia já tinha recuperado tudo e ainda sobrou.\"",
+          t3: "\"Minha aposentadoria é um salário mínimo. Não tinha nada sobrando. Mas o retorno veio tão rápido que em uma semana já tava no positivo.\"",
+        },
+      },
     };
-    return map[obstacle || ""] || "tinham os mesmos desafios que você";
+    return map[obstacle || ""] || map["medo"];
   };
+
+  const obstacleCtx = getObstacleContext(answers?.obstacle);
 
   const people = getAgePeople(answers?.age);
 
@@ -205,19 +235,21 @@ const PeopleLikeYou = ({ answers }: { answers?: QuizAnswers }) => {
         Pessoas com o <span className="text-gradient-green">mesmo perfil que você</span> já estão tendo resultados
       </h3>
       <p className="text-sm text-muted-foreground text-center">
-        Esses alunos {getObstacleMessage(answers?.obstacle)} — e hoje ganham renda extra todos os dias:
+        Esses alunos {obstacleCtx.subtitle}
       </p>
       <div className="space-y-3">
         {people.map((p, i) => (
-          <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-secondary/50 rounded-xl p-3">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <img src={p.avatar} alt={p.name} className="w-10 h-10 rounded-full object-cover border border-primary/30 shrink-0" />
+          <div key={i} className="funnel-card border-primary/15 bg-secondary/30 space-y-2">
+            <div className="flex items-center gap-3">
+              <img src={p.avatar} alt={p.name} className="w-11 h-11 rounded-full object-cover border-2 border-primary/30 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground">{p.name}, {p.age} anos</p>
-                <p className="text-xs text-muted-foreground">{getObstacleMessage(answers?.obstacle)}</p>
+                <p className="text-sm font-bold text-foreground">{p.name}, {p.age} anos</p>
+                <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{p.result}</span>
               </div>
             </div>
-            <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-full self-start sm:self-center whitespace-nowrap">{p.result}</span>
+            <p className="text-sm text-foreground/85 italic leading-relaxed">
+              {obstacleCtx.testimonials[`t${i + 1}` as keyof typeof obstacleCtx.testimonials]}
+            </p>
           </div>
         ))}
       </div>
