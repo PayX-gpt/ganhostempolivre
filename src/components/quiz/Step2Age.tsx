@@ -6,9 +6,9 @@ interface Step2Props {
 }
 
 const ageOptions = [
-  { label: "18 a 25 anos", icon: "👤" },
+  { label: "18 a 25 anos", icon: "👩" },
   { label: "26 a 35 anos", icon: "👨" },
-  { label: "36 a 45 anos", icon: "👨‍💼" },
+  { label: "36 a 45 anos", icon: "👩‍💼" },
   { label: "46 a 55 anos", icon: "👨‍🦳" },
   { label: "56 anos ou mais", icon: "🧓" },
 ];
@@ -24,7 +24,7 @@ const Step2Age = ({ onNext }: Step2Props) => {
   return (
     <StepContainer>
       <StepTitle>Qual é a sua faixa de idade?</StepTitle>
-      <StepSubtitle>Isso nos ajuda a personalizar seu plano.</StepSubtitle>
+      <StepSubtitle>Isso nos ajuda a personalizar o melhor plano para o seu perfil.</StepSubtitle>
 
       <div className="w-full space-y-3 mt-2">
         {ageOptions.map((opt) => (

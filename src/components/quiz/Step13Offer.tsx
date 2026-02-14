@@ -7,7 +7,7 @@ interface Step13Props {
 
 const Step13Offer = ({ userName }: Step13Props) => {
   const [showCTA, setShowCTA] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+  const [timeLeft, setTimeLeft] = useState(600);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowCTA(true), 3000);
@@ -51,7 +51,7 @@ const Step13Offer = ({ userName }: Step13Props) => {
               <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
             </svg>
           </div>
-          <p className="text-xs text-muted-foreground">Vídeo de apresentação</p>
+          <p className="text-xs text-muted-foreground">Vídeo de apresentação da plataforma</p>
         </div>
       </div>
 
@@ -61,6 +61,7 @@ const Step13Offer = ({ userName }: Step13Props) => {
           "✅ Acesso completo à plataforma",
           "✅ Suporte passo a passo em tempo real",
           "✅ Comunidade exclusiva de alunos",
+          "✅ Acompanhamento personalizado",
           "✅ Garantia de 7 dias ou seu dinheiro de volta",
         ].map((benefit, i) => (
           <p key={i} className="text-sm text-foreground">{benefit}</p>
@@ -77,26 +78,41 @@ const Step13Offer = ({ userName }: Step13Props) => {
         <p className="text-xs text-muted-foreground">ou 12x de R$6,58</p>
       </div>
 
-      {/* Testimonials */}
+      {/* Real testimonials */}
       <div className="w-full space-y-3 mt-3">
         <p className="text-xs text-muted-foreground text-center font-medium uppercase tracking-wider">
           Depoimentos de alunos reais
         </p>
-        {[
-          {
-            name: "Maria, 54 anos",
-            text: "Paguei todas as minhas contas atrasadas no primeiro mês. Não acreditava que era possível.",
-          },
-          {
-            name: "José, 61 anos",
-            text: "Finalmente tenho tranquilidade financeira. O suporte é excelente, me ajudaram em cada passo.",
-          },
-        ].map((t, i) => (
-          <div key={i} className="funnel-card">
-            <p className="font-bold text-sm text-foreground">{t.name}</p>
-            <p className="text-xs text-foreground/80 italic mt-1">"{t.text}"</p>
+
+        <div className="funnel-card border-primary/20">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-xl">👨‍🦳</span>
+            <p className="font-bold text-sm text-foreground">José, 61 anos</p>
           </div>
-        ))}
+          <p className="text-xs text-foreground/80 italic">
+            "Finalmente tenho tranquilidade financeira. O suporte é excelente, me ajudaram em cada passo. Já não preciso pedir dinheiro emprestado no final do mês."
+          </p>
+        </div>
+
+        <div className="funnel-card border-primary/20">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-xl">👩‍🦳</span>
+            <p className="font-bold text-sm text-foreground">Maria, 54 anos</p>
+          </div>
+          <p className="text-xs text-foreground/80 italic">
+            "Paguei todas as minhas contas atrasadas no primeiro mês. Não acreditava que era possível. Hoje tenho paz de espírito."
+          </p>
+        </div>
+
+        <div className="funnel-card border-primary/20">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-xl">👨‍🦳</span>
+            <p className="font-bold text-sm text-foreground">Seu Carlos, 67 anos</p>
+          </div>
+          <p className="text-xs text-foreground/80 italic">
+            "Eu tinha medo porque já perdi dinheiro na internet. Mas aqui é diferente. Comecei devagar, e hoje minha esposa também usa. Juntos tiramos mais de R$200 por dia."
+          </p>
+        </div>
       </div>
 
       {showCTA ? (

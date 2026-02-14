@@ -1,22 +1,31 @@
+import { useState, useEffect } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
 
 interface Step3Props {
   onNext: () => void;
 }
 
-const Step3SocialProof = ({ onNext }: Step3Props) => {
+const Step3MentorVideo = ({ onNext }: Step3Props) => {
+  const [showCTA, setShowCTA] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowCTA(true), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <StepContainer>
       <div className="text-center space-y-2">
-        <p className="text-3xl font-display font-bold text-gradient-green">36.327</p>
-        <StepTitle>alunos já estão lucrando com este método</StepTitle>
+        <StepTitle>
+          Mais de <span className="text-gradient-green">36.000 brasileiros</span> já descobriram como ter uma nova fonte de renda segura
+        </StepTitle>
       </div>
 
       <StepSubtitle>
-        Veja o depoimento de quem já começou a ter resultados reais:
+        Assista esta mensagem especial do nosso especialista — ele pode mudar sua perspectiva sobre ganhar dinheiro online:
       </StepSubtitle>
 
-      {/* Video placeholder */}
+      {/* Mentor Video placeholder */}
       <div className="w-full aspect-video bg-secondary rounded-xl flex items-center justify-center border border-border overflow-hidden relative">
         <div className="text-center space-y-2">
           <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto">
@@ -24,15 +33,21 @@ const Step3SocialProof = ({ onNext }: Step3Props) => {
               <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
             </svg>
           </div>
-          <p className="text-xs text-muted-foreground">Depoimento em vídeo</p>
+          <p className="text-xs text-muted-foreground">Vídeo do mentor / especialista</p>
         </div>
       </div>
 
-      <CTAButton onClick={onNext}>
-        CONTINUAR →
-      </CTAButton>
+      {showCTA ? (
+        <CTAButton onClick={onNext} className="animate-fade-in">
+          CONTINUAR →
+        </CTAButton>
+      ) : (
+        <p className="text-xs text-muted-foreground text-center animate-pulse">
+          Assista o vídeo para continuar...
+        </p>
+      )}
     </StepContainer>
   );
 };
 
-export default Step3SocialProof;
+export default Step3MentorVideo;
