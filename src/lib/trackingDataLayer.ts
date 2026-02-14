@@ -97,6 +97,8 @@ const saveToStorage = (data: TrackingData): void => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     sessionStorage.setItem("tracking_session", JSON.stringify(data));
+    const fbTracking = { fbp: data.fbp, fbc: data.fbc };
+    localStorage.setItem("fb_tracking", JSON.stringify(fbTracking));
     if (data.src) setCookie("utmify_src", data.src);
     if (data.sck) setCookie("utmify_sck", data.sck);
     if (data.fbclid) {
@@ -162,7 +164,28 @@ export const initializeTrackingDataLayer = (): TrackingData => {
   }
 
   window.trackingData = trackingData;
+
+  (window as unknown as Record<string, unknown>).__trackingParams = {
+    ...trackingData,
+    src: trackingData.src,
+    sck: trackingData.sck,
+  };
+
   saveToStorage(trackingData);
+
+  if (!storedData) {
+    console.log("✅ UTMs capturados:", {
+      utm_source: trackingData.utm_source,
+      utm_medium: trackingData.utm_medium,
+      utm_campaign: trackingData.utm_campaign,
+      fbclid: trackingData.fbclid,
+      gclid: trackingData.gclid,
+      fbp: trackingData.fbp,
+      fbc: trackingData.fbc,
+      session_id: trackingData.session_id,
+    });
+  }
+
   return trackingData;
 };
 
@@ -182,17 +205,94 @@ export const recordFunnelEvent = (eventName: string): void => {
   saveToStorage(window.trackingData);
 };
 
-export const getTrackingData = (): TrackingData => {
-  if (!window.trackingData) return initializeTrackingDataLayer();
-  return window.trackingData;
-};
-
 export const getTrackingDataForCheckout = (): Record<string, string> => {
   if (!window.trackingData) initializeTrackingDataLayer();
   const data = window.trackingData;
   const result: Record<string, string> = {};
-  const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid", "gclid", "xcod", "src", "sck", "fbp", "fbc", "vsl_variant", "vsl_player_id"] as const;
-  keys.forEach(k => { if (data[k]) result[k] = data[k]!; });
+  if (data.utm_source) result.utm_source = data.utm_source;
+  if (data.utm_medium) result.utm_medium = data.utm_medium;
+  if (data.utm_campaign) result.utm_campaign = data.utm_campaign;
+  if (data.utm_content) result.utm_content = data.utm_content;
+  if (data.utm_term) result.utm_term = data.utm_term;
+  if (data.fbclid) result.fbclid = data.fbclid;
+  if (data.gclid) result.gclid = data.gclid;
+  if (data.xcod) result.xcod = data.xcod;
+  if (data.src) result.src = data.src;
+  if (data.sck) result.sck = data.sck;
+  if (data.fbp) result.fbp = data.fbp;
+  if (data.fbc) result.fbc = data.fbc;
+  if (data.vsl_variant) result.vsl_variant = data.vsl_variant;
+  if (data.vsl_player_id) result.vsl_player_id = data.vsl_player_id;
   result.session_id = data.session_id;
   return result;
+};
+
+export const getTrackingDataForFacebookCAPI = (): Record<string, string | null> => {
+  if (!window.trackingData) initializeTrackingDataLayer();
+  const data = window.trackingData;
+  return {
+    fbp: data.fbp, fbc: data.fbc, fbclid: data.fbclid,
+    utm_source: data.utm_source, utm_medium: data.utm_medium,
+    utm_campaign: data.utm_campaign, utm_content: data.utm_content,
+    utm_term: data.utm_term, session_id: data.session_id,
+    landing_page: data.landing_page, referrer: data.referrer,
+    user_agent: data.user_agent, first_visit: data.first_visit,
+  };
+};
+
+export const buildTrackingQueryString = (): string => {
+  const params = getTrackingDataForCheckout();
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) searchParams.set(key, value);
+  });
+  const qs = searchParams.toString();
+  return qs ? `?${qs}` : "";
+};
+
+export const ensureUrlHasTrackingParams = (): void => {
+  if (!window.trackingData) initializeTrackingDataLayer();
+  const data = window.trackingData;
+  const currentParams = new URLSearchParams(window.location.search);
+  let changed = false;
+  const criticalParams: (keyof TrackingData)[] = [
+    "utm_source", "utm_medium", "utm_campaign", "fbclid", "gclid", "src", "sck",
+  ];
+  criticalParams.forEach((param) => {
+    const value = data[param];
+    if (value && !currentParams.has(param)) {
+      currentParams.set(param, value as string);
+      changed = true;
+    }
+  });
+  if (changed) {
+    const newUrl = `${window.location.pathname}?${currentParams.toString()}${window.location.hash}`;
+    window.history.replaceState(null, "", newUrl);
+  }
+};
+
+export const getTrackingData = (): TrackingData => {
+  if (!window.trackingData) return initializeTrackingDataLayer();
+  if (!window.trackingData.utm_source && !window.trackingData.utm_campaign) {
+    const stored = loadFromStorage();
+    if (stored && (stored.utm_source || stored.utm_campaign)) {
+      window.trackingData = {
+        ...window.trackingData,
+        utm_source: stored.utm_source || window.trackingData.utm_source,
+        utm_medium: stored.utm_medium || window.trackingData.utm_medium,
+        utm_campaign: stored.utm_campaign || window.trackingData.utm_campaign,
+        utm_content: stored.utm_content || window.trackingData.utm_content,
+        utm_term: stored.utm_term || window.trackingData.utm_term,
+        fbclid: stored.fbclid || window.trackingData.fbclid,
+        gclid: stored.gclid || window.trackingData.gclid,
+        fbp: stored.fbp || window.trackingData.fbp,
+        fbc: stored.fbc || window.trackingData.fbc,
+        landing_page: stored.landing_page || window.trackingData.landing_page,
+        referrer: stored.referrer || window.trackingData.referrer,
+        src: stored.src || window.trackingData.src,
+        sck: stored.sck || window.trackingData.sck,
+      };
+    }
+  }
+  return window.trackingData;
 };
