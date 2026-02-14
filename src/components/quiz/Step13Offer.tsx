@@ -27,9 +27,16 @@ interface Step13Props {
 /* ─── Reusable CTA Block ─── */
 const CTABlock = ({ showCTA, context }: { showCTA: boolean; context?: string }) =>
   showCTA ? (
-    <div className="w-full space-y-2">
+    <div className="w-full space-y-3">
+      <div className="text-center space-y-1">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">CHAVE TOKEN CHATGPT</p>
+        <p className="text-3xl sm:text-4xl font-display font-bold text-foreground">
+          R$<span className="text-gradient-green">66</span>
+        </p>
+        <p className="text-sm text-muted-foreground">ou 12x de R$6,58</p>
+      </div>
       <CTAButton onClick={() => window.open("#", "_blank")} variant="accent" className="animate-bounce-subtle text-lg sm:text-xl tracking-wider">
-        🔑 ATIVAR MINHA CHAVE AGORA
+        🔑 ATIVAR MINHA CHAVE TOKEN — R$66
       </CTAButton>
       <div className="flex items-center justify-center gap-2">
         <Lock className="w-3.5 h-3.5 text-muted-foreground" />
