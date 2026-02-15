@@ -334,32 +334,32 @@ export default function AdminFunnelAudit() {
       <SEOHead title="Live Dashboard" description="Real-time analytics and monitoring dashboard" url="/live" />
 
       <div className="max-w-[1600px] mx-auto px-4 py-6 space-y-6">
-        <header className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/80 to-emerald-700/80 flex items-center justify-center">
-                <Activity className="w-3.5 h-3.5 text-white" />
+        <header className="flex flex-col gap-2 overflow-hidden">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500/80 to-emerald-700/80 flex items-center justify-center flex-shrink-0">
+                <Activity className="w-3 h-3 text-white" />
               </div>
-              <div>
-                <h1 className="text-base font-semibold text-white tracking-tight">Dashboard</h1>
-                <p className="text-[10px] text-[#555] tracking-wide uppercase">Tempo real</p>
+              <div className="min-w-0">
+                <h1 className="text-sm font-semibold text-white tracking-tight">Dashboard</h1>
+                <p className="text-[9px] text-[#555] tracking-wide uppercase">Tempo real</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 flex-shrink-0 overflow-x-auto">
               <button onClick={toggleSound}
-                className={cn("w-7 h-7 rounded-md flex items-center justify-center transition-colors",
-                  soundEnabled ? "bg-emerald-500/15 text-emerald-400" : "text-[#555] hover:text-[#888] hover:bg-white/5")}>
+                className={cn("w-6 h-6 rounded flex items-center justify-center transition-colors flex-shrink-0",
+                  soundEnabled ? "bg-emerald-500/15 text-emerald-400" : "text-[#555] hover:text-[#888]")}>
                 {soundEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
               </button>
               <button onClick={toggleNotifications}
-                className={cn("w-7 h-7 rounded-md flex items-center justify-center transition-colors",
-                  notificationsEnabled ? "bg-emerald-500/15 text-emerald-400" : "text-[#555] hover:text-[#888] hover:bg-white/5")}>
+                className={cn("w-6 h-6 rounded flex items-center justify-center transition-colors flex-shrink-0",
+                  notificationsEnabled ? "bg-emerald-500/15 text-emerald-400" : "text-[#555] hover:text-[#888]")}>
                 {notificationsEnabled ? <Bell className="w-3 h-3" /> : <BellOff className="w-3 h-3" />}
               </button>
-              <div className="w-px h-4 bg-[#222] mx-0.5" />
+              <div className="w-px h-3.5 bg-[#222] mx-0.5 flex-shrink-0" />
               <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="w-24 h-7 bg-[#141414] border-[#222] text-white/80 rounded-md text-[11px] px-2">
+                <SelectTrigger className="w-20 h-6 bg-[#141414] border-[#222] text-white/80 rounded text-[10px] px-1.5 flex-shrink-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-[#141414] border-[#222]">
@@ -370,37 +370,37 @@ export default function AdminFunnelAudit() {
                 </SelectContent>
               </Select>
               <button onClick={fetchData} disabled={isLoading}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-[#555] hover:text-white hover:bg-white/5 transition-colors">
+                className="w-6 h-6 rounded flex items-center justify-center text-[#555] hover:text-white transition-colors flex-shrink-0">
                 <RefreshCw className={cn("w-3 h-3", isLoading && "animate-spin")} />
               </button>
               <button onClick={() => setAutoRefresh(!autoRefresh)}
-                className={cn("w-7 h-7 rounded-md flex items-center justify-center transition-colors",
-                  autoRefresh ? "bg-emerald-500/15 text-emerald-400" : "text-[#555] hover:text-[#888] hover:bg-white/5")}>
+                className={cn("w-6 h-6 rounded flex items-center justify-center transition-colors flex-shrink-0",
+                  autoRefresh ? "bg-emerald-500/15 text-emerald-400" : "text-[#555] hover:text-[#888]")}>
                 <Radio className={cn("w-3 h-3", autoRefresh && "animate-pulse")} />
               </button>
               <button onClick={exportLogs}
-                className="w-7 h-7 rounded-md flex items-center justify-center text-[#555] hover:text-white hover:bg-white/5 transition-colors">
+                className="w-6 h-6 rounded flex items-center justify-center text-[#555] hover:text-white transition-colors flex-shrink-0">
                 <Download className="w-3 h-3" />
               </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
-              <span className="relative flex h-1.5 w-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded">
+              <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
               </span>
-              <span className="text-[11px] font-medium text-emerald-400 tabular-nums">{activeUsers} online</span>
+              <span className="text-[10px] font-medium text-emerald-400 tabular-nums">{activeUsers} online</span>
             </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#141414] border border-[#222] rounded-md">
-              <Globe className="w-2.5 h-2.5 text-sky-400/70" />
-              <span className="text-[11px] text-white/70 tabular-nums">{totalVisitsToday} <span className="text-[#555]">visitas</span></span>
+            <div className="flex items-center gap-1 px-2 py-0.5 bg-[#141414] border border-[#222] rounded">
+              <Globe className="w-2.5 h-2.5 text-sky-400/70 flex-shrink-0" />
+              <span className="text-[10px] text-white/70 tabular-nums">{totalVisitsToday} <span className="text-[#444]">visitas</span></span>
             </div>
             {lastUpdated && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#141414] border border-[#222] rounded-md">
-                <Clock className="w-2.5 h-2.5 text-[#555]" />
-                <span className="text-[11px] text-[#555] tabular-nums">{lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-[#141414] border border-[#222] rounded">
+                <Clock className="w-2.5 h-2.5 text-[#444] flex-shrink-0" />
+                <span className="text-[10px] text-[#444] tabular-nums">{lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
               </div>
             )}
           </div>
