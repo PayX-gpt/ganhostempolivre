@@ -334,8 +334,8 @@ export default function AdminFunnelAudit() {
     <div className="min-h-screen bg-[#0a0a0a]">
       <SEOHead title="Live Dashboard" description="Real-time analytics and monitoring dashboard" url="/live" />
 
-      <div className="max-w-[1600px] mx-auto px-4 py-6 space-y-6">
-        <header className="space-y-2">
+      <div className="sticky top-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-[#1a1a1a]">
+        <div className="max-w-[1600px] mx-auto px-4 py-3 space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <div className="w-6 h-6 rounded-md bg-gradient-to-br from-emerald-500/80 to-emerald-700/80 flex items-center justify-center flex-shrink-0">
               <Activity className="w-3 h-3 text-white" />
@@ -399,103 +399,10 @@ export default function AdminFunnelAudit() {
               </div>
             )}
           </div>
-        </header>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <MetricCard title="Receita Hoje"
-            value={`R$ ${totalRevenueToday.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-            icon={DollarSign} trend="up" trendLabel={`${hotmartSalesToday} vendas`} />
-          <MetricCard title="Vendas Hoje" value={hotmartSalesToday} subtitle={`${hotmartRefunded} reembolsos`} icon={ShoppingCart} />
-          <MetricCard title="Taxa de Aprovação" value={`${hotmartApprovalRate.toFixed(1)}%`}
-            subtitle={`${hotmartApproved} aprov. · ${hotmartRefunded} reemb.`} icon={CreditCard} />
-          <MetricCard title="IC → Vendas" value={`${icToSalesRate.toFixed(1)}%`}
-            subtitle={`${frontendICs} ICs · ${icToSalesRatio}`} icon={Target} />
         </div>
+      </div>
 
-        <div className="grid grid-cols-3 lg:grid-cols-3 gap-3">
-          <MetricCard title="Leads Hoje" value={totalLeadsToday} icon={Users}
-            subtitle={`${qualifiedLeadsToday} qualificados`} />
-          <MetricCard title="Qualificados" value={qualifiedLeadsToday}
-            subtitle={totalLeadsToday > 0 ? `${((qualifiedLeadsToday / totalLeadsToday) * 100).toFixed(1)}% dos leads` : "0%"}
-            icon={Eye} iconClassName="from-violet-500/20 to-violet-600/10 border-violet-500/20" valueClassName="text-violet-400" />
-          <MetricCard title="Taxa Interação" value={`${interactionRateToday.toFixed(1)}%`}
-            subtitle={`${totalLeadsToday} visitantes`}
-            icon={Activity} iconClassName="from-amber-500/20 to-amber-600/10 border-amber-500/20" valueClassName="text-amber-400" />
-        </div>
-
-        <div className="overflow-x-auto pb-2 -mx-4 px-4" style={{ maxWidth: 'calc(100% + 2rem)' }}>
-          <div className="flex gap-3 w-max">
-            {/* Aprovação Gateway */}
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <h3 className="text-xs font-medium text-[#888] truncate">Aprovação Gateway</h3>
-                <Globe className="w-4 h-4 text-orange-400 flex-shrink-0" />
-              </div>
-              <div className="flex items-center justify-around gap-2">
-                <ProgressRing value={hotmartApprovalRate} label="Aprovação" color="emerald" />
-                <div className="flex flex-col gap-2 min-w-0">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved} Aprov.</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartRefunded} Reemb.</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#666] flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved + hotmartRefunded} Total</span></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Funil IC → Venda */}
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <h3 className="text-xs font-medium text-[#888] truncate">Funil IC → Venda</h3>
-                <Target className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              </div>
-              <div className="flex items-center justify-around gap-2">
-                <ProgressRing value={icToSalesRate} label="Conversão" color="emerald" />
-                <div className="flex flex-col gap-2 min-w-0">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{frontendICs} ICs</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} Vendas</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">Ratio {icToSalesRatio}</span></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Sessões Únicas */}
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <h3 className="text-xs font-medium text-[#888] truncate">Sessões Únicas</h3>
-                <Eye className="w-4 h-4 text-sky-400 flex-shrink-0" />
-              </div>
-              <div className="flex items-center justify-around gap-2">
-                <ProgressRing value={frontendICs > 0 ? Math.min((activeUsers / frontendICs) * 100, 100) : 0} label="Ativas" color="violet" />
-                <div className="flex flex-col gap-2 min-w-0">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{activeUsers} Online</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{frontendICs} ICs hoje</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} Compraram</span></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Ticket Médio */}
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <h3 className="text-xs font-medium text-[#888] truncate">Ticket Médio</h3>
-                <DollarSign className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              </div>
-              <div className="flex items-center justify-around gap-2">
-                <ProgressRing value={Math.min(hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday / 200) * 100 : 0, 100)} label="Ticket" color="amber" />
-                <div className="flex flex-col gap-2 min-w-0">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">R$ {hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : '0'}</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">R$ {totalRevenueToday.toFixed(0)} total</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} vendas</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <LiveUserPresence onTotalChange={handlePresenceTotalChange} />
-        <LiveFunnelAnalytics />
-        <LiveRevenueChart usdToBrl={USD_TO_BRL} />
-        <LiveIntelligence />
-        <LiveLeadsTable />
+      <div className="max-w-[1600px] mx-auto px-4 py-6 space-y-6">
 
 
         <Tabs defaultValue="logs" className="space-y-4">
