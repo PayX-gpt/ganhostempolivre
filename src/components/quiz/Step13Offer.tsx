@@ -161,10 +161,13 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
 
   const getAgeLabel = (a?: string) => {
     const map: Record<string, string> = {
+      "18 a 25 anos": "18–25 anos", "26 a 35 anos": "26–35 anos",
+      "36 a 45 anos": "36–45 anos", "46 a 55 anos": "46–55 anos",
+      "56 anos ou mais": "56+ anos",
       "18-25": "18–25 anos", "26-35": "26–35 anos",
       "36-45": "36–45 anos", "46-55": "46–55 anos", "56+": "56+ anos",
     };
-    return map[a || ""] || "—";
+    return map[a || ""] || a || "—";
   };
 
   const getDreamLabel = (d?: string) => {
@@ -172,8 +175,10 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
       contas: "Pagar contas em dia", dividas: "Quitar dívidas",
       viagem: "Viajar com a família", independencia: "Independência financeira",
       aposentadoria: "Complementar aposentadoria", negocio: "Ter próprio negócio",
+      valorizado: "Ser valorizado", familia: "Cuidar da família",
+      liberdade: "Tempo e liberdade",
     };
-    return map[d || ""] || "—";
+    return map[d || ""] || d || "—";
   };
 
   const getTriedLabel = (t?: string) => {
@@ -301,6 +306,11 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
 
 /* ─── Fixed age sets per age group (no randomness) ─── */
 const AGE_SETS: Record<string, [string, string, string]> = {
+  "18 a 25 anos": ["22", "24", "21"],
+  "26 a 35 anos": ["29", "33", "31"],
+  "36 a 45 anos": ["38", "42", "40"],
+  "46 a 55 anos": ["48", "52", "50"],
+  "56 anos ou mais": ["57", "60", "55"],
   "18-25": ["22", "24", "21"],
   "26-35": ["29", "33", "31"],
   "36-45": ["38", "42", "40"],
@@ -309,7 +319,7 @@ const AGE_SETS: Record<string, [string, string, string]> = {
 };
 
 const getFixedAges = (age?: string): [string, string, string] => {
-  return AGE_SETS[age || ""] || AGE_SETS["46-55"];
+  return AGE_SETS[age || ""] || AGE_SETS["46 a 55 anos"];
 };
 
 /* ─── People Like You (dynamic social proof) ─── */

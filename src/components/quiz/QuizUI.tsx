@@ -91,13 +91,6 @@ interface CTAButtonProps {
 export const CTAButton = ({ children, onClick, variant = "primary", disabled, className = "" }: CTAButtonProps) => {
   const ref = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    // Auto-scroll the CTA into view when it appears
-    if (ref.current) {
-      ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, []);
-
   return (
     <button
       ref={ref}
