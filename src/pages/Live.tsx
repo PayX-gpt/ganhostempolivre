@@ -52,23 +52,23 @@ const MetricCard = ({
     "bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a]",
     "shadow-xl hover:shadow-2xl hover:shadow-emerald-500/5", className
   )}>
-    <div className="flex items-start justify-between">
-      <div className="space-y-2">
-        <p className="text-[#888] text-sm font-medium">{title}</p>
-        <p className={cn("text-3xl font-bold text-white tracking-tight", valueClassName)}>{value}</p>
-        {subtitle && <p className="text-[#666] text-sm">{subtitle}</p>}
+    <div className="flex items-start justify-between gap-2">
+      <div className="space-y-2 min-w-0 flex-1">
+        <p className="text-[#888] text-sm font-medium truncate">{title}</p>
+        <p className={cn("text-2xl sm:text-3xl font-bold text-white tracking-tight truncate tabular-nums", valueClassName)}>{value}</p>
+        {subtitle && <p className="text-[#666] text-xs sm:text-sm truncate">{subtitle}</p>}
         {trendLabel && (
           <div className={cn("flex items-center gap-1 text-xs font-medium mt-2",
             trend === 'up' && "text-emerald-400", trend === 'down' && "text-red-400", trend === 'neutral' && "text-[#888]"
           )}>
-            {trend === 'up' && <TrendingUp className="w-3 h-3" />}
-            {trend === 'down' && <TrendingDown className="w-3 h-3" />}
-            <span>{trendLabel}</span>
+            {trend === 'up' && <TrendingUp className="w-3 h-3 flex-shrink-0" />}
+            {trend === 'down' && <TrendingDown className="w-3 h-3 flex-shrink-0" />}
+            <span className="truncate">{trendLabel}</span>
           </div>
         )}
       </div>
       {Icon && (
-        <div className={cn("p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/20", iconClassName)}>
+        <div className={cn("p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/20 flex-shrink-0", iconClassName)}>
           <Icon className="w-5 h-5 text-emerald-400" />
         </div>
       )}
@@ -384,65 +384,65 @@ export default function AdminFunnelAudit() {
         <div className="overflow-x-auto pb-2 -mx-4 px-4" style={{ maxWidth: 'calc(100% + 2rem)' }}>
           <div className="flex gap-3 w-max">
             {/* Aprovação Gateway */}
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-medium text-[#888]">Aprovação Gateway</h3>
-                <Globe className="w-4 h-4 text-orange-400" />
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xs font-medium text-[#888] truncate">Aprovação Gateway</h3>
+                <Globe className="w-4 h-4 text-orange-400 flex-shrink-0" />
               </div>
-              <div className="flex items-center justify-around">
+              <div className="flex items-center justify-around gap-2">
                 <ProgressRing value={hotmartApprovalRate} label="Aprovação" color="emerald" />
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span className="text-xs text-white">{hotmartApproved} Aprov.</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500" /><span className="text-xs text-white">{hotmartRefunded} Reemb.</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#666]" /><span className="text-xs text-white">{hotmartApproved + hotmartRefunded} Total</span></div>
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved} Aprov.</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartRefunded} Reemb.</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#666] flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved + hotmartRefunded} Total</span></div>
                 </div>
               </div>
             </div>
 
             {/* Funil IC → Venda */}
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-medium text-[#888]">Funil IC → Venda</h3>
-                <Target className="w-4 h-4 text-emerald-400" />
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xs font-medium text-[#888] truncate">Funil IC → Venda</h3>
+                <Target className="w-4 h-4 text-emerald-400 flex-shrink-0" />
               </div>
-              <div className="flex items-center justify-around">
+              <div className="flex items-center justify-around gap-2">
                 <ProgressRing value={icToSalesRate} label="Conversão" color="emerald" />
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500" /><span className="text-xs text-white">{frontendICs} ICs</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span className="text-xs text-white">{hotmartSalesToday} Vendas</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500" /><span className="text-xs text-white">Ratio {icToSalesRatio}</span></div>
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{frontendICs} ICs</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} Vendas</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">Ratio {icToSalesRatio}</span></div>
                 </div>
               </div>
             </div>
 
             {/* Sessões Únicas */}
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-medium text-[#888]">Sessões Únicas</h3>
-                <Eye className="w-4 h-4 text-sky-400" />
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xs font-medium text-[#888] truncate">Sessões Únicas</h3>
+                <Eye className="w-4 h-4 text-sky-400 flex-shrink-0" />
               </div>
-              <div className="flex items-center justify-around">
+              <div className="flex items-center justify-around gap-2">
                 <ProgressRing value={frontendICs > 0 ? Math.min((activeUsers / frontendICs) * 100, 100) : 0} label="Ativas" color="violet" />
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500" /><span className="text-xs text-white">{activeUsers} Online</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500" /><span className="text-xs text-white">{frontendICs} ICs hoje</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span className="text-xs text-white">{hotmartSalesToday} Compraram</span></div>
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{activeUsers} Online</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{frontendICs} ICs hoje</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} Compraram</span></div>
                 </div>
               </div>
             </div>
 
             {/* Ticket Médio */}
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-medium text-[#888]">Ticket Médio</h3>
-                <DollarSign className="w-4 h-4 text-emerald-400" />
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xs font-medium text-[#888] truncate">Ticket Médio</h3>
+                <DollarSign className="w-4 h-4 text-emerald-400 flex-shrink-0" />
               </div>
-              <div className="flex items-center justify-around">
+              <div className="flex items-center justify-around gap-2">
                 <ProgressRing value={Math.min(hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday / 200) * 100 : 0, 100)} label="Ticket" color="amber" />
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span className="text-xs text-white">R$ {hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : '0'}</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500" /><span className="text-xs text-white">R$ {totalRevenueToday.toFixed(0)} total</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500" /><span className="text-xs text-white">{hotmartSalesToday} vendas</span></div>
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">R$ {hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : '0'}</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">R$ {totalRevenueToday.toFixed(0)} total</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} vendas</span></div>
                 </div>
               </div>
             </div>
