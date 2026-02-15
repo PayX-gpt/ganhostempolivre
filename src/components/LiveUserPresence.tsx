@@ -68,8 +68,10 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastStableCountRef = useRef<number>(0);
 
-  const processPresenceState = useCallback((presenceState: Record<string, PresencePayload[]>) => {
+  const applyPresenceState = useCallback((presenceState: Record<string, PresencePayload[]>) => {
     const pageGroups: Record<string, Set<string>> = {};
     INITIAL_STEPS.forEach(step => { pageGroups[step.id] = new Set(); });
 
@@ -77,10 +79,10 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
 
     Object.entries(presenceState).forEach(([sessionId, presences]) => {
       if (!presences || presences.length === 0) return;
-      const latest = presences[presences.length - 1]; // most recent presence
+      // Take the last tracked presence (most recent)
+      const latest = presences[presences.length - 1];
       const pageId = latest.page_id || "";
 
-      // Skip admin/dev pages
       if (pageId.includes('/admin') || pageId.includes('/live') || pageId.includes('/docs')) return;
 
       const stepId = categorizePageToStep(pageId);
@@ -90,13 +92,37 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
       }
     });
 
-    const total = uniqueSessions.size;
+    return { pageGroups, total: uniqueSessions.size };
+  }, []);
 
-    setFunnelSteps(prev => prev.map(step => ({ ...step, count: pageGroups[step.id]?.size || 0 })));
-    setTotalOnline(total);
-    setLastUpdated(new Date());
-    onTotalChange?.(total);
-  }, [onTotalChange]);
+  const processPresenceState = useCallback((presenceState: Record<string, PresencePayload[]>) => {
+    const { pageGroups, total } = applyPresenceState(presenceState);
+
+    // Anti-flicker: if the count drops by more than 50% from last stable,
+    // debounce for 800ms to wait for the state to stabilize (reconnection artifact)
+    const dropThreshold = lastStableCountRef.current > 3 && total < lastStableCountRef.current * 0.5;
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
+    const commit = () => {
+      setFunnelSteps(prev => prev.map(step => ({ ...step, count: pageGroups[step.id]?.size || 0 })));
+      setTotalOnline(total);
+      setLastUpdated(new Date());
+      lastStableCountRef.current = total;
+      onTotalChange?.(total);
+    };
+
+    if (dropThreshold) {
+      // Wait 800ms — if a new sync comes with higher count, this timer gets cleared
+      debounceTimerRef.current = setTimeout(commit, 800);
+    } else {
+      // Normal update (increase or small decrease) — apply immediately
+      commit();
+    }
+  }, [applyPresenceState, onTotalChange]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -118,12 +144,12 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           setIsLoading(false);
-          // Process initial state
           processPresenceState(channel.presenceState<PresencePayload>());
         }
       });
 
     return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
@@ -131,6 +157,7 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
 
   const handleRefresh = useCallback(() => {
     if (channelRef.current) {
+      lastStableCountRef.current = 0; // Reset threshold on manual refresh
       processPresenceState(channelRef.current.presenceState<PresencePayload>());
     }
   }, [processPresenceState]);
@@ -144,7 +171,7 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
           </div>
           <div className="min-w-0">
             <h3 className="font-semibold text-white text-sm truncate">Mapa do Funil — Tempo Real</h3>
-            <p className="text-[10px] text-[#666]">Presença exata (entra/sai instantâneo)</p>
+            <p className="text-[10px] text-[#666]">Presença exata (instantâneo)</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
