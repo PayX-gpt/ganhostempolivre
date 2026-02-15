@@ -14,54 +14,54 @@ const plans = [
   {
     id: "prata",
     icon: Shield,
-    name: "Potencial Prata",
-    subtitle: "Até R$ 250/dia",
+    name: "Plano Prata",
+    subtitle: "Ganhe até R$ 250 por dia",
     subtitleColor: "#94A3B8",
     description:
-      "Aumenta o teto de segurança da sua IA. Ideal para quem quer dobrar os ganhos mantendo um controle conservador.",
+      "O sistema passa a buscar ganhos maiores pra você, mas ainda com bastante cuidado. É como trocar a marcha do carro — você anda mais rápido, mas com segurança.",
     price: 47,
     installments: "5x de R$ 9,90",
     border: "1px solid rgba(255,255,255,0.08)",
     btnBg: "transparent",
     btnColor: "#94A3B8",
     btnBorder: "1.5px solid #94A3B8",
-    btnText: "ATIVAR POTENCIAL PRATA",
+    btnText: "QUERO O PLANO PRATA",
     badge: null,
     checkoutUrl: "https://pay.kirvano.com/PRATA_PLACEHOLDER",
   },
   {
     id: "ouro",
     icon: Crown,
-    name: "Potencial Ouro",
-    subtitle: "Até R$ 500/dia",
+    name: "Plano Ouro",
+    subtitle: "Ganhe até R$ 500 por dia",
     subtitleColor: "#FACC15",
     description:
-      "Aumenta o teto e instala o 'Robô Vigia', uma segunda IA que monitora as operações de maior valor, permitindo buscar lucros maiores com a mesma segurança.",
+      "Além de buscar ganhos maiores, o sistema ganha um 'vigia' automático que fica de olho nas operações o dia todo. Você não precisa fazer nada — ele cuida de tudo pra você.",
     price: 67,
     installments: "7x de R$ 9,90",
     border: "2px solid #FACC15",
     btnBg: "linear-gradient(135deg, #FACC15, #EAB308)",
     btnColor: "#020617",
     btnBorder: "none",
-    btnText: "ATIVAR POTENCIAL OURO",
-    badge: "⭐ RECOMENDADO",
+    btnText: "QUERO O PLANO OURO",
+    badge: "⭐ MAIS ESCOLHIDO",
     checkoutUrl: "https://pay.kirvano.com/OURO_PLACEHOLDER",
   },
   {
     id: "diamante",
     icon: Diamond,
-    name: "Potencial Ilimitado",
-    subtitle: "Sem Limites",
+    name: "Plano Diamante",
+    subtitle: "Ganhos sem limite",
     subtitleColor: "#60A5FA",
     description:
-      "Removemos todos os tetos. A IA opera com 100% do potencial, 24h por dia. Inclui o 'Robô Vigia' e um relatório semanal de performance enviado no seu WhatsApp.",
+      "O sistema trabalha no máximo, 24 horas por dia, sem limite de ganho. Você ainda recebe um resumo toda semana no seu WhatsApp mostrando quanto ganhou.",
     price: 97,
     installments: "10x de R$ 9,90",
     border: "1px solid rgba(96,165,250,0.25)",
     btnBg: "linear-gradient(135deg, #3B82F6, #2563EB)",
     btnColor: "#fff",
     btnBorder: "none",
-    btnText: "ATIVAR POTENCIAL DIAMANTE",
+    btnText: "QUERO O PLANO DIAMANTE",
     badge: null,
     checkoutUrl: "https://pay.kirvano.com/DIAMANTE_PLACEHOLDER",
   },
@@ -89,23 +89,21 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
           className="text-[11px] uppercase tracking-widest font-semibold mb-2"
           style={{ color: "#FACC15" }}
         >
-          Calibrando seu Potencial de Ganhos Diários
+          Escolha quanto você quer ganhar por dia
         </p>
         <h1
           className="text-[22px] font-extrabold leading-tight"
           style={{ color: "#F8FAFC" }}
         >
-          Seu Acelerador está ativo. Última calibração de potencial...
+          Seu sistema está pronto. Agora escolha o seu objetivo de ganho.
         </h1>
         <p
           className="text-[14px] mt-3 leading-relaxed"
           style={{ color: "#94A3B8" }}
         >
-          {firstName ? `${firstName}, p` : "P"}or padrão, sua conta vem com um{" "}
-          <strong style={{ color: "#FACC15" }}>teto de segurança de R$100/dia</strong>{" "}
-          para proteger seu capital inicial. Para ganhar mais, precisamos que
-          você autorize o sistema a buscar lucros maiores. Escolha até onde você
-          quer chegar:
+          {firstName ? `${firstName}, h` : "H"}oje o sistema está configurado para buscar{" "}
+          <strong style={{ color: "#FACC15" }}>até R$100 por dia</strong>.{" "}
+          Isso é uma proteção pra quem está começando. Se você quiser que ele busque ganhos maiores, é só escolher abaixo. É simples — você escolhe, e o sistema faz o resto.
         </p>
       </div>
 

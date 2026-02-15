@@ -13,19 +13,19 @@ interface Props {
 const benefits = [
   {
     icon: MessageCircle,
-    text: "Acesso ao grupo de WhatsApp com o Ricardo e os alunos mais avançados.",
+    text: "Grupo no WhatsApp com o Ricardo e os alunos que mais ganham. Você tira dúvidas direto com ele.",
   },
   {
     icon: Headphones,
-    text: "Áudios semanais do Ricardo com análises de mercado.",
+    text: "Toda semana, o Ricardo manda áudios explicando o que está acontecendo no mercado, de um jeito fácil de entender.",
   },
   {
     icon: Sparkles,
-    text: "Acesso antecipado a novas ferramentas.",
+    text: "Você recebe ferramentas novas antes de todo mundo.",
   },
   {
     icon: Users,
-    text: "Networking de alto nível.",
+    text: "Conhece outras pessoas que também estão ganhando dinheiro com o sistema. Troca de experiências.",
   },
 ];
 
@@ -55,19 +55,19 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
           className="text-[11px] uppercase tracking-widest font-semibold mb-2"
           style={{ color: "#D4A017" }}
         >
-          Convite para o Círculo Interno
+          Um convite especial pra você
         </p>
         <h1
           className="text-[22px] font-extrabold leading-tight"
           style={{ color: "#F8FAFC" }}
         >
-          Sua plataforma está 100% configurada e protegida. Uma última coisa...
+          Tudo pronto! Só falta uma coisa...
         </h1>
         <p
           className="text-[14px] mt-3 leading-relaxed"
           style={{ color: "#94A3B8" }}
         >
-          Isso não é uma venda. É um convite. E não é para todos.
+          Isso aqui não é uma venda. É um convite pessoal do Ricardo. E ele não faz isso pra todo mundo.
         </p>
       </div>
 
@@ -119,11 +119,8 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
             className="text-[13px] leading-relaxed mb-4"
             style={{ color: "#94A3B8" }}
           >
-            Apenas <strong style={{ color: "#FACC15" }}>1% dos nossos alunos</strong>{" "}
-            são selecionados para participar do grupo de WhatsApp onde o próprio
-            Ricardo Almeida compartilha análises semanais e tira dúvidas. É o
-            ambiente que cria os maiores resultados.{" "}
-            <strong style={{ color: "#EF4444" }}>Hoje, restam 3 vagas.</strong>
+            O Ricardo escolhe pessoalmente quem entra no grupo de WhatsApp dele. É um grupo pequeno, com poucas pessoas, onde ele compartilha o que está funcionando e responde dúvidas de verdade. São os alunos desse grupo que conseguem os melhores resultados.{" "}
+            <strong style={{ color: "#EF4444" }}>Hoje só tem 3 vagas.</strong>
           </p>
 
           <ul className="flex flex-col gap-3">
@@ -147,7 +144,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
             style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
           >
             <p className="text-[12px]" style={{ color: "#64748B" }}>
-              Taxa de manutenção mensal (cancele quando quiser)
+              Só R$ 29,90 por mês (você cancela quando quiser, sem burocracia)
             </p>
             <div className="flex items-baseline gap-1 mt-1">
               <span
@@ -175,7 +172,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
           >
             {loading
               ? "Processando..."
-              : "SOLICITAR MINHA VAGA NO CÍRCULO INTERNO"}
+              : "QUERO ENTRAR NO GRUPO DO RICARDO"}
           </button>
         </div>
       </motion.div>
@@ -190,9 +187,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
       >
         <Users className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#EF4444" }} />
         <p className="text-[12px] leading-relaxed" style={{ color: "#CBD5E1" }}>
-          <strong style={{ color: "#EF4444" }}>Atenção:</strong> O grupo tem
-          limite de participantes para garantir qualidade. Vagas preenchidas não
-          são reabertas.
+          <strong style={{ color: "#EF4444" }}>Importante:</strong> O grupo é pequeno de propósito, pra todo mundo receber atenção. Quando as vagas acabam, não abrimos mais.
         </p>
       </div>
 
@@ -201,7 +196,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
         className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2 pb-6"
         style={{ color: "#475569" }}
       >
-        Não, obrigado. Não tenho interesse em participar no momento.
+        Não, obrigado. Prefiro seguir sem o grupo por enquanto.
       </button>
     </div>
   );
