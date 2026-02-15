@@ -19,6 +19,7 @@ import LiveUserPresence from "@/components/LiveUserPresence";
 import LiveIntelligence from "@/components/LiveIntelligence";
 import LiveFunnelAnalytics from "@/components/LiveFunnelAnalytics";
 import LiveLeadsTable from "@/components/LiveLeadsTable";
+import LiveUpsellMonitor from "@/components/LiveUpsellMonitor";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import SessionLogsDialog from "@/components/SessionLogsDialog";
@@ -495,6 +496,7 @@ export default function AdminFunnelAudit() {
         </div>
 
         <LiveUserPresence onTotalChange={handlePresenceTotalChange} />
+        <LiveUpsellMonitor />
         <LiveFunnelAnalytics />
         <LiveRevenueChart usdToBrl={USD_TO_BRL} />
         <LiveIntelligence />
