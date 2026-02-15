@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Shield, Zap, BarChart3, Star, Crown, Diamond } from "lucide-react";
+import { Shield, Zap, BarChart3, Star, Crown, Diamond, Check } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 
@@ -92,10 +92,14 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
           Escolha quanto você quer ganhar por dia
         </p>
         <h1
-          className="text-[22px] font-extrabold leading-tight"
+          className="text-[22px] font-extrabold leading-tight flex items-center justify-center gap-2 flex-wrap"
           style={{ color: "#F8FAFC" }}
         >
-          Seu Acelerador já está ativo! ✅ Agora escolha o seu objetivo de ganho diário.
+          <span>Seu Acelerador já está ativo!</span>
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full shrink-0" style={{ background: "rgba(22,163,74,0.2)", border: "1.5px solid rgba(22,163,74,0.4)" }}>
+            <Check className="w-4 h-4" style={{ color: "#22C55E" }} strokeWidth={3} />
+          </span>
+          <span className="w-full text-center">Agora escolha o seu objetivo de ganho diário.</span>
         </h1>
         <p
           className="text-[14px] mt-3 leading-relaxed"
