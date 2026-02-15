@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { Shield, Zap, BarChart3, Star, Crown, Diamond, Check } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
-
+import { saveFunnelEvent } from "@/lib/metricsClient";
+import { logAuditEvent } from "@/hooks/useAuditLog";
 
 interface Props {
   name: string;
@@ -71,6 +72,8 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
 
   const handleSelect = (plan: (typeof plans)[0]) => {
     saveUpsellExtras("multiplicador", { plan: plan.id, price: plan.price });
+    saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell2", plan: plan.id, price: plan.price });
+    logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell2", metadata: { plan: plan.id, price: plan.price } });
   };
 
   return (
@@ -179,7 +182,7 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
       ))}
 
       <button
-        onClick={onDecline}
+        onClick={() => { saveFunnelEvent("upsell_oneclick_decline", { page: "/upsell2" }); logAuditEvent({ eventType: "upsell_oneclick_decline", pageId: "/upsell2" }); onDecline(); }}
         className="kirvano-refuse-trigger text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2"
         style={{ color: "#475569" }}
       >

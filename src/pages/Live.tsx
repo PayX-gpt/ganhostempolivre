@@ -145,6 +145,7 @@ export default function AdminFunnelAudit() {
     "page_loaded", "checkout_initiated", "email_prefill", "payment_completed",
     "conversion_saved", "conversion_save_failed", "redirect_executed",
     "redirect_completed", "redirect_failed",
+    "upsell_oneclick_buy", "upsell_oneclick_decline",
   ];
 
   const isImportantEvent = (eventType: string) => IMPORTANT_EVENT_TYPES.includes(eventType);
@@ -320,6 +321,8 @@ export default function AdminFunnelAudit() {
       payment_completed: <CreditCard className="w-3.5 h-3.5" />, conversion_saved: <Database className="w-3.5 h-3.5" />,
       conversion_save_failed: <XCircle className="w-3.5 h-3.5" />, redirect_executed: <ArrowUpRight className="w-3.5 h-3.5" />,
       redirect_failed: <XCircle className="w-3.5 h-3.5" />,
+      upsell_oneclick_buy: <CheckCircle2 className="w-3.5 h-3.5" />,
+      upsell_oneclick_decline: <XCircle className="w-3.5 h-3.5" />,
     };
     return icons[eventType] || <Activity className="w-3.5 h-3.5" />;
   };
@@ -544,8 +547,10 @@ export default function AdminFunnelAudit() {
                           log.event_type === "checkout_initiated" && "bg-violet-500/20 text-violet-400",
                           log.event_type === "redirect_executed" && "bg-blue-500/20 text-blue-400",
                           log.event_type === "redirect_completed" && "bg-cyan-500/20 text-cyan-400",
+                          log.event_type === "upsell_oneclick_buy" && "bg-emerald-500/20 text-emerald-400",
+                          log.event_type === "upsell_oneclick_decline" && "bg-amber-500/20 text-amber-400",
                           log.status === "error" && "bg-red-500/20 text-red-400",
-                          !["payment_completed", "checkout_initiated", "redirect_executed", "redirect_completed"].includes(log.event_type) &&
+                          !["payment_completed", "checkout_initiated", "redirect_executed", "redirect_completed", "upsell_oneclick_buy", "upsell_oneclick_decline"].includes(log.event_type) &&
                             log.status !== "error" && "bg-[#2a2a2a] text-[#888]"
                         )}>
                           {getEventIcon(log.event_type)}

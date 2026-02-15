@@ -36,7 +36,10 @@ const FUNNEL_STEPS = [
   { route: "/step-17", label: "Contato" },
   { route: "/step-18", label: "Input" },
   { route: "/step-19", label: "Oferta" },
-  { route: "/upsell", label: "Upsell" },
+  { route: "/upsell1", label: "UP1 Acel." },
+  { route: "/upsell2", label: "UP2 Multi." },
+  { route: "/upsell3", label: "UP3 Blind." },
+  { route: "/upsell4", label: "UP4 Círc." },
 ];
 
 const tooltipStyle = {
@@ -82,8 +85,11 @@ const LiveFunnelAnalytics = () => {
 
     pageLoads.forEach(log => {
       let pid = log.page_id || "";
-      // Aggregate all upsell sub-pages into single "/upsell"
-      if (pid.startsWith("/upsell")) pid = "/upsell";
+      // Map upsell sub-pages to their parent route
+      if (pid.startsWith("/upsell") && !stepCounts[pid]) {
+        // Map sub-pages like /upsell-confirmacao, /upsell-analise etc to /upsell1
+        if (pid.startsWith("/upsell-") || pid === "/upsell1") pid = "/upsell1";
+      }
       if (stepCounts[pid]) {
         stepCounts[pid].add(log.session_id);
       }
