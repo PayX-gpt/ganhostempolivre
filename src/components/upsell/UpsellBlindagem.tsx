@@ -2,7 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ShieldCheck, Check, Lock, Infinity, RefreshCw } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
-
+import { saveFunnelEvent } from "@/lib/metricsClient";
+import { logAuditEvent } from "@/hooks/useAuditLog";
 
 interface Props {
   name: string;
@@ -27,6 +28,8 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
   const handleBuy = () => {
     setLoading(true);
     saveUpsellExtras("blindagem", { price: 197 });
+    saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell3", product: "blindagem", price: 197 });
+    logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell3", metadata: { product: "blindagem", price: 197 } });
   };
 
   return (
@@ -174,7 +177,7 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
       </div>
 
       <button
-        onClick={onDecline}
+        onClick={() => { saveFunnelEvent("upsell_oneclick_decline", { page: "/upsell3" }); logAuditEvent({ eventType: "upsell_oneclick_decline", pageId: "/upsell3" }); onDecline(); }}
         className="kirvano-refuse-trigger text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2"
         style={{ color: "#475569" }}
       >

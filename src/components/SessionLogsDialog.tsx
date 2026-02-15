@@ -168,6 +168,8 @@ export default function SessionLogsDialog({ sessionId, onClose, realtimeLogs = [
       redirect_executed: <ArrowUpRight className="w-3.5 h-3.5" />,
       redirect_completed: <CheckCircle2 className="w-3.5 h-3.5" />,
       redirect_failed: <XCircle className="w-3.5 h-3.5" />,
+      upsell_oneclick_buy: <CheckCircle2 className="w-3.5 h-3.5" />,
+      upsell_oneclick_decline: <XCircle className="w-3.5 h-3.5" />,
     };
     return icons[eventType] || <Activity className="w-3.5 h-3.5" />;
   };
@@ -177,6 +179,7 @@ export default function SessionLogsDialog({ sessionId, onClose, realtimeLogs = [
       page_loaded: "bg-sky-500", checkout_initiated: "bg-violet-500", payment_completed: "bg-emerald-500",
       conversion_saved: "bg-teal-500", conversion_save_failed: "bg-red-500", redirect_executed: "bg-indigo-500",
       redirect_completed: "bg-green-500", redirect_failed: "bg-red-500",
+      upsell_oneclick_buy: "bg-emerald-500", upsell_oneclick_decline: "bg-amber-500",
     };
     return colors[eventType] || "bg-gray-500";
   };
@@ -191,6 +194,8 @@ export default function SessionLogsDialog({ sessionId, onClose, realtimeLogs = [
       redirect_executed: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
       redirect_completed: "bg-green-500/20 text-green-400 border-green-500/30",
       redirect_failed: "bg-red-500/20 text-red-400 border-red-500/30",
+      upsell_oneclick_buy: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+      upsell_oneclick_decline: "bg-amber-500/20 text-amber-400 border-amber-500/30",
     };
     return styles[eventType] || "bg-gray-500/20 text-gray-400 border-gray-500/30";
   };

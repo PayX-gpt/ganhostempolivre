@@ -2,7 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Users, MessageCircle, Headphones, Sparkles } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
-
+import { saveFunnelEvent } from "@/lib/metricsClient";
+import { logAuditEvent } from "@/hooks/useAuditLog";
 
 interface Props {
   name: string;
@@ -38,6 +39,8 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
   const handleBuy = () => {
     setLoading(true);
     saveUpsellExtras("circulo", { price: 29.9 });
+    saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell4", product: "circulo", price: 29.9 });
+    logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell4", metadata: { product: "circulo", price: 29.9 } });
   };
 
   return (
@@ -185,7 +188,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
       </div>
 
       <button
-        onClick={onDecline}
+        onClick={() => { saveFunnelEvent("upsell_oneclick_decline", { page: "/upsell4" }); logAuditEvent({ eventType: "upsell_oneclick_decline", pageId: "/upsell4" }); onDecline(); }}
         className="kirvano-refuse-trigger text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2 pb-6"
         style={{ color: "#475569" }}
       >
