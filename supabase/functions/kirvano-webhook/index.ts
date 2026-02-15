@@ -5,6 +5,40 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function extractAmount(body: any): number | null {
+  // 1. Try total_price "R$ 37,00" → 37.00
+  if (body.total_price && typeof body.total_price === "string") {
+    const cleaned = body.total_price.replace(/[^\d,.-]/g, "").replace(",", ".");
+    const val = parseFloat(cleaned);
+    if (!isNaN(val) && val > 0) return val;
+  }
+  // 2. Try fiscal.total_value (numeric)
+  if (body.fiscal?.total_value) {
+    const val = parseFloat(body.fiscal.total_value);
+    if (!isNaN(val) && val > 0) return val;
+  }
+  // 3. Try products[0].price "R$ 37,00"
+  if (body.products?.[0]?.price && typeof body.products[0].price === "string") {
+    const cleaned = body.products[0].price.replace(/[^\d,.-]/g, "").replace(",", ".");
+    const val = parseFloat(cleaned);
+    if (!isNaN(val) && val > 0) return val;
+  }
+  // 4. Try direct numeric fields
+  const directFields = ["amount", "valor", "price", "preco", "value"];
+  for (const field of directFields) {
+    if (body[field]) {
+      const val = parseFloat(body[field]);
+      if (!isNaN(val) && val > 0) return val;
+    }
+  }
+  // 5. Try fiscal.commission (net value for producer)
+  if (body.fiscal?.commission) {
+    const val = parseFloat(body.fiscal.commission);
+    if (!isNaN(val) && val > 0) return val;
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -26,18 +60,20 @@ Deno.serve(async (req) => {
     const status = body.status || body.purchase_status || body.payment_status || "approved";
 
     // Extract transaction/sale info
-    const transactionId = body.transaction_id || body.transaction || body.sale_id || body.id || body.codigo || null;
-    const planId = body.plan_id || body.plan || body.produto_id || body.product_id || null;
-    const productName = body.product_name || body.produto || body.product || body.nome_produto || null;
-    const amount = parseFloat(body.amount || body.valor || body.price || body.preco || "0") || null;
+    const transactionId = body.sale_id || body.transaction_id || body.transaction || body.id || body.codigo || null;
+    const checkoutId = body.checkout_id || null;
+    const planId = body.plan_id || body.plan || body.produto_id || body.product_id || body.products?.[0]?.id || null;
+    const productName = body.products?.[0]?.name || body.product_name || body.produto || body.product || body.nome_produto || null;
+    const offerName = body.products?.[0]?.offer_name || null;
+    const amount = extractAmount(body);
 
     // Extract buyer info
-    const email = body.email || body.buyer_email || body.cliente_email || body.customer?.email || null;
-    const buyerName = body.buyer_name || body.nome || body.customer?.name || body.cliente_nome || null;
-    const phone = body.phone || body.telefone || body.buyer_phone || body.customer?.phone || null;
+    const email = body.customer?.email || body.email || body.buyer_email || body.cliente_email || null;
+    const buyerName = body.customer?.name || body.buyer_name || body.nome || body.cliente_nome || null;
+    const phone = body.customer?.phone_number || body.phone || body.telefone || body.buyer_phone || null;
 
     // Extract payment details
-    const paymentMethod = body.payment_method || body.forma_pagamento || body.metodo_pagamento || null;
+    const paymentMethod = body.payment?.method || body.payment_method || body.forma_pagamento || null;
     const paymentId = body.payment_id || body.pagamento_id || null;
 
     // Extract tracking/UTM params that Kirvano forwards
@@ -57,26 +93,21 @@ Deno.serve(async (req) => {
 
     // Map Kirvano status to our internal status
     const statusMap: Record<string, string> = {
-      approved: "approved",
-      aprovado: "approved",
-      paid: "approved",
-      pago: "approved",
-      completed: "approved",
-      completo: "approved",
-      refused: "refused",
-      recusado: "refused",
-      refunded: "refunded",
-      reembolsado: "refunded",
+      approved: "approved", aprovado: "approved", paid: "approved", pago: "approved",
+      completed: "approved", completo: "approved",
+      sale_approved: "approved", // Kirvano event name
+      refused: "refused", recusado: "refused",
+      refunded: "refunded", reembolsado: "refunded",
       chargeback: "chargeback",
-      waiting_payment: "pending",
-      aguardando_pagamento: "pending",
-      pending: "pending",
-      pendente: "pending",
-      canceled: "canceled",
-      cancelado: "canceled",
+      waiting_payment: "pending", aguardando_pagamento: "pending",
+      pending: "pending", pendente: "pending",
+      canceled: "canceled", cancelado: "canceled",
+      abandoned_cart: "ABANDONED_CART",
     };
 
     const normalizedStatus = statusMap[status.toLowerCase()] || status;
+
+    console.log(`💰 [Kirvano] Amount extracted: ${amount}, Status: ${normalizedStatus}, Email: ${email}, Product: ${productName}`);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -143,9 +174,12 @@ Deno.serve(async (req) => {
         buyer_name: buyerName,
         phone,
         payment_method: paymentMethod,
+        checkout_id: checkoutId,
+        offer_name: offerName,
         sck,
         src,
         raw_status: status,
+        fiscal: body.fiscal || null,
         received_at: new Date().toISOString(),
       };
       insertData.event_id = JSON.stringify(extraMeta);
@@ -164,26 +198,28 @@ Deno.serve(async (req) => {
         });
       }
 
-      console.log("✅ [Kirvano] New purchase recorded:", data.id);
+      console.log("✅ [Kirvano] New purchase recorded:", data.id, "Amount:", amount);
     }
 
-    // Log to audit
+    // Log to audit with amount info
     await supabase.from("funnel_audit_logs").insert({
       event_type: `kirvano_${normalizedStatus}`,
       page_id: "webhook",
-      session_id: `webhook_${Date.now()}`,
+      session_id: sessionId || `webhook_${Date.now()}`,
       status: normalizedStatus === "approved" ? "success" : "pending",
       metadata: {
         transaction_id: transactionId,
         email,
         amount,
         product_name: productName,
+        payment_method: paymentMethod,
+        buyer_name: buyerName,
         event,
         raw_status: status,
       },
     });
 
-    return new Response(JSON.stringify({ success: true, status: normalizedStatus }), {
+    return new Response(JSON.stringify({ success: true, status: normalizedStatus, amount }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
