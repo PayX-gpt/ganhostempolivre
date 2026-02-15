@@ -38,25 +38,20 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
 
   return (
     <StepContainer>
-      <div className="text-center space-y-2">
-        <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center mx-auto">
-          <Target className="w-6 h-6 text-primary" />
-        </div>
+      <div className="flex items-center gap-2">
+        <Target className="w-5 h-5 text-primary shrink-0" />
         <StepTitle>Ótima notícia: seu perfil é compatível!</StepTitle>
       </div>
 
-      <StepSubtitle>
-        Pessoas com o mesmo perfil que o seu já estão tendo resultados reais. Veja o que elas dizem:
-      </StepSubtitle>
+      <p className="text-xs sm:text-sm text-muted-foreground text-center -mt-1">
+        Pessoas com o mesmo perfil que o seu já estão tendo resultados reais.
+      </p>
 
       {/* Headline Copy */}
-      <div className="w-full funnel-card border-accent/30 bg-accent/5 text-center space-y-2">
-        <p className="text-sm sm:text-base text-foreground font-bold leading-snug">
-          Nos próximos <span className="text-accent">30 SEGUNDOS</span> vou te explicar como você pode se tornar
-          meu <span className="text-gradient-green">parceiro(a)</span> na única plataforma capaz de te fazer ganhar com apenas{" "}
-          <span className="text-accent">10 MINUTOS DO SEU TEMPO LIVRE POR DIA</span>
-        </p>
-        <p className="text-lg sm:text-xl font-display font-bold text-foreground">
+      <div className="w-full funnel-card border-accent/30 bg-accent/5 text-center py-2.5 px-3">
+        <p className="text-xs sm:text-sm text-foreground font-bold leading-snug">
+          Nos próximos <span className="text-accent">30 SEGUNDOS</span> vou te explicar como ganhar com apenas{" "}
+          <span className="text-accent">10 MIN DO SEU TEMPO LIVRE</span>{" "}
           de <span className="text-gradient-green">R$200 a R$1.000</span> reais!
         </p>
       </div>
@@ -83,7 +78,7 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
         </div>
       </div>
 
-      {/* CTA - appears after 100 seconds, between video and testimonials */}
+      {/* CTA */}
       {showCTA ? (
         <CTAButton onClick={onNext} className="animate-fade-in">
           PEGAR MEU ACESSO →
@@ -97,45 +92,31 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
         </div>
       )}
 
-      {/* Testimonials */}
-      <div className="w-full space-y-3">
-        <div className="funnel-card border-primary/25 bg-primary/5">
-          <div className="flex items-center gap-3 mb-3">
-            <img src={avatarJose} alt="Antônio" className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
-            <div className="min-w-0">
-              <p className="font-bold text-foreground text-sm sm:text-base">Antônio, 45 anos</p>
-              <div className="flex items-center gap-1">
-                <span className="text-xs sm:text-sm text-muted-foreground">São Paulo, SP • Aluno verificado</span>
-                <CheckCircle className="w-3.5 h-3.5 text-primary" />
+      {/* Testimonials - compact */}
+      <div className="w-full space-y-2">
+        {[
+          { img: avatarJose, name: "Antônio, 45", loc: "SP", text: "Comecei devagar e no terceiro dia já tinha feito R$87. Hoje pago minhas contas com tranquilidade." },
+          { img: avatarLucia, name: "Cláudia, 53", loc: "MG", text: "Complemento com R$150 por dia e finalmente durmo sem preocupação. O suporte ajudou em cada passo." },
+        ].map((t, i) => (
+          <div key={i} className="funnel-card border-primary/25 bg-primary/5 py-2.5 px-3">
+            <div className="flex items-center gap-2.5">
+              <img src={t.img} alt={t.name} className="w-9 h-9 rounded-full object-cover border border-primary/30 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="font-bold text-foreground text-xs">{t.name} <span className="font-normal text-muted-foreground">• {t.loc}</span></p>
+                  <CheckCircle className="w-3 h-3 text-primary shrink-0" />
+                </div>
+                <p className="text-xs text-foreground/80 italic leading-snug mt-0.5">"{t.text}"</p>
               </div>
             </div>
           </div>
-          <p className="text-sm sm:text-base text-foreground/90 italic leading-relaxed">
-            "Eu tinha muito medo de perder dinheiro de novo. Já tinha caído em golpe antes. Mas desta vez foi diferente — comecei devagar, seguindo o passo a passo, e no terceiro dia já tinha feito R$87. Hoje pago minhas contas com tranquilidade e ainda sobra."
-          </p>
-        </div>
-
-        <div className="funnel-card border-primary/25 bg-primary/5">
-          <div className="flex items-center gap-3 mb-3">
-            <img src={avatarLucia} alt="Dona Cláudia" className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
-            <div className="min-w-0">
-              <p className="font-bold text-foreground text-sm sm:text-base">Dona Cláudia, 53 anos</p>
-              <div className="flex items-center gap-1">
-                <span className="text-xs sm:text-sm text-muted-foreground">Belo Horizonte, MG • Aluna verificada</span>
-                <CheckCircle className="w-3.5 h-3.5 text-primary" />
-              </div>
-            </div>
-          </div>
-          <p className="text-sm sm:text-base text-foreground/90 italic leading-relaxed">
-            "Minha aposentadoria não dava pra nada. Vivia no limite. Hoje complemento com R$150 por dia e finalmente durmo sem preocupação. O suporte me ajudou em cada passo, como se eu tivesse um professor particular."
-          </p>
-        </div>
+        ))}
       </div>
 
-      {/* Emotional CTA */}
-      <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center">
-        <p className="text-sm sm:text-base text-foreground font-semibold leading-relaxed">
-          Você merece terminar cada mês com a <span className="text-primary font-bold">tranquilidade</span> de quem tem as contas pagas e dinheiro sobrando.{" "}
+      {/* Emotional CTA - compact */}
+      <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center py-2 px-3">
+        <p className="text-xs sm:text-sm text-foreground font-semibold leading-snug">
+          Você merece a <span className="text-primary font-bold">tranquilidade</span> de ter as contas pagas.{" "}
           <span className="font-bold">Chega de viver no limite.</span>
         </p>
       </div>
