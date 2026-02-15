@@ -12,8 +12,15 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
   const videoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowCTA(true), 20_000); // 20 seconds
+    const timer = setTimeout(() => setShowCTA(true), 20_000);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Scroll video into view on mount so it's not behind the header
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   }, []);
 
   useEffect(() => {
@@ -59,10 +66,10 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
       </StepSubtitle>
 
       {/* ConverteAI Video Player */}
-      <div className="w-full rounded-2xl overflow-hidden border border-border" ref={videoRef}>
+      <div className="w-full rounded-2xl overflow-hidden border border-border scroll-mt-24" ref={videoRef}>
         <div
           id="ifr_692056147cc713fc76f6135f_wrapper"
-          style={{ margin: "0 auto", width: "100%", maxWidth: "400px" }}
+          style={{ margin: "0 auto", width: "100%" }}
         >
           <div
             style={{ position: "relative", paddingTop: "177.77777777777777%", width: "100%" }}
