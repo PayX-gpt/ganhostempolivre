@@ -1,6 +1,5 @@
 import { ReactNode, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 
 interface UpsellLayoutProps {
   children: ReactNode;
@@ -8,11 +7,9 @@ interface UpsellLayoutProps {
 }
 
 const UpsellLayout = ({ children, progress }: UpsellLayoutProps) => {
-  const location = useLocation();
-
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-  }, [location.pathname]);
+  }, [progress]);
 
   return (
     <div className="min-h-screen" style={{ background: "#020617", fontFamily: "'Inter', sans-serif" }}>
@@ -36,17 +33,7 @@ const UpsellLayout = ({ children, progress }: UpsellLayoutProps) => {
 
       {/* Content */}
       <main className="pt-14 pb-12 px-4 mx-auto" style={{ maxWidth: 480 }}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-          >
-            {children}
-          </motion.div>
-        </AnimatePresence>
+        {children}
       </main>
     </div>
   );
