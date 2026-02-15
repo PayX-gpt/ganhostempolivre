@@ -1,66 +1,91 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
-import { getUpsellData, saveUpsellChoice } from "@/lib/upsellData";
+import { Check, BookOpen, ArrowRight } from "lucide-react";
+import { saveUpsellChoice } from "@/lib/upsellData";
 
-interface Props { onBuy: () => void; onDecline: () => void; }
+interface Props { name: string; onBuy: () => void; onDecline: () => void; }
 
 const days = [
-  "Dia 1: Como acessar e entender o painel",
-  "Dia 2: Como ativar o robô pela primeira vez",
-  "Dia 3: Como ler seus primeiros resultados",
-  "Dia 4: Como ajustar a meta de ganho",
-  "Dia 5: Como sacar seus primeiros lucros",
-  "Dia 6: Como aumentar os ganhos com segurança",
-  "Dia 7: Como colocar no piloto automático",
+  { day: "Dia 1", task: "Acessar e entender o painel" },
+  { day: "Dia 2", task: "Ativar o robô pela primeira vez" },
+  { day: "Dia 3", task: "Ler seus primeiros resultados" },
+  { day: "Dia 4", task: "Ajustar a meta de ganho" },
+  { day: "Dia 5", task: "Sacar seus primeiros lucros" },
+  { day: "Dia 6", task: "Aumentar ganhos com segurança" },
+  { day: "Dia 7", task: "Colocar no piloto automático" },
 ];
 
-const UpsellStep5 = ({ onBuy, onDecline }: Props) => {
-  const { name } = getUpsellData();
+const UpsellStep5 = ({ name, onBuy, onDecline }: Props) => {
+  const firstName = name !== "Visitante" ? name : "";
   const [loading, setLoading] = useState(false);
 
   const handleBuy = () => {
     setLoading(true);
     saveUpsellChoice({ accelerator: null, guide: true, price: 9.9 });
-    setTimeout(() => onBuy(), 3000);
+    setTimeout(onBuy, 2500);
   };
 
   return (
-    <div className="flex flex-col gap-5 pt-8">
-      <h1 className="text-xl font-bold text-center" style={{ color: "#F8FAFC" }}>
-        Espera, {name}! Antes de ir...
-      </h1>
-      <p className="text-sm text-center" style={{ color: "#94A3B8" }}>
-        Entendo que talvez agora não seja o momento para o acelerador. Mas não quero que você passe pelos 7 dias de espera sem nenhum suporte.
-      </p>
-
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl p-5" style={{ background: "#0F172A", border: "1px solid #FACC15" }}>
-        <h3 className="text-xl font-bold" style={{ color: "#F8FAFC" }}>Plano Primeiros Passos</h3>
-        <p className="text-[13px] mt-1" style={{ color: "#FACC15" }}>O mapa para não se perder nos primeiros 7 dias</p>
-        <p className="text-sm mt-3 leading-relaxed" style={{ color: "#94A3B8" }}>
-          Um guia dia a dia do que fazer em cada um dos 7 primeiros dias na plataforma. Cada dia tem uma única tarefa simples de no máximo 10 minutos.
+    <div className="flex flex-col gap-5 pt-6">
+      <div className="text-center">
+        <h1 className="text-[22px] font-extrabold" style={{ color: "#F8FAFC" }}>
+          {firstName ? `${firstName}, espera...` : "Espera..."}
+        </h1>
+        <p className="text-[14px] mt-2 leading-relaxed" style={{ color: "#94A3B8" }}>
+          Entendo que o acelerador talvez não faça sentido agora. Mas {firstName ? `${firstName}, ` : ""}não quero que você fique perdido nos primeiros 7 dias.
         </p>
-        <ul className="mt-4 flex flex-col gap-2">
-          {days.map((d) => (
-            <li key={d} className="flex items-center gap-2 text-sm" style={{ color: "#F8FAFC" }}>
-              <Check className="w-4 h-4 shrink-0" style={{ color: "#16A34A" }} />
-              {d}
-            </li>
-          ))}
-        </ul>
-        <div className="mt-5">
-          <span className="text-sm line-through" style={{ color: "#64748B" }}>De R$ 47</span>
-          <p className="text-[28px] font-bold" style={{ color: "#F8FAFC" }}>Por apenas R$ 9,90</p>
-          <p className="text-[13px]" style={{ color: "#94A3B8" }}>Pagamento único. Sem mensalidade.</p>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl overflow-hidden"
+        style={{ border: "1px solid rgba(250,204,21,0.25)" }}
+      >
+        {/* Header */}
+        <div className="p-4 flex items-center gap-3" style={{ background: "rgba(250,204,21,0.08)" }}>
+          <BookOpen className="w-6 h-6" style={{ color: "#FACC15" }} />
+          <div>
+            <h3 className="text-[17px] font-bold" style={{ color: "#F8FAFC" }}>Guia Primeiros Passos</h3>
+            <p className="text-[12px]" style={{ color: "#FACC15" }}>7 dias · 1 tarefa por dia · 10 min cada</p>
+          </div>
         </div>
-        <button
-          onClick={handleBuy}
-          disabled={loading}
-          className="w-full mt-4 py-4 rounded-xl text-base font-bold text-white transition-all hover:brightness-110 disabled:opacity-70"
-          style={{ background: "#16A34A" }}
-        >
-          {loading ? "Processando..." : "SIM, QUERO O GUIA POR R$ 9,90"}
-        </button>
+
+        {/* Content */}
+        <div className="p-4" style={{ background: "#0F172A" }}>
+          <p className="text-[13px] leading-relaxed mb-4" style={{ color: "#94A3B8" }}>
+            Um mapa dia a dia do que fazer em cada etapa. Cada dia tem uma única tarefa simples. Você nunca vai se sentir perdido.
+          </p>
+
+          <div className="flex flex-col gap-2">
+            {days.map((d) => (
+              <div key={d.day} className="flex items-center gap-2.5 py-1.5">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(22,163,74,0.15)" }}>
+                  <Check className="w-3 h-3" style={{ color: "#22C55E" }} />
+                </div>
+                <span className="text-[13px]" style={{ color: "#64748B" }}>{d.day}:</span>
+                <span className="text-[13px]" style={{ color: "#E2E8F0" }}>{d.task}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="flex items-baseline gap-3">
+              <span className="text-[14px] line-through" style={{ color: "#475569" }}>R$ 47</span>
+              <span className="text-[28px] font-extrabold" style={{ color: "#F8FAFC" }}>R$ 9,90</span>
+            </div>
+            <p className="text-[12px] mt-1" style={{ color: "#64748B" }}>Pagamento único. Sem assinatura.</p>
+          </div>
+
+          <button
+            onClick={handleBuy}
+            disabled={loading}
+            className="w-full mt-4 py-[16px] rounded-xl text-[15px] font-bold text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
+            style={{ background: "linear-gradient(135deg, #16A34A, #15803D)" }}
+          >
+            {loading ? "Processando..." : <>QUERO O GUIA POR R$ 9,90 <ArrowRight className="w-4 h-4" /></>}
+          </button>
+        </div>
       </motion.div>
 
       <button
@@ -68,10 +93,10 @@ const UpsellStep5 = ({ onBuy, onDecline }: Props) => {
           saveUpsellChoice({ accelerator: null, guide: false, price: 0 });
           onDecline();
         }}
-        className="text-[13px] underline cursor-pointer bg-transparent border-none mx-auto"
-        style={{ color: "#64748B" }}
+        className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2"
+        style={{ color: "#475569" }}
       >
-        Não, obrigado. Eu prefiro descobrir sozinho.
+        Não, prefiro descobrir sozinho.
       </button>
     </div>
   );

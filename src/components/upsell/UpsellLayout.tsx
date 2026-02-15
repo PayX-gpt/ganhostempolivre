@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode } from "react";
 import { motion } from "framer-motion";
 
 interface UpsellLayoutProps {
@@ -7,32 +7,28 @@ interface UpsellLayoutProps {
 }
 
 const UpsellLayout = ({ children, progress }: UpsellLayoutProps) => {
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-  }, [progress]);
-
   return (
-    <div className="min-h-screen" style={{ background: "#020617", fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen" style={{ background: "#020617", fontFamily: "'Inter', system-ui, sans-serif" }}>
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center py-3" style={{ background: "#020617", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <span style={{ fontSize: 14, letterSpacing: 3, fontWeight: 600, color: "#fff" }}>
-          <span style={{ color: "#16A34A" }}>G</span>ANHOS COM TEMPO LIVRE
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center py-3.5 backdrop-blur-sm" style={{ background: "rgba(2,6,23,0.95)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <span style={{ fontSize: 13, letterSpacing: 3, fontWeight: 600, color: "rgba(248,250,252,0.9)" }}>
+          <span style={{ color: "#16A34A", fontWeight: 700 }}>G</span>ANHOS COM TEMPO LIVRE
         </span>
       </header>
 
       {/* Progress bar */}
-      <div className="fixed top-[45px] left-0 right-0 z-50 h-1" style={{ background: "rgba(255,255,255,0.06)" }}>
+      <div className="fixed top-[49px] left-0 right-0 z-50 h-[3px]" style={{ background: "rgba(255,255,255,0.04)" }}>
         <motion.div
-          className="h-full"
-          style={{ background: "#16A34A" }}
+          className="h-full rounded-r-full"
+          style={{ background: "linear-gradient(90deg, #16A34A, #22C55E)" }}
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
         />
       </div>
 
       {/* Content */}
-      <main className="pt-14 pb-12 px-4 mx-auto" style={{ maxWidth: 480 }}>
+      <main className="pt-16 pb-16 px-5 mx-auto" style={{ maxWidth: 440 }}>
         {children}
       </main>
     </div>
