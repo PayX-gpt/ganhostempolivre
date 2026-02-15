@@ -95,7 +95,7 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
           className="text-[22px] font-extrabold leading-tight"
           style={{ color: "#F8FAFC" }}
         >
-          Seu sistema está pronto. Agora escolha o seu objetivo de ganho.
+          Seu Acelerador já está ativo! ✅ Agora escolha o seu objetivo de ganho diário.
         </h1>
         <p
           className="text-[14px] mt-3 leading-relaxed"
