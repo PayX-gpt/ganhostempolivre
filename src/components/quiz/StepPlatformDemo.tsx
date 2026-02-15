@@ -30,6 +30,13 @@ const plat = {
 const pares = ["EUR/USD","GBP/USD","USD/JPY","BTC/USD","ETH/USD","AUD/USD","XAU/USD","USD/CAD","GBP/JPY","SOL/USD","EUR/GBP","NZD/USD","USD/CHF"];
 const precos = ["1.08432","1.26781","149.320","67,241.00","3,412.50","0.65123","2,341.80","1.36540","188.410","148.22","0.85612","0.61234","0.87654"];
 
+/* ─── Onboarding steps ─── */
+const onboardingSteps = [
+  { step: 1, text: "Toque em \"Iniciar Robô\" para ativar a IA" },
+  { step: 2, text: "Defina sua meta de ganho diário" },
+  { step: 3, text: "Escolha o tempo disponível e confirme" },
+];
+
 /* ─── Tutorial tips (timed for 1 min window) ─── */
 const tutorialTips = [
   { icon: Eye, text: "A IA identificou uma oportunidade e entrou automaticamente. Você não fez nada!" },
@@ -429,27 +436,18 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
         {/* Analyzing bar - always visible when active to prevent layout shift */}
         {isActive && !goalReached && <AnalyzingBar key={isAnalyzing ? "analyzing" : "idle"} onDone={handleAnalysisDone} paused={!isAnalyzing} />}
 
-        {/* Play button with animation (before start) */}
+        {/* Play button (before start) */}
         {!isActive && (
-          <div className="px-2.5 pt-2 pb-3 flex flex-col items-center gap-1.5">
-            {/* Arrow indicator */}
-            <div className="flex flex-col items-center animate-bounce-subtle">
-              <span className="text-[10px] font-bold text-[hsl(152,60%,42%)] tracking-wide">👇 CLIQUE AQUI PARA COMEÇAR</span>
-              <svg width="16" height="10" viewBox="0 0 16 10" fill="none" className="mt-0.5">
-                <path d="M8 10L0 0h16L8 10z" fill="hsl(152,60%,42%)" />
-              </svg>
-            </div>
-            <div className="flex gap-1.5 w-full">
-              <button onClick={() => setShowPopup(true)}
-                className="flex-1 py-2.5 rounded-xl border-2 border-[hsl(152,60%,42%,0.6)] bg-[hsl(152,60%,42%,0.15)] text-[hsl(152,60%,42%)] font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-125 active:scale-[0.98] transition-all relative overflow-hidden">
-                <span className="absolute inset-0 rounded-xl animate-ping bg-[hsl(152,60%,42%,0.1)]" style={{ animationDuration: '2s' }} />
-                <Play className="w-3.5 h-3.5 relative z-10" fill="currentColor" />
-                <span className="relative z-10">Iniciar Robô</span>
-              </button>
-              <button className={`flex-1 py-2.5 rounded-xl ${plat.border} border ${plat.secondary} text-[hsl(260,15%,55%)] font-semibold text-xs flex items-center justify-center gap-1.5 cursor-default`}>
-                <Bot className="w-3.5 h-3.5" /> Selecionar Robô
-              </button>
-            </div>
+          <div className="px-2.5 pt-2 pb-3 flex gap-1.5">
+            <button onClick={() => setShowPopup(true)}
+              className="flex-1 py-2.5 rounded-xl border-2 border-[hsl(152,60%,42%,0.6)] bg-[hsl(152,60%,42%,0.15)] text-[hsl(152,60%,42%)] font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-125 active:scale-[0.98] transition-all relative overflow-hidden">
+              <span className="absolute inset-0 rounded-xl animate-ping bg-[hsl(152,60%,42%,0.1)]" style={{ animationDuration: '2s' }} />
+              <Play className="w-3.5 h-3.5 relative z-10" fill="currentColor" />
+              <span className="relative z-10">Iniciar Robô</span>
+            </button>
+            <button className={`flex-1 py-2.5 rounded-xl ${plat.border} border ${plat.secondary} text-[hsl(260,15%,55%)] font-semibold text-xs flex items-center justify-center gap-1.5 cursor-default`}>
+              <Bot className="w-3.5 h-3.5" /> Selecionar Robô
+            </button>
           </div>
         )}
 
@@ -502,7 +500,39 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
         </div>
       </div>
 
-      {/* ═══ TUTORIAL TIP (BELOW platform, visible on scroll) ═══ */}
+      {/* ═══ ONBOARDING / TUTORIAL INDICATOR ═══ */}
+      {!isActive && !showPopup && (
+        <div className="w-full space-y-2">
+          {onboardingSteps.map((s, i) => (
+            <div key={s.step} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all ${
+              i === 0
+                ? "border-primary/40 bg-primary/10"
+                : "border-border/30 bg-secondary/30 opacity-50"
+            }`}>
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
+                i === 0
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              }`}>
+                {s.step}
+              </div>
+              <p className={`text-xs font-medium leading-snug ${
+                i === 0 ? "text-foreground" : "text-muted-foreground"
+              }`}>{s.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showPopup && (
+        <div className="w-full">
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-primary/40 bg-primary/10">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold bg-primary text-primary-foreground">2</div>
+            <p className="text-xs font-medium leading-snug text-foreground">Defina sua meta de ganho diário</p>
+          </div>
+        </div>
+      )}
+
       {isActive && !goalReached && currentTipIndex >= 0 && (
         <TutorialTip
           key={currentTipIndex}
