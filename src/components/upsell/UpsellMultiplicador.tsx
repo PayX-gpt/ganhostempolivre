@@ -102,7 +102,7 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
           style={{ color: "#94A3B8" }}
         >
           {firstName ? `${firstName}, h` : "H"}oje o sistema está configurado para buscar{" "}
-          <strong style={{ color: "#FACC15" }}>até R$100 por dia</strong>.{" "}
+          <strong style={{ color: "#FACC15" }}>até R$25 por dia</strong>.{" "}
           Isso é uma proteção pra quem está começando. Se você quiser que ele busque ganhos maiores, é só escolher abaixo. É simples — você escolhe, e o sistema faz o resto.
         </p>
       </div>
@@ -186,7 +186,7 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
         className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2"
         style={{ color: "#475569" }}
       >
-        Não, obrigado. Prefiro manter o teto de R$100/dia por enquanto.
+        Não, obrigado. Prefiro manter o limite de R$25/dia por enquanto.
       </button>
     </div>
   );
