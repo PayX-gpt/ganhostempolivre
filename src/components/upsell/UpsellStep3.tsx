@@ -23,6 +23,7 @@ const plans = [
     btnBg: "transparent", btnColor: "#22C55E", btnBorder: "1.5px solid #22C55E",
     btnText: "ATIVAR BÁSICO",
     badge: null,
+    checkoutUrl: "https://pay.kirvano.com/863c8fe9-ca48-452f-9fa4-22e14df182cf",
   },
   {
     id: "duplo" as const,
@@ -41,6 +42,7 @@ const plans = [
     btnBg: "linear-gradient(135deg, #16A34A, #15803D)", btnColor: "#fff", btnBorder: "none",
     btnText: "ATIVAR DUPLO — MAIS ESCOLHIDO",
     badge: "⚡ RECOMENDADO",
+    checkoutUrl: "https://pay.kirvano.com/59a5cba3-f876-46a8-b0e4-6e2c72cf725a",
   },
   {
     id: "maximo" as const,
@@ -60,6 +62,7 @@ const plans = [
     btnBg: "linear-gradient(135deg, #FACC15, #EAB308)", btnColor: "#020617", btnBorder: "none",
     btnText: "ATIVAR MÁXIMO",
     badge: null,
+    checkoutUrl: "https://pay.kirvano.com/e8135deb-de2d-4cac-bbeb-1aed6610921c",
   },
 ];
 
@@ -68,6 +71,7 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
 
   const handleSelect = (plan: typeof plans[0]) => {
     saveUpsellChoice({ accelerator: plan.id, guide: false, price: plan.price });
+    window.open(plan.checkoutUrl, "_blank");
     onNext();
   };
 
