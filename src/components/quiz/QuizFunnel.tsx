@@ -72,6 +72,32 @@ const QuizFunnel = () => {
   // Track presence for the current step
   usePagePresence(`/${currentSlug}`);
 
+  // Block back navigation and reset on reload
+  useEffect(() => {
+    // Push a dummy state so popstate fires on back
+    window.history.pushState(null, "", window.location.href);
+    const handlePopState = () => {
+      // Re-push to prevent going back
+      window.history.pushState(null, "", window.location.href);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [currentSlug]);
+
+  // On first mount, always redirect to step-1 (handles page reload)
+  const hasRedirected = useRef(false);
+  useEffect(() => {
+    if (!hasRedirected.current) {
+      hasRedirected.current = true;
+      const isReload = performance.navigation?.type === 1 ||
+        (performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming)?.type === "reload";
+      if (isReload && currentSlug !== "step-1") {
+        sessionStorage.removeItem("quiz_answers");
+        navigate("/step-1", { replace: true });
+      }
+    }
+  }, []);
+
   // Track time spent when step changes
   useEffect(() => {
     stepEnteredAt.current = Date.now();
