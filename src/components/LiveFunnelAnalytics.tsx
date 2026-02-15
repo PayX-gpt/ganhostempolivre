@@ -144,63 +144,58 @@ const LiveFunnelAnalytics = () => {
         </div>
       </div>
 
-      {/* Funnel Bar Chart + Traffic Line Chart in horizontal scroll */}
-      <div className="overflow-x-auto -mx-5 px-5 pb-3">
-        <div className="flex gap-3 w-max">
-          {/* Funnel Bar Chart */}
-          <div className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3 min-w-[400px] w-[400px] flex-shrink-0">
-            <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2">Funil por Etapa</h4>
-            <div className="h-[180px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={funnelData} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
-                  <XAxis dataKey="label" tick={{ fill: "#666", fontSize: 9 }} axisLine={false} tickLine={false} interval={0} angle={-45} textAnchor="end" height={50} />
-                  <YAxis tick={{ fill: "#666", fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="views" fill="#10b981" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+      {/* Funnel Bar Chart */}
+      <div className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3 mb-3">
+        <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2">Funil por Etapa</h4>
+        <div className="h-[200px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={funnelData} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
+              <XAxis dataKey="label" tick={{ fill: "#666", fontSize: 9 }} axisLine={false} tickLine={false} interval={0} angle={-45} textAnchor="end" height={50} />
+              <YAxis tick={{ fill: "#666", fontSize: 10 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Bar dataKey="views" fill="#10b981" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
 
-          {/* Traffic per Hour */}
-          <div className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3 min-w-[350px] w-[350px] flex-shrink-0">
-            <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2">Tráfego por Hora</h4>
-            <div className="h-[180px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={hourlyData} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
-                  <XAxis dataKey="hour" tick={{ fill: "#666", fontSize: 9 }} axisLine={false} tickLine={false} interval={2} />
-                  <YAxis tick={{ fill: "#666", fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Line type="monotone" dataKey="visits" stroke="#8b5cf6" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+      {/* Traffic per Hour */}
+      <div className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3 mb-3">
+        <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2">Tráfego por Hora</h4>
+        <div className="h-[200px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={hourlyData} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+              <XAxis dataKey="hour" tick={{ fill: "#666", fontSize: 9 }} axisLine={false} tickLine={false} interval={2} />
+              <YAxis tick={{ fill: "#666", fontSize: 10 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Line type="monotone" dataKey="visits" stroke="#8b5cf6" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
 
-          {/* Drop-off Rates */}
-          <div className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3 min-w-[240px] w-[240px] flex-shrink-0">
-            <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <TrendingDown className="w-3.5 h-3.5 text-red-400" /> Taxa de Abandono
-            </h4>
-            <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
-              {funnelData.filter(s => s.dropOff > 0).map((s, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs">
-                  <span className="text-[#888] w-14 truncate">{s.label}</span>
-                  <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
-                    <div className={cn("h-full rounded-full transition-all", s.dropOff > 50 ? "bg-red-500" : s.dropOff > 30 ? "bg-amber-500" : "bg-emerald-500")}
-                      style={{ width: `${Math.min(s.dropOff, 100)}%` }} />
-                  </div>
-                  <span className={cn("font-bold tabular-nums w-10 text-right", s.dropOff > 50 ? "text-red-400" : s.dropOff > 30 ? "text-amber-400" : "text-emerald-400")}>
-                    {s.dropOff}%
-                  </span>
-                </div>
-              ))}
-              {funnelData.filter(s => s.dropOff > 0).length === 0 && (
-                <p className="text-[10px] text-[#666] py-4 text-center">Sem dados ainda</p>
-              )}
+      {/* Drop-off Rates */}
+      <div className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3">
+        <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <TrendingDown className="w-3.5 h-3.5 text-red-400" /> Taxa de Abandono
+        </h4>
+        <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
+          {funnelData.filter(s => s.dropOff > 0).map((s, i) => (
+            <div key={i} className="flex items-center gap-2 text-xs">
+              <span className="text-[#888] w-14 truncate">{s.label}</span>
+              <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+                <div className={cn("h-full rounded-full transition-all", s.dropOff > 50 ? "bg-red-500" : s.dropOff > 30 ? "bg-amber-500" : "bg-emerald-500")}
+                  style={{ width: `${Math.min(s.dropOff, 100)}%` }} />
+              </div>
+              <span className={cn("font-bold tabular-nums w-10 text-right", s.dropOff > 50 ? "text-red-400" : s.dropOff > 30 ? "text-amber-400" : "text-emerald-400")}>
+                {s.dropOff}%
+              </span>
             </div>
-          </div>
+          ))}
+          {funnelData.filter(s => s.dropOff > 0).length === 0 && (
+            <p className="text-[10px] text-[#666] py-4 text-center">Sem dados ainda</p>
+          )}
         </div>
       </div>
     </div>
