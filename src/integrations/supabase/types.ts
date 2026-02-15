@@ -92,6 +92,87 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_behavior: {
+        Row: {
+          account_balance: string | null
+          ai_insights: string | null
+          checkout_click_count: number | null
+          checkout_clicked: boolean | null
+          created_at: string
+          cta_clicks: number | null
+          cta_hesitation_count: number | null
+          cta_views: number | null
+          dynamic_price: number | null
+          faq_opened: string[] | null
+          first_cta_click_ms: number | null
+          first_cta_view_ms: number | null
+          id: string
+          intent_label: string | null
+          intent_score: number | null
+          max_scroll_depth: number | null
+          quiz_answers: Json | null
+          section_times: Json | null
+          sections_viewed: string[] | null
+          segment_tags: string[] | null
+          session_id: string
+          time_on_page_ms: number | null
+          video_started: boolean | null
+          video_watch_time_ms: number | null
+        }
+        Insert: {
+          account_balance?: string | null
+          ai_insights?: string | null
+          checkout_click_count?: number | null
+          checkout_clicked?: boolean | null
+          created_at?: string
+          cta_clicks?: number | null
+          cta_hesitation_count?: number | null
+          cta_views?: number | null
+          dynamic_price?: number | null
+          faq_opened?: string[] | null
+          first_cta_click_ms?: number | null
+          first_cta_view_ms?: number | null
+          id?: string
+          intent_label?: string | null
+          intent_score?: number | null
+          max_scroll_depth?: number | null
+          quiz_answers?: Json | null
+          section_times?: Json | null
+          sections_viewed?: string[] | null
+          segment_tags?: string[] | null
+          session_id: string
+          time_on_page_ms?: number | null
+          video_started?: boolean | null
+          video_watch_time_ms?: number | null
+        }
+        Update: {
+          account_balance?: string | null
+          ai_insights?: string | null
+          checkout_click_count?: number | null
+          checkout_clicked?: boolean | null
+          created_at?: string
+          cta_clicks?: number | null
+          cta_hesitation_count?: number | null
+          cta_views?: number | null
+          dynamic_price?: number | null
+          faq_opened?: string[] | null
+          first_cta_click_ms?: number | null
+          first_cta_view_ms?: number | null
+          id?: string
+          intent_label?: string | null
+          intent_score?: number | null
+          max_scroll_depth?: number | null
+          quiz_answers?: Json | null
+          section_times?: Json | null
+          sections_viewed?: string[] | null
+          segment_tags?: string[] | null
+          session_id?: string
+          time_on_page_ms?: number | null
+          video_started?: boolean | null
+          video_watch_time_ms?: number | null
+        }
+        Relationships: []
+      }
       purchase_tracking: {
         Row: {
           amount: number | null

@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Shield, Lock, Zap, ArrowRight, Star, Users, Clock, CheckCircle } from "lucide-react";
 import { saveFunnelEvent } from "@/lib/metricsClient";
+import { initBehaviorTracker, trackSectionView, trackSectionLeave, trackCtaView, trackCtaHesitation, trackCheckoutClick, trackFaqOpen, trackVideoStart } from "@/lib/behaviorTracker";
 import { Separator } from "@/components/ui/separator";
 import { CTAButton, TrustBadge, VideoPlaceholder } from "./QuizUI";
 import type { QuizAnswers } from "./QuizUI";
@@ -41,9 +42,31 @@ const getPricing = (accountBalance?: string) => {
 const formatPrice = (price: number) => price.toFixed(2).replace(".", ",");
 
 /* ─── Reusable CTA Block ─── */
-const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: string; pricing: { price: number; installment: number; installments: number; checkoutUrl: string } }) =>
-  showCTA ? (
-    <div className="w-full space-y-3">
+const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: string; pricing: { price: number; installment: number; installments: number; checkoutUrl: string } }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const hasTrackedView = useRef(false);
+
+  useEffect(() => {
+    if (!showCTA || !ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasTrackedView.current) {
+          hasTrackedView.current = true;
+          trackCtaView();
+        }
+        if (!entry.isIntersecting && hasTrackedView.current) {
+          trackCtaHesitation();
+          hasTrackedView.current = false;
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [showCTA]);
+
+  return showCTA ? (
+    <div ref={ref} className="w-full space-y-3">
       <div className="text-center space-y-1">
         <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">CHAVE TOKEN CHATGPT</p>
         <p className="text-3xl sm:text-4xl font-display font-bold text-foreground">
@@ -52,6 +75,7 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
         <p className="text-sm text-muted-foreground">ou {pricing.installments}x de R${formatPrice(pricing.installment)}</p>
       </div>
       <CTAButton onClick={() => {
+        trackCheckoutClick();
         saveFunnelEvent("checkout_click", { context: context || "default", product: "chave_token_chatgpt", amount: pricing.price });
         window.open(pricing.checkoutUrl, "_blank");
       }} variant="accent" className="animate-bounce-subtle text-lg sm:text-xl tracking-wider">
@@ -72,6 +96,7 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
       </p>
     </div>
   );
+};
 
 /* ─── Urgency Strip (sticky) ─── */
 const UrgencyStrip = ({ minutes, seconds, show, priceLabel }: { minutes: number; seconds: number; show: boolean; priceLabel: string }) => {
@@ -251,7 +276,11 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
   return (
     <div className="border border-border rounded-xl overflow-hidden">
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          const next = !open;
+          setOpen(next);
+          if (next) trackFaqOpen(question);
+        }}
         className="w-full flex items-center justify-between px-4 py-3.5 text-left cursor-pointer hover:bg-secondary/50 transition-colors"
       >
         <span className="font-semibold text-foreground text-sm pr-4">{question}</span>
@@ -518,6 +547,24 @@ const Divider = () => (
   </div>
 );
 
+/* ─── Section Tracker (IntersectionObserver) ─── */
+const SectionTracker = ({ id, children }: { id: string; children: React.ReactNode }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) trackSectionView(id);
+        else trackSectionLeave(id);
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [id]);
+  return <div ref={ref}>{children}</div>;
+};
+
 /* ═══════════════════════════════════════════════════════════
    MAIN OFFER PAGE
    Structured following elite direct response frameworks:
@@ -527,6 +574,16 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   const [showCTA, setShowCTA] = useState(false);
   const [timeLeft, setTimeLeft] = useState(900);
   const [spotsLeft] = useState(() => Math.floor(Math.random() * 4) + 3); // 3-6
+
+  // ─── Behavior Tracker Init ───
+  useEffect(() => {
+    const cleanup = initBehaviorTracker(
+      answers ? { age: answers.age, incomeGoal: answers.incomeGoal, obstacle: answers.obstacle, device: answers.device, financialDream: answers.financialDream, contactMethod: answers.contactMethod, accountBalance: answers.accountBalance, triedOnline: answers.triedOnline, availability: answers.availability } : {},
+      getPricing(answers?.accountBalance),
+      answers?.accountBalance
+    );
+    return cleanup;
+  }, []);
 
   useEffect(() => {
     saveFunnelEvent("offer_page_viewed", {
@@ -602,39 +659,46 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
     <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-4 sm:px-5 py-5 sm:py-6 gap-5 sm:gap-6">
 
       {/* ═══ 1. URGENCY TIMER ═══ */}
-      <UrgencyStrip minutes={minutes} seconds={seconds} show={true} priceLabel={formatPrice(pricing.price)} />
+      <SectionTracker id="urgency">
+        <UrgencyStrip minutes={minutes} seconds={seconds} show={true} priceLabel={formatPrice(pricing.price)} />
+      </SectionTracker>
 
       {/* ═══ 2. PROFILE ANALYSIS (approved status) ═══ */}
-      <ProfileAnalysis answers={answers} firstName={firstName} />
+      <SectionTracker id="profile_analysis">
+        <ProfileAnalysis answers={answers} firstName={firstName} />
+      </SectionTracker>
 
-      {/* ═══ 3. HERO HEADLINE ═══ */}
-      <div className="text-center space-y-3">
-        <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground leading-snug">
-          {firstName ? `${firstName}, sua` : "Sua"} chave de acesso está pronta.
-        </h2>
-        <p className="text-base sm:text-lg text-foreground/90 leading-relaxed">
-          Falta <span className="text-primary font-bold">um único passo</span> pra você começar a gerar renda extra todos os dias — direto do seu celular.
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Assista o vídeo abaixo e entenda como funciona em 4 minutos:
-        </p>
-      </div>
+      <SectionTracker id="hero">
+        <div className="text-center space-y-3">
+          <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground leading-snug">
+            {firstName ? `${firstName}, sua` : "Sua"} chave de acesso está pronta.
+          </h2>
+          <p className="text-base sm:text-lg text-foreground/90 leading-relaxed">
+            Falta <span className="text-primary font-bold">um único passo</span> pra você começar a gerar renda extra todos os dias — direto do seu celular.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Assista o vídeo abaixo e entenda como funciona em 4 minutos:
+          </p>
+        </div>
+      </SectionTracker>
 
       {/* ═══ 3b. VSL VIDEO (ConverteAI) ═══ */}
-      <div className="w-full rounded-2xl overflow-hidden border border-border">
-        <div id="ifr_687c23666137406f142acebc_wrapper" style={{ margin: "0 auto", width: "100%" }}>
-          <div style={{ position: "relative", padding: "56.25% 0 0 0" }} id="ifr_687c23666137406f142acebc_aspect">
-            <iframe
-              frameBorder="0"
-              allowFullScreen
-              src="about:blank"
-              id="ifr_687c23666137406f142acebc"
-              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-              referrerPolicy="origin"
-            />
+      <SectionTracker id="vsl_video">
+        <div className="w-full rounded-2xl overflow-hidden border border-border">
+          <div id="ifr_687c23666137406f142acebc_wrapper" style={{ margin: "0 auto", width: "100%" }}>
+            <div style={{ position: "relative", padding: "56.25% 0 0 0" }} id="ifr_687c23666137406f142acebc_aspect">
+              <iframe
+                frameBorder="0"
+                allowFullScreen
+                src="about:blank"
+                id="ifr_687c23666137406f142acebc"
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+                referrerPolicy="origin"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </SectionTracker>
 
       {/* ═══ 3c. EXPLICAÇÃO DA TAXA (compacta) ═══ */}
       <div className="w-full text-center space-y-2">
@@ -644,15 +708,17 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       </div>
 
       {/* ═══ 5. MENTOR CREDIBILITY ═══ */}
-      <div className="flex gap-4 w-full funnel-card border-primary/20 bg-primary/5">
-        <img src={mentorPhoto} alt="Ricardo" className="w-14 h-14 rounded-full object-cover border-2 border-primary/40 shrink-0" />
-        <div>
-          <p className="text-sm text-foreground/90 italic leading-relaxed">
-            "{firstName ? `${firstName}, ` : ""}Eu sei que você já foi enganado antes. Por isso eu coloco minha cara. Se você não tiver resultado em 30 dias, eu devolvo seu dinheiro pessoalmente. Sem joguinho."
-          </p>
-          <p className="text-muted-foreground text-xs mt-2 not-italic font-semibold">— Ricardo Almeida • Criador do método • +36.000 alunos</p>
+      <SectionTracker id="mentor">
+        <div className="flex gap-4 w-full funnel-card border-primary/20 bg-primary/5">
+          <img src={mentorPhoto} alt="Ricardo" className="w-14 h-14 rounded-full object-cover border-2 border-primary/40 shrink-0" />
+          <div>
+            <p className="text-sm text-foreground/90 italic leading-relaxed">
+              "{firstName ? `${firstName}, ` : ""}Eu sei que você já foi enganado antes. Por isso eu coloco minha cara. Se você não tiver resultado em 30 dias, eu devolvo seu dinheiro pessoalmente. Sem joguinho."
+            </p>
+            <p className="text-muted-foreground text-xs mt-2 not-italic font-semibold">— Ricardo Almeida • Criador do método • +36.000 alunos</p>
+          </div>
         </div>
-      </div>
+      </SectionTracker>
 
       {/* ═══ 6. CTA 1 ═══ */}
       <CTABlock showCTA={showCTA} context="Restam apenas poucas vagas hoje" pricing={pricing} />
@@ -660,10 +726,14 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       <Divider />
 
       {/* ═══ 7. SOCIAL PROOF (people like you) ═══ */}
-      <PeopleLikeYou answers={answers} />
+      <SectionTracker id="social_proof">
+        <PeopleLikeYou answers={answers} />
+      </SectionTracker>
 
       {/* ═══ 8. EARNINGS PROJECTION ═══ */}
-      <EarningsProjection answers={answers} firstName={firstName} />
+      <SectionTracker id="earnings_projection">
+        <EarningsProjection answers={answers} firstName={firstName} />
+      </SectionTracker>
 
       {/* ═══ 9. CTA 2 ═══ */}
       <CTABlock showCTA={showCTA} pricing={pricing} />
