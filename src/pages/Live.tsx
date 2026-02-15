@@ -98,13 +98,31 @@ const Live = () => {
   // ─── Active leads tracking (individual leads per step) ──
   const [activeLeads, setActiveLeads] = useState<Map<string, { step: string; lastSeen: string }>>(new Map());
 
-  // ─── Real-time presence ─────────────────────────────────
-  const processPresence = useCallback((state: Record<string, PresenceEntry[]>) => {
+  // Helper: rebuild steps counts from activeLeads map
+  const rebuildCounts = useCallback((leadsMap: Map<string, { step: string; lastSeen: string }>) => {
     const counts: Record<string, Set<string>> = {};
     STEP_SLUGS.forEach(s => { counts[s] = new Set(); });
+    let total = 0;
+    leadsMap.forEach((val, sid) => {
+      if (counts[val.step]) {
+        counts[val.step].add(sid);
+        total++;
+      }
+    });
+    setSteps(STEP_SLUGS.map(s => ({
+      id: s,
+      label: STEP_META[s]?.label || s,
+      shortLabel: STEP_META[s]?.short || s,
+      count: counts[s]?.size || 0,
+    })));
+    setTotalOnline(total);
+    setLastUpdated(new Date());
+  }, []);
+
+  // ─── Real-time presence (Supabase Presence channel) ─────
+  const processPresence = useCallback((state: Record<string, PresenceEntry[]>) => {
     const leadsMap = new Map<string, { step: string; lastSeen: string }>();
 
-    let total = 0;
     Object.entries(state).forEach(([sessionId, presences]) => {
       if (!presences.length) return;
       const p = presences[0];
@@ -113,22 +131,27 @@ const Live = () => {
 
       const matched = STEP_SLUGS.find(slug => pageId.includes(`/${slug}`));
       if (matched) {
-        counts[matched].add(sessionId);
         leadsMap.set(sessionId, { step: matched, lastSeen: p.joined_at || new Date().toISOString() });
       }
-      total++;
     });
 
-    setSteps(STEP_SLUGS.map(s => ({
-      id: s,
-      label: STEP_META[s]?.label || s,
-      shortLabel: STEP_META[s]?.short || s,
-      count: counts[s]?.size || 0,
-    })));
-    setTotalOnline(total);
-    setActiveLeads(leadsMap);
-    setLastUpdated(new Date());
-  }, []);
+    setActiveLeads(prev => {
+      const merged = new Map(prev);
+      leadsMap.forEach((val, key) => merged.set(key, val));
+      // Remove leads no longer in presence
+      prev.forEach((_, key) => {
+        if (!leadsMap.has(key)) {
+          // Keep if recently seen via DB (within 90s), otherwise remove
+          const existing = merged.get(key);
+          if (existing && (Date.now() - new Date(existing.lastSeen).getTime()) > 90000) {
+            merged.delete(key);
+          }
+        }
+      });
+      rebuildCounts(merged);
+      return merged;
+    });
+  }, [rebuildCounts]);
 
   useEffect(() => {
     const channel = supabase.channel("funnel-presence");
@@ -140,7 +163,37 @@ const Live = () => {
     return () => { supabase.removeChannel(channel); };
   }, [processPresence]);
 
-  // ─── Polling fallback: fetch recent step_viewed events ──
+  // ─── Real-time DB subscription: instant step changes ────
+  useEffect(() => {
+    const channel = supabase
+      .channel("live-funnel-events")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "funnel_events",
+          filter: "event_name=eq.step_viewed",
+        },
+        (payload) => {
+          const row = payload.new as { session_id: string; event_data: Record<string, unknown> | null; created_at: string };
+          const step = (row.event_data as any)?.step as string;
+          if (!step || !STEP_SLUGS.includes(step)) return;
+
+          setActiveLeads(prev => {
+            const updated = new Map(prev);
+            updated.set(row.session_id, { step, lastSeen: row.created_at });
+            rebuildCounts(updated);
+            return updated;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [rebuildCounts]);
+
+  // ─── Polling fallback (every 15s) + cleanup stale leads ─
   const fetchRecentPresence = useCallback(async () => {
     const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
     const { data } = await supabase
@@ -151,62 +204,35 @@ const Live = () => {
       .order("created_at", { ascending: false })
       .limit(500);
 
-    if (!data || data.length === 0) return;
+    if (!data) return;
 
-    // Build latest step per session from recent events
     const sessionLatest = new Map<string, { step: string; lastSeen: string }>();
     (data as { session_id: string; event_data: Record<string, unknown> | null; created_at: string }[]).forEach(row => {
-      if (sessionLatest.has(row.session_id)) return; // already have latest
+      if (sessionLatest.has(row.session_id)) return;
       const step = (row.event_data as any)?.step as string;
       if (step && STEP_SLUGS.includes(step)) {
         sessionLatest.set(row.session_id, { step, lastSeen: row.created_at });
       }
     });
 
-    // Merge with realtime presence - polling is fallback
     setActiveLeads(prev => {
-      const merged = new Map(prev);
-      sessionLatest.forEach((val, key) => {
-        if (!merged.has(key)) merged.set(key, val);
-      });
-      // Remove stale entries (older than 2 min)
-      const cutoff = Date.now() - 2 * 60 * 1000;
-      merged.forEach((val, key) => {
-        if (new Date(val.lastSeen).getTime() < cutoff && !prev.has(key)) {
-          merged.delete(key);
+      const merged = new Map<string, { step: string; lastSeen: string }>();
+      // Keep DB-fresh sessions
+      sessionLatest.forEach((val, key) => merged.set(key, val));
+      // Keep realtime presence sessions even if not in DB yet
+      prev.forEach((val, key) => {
+        if (!merged.has(key) && (Date.now() - new Date(val.lastSeen).getTime()) < 120000) {
+          merged.set(key, val);
         }
       });
+      rebuildCounts(merged);
       return merged;
     });
+  }, [rebuildCounts]);
 
-    // Update counts from merged data
-    setActiveLeads(current => {
-      const counts: Record<string, Set<string>> = {};
-      STEP_SLUGS.forEach(s => { counts[s] = new Set(); });
-      let total = 0;
-      current.forEach((val, sid) => {
-        if (counts[val.step]) {
-          counts[val.step].add(sid);
-          total++;
-        }
-      });
-
-      setSteps(STEP_SLUGS.map(s => ({
-        id: s,
-        label: STEP_META[s]?.label || s,
-        shortLabel: STEP_META[s]?.short || s,
-        count: Math.max(counts[s]?.size || 0, steps.find(st => st.id === s)?.count || 0),
-      })));
-      if (total > totalOnline) setTotalOnline(total);
-      setLastUpdated(new Date());
-      return current;
-    });
-  }, [steps, totalOnline]);
-
-  // Poll every 10s as fallback
   useEffect(() => {
     fetchRecentPresence();
-    const interval = setInterval(fetchRecentPresence, 10000);
+    const interval = setInterval(fetchRecentPresence, 15000);
     return () => clearInterval(interval);
   }, [fetchRecentPresence]);
 
