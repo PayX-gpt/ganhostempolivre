@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
-  RefreshCw, TrendingUp, Clock, DollarSign, 
+  RefreshCw, TrendingUp, Clock, DollarSign, Users, 
   Activity, Download, Target, Eye,
   ShoppingCart, CreditCard, ArrowUpRight, CheckCircle2,
   XCircle, Database, Radio, Filter, Search,
@@ -124,6 +124,9 @@ export default function AdminFunnelAudit() {
   
   const USD_TO_BRL = 5.80;
   const [totalRevenueToday, setTotalRevenueToday] = useState(0);
+  const [totalLeadsToday, setTotalLeadsToday] = useState(0);
+  const [qualifiedLeadsToday, setQualifiedLeadsToday] = useState(0);
+  const [interactionRateToday, setInteractionRateToday] = useState(0);
   
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const saved = localStorage.getItem('live-sound-enabled');
@@ -209,6 +212,15 @@ export default function AdminFunnelAudit() {
     const rate = icSessions.size > 0 ? (uniqueBuyers / icSessions.size) * 100 : 0;
     setIcToSalesRate(rate);
     setIcToSalesRatio(uniqueBuyers > 0 ? `1:${Math.round(icSessions.size / uniqueBuyers)}` : "0:0");
+
+    // Fetch lead behavior KPIs
+    const { data: leadData } = await supabase.from("lead_behavior")
+      .select("cta_clicks, intent_score, checkout_clicked")
+      .gte("created_at", todayISO);
+    const tLeads = leadData?.length || 0;
+    setTotalLeadsToday(tLeads);
+    setQualifiedLeadsToday(leadData?.filter(l => (l.intent_score || 0) >= 50).length || 0);
+    setInteractionRateToday(tLeads > 0 ? ((leadData?.filter(l => l.cta_clicks > 0).length || 0) / tLeads) * 100 : 0);
 
     setIsLoading(false);
   }, [getDateRange, eventFilter, sessionFilter]);
@@ -379,6 +391,17 @@ export default function AdminFunnelAudit() {
             subtitle={`${hotmartApproved} aprov. · ${hotmartRefunded} reemb.`} icon={CreditCard} />
           <MetricCard title="IC → Vendas" value={`${icToSalesRate.toFixed(1)}%`}
             subtitle={`${frontendICs} ICs · ${icToSalesRatio}`} icon={Target} />
+        </div>
+
+        <div className="grid grid-cols-3 lg:grid-cols-3 gap-3">
+          <MetricCard title="Leads Hoje" value={totalLeadsToday} icon={Users}
+            subtitle={`${qualifiedLeadsToday} qualificados`} />
+          <MetricCard title="Qualificados" value={qualifiedLeadsToday}
+            subtitle={totalLeadsToday > 0 ? `${((qualifiedLeadsToday / totalLeadsToday) * 100).toFixed(1)}% dos leads` : "0%"}
+            icon={Eye} iconClassName="from-violet-500/20 to-violet-600/10 border-violet-500/20" valueClassName="text-violet-400" />
+          <MetricCard title="Taxa Interação" value={`${interactionRateToday.toFixed(1)}%`}
+            subtitle={`${totalLeadsToday} visitantes`}
+            icon={Activity} iconClassName="from-amber-500/20 to-amber-600/10 border-amber-500/20" valueClassName="text-amber-400" />
         </div>
 
         <div className="overflow-x-auto pb-2 -mx-4 px-4" style={{ maxWidth: 'calc(100% + 2rem)' }}>
