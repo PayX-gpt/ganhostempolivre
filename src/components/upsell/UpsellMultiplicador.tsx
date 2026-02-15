@@ -27,7 +27,7 @@ const plans = [
     btnBorder: "1.5px solid #94A3B8",
     btnText: "QUERO O PLANO PRATA",
     badge: null,
-    checkoutUrl: "https://pay.kirvano.com/PRATA_PLACEHOLDER",
+    checkoutUrl: "https://pay.kirvano.com/b61b6335-9325-4ecb-9b87-8214d948e90e",
   },
   {
     id: "ouro",
@@ -45,7 +45,7 @@ const plans = [
     btnBorder: "none",
     btnText: "QUERO O PLANO OURO",
     badge: "⭐ MAIS ESCOLHIDO",
-    checkoutUrl: "https://pay.kirvano.com/OURO_PLACEHOLDER",
+    checkoutUrl: "https://pay.kirvano.com/2f8e1d23-b71c-4c4b-9da1-672a6ca75c9b",
   },
   {
     id: "diamante",
@@ -63,7 +63,7 @@ const plans = [
     btnBorder: "none",
     btnText: "QUERO O PLANO DIAMANTE",
     badge: null,
-    checkoutUrl: "https://pay.kirvano.com/DIAMANTE_PLACEHOLDER",
+    checkoutUrl: "https://pay.kirvano.com/e7d1995f-9b55-47d0-a1c4-762b07721162",
   },
 ];
 
