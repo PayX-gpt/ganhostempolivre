@@ -8,24 +8,40 @@ import UpsellStep4 from "./UpsellStep4";
 import UpsellStep5 from "./UpsellStep5";
 import UpsellStep6 from "./UpsellStep6";
 import { getLeadName } from "@/lib/upsellData";
+import { usePagePresence } from "@/hooks/usePagePresence";
+import { saveFunnelEvent } from "@/lib/metricsClient";
 
 const progressMap: Record<number, number> = { 1: 10, 2: 25, 3: 50, 4: 75, 5: 75, 6: 100 };
+
+const UPSELL_PAGE_IDS: Record<number, string> = {
+  1: "/upsell-confirmacao",
+  2: "/upsell-analise",
+  3: "/upsell-planos",
+  4: "/upsell-checkout",
+  5: "/upsell-downsell",
+  6: "/upsell-sucesso",
+};
 
 const UpsellFunnel = () => {
   const [step, setStep] = useState(1);
   const name = getLeadName();
 
+  // Track presence for each upsell step
+  usePagePresence(UPSELL_PAGE_IDS[step] || "/upsell1");
+
   useEffect(() => {
     window.history.pushState(null, "", "/upsell1");
     const onPop = () => window.history.pushState(null, "", "/upsell1");
     window.addEventListener("popstate", onPop);
+    saveFunnelEvent("upsell_step_view", { step: 1, page_id: UPSELL_PAGE_IDS[1], name });
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
   const goTo = useCallback((s: number) => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    saveFunnelEvent("upsell_step_view", { step: s, page_id: UPSELL_PAGE_IDS[s], name });
     setStep(s);
-  }, []);
+  }, [name]);
 
   return (
     <UpsellLayout progress={progressMap[step] || 10}>
