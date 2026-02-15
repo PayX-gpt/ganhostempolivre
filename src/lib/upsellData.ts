@@ -1,13 +1,56 @@
-export interface UpsellLeadData {
-  name: string;
-  price_paid: string;
-  pain: string;
-  goal: string;
-  risk: string;
-  time: string;
-  device: string;
-  capital: string;
-}
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * Reads the user's first name from quiz sessionStorage data.
+ */
+export const getLeadName = (): string => {
+  try {
+    const raw = sessionStorage.getItem("quizAnswers");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.name && parsed.name.trim()) return parsed.name.trim().split(" ")[0];
+    }
+  } catch {}
+  try {
+    const raw = localStorage.getItem("upsell_lead_data");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.name && parsed.name !== "Visitante") return parsed.name.trim().split(" ")[0];
+    }
+  } catch {}
+  return "Visitante";
+};
+
+/**
+ * Reads the price the lead paid from quiz data or localStorage.
+ */
+export const getLeadPricePaid = (): number => {
+  try {
+    const raw = sessionStorage.getItem("quizAnswers");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.accountBalance) {
+        const map: Record<string, number> = {
+          "menos100": 37, "100-500": 47, "500-2000": 66, "2000-10000": 97, "10000+": 147,
+        };
+        return map[parsed.accountBalance] || 37;
+      }
+    }
+  } catch {}
+  return 37;
+};
+
+/**
+ * Gets the session_id for matching purchases
+ */
+export const getSessionId = (): string => {
+  try {
+    const td = localStorage.getItem("tracking_data_layer");
+    if (td) return JSON.parse(td).session_id || "";
+  } catch {}
+  return "";
+};
 
 export interface UpsellChoice {
   accelerator: "basico" | "duplo" | "maximo" | null;
@@ -15,32 +58,7 @@ export interface UpsellChoice {
   price: number;
 }
 
-const UPSELL_LEAD_KEY = "upsell_lead_data";
 const UPSELL_CHOICE_KEY = "upsell_choice";
-
-export const initUpsellData = (): UpsellLeadData => {
-  const params = new URLSearchParams(window.location.search);
-  const data: UpsellLeadData = {
-    name: params.get("name") || localStorage.getItem("upsell_name") || "Visitante",
-    price_paid: params.get("price_paid") || "37",
-    pain: params.get("pain") || "medo_errar",
-    goal: params.get("goal") || "pagar_contas",
-    risk: params.get("risk") || "moderado",
-    time: params.get("time") || "1h",
-    device: params.get("device") || "celular",
-    capital: params.get("capital") || "100_500",
-  };
-  localStorage.setItem(UPSELL_LEAD_KEY, JSON.stringify(data));
-  return data;
-};
-
-export const getUpsellData = (): UpsellLeadData => {
-  try {
-    const stored = localStorage.getItem(UPSELL_LEAD_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch {}
-  return initUpsellData();
-};
 
 export const saveUpsellChoice = (choice: UpsellChoice) => {
   localStorage.setItem(UPSELL_CHOICE_KEY, JSON.stringify(choice));
@@ -52,4 +70,46 @@ export const getUpsellChoice = (): UpsellChoice => {
     if (stored) return JSON.parse(stored);
   } catch {}
   return { accelerator: null, guide: false, price: 0 };
+};
+
+/**
+ * Hook: listens for purchase confirmation via Supabase Realtime.
+ * When a SALE_APPROVED event is detected for any matching session/email,
+ * it triggers the callback immediately.
+ */
+export const usePurchaseDetection = (onPurchaseDetected: () => void) => {
+  const [detected, setDetected] = useState(false);
+
+  useEffect(() => {
+    const sessionId = getSessionId();
+
+    // Listen for inserts and updates on purchase_tracking
+    const channel = supabase
+      .channel("upsell-purchase-watch")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "purchase_tracking",
+        },
+        (payload) => {
+          const row = payload.new as Record<string, unknown>;
+          if (row && row.status === "approved") {
+            // Match by session or just any approved purchase
+            if (!sessionId || row.session_id === sessionId || !row.session_id) {
+              setDetected(true);
+              onPurchaseDetected();
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [onPurchaseDetected]);
+
+  return detected;
 };
