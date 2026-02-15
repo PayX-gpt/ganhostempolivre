@@ -19,18 +19,23 @@ interface HourlyData {
 const FUNNEL_STEPS = [
   { route: "/step-1", label: "Intro" },
   { route: "/step-2", label: "Idade" },
-  { route: "/step-3", label: "Prova Social" },
-  { route: "/step-4", label: "Online?" },
-  { route: "/step-5", label: "Meta" },
-  { route: "/step-6", label: "Obstáculo" },
-  { route: "/step-7", label: "Mentor" },
-  { route: "/step-8", label: "Device" },
-  { route: "/step-9", label: "Tempo" },
-  { route: "/step-10", label: "Loading" },
-  { route: "/step-11", label: "Prova 2" },
-  { route: "/step-12", label: "Captura" },
-  { route: "/step-13", label: "Oferta" },
-  { route: "/checkout", label: "Checkout" },
+  { route: "/step-3", label: "Nome" },
+  { route: "/step-4", label: "Prova Social" },
+  { route: "/step-5", label: "Online?" },
+  { route: "/step-6", label: "Meta" },
+  { route: "/step-7", label: "Obstáculo" },
+  { route: "/step-8", label: "Sonho" },
+  { route: "/step-9", label: "Saldo" },
+  { route: "/step-10", label: "Mentor" },
+  { route: "/step-11", label: "Device" },
+  { route: "/step-12", label: "Tempo" },
+  { route: "/step-13", label: "Demo" },
+  { route: "/step-14", label: "Loading" },
+  { route: "/step-15", label: "Prova 2" },
+  { route: "/step-16", label: "WhatsApp" },
+  { route: "/step-17", label: "Contato" },
+  { route: "/step-18", label: "Input" },
+  { route: "/step-19", label: "Oferta" },
 ];
 
 const tooltipStyle = {
@@ -98,15 +103,31 @@ const LiveFunnelAnalytics = () => {
     setHourlyData(hourly);
     setTotalViews(steps[0]?.views || 0);
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
-    setOfferViews(stepCounts["/step-13"]?.size || 0);
-    setCheckoutClicks(stepCounts["/checkout"]?.size || 0);
+    setOfferViews(stepCounts["/step-19"]?.size || 0);
+    setCheckoutClicks(stepCounts["/step-19"]?.size || 0);
     setLoading(false);
   }, []);
 
   useEffect(() => {
     fetchFunnelData();
     const interval = setInterval(fetchFunnelData, 30000);
-    return () => clearInterval(interval);
+
+    // Realtime: refresh on new page_loaded events
+    const channel = supabase.channel("funnel-analytics-realtime")
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "funnel_audit_logs",
+        filter: "event_type=eq.page_loaded",
+      }, () => {
+        fetchFunnelData();
+      })
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [fetchFunnelData]);
 
   return (
@@ -150,7 +171,7 @@ const LiveFunnelAnalytics = () => {
         <div className="h-[200px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={funnelData} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
-              <XAxis dataKey="label" tick={{ fill: "#666", fontSize: 9 }} axisLine={false} tickLine={false} interval={0} angle={-45} textAnchor="end" height={50} />
+              <XAxis dataKey="label" tick={{ fill: "#666", fontSize: 8 }} axisLine={false} tickLine={false} interval={0} angle={-55} textAnchor="end" height={60} />
               <YAxis tick={{ fill: "#666", fontSize: 10 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
               <Bar dataKey="views" fill="#10b981" radius={[4, 4, 0, 0]} />
