@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Users, RefreshCw, Search, Download, ChevronDown, ChevronUp,
-  Eye, MousePointerClick, CheckCircle2, Calendar, Filter
+  Eye, MousePointerClick, CheckCircle2, Calendar, Filter,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +89,8 @@ const LiveLeadsTable = () => {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [showCustom, setShowCustom] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -120,6 +123,15 @@ const LiveLeadsTable = () => {
         (l.intent_label || "").toLowerCase().includes(q);
     });
   }, [leads, search]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(1); }, [search, datePreset, customStart, customEnd]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, page, PAGE_SIZE]);
 
   // KPIs
   const totalLeads = filtered.length;
@@ -267,8 +279,7 @@ const LiveLeadsTable = () => {
 
       {/* Desktop table (hidden on small screens) */}
       <div className="hidden md:block">
-        <ScrollArea className="h-[500px]">
-          <div className="overflow-x-auto">
+        <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-[#141414] border-b border-[#2a2a2a]">
@@ -285,13 +296,14 @@ const LiveLeadsTable = () => {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((lead, idx) => {
+                {paginated.map((lead, idx) => {
                   const a = lead.quiz_answers || {};
+                  const globalIdx = (page - 1) * PAGE_SIZE + idx;
                   return (
                     <tr key={lead.id}
                       className="border-b border-[#1a1a1a] hover:bg-[#1a1a1a]/50 transition-colors cursor-pointer"
                       onClick={() => setExpandedId(expandedId === lead.id ? null : lead.id)}>
-                      <td className="py-2 px-2 text-[#555] tabular-nums">{idx + 1}</td>
+                      <td className="py-2 px-2 text-[#555] tabular-nums">{globalIdx + 1}</td>
                       <td className="py-2 px-2">
                         <code className="text-[#aaa] font-mono text-[10px]">{lead.session_id.slice(-6)}</code>
                       </td>
@@ -329,14 +341,12 @@ const LiveLeadsTable = () => {
               </tbody>
             </table>
           </div>
-        </ScrollArea>
-      </div>
+        </div>
 
       {/* Mobile card list */}
       <div className="md:hidden">
-        <ScrollArea className="h-[500px]">
-          <div className="space-y-2">
-            {filtered.map((lead, idx) => {
+        <div className="space-y-2">
+            {paginated.map((lead, idx) => {
               const isExpanded = expandedId === lead.id;
               const answers = lead.quiz_answers || {};
               return (
@@ -363,7 +373,7 @@ const LiveLeadsTable = () => {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-[10px] text-[#888] tabular-nums">#{idx + 1}</span>
+                        <span className="text-[10px] text-[#888] tabular-nums">#{(page - 1) * PAGE_SIZE + idx + 1}</span>
                         <code className="text-[10px] text-[#aaa] font-mono">{lead.session_id.slice(-6)}</code>
                         {answers.name && <span className="text-xs text-white font-medium truncate">{answers.name}</span>}
                         {lead.checkout_clicked && (
@@ -435,14 +445,43 @@ const LiveLeadsTable = () => {
                 <p className="text-sm">Nenhum lead encontrado</p>
               </div>
             )}
-          </div>
-        </ScrollArea>
+        </div>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#1a1a1a]">
-        <span className="text-[10px] text-[#666]">{filtered.length} de {leads.length} leads</span>
-        <span className="text-[10px] text-[#666]">Limite: 500 · Auto-refresh 30s</span>
+      {/* Pagination */}
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#1a1a1a] gap-2">
+        <span className="text-[10px] text-[#666] tabular-nums flex-shrink-0">{filtered.length} leads</span>
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
+            className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-colors border",
+              page <= 1 ? "border-[#1a1a1a] text-[#333] cursor-not-allowed" : "border-[#2a2a2a] text-[#888] hover:text-white hover:bg-[#1a1a1a]")}>
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+          <div className="flex items-center gap-0.5">
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 5) { pageNum = i + 1; }
+              else if (page <= 3) { pageNum = i + 1; }
+              else if (page >= totalPages - 2) { pageNum = totalPages - 4 + i; }
+              else { pageNum = page - 2 + i; }
+              return (
+                <button key={pageNum} onClick={() => setPage(pageNum)}
+                  className={cn("w-7 h-7 rounded-lg text-[11px] font-medium tabular-nums transition-colors",
+                    pageNum === page
+                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                      : "text-[#888] hover:text-white hover:bg-[#1a1a1a]")}>
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
+            className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-colors border",
+              page >= totalPages ? "border-[#1a1a1a] text-[#333] cursor-not-allowed" : "border-[#2a2a2a] text-[#888] hover:text-white hover:bg-[#1a1a1a]")}>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <span className="text-[10px] text-[#666] tabular-nums flex-shrink-0">{page}/{totalPages}</span>
       </div>
     </div>
   );
