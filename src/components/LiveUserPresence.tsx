@@ -214,7 +214,7 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
             <Users className="w-5 h-5 text-emerald-400" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-white text-sm truncate">Mapa do Funil — 19 Etapas</h3>
+            <h3 className="font-semibold text-white text-sm truncate">Mapa do Funil</h3>
             <p className="text-[10px] text-[#666]">
               {dataSource === "db" ? "Atividade últimos 5 min" : "Presença em tempo real"}
             </p>
