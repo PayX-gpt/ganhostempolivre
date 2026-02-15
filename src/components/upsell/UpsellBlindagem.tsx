@@ -22,7 +22,7 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
   const [loading, setLoading] = useState(false);
 
-  const checkoutUrl = "https://pay.kirvano.com/BLINDAGEM_PLACEHOLDER";
+  const checkoutUrl = "https://pay.kirvano.com/a7cfdcbf-849f-4060-b660-b850f46a0e52";
 
   const handleBuy = () => {
     setLoading(true);
