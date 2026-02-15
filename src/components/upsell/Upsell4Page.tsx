@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import UpsellLayout from "./UpsellLayout";
 import UpsellCirculoInterno from "./UpsellCirculoInterno";
 import UpsellStep6 from "./UpsellStep6";
+import KirvanoOneClick from "./KirvanoOneClick";
 import { getLeadName } from "@/lib/upsellData";
 import { usePagePresence } from "@/hooks/usePagePresence";
 import { saveFunnelEvent } from "@/lib/metricsClient";
@@ -31,6 +31,13 @@ const Upsell4Page = () => {
 
   return (
     <UpsellLayout progress={showSuccess ? 100 : 99}>
+      {!showSuccess && (
+        <KirvanoOneClick
+          offer="67e759ec-598c-43c6-890e-b993901712b7"
+          nextPageURL={null}
+          refusePageURL={null}
+        />
+      )}
       <AnimatePresence mode="wait">
         <motion.div
           key={showSuccess ? "success" : "circulo"}
