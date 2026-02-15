@@ -4,7 +4,7 @@ import { Shield, Lock, Zap, ArrowRight, Star, Users, Clock, CheckCircle } from "
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import { initBehaviorTracker, trackSectionView, trackSectionLeave, trackCtaView, trackCtaHesitation, trackCheckoutClick, trackFaqOpen, trackVideoStart } from "@/lib/behaviorTracker";
-import { usePurchaseDetection } from "@/lib/upsellData";
+
 import { Separator } from "@/components/ui/separator";
 import { CTAButton, TrustBadge, VideoPlaceholder } from "./QuizUI";
 import type { QuizAnswers } from "./QuizUI";
@@ -592,10 +592,6 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   const [timeLeft, setTimeLeft] = useState(900);
   const [spotsLeft] = useState(() => Math.floor(Math.random() * 4) + 3);
 
-  // Auto-redirect to upsell when purchase is detected via webhook
-  usePurchaseDetection(useCallback(() => {
-    navigate("/upsell1");
-  }, [navigate]));
 
   // ─── Behavior Tracker Init ───
   useEffect(() => {
