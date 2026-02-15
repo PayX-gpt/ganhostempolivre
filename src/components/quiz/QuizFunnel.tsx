@@ -175,9 +175,9 @@ const QuizFunnel = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
       <header className="w-full bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-center">
+        <div className="max-w-lg mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-center">
           <h1 className="font-bold text-lg sm:text-xl text-foreground tracking-tight flex items-center gap-1.5">
             <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">G</span>
             <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">anhos com</span>
@@ -190,12 +190,12 @@ const QuizFunnel = () => {
         {step > 1 && step < TOTAL_STEPS && <ProgressBar current={step - 1} total={TOTAL_STEPS - 2} />}
       </header>
 
-      <main className="flex-1 flex items-start justify-center pb-8" key={step}>
+      <main className="flex-1 flex items-start justify-center" key={step}>
         {renderStep()}
       </main>
 
-      <footer className="w-full py-4 border-t border-border">
-        <p className="text-sm text-muted-foreground text-center">
+      <footer className="w-full py-3 border-t border-border">
+        <p className="text-xs sm:text-sm text-muted-foreground text-center">
           © 2026 — Alfa Híbrida • Todos os direitos reservados
         </p>
       </footer>

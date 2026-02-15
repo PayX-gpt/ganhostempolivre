@@ -9,10 +9,18 @@ interface Step3Props {
 
 const Step3SocialProof = ({ onNext }: Step3Props) => {
   const [showCTA, setShowCTA] = useState(false);
+  const videoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowCTA(true), 5000);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Scroll video into view on mount
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   }, []);
 
   useEffect(() => {
@@ -48,7 +56,7 @@ const Step3SocialProof = ({ onNext }: Step3Props) => {
 
       {/* Video testimonial - 50+ person */}
       {/* ConverteAI Video Player */}
-      <div className="w-full rounded-2xl overflow-hidden border border-border">
+      <div className="w-full rounded-2xl overflow-hidden border border-border scroll-mt-24" ref={videoRef}>
         <div
           id="ifr_67d187e9fad7e51c45b357f2_wrapper"
           style={{ margin: "0 auto", width: "100%" }}

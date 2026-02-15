@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import { Lock } from "lucide-react";
 
 export interface QuizAnswers {
@@ -87,22 +88,34 @@ interface CTAButtonProps {
   className?: string;
 }
 
-export const CTAButton = ({ children, onClick, variant = "primary", disabled, className = "" }: CTAButtonProps) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
-    className={`w-full py-4 sm:py-5 px-5 sm:px-6 rounded-2xl font-extrabold text-base sm:text-lg tracking-wide transition-all duration-300 ${
-      variant === "primary"
-        ? "bg-primary text-primary-foreground funnel-glow-button hover:brightness-110 active:scale-[0.98]"
-        : "bg-accent text-accent-foreground hover:brightness-110 active:scale-[0.98]"
-    } ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"} ${className}`}
-  >
-    {children}
-  </button>
-);
+export const CTAButton = ({ children, onClick, variant = "primary", disabled, className = "" }: CTAButtonProps) => {
+  const ref = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    // Auto-scroll the CTA into view when it appears
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, []);
+
+  return (
+    <button
+      ref={ref}
+      onClick={onClick}
+      disabled={disabled}
+      className={`w-full py-4 sm:py-5 px-5 sm:px-6 rounded-2xl font-extrabold text-base sm:text-lg tracking-wide transition-all duration-300 ${
+        variant === "primary"
+          ? "bg-primary text-primary-foreground funnel-glow-button hover:brightness-110 active:scale-[0.98]"
+          : "bg-accent text-accent-foreground hover:brightness-110 active:scale-[0.98]"
+      } ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"} ${className}`}
+    >
+      {children}
+    </button>
+  );
+};
 
 export const StepContainer = ({ children }: { children: React.ReactNode }) => (
-  <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-4 sm:px-5 py-5 sm:py-6 gap-4 sm:gap-5">
+  <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-4 sm:px-5 py-6 sm:py-8 gap-5 sm:gap-6 min-h-[calc(100dvh-120px)]">
     {children}
   </div>
 );
