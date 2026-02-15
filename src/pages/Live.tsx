@@ -182,7 +182,7 @@ export default function AdminFunnelAudit() {
     const todayISO = todayStart.toISOString();
 
     const { data: checkoutPageLoads } = await supabase.from("funnel_audit_logs").select("session_id")
-      .eq("event_type", "page_loaded").in("page_id", ["/checkout", "/step-13"]).gte("created_at", todayISO);
+      .eq("event_type", "page_loaded").in("page_id", ["/checkout", "/step-19"]).gte("created_at", todayISO);
 
     const icSessions = new Set<string>();
     checkoutPageLoads?.forEach(r => icSessions.add(r.session_id));
