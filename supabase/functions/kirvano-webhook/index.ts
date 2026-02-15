@@ -41,15 +41,19 @@ Deno.serve(async (req) => {
     const paymentId = body.payment_id || body.pagamento_id || null;
 
     // Extract tracking/UTM params that Kirvano forwards
-    const utmSource = body.utm_source || body.src || null;
-    const utmMedium = body.utm_medium || null;
-    const utmCampaign = body.utm_campaign || null;
-    const utmContent = body.utm_content || null;
-    const utmTerm = body.utm_term || null;
+    const utmData = body.utm || {};
+    const utmSource = utmData.utm_source || body.utm_source || null;
+    const utmMedium = utmData.utm_medium || body.utm_medium || null;
+    const utmCampaign = utmData.utm_campaign || body.utm_campaign || null;
+    const utmContent = utmData.utm_content || body.utm_content || null;
+    const utmTerm = utmData.utm_term || body.utm_term || null;
     const sck = body.sck || null;
-    const src = body.src || null;
-    const fbclid = body.fbclid || null;
+    const src = utmData.src || body.src || null;
+    const fbclid = body.cookies?.fbclid || body.fbclid || null;
     const gclid = body.gclid || null;
+
+    // Extract session_id: Kirvano forwards it in utm.src
+    const sessionId = (src && src.startsWith("sess_")) ? src : null;
 
     // Map Kirvano status to our internal status
     const statusMap: Record<string, string> = {
@@ -92,6 +96,7 @@ Deno.serve(async (req) => {
           product_name: productName,
           plan_id: planId,
           whop_payment_id: paymentId,
+          session_id: sessionId,
           utm_source: utmSource,
           utm_medium: utmMedium,
           utm_campaign: utmCampaign,
@@ -119,6 +124,7 @@ Deno.serve(async (req) => {
         amount,
         email,
         status: normalizedStatus,
+        session_id: sessionId,
         utm_source: utmSource,
         utm_medium: utmMedium,
         utm_campaign: utmCampaign,
