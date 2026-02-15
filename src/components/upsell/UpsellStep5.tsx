@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, BookOpen, ArrowRight } from "lucide-react";
 import { saveUpsellChoice } from "@/lib/upsellData";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 
 interface Props { name: string; onBuy: () => void; onDecline: () => void; }
 
@@ -22,6 +23,11 @@ const UpsellStep5 = ({ name, onBuy, onDecline }: Props) => {
   const handleBuy = () => {
     setLoading(true);
     saveUpsellChoice({ accelerator: null, guide: true, price: 9.9 });
+    const checkoutUrl = "https://pay.kirvano.com/863c8fe9-ca48-452f-9fa4-22e14df182cf";
+    const utmQs = buildTrackingQueryString();
+    const separator = checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${checkoutUrl}${separator}${utmQs.slice(1)}` : checkoutUrl;
+    window.open(fullUrl, "_blank");
     setTimeout(onBuy, 2500);
   };
 
