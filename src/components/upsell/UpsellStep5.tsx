@@ -23,7 +23,7 @@ const UpsellStep5 = ({ name, onBuy, onDecline }: Props) => {
   const handleBuy = () => {
     setLoading(true);
     saveUpsellChoice({ accelerator: null, guide: true, price: 9.9 });
-    const checkoutUrl = "https://pay.kirvano.com/863c8fe9-ca48-452f-9fa4-22e14df182cf";
+    const checkoutUrl = "https://pay.kirvano.com/06c6007a-0cd9-48f2-8f95-1b933e05509a";
     const utmQs = buildTrackingQueryString();
     const separator = checkoutUrl.includes("?") ? "&" : "?";
     const fullUrl = utmQs ? `${checkoutUrl}${separator}${utmQs.slice(1)}` : checkoutUrl;
