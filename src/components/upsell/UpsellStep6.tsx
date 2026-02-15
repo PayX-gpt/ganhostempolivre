@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Rocket, ExternalLink } from "lucide-react";
-import { getUpsellChoice } from "@/lib/upsellData";
+import { getUpsellChoice, getUpsellExtras } from "@/lib/upsellData";
 
 const accelNames: Record<string, string> = { basico: "Básico", duplo: "Duplo", maximo: "Máximo" };
 const accelTimes: Record<string, string> = { basico: "72h", duplo: "24h", maximo: "12h" };
@@ -32,6 +32,7 @@ interface Props { name: string; }
 
 const UpsellStep6 = ({ name }: Props) => {
   const choice = getUpsellChoice();
+  const extras = getUpsellExtras();
   const [showConfetti, setShowConfetti] = useState(true);
   const firstName = name !== "Visitante" ? name : "";
 
@@ -42,6 +43,11 @@ const UpsellStep6 = ({ name }: Props) => {
 
   const boughtAccel = !!choice.accelerator;
   const boughtGuide = choice.guide;
+  const boughtMultiplicador = !!extras.multiplicador;
+  const boughtBlindagem = !!extras.blindagem;
+  const boughtCirculo = !!extras.circulo;
+
+  const multiplicadorNames: Record<string, string> = { prata: "Prata", ouro: "Ouro", diamante: "Diamante" };
 
   let subtitle: string;
   if (boughtAccel) {
@@ -60,6 +66,9 @@ const UpsellStep6 = ({ name }: Props) => {
   ];
   if (boughtAccel) checklist.push(`Acelerador ${accelNames[choice.accelerator!]} ativado`);
   if (boughtGuide) checklist.push("Guia Primeiros Passos liberado");
+  if (boughtMultiplicador) checklist.push(`Potencial ${multiplicadorNames[extras.multiplicador!.plan] || "Multiplicador"} ativado`);
+  if (boughtBlindagem) checklist.push("Blindagem Anual de Estratégia ativa");
+  if (boughtCirculo) checklist.push("Círculo Interno — vaga garantida");
 
   return (
     <>

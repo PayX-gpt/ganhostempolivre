@@ -58,7 +58,14 @@ export interface UpsellChoice {
   price: number;
 }
 
+export interface UpsellExtras {
+  multiplicador?: { plan: string; price: number } | null;
+  blindagem?: { price: number } | null;
+  circulo?: { price: number } | null;
+}
+
 const UPSELL_CHOICE_KEY = "upsell_choice";
+const UPSELL_EXTRAS_KEY = "upsell_extras";
 
 export const saveUpsellChoice = (choice: UpsellChoice) => {
   localStorage.setItem(UPSELL_CHOICE_KEY, JSON.stringify(choice));
@@ -70,6 +77,20 @@ export const getUpsellChoice = (): UpsellChoice => {
     if (stored) return JSON.parse(stored);
   } catch {}
   return { accelerator: null, guide: false, price: 0 };
+};
+
+export const saveUpsellExtras = (key: keyof UpsellExtras, value: Record<string, unknown>) => {
+  const current = getUpsellExtras();
+  (current as Record<string, unknown>)[key] = value;
+  localStorage.setItem(UPSELL_EXTRAS_KEY, JSON.stringify(current));
+};
+
+export const getUpsellExtras = (): UpsellExtras => {
+  try {
+    const stored = localStorage.getItem(UPSELL_EXTRAS_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return {};
 };
 
 /**
