@@ -85,15 +85,6 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
         </div>
       </div>
 
-      <div className="w-full funnel-card border-primary/20 bg-primary/5">
-        <div className="flex items-start gap-2">
-          <MessageSquare className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-          <p className="text-sm text-foreground/80 text-center leading-relaxed italic">
-            "A maioria dos meus melhores alunos tem mais de 50 anos. Eles não tinham experiência nenhuma com tecnologia. Mesmo assim, conseguiram. Se eles conseguiram, você também consegue."
-          </p>
-        </div>
-      </div>
-
       {showCTA ? (
         <CTAButton onClick={onNext} className="animate-fade-in">
           ENTENDI, QUERO CONTINUAR →
@@ -106,6 +97,15 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
           </p>
         </div>
       )}
+
+      <div className="w-full funnel-card border-primary/20 bg-primary/5">
+        <div className="flex items-start gap-2">
+          <MessageSquare className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+          <p className="text-sm text-foreground/80 text-center leading-relaxed italic">
+            "A maioria dos meus melhores alunos tem mais de 50 anos. Eles não tinham experiência nenhuma com tecnologia. Mesmo assim, conseguiram. Se eles conseguiram, você também consegue."
+          </p>
+        </div>
+      </div>
     </StepContainer>
   );
 };
