@@ -95,10 +95,14 @@ const Live = () => {
   const [responsesPage, setResponsesPage] = useState(0);
   const RESPONSES_PER_PAGE = 20;
 
+  // ─── Active leads tracking (individual leads per step) ──
+  const [activeLeads, setActiveLeads] = useState<Map<string, { step: string; lastSeen: string }>>(new Map());
+
   // ─── Real-time presence ─────────────────────────────────
   const processPresence = useCallback((state: Record<string, PresenceEntry[]>) => {
     const counts: Record<string, Set<string>> = {};
     STEP_SLUGS.forEach(s => { counts[s] = new Set(); });
+    const leadsMap = new Map<string, { step: string; lastSeen: string }>();
 
     let total = 0;
     Object.entries(state).forEach(([sessionId, presences]) => {
@@ -108,7 +112,10 @@ const Live = () => {
       if (pageId.includes("/live") || pageId.includes("/admin")) return;
 
       const matched = STEP_SLUGS.find(slug => pageId.includes(`/${slug}`));
-      if (matched) counts[matched].add(sessionId);
+      if (matched) {
+        counts[matched].add(sessionId);
+        leadsMap.set(sessionId, { step: matched, lastSeen: p.joined_at || new Date().toISOString() });
+      }
       total++;
     });
 
@@ -119,6 +126,7 @@ const Live = () => {
       count: counts[s]?.size || 0,
     })));
     setTotalOnline(total);
+    setActiveLeads(leadsMap);
     setLastUpdated(new Date());
   }, []);
 
@@ -131,6 +139,76 @@ const Live = () => {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [processPresence]);
+
+  // ─── Polling fallback: fetch recent step_viewed events ──
+  const fetchRecentPresence = useCallback(async () => {
+    const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const { data } = await supabase
+      .from("funnel_events")
+      .select("session_id, event_data, created_at")
+      .eq("event_name", "step_viewed")
+      .gte("created_at", twoMinAgo)
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    if (!data || data.length === 0) return;
+
+    // Build latest step per session from recent events
+    const sessionLatest = new Map<string, { step: string; lastSeen: string }>();
+    (data as { session_id: string; event_data: Record<string, unknown> | null; created_at: string }[]).forEach(row => {
+      if (sessionLatest.has(row.session_id)) return; // already have latest
+      const step = (row.event_data as any)?.step as string;
+      if (step && STEP_SLUGS.includes(step)) {
+        sessionLatest.set(row.session_id, { step, lastSeen: row.created_at });
+      }
+    });
+
+    // Merge with realtime presence - polling is fallback
+    setActiveLeads(prev => {
+      const merged = new Map(prev);
+      sessionLatest.forEach((val, key) => {
+        if (!merged.has(key)) merged.set(key, val);
+      });
+      // Remove stale entries (older than 2 min)
+      const cutoff = Date.now() - 2 * 60 * 1000;
+      merged.forEach((val, key) => {
+        if (new Date(val.lastSeen).getTime() < cutoff && !prev.has(key)) {
+          merged.delete(key);
+        }
+      });
+      return merged;
+    });
+
+    // Update counts from merged data
+    setActiveLeads(current => {
+      const counts: Record<string, Set<string>> = {};
+      STEP_SLUGS.forEach(s => { counts[s] = new Set(); });
+      let total = 0;
+      current.forEach((val, sid) => {
+        if (counts[val.step]) {
+          counts[val.step].add(sid);
+          total++;
+        }
+      });
+
+      setSteps(STEP_SLUGS.map(s => ({
+        id: s,
+        label: STEP_META[s]?.label || s,
+        shortLabel: STEP_META[s]?.short || s,
+        count: Math.max(counts[s]?.size || 0, steps.find(st => st.id === s)?.count || 0),
+      })));
+      if (total > totalOnline) setTotalOnline(total);
+      setLastUpdated(new Date());
+      return current;
+    });
+  }, [steps, totalOnline]);
+
+  // Poll every 10s as fallback
+  useEffect(() => {
+    fetchRecentPresence();
+    const interval = setInterval(fetchRecentPresence, 10000);
+    return () => clearInterval(interval);
+  }, [fetchRecentPresence]);
 
   // ─── Audit logs fetch ───────────────────────────────────
   const fetchAuditData = useCallback(async () => {
@@ -400,64 +478,94 @@ const Live = () => {
             <h2 className="text-xs sm:text-sm font-semibold text-muted-foreground flex items-center gap-2">
               <Eye className="w-3.5 h-3.5" /> PRESENÇA EM TEMPO REAL
             </h2>
-            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {lastUpdated.toLocaleTimeString("pt-BR")}
-            </span>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="gap-1 text-xs border-primary/40 text-primary">
+                <Users className="w-3 h-3" />
+                {totalOnline} online
+              </Badge>
+              <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {lastUpdated.toLocaleTimeString("pt-BR")}
+              </span>
+            </div>
           </div>
 
-          {/* Mobile: vertical list. Desktop: grid */}
+          {/* Desktop: grid with leads */}
           <div className="hidden sm:grid sm:grid-cols-6 lg:grid-cols-9 gap-2">
             {steps.map((step) => {
               const meta = STEP_META[step.id];
+              const leadsInStep = Array.from(activeLeads.entries()).filter(([, v]) => v.step === step.id);
               return (
                 <div
                   key={step.id}
                   className={cn(
                     "rounded-lg border p-2.5 text-center transition-all",
                     step.count > 0
-                      ? "border-green-500/50 bg-green-500/10 shadow-sm shadow-green-500/20"
+                      ? "border-primary/50 bg-primary/10 shadow-sm shadow-primary/20"
                       : "border-border/50 bg-card/30"
                   )}
                 >
                   <span className="text-sm">{meta?.emoji}</span>
                   <div className={cn(
                     "text-xl font-bold mt-0.5",
-                    step.count > 0 ? "text-green-400" : "text-muted-foreground/40"
+                    step.count > 0 ? "text-primary" : "text-muted-foreground/40"
                   )}>
                     {step.count}
                   </div>
                   <div className="text-[9px] text-muted-foreground leading-tight mt-0.5 truncate">
                     {step.shortLabel}
                   </div>
+                  {leadsInStep.length > 0 && (
+                    <div className="mt-1.5 space-y-0.5">
+                      {leadsInStep.slice(0, 3).map(([sid]) => (
+                        <div key={sid} className="text-[8px] bg-primary/20 rounded px-1 py-0.5 text-primary truncate">
+                          👤 {sid.slice(-6)}
+                        </div>
+                      ))}
+                      {leadsInStep.length > 3 && (
+                        <div className="text-[8px] text-muted-foreground">+{leadsInStep.length - 3}</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
 
-          {/* Mobile list */}
+          {/* Mobile list with leads */}
           <div className="sm:hidden space-y-1">
             {steps.map((step, i) => {
               const meta = STEP_META[step.id];
+              const leadsInStep = Array.from(activeLeads.entries()).filter(([, v]) => v.step === step.id);
               return (
-                <div
-                  key={step.id}
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-3 py-2 transition-all",
-                    step.count > 0
-                      ? "bg-green-500/10 border border-green-500/30"
-                      : "bg-card/30 border border-transparent"
+                <div key={step.id}>
+                  <div
+                    className={cn(
+                      "flex items-center gap-2.5 rounded-lg px-3 py-2 transition-all",
+                      step.count > 0
+                        ? "bg-primary/10 border border-primary/30"
+                        : "bg-card/30 border border-transparent"
+                    )}
+                  >
+                    <span className="text-sm w-6 text-center">{meta?.emoji}</span>
+                    <span className="text-xs text-muted-foreground w-4 tabular-nums">{i + 1}.</span>
+                    <span className="text-xs font-medium text-foreground flex-1 truncate">{step.label}</span>
+                    <span className={cn(
+                      "text-sm font-bold tabular-nums min-w-[24px] text-right",
+                      step.count > 0 ? "text-primary" : "text-muted-foreground/40"
+                    )}>
+                      {step.count}
+                    </span>
+                  </div>
+                  {leadsInStep.length > 0 && (
+                    <div className="ml-12 mt-0.5 mb-1 flex flex-wrap gap-1">
+                      {leadsInStep.map(([sid]) => (
+                        <span key={sid} className="text-[10px] bg-primary/15 text-primary rounded-full px-2 py-0.5">
+                          👤 {sid.slice(-6)}
+                        </span>
+                      ))}
+                    </div>
                   )}
-                >
-                  <span className="text-sm w-6 text-center">{meta?.emoji}</span>
-                  <span className="text-xs text-muted-foreground w-4 tabular-nums">{i + 1}.</span>
-                  <span className="text-xs font-medium text-foreground flex-1 truncate">{step.label}</span>
-                  <span className={cn(
-                    "text-sm font-bold tabular-nums min-w-[24px] text-right",
-                    step.count > 0 ? "text-green-400" : "text-muted-foreground/40"
-                  )}>
-                    {step.count}
-                  </span>
                 </div>
               );
             })}
