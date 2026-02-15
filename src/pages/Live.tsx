@@ -225,13 +225,14 @@ export default function AdminFunnelAudit() {
     setQualifiedLeadsToday(leadData?.filter(l => (l.intent_score || 0) >= 50).length || 0);
     setInteractionRateToday(tLeads > 0 ? ((leadData?.filter(l => l.cta_clicks > 0).length || 0) / tLeads) * 100 : 0);
 
-    // Count unique visits today
-    const { count: visitsCount } = await supabase.from("funnel_audit_logs")
-      .select("session_id", { count: "exact", head: false })
+    // Count unique sessions (visitors) today
+    const { data: visitRows } = await supabase.from("funnel_audit_logs")
+      .select("session_id")
       .eq("event_type", "page_loaded")
       .eq("page_id", "/step-1")
       .gte("created_at", todayISO);
-    setTotalVisitsToday(visitsCount || 0);
+    const uniqueVisits = new Set(visitRows?.map(r => r.session_id)).size;
+    setTotalVisitsToday(uniqueVisits);
 
     setLastUpdated(new Date());
     setIsLoading(false);
