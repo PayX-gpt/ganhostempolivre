@@ -21,6 +21,14 @@ interface FunnelStep {
 interface PresencePayload {
   session_id: string;
   page_id: string;
+  lead_name?: string;
+  joined_at: string;
+}
+
+interface OnlineUser {
+  session_id: string;
+  name: string;
+  page: string;
   joined_at: string;
 }
 
@@ -76,6 +84,7 @@ const shouldSkip = (pageId: string) => {
 export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProps) {
   const [funnelSteps, setFunnelSteps] = useState<FunnelStep[]>(STEPS);
   const [totalOnline, setTotalOnline] = useState(0);
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const onTotalChangeRef = useRef(onTotalChange);
@@ -88,6 +97,7 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
     STEPS.forEach(s => { counts[s.id] = 0; });
 
     let total = 0;
+    const users: OnlineUser[] = [];
 
     Object.entries(state).forEach(([, presences]) => {
       if (!presences || presences.length === 0) return;
@@ -98,6 +108,13 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
       if (stepId && counts[stepId] !== undefined) {
         counts[stepId]++;
         total++;
+        const stepLabel = STEPS.find(s => s.id === stepId)?.label || pageId;
+        users.push({
+          session_id: latest.session_id,
+          name: latest.lead_name || "Anônimo",
+          page: stepLabel,
+          joined_at: latest.joined_at,
+        });
       }
     });
 
@@ -113,6 +130,7 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
     });
 
     setTotalOnline(prev => { if (prev !== total) return total; return prev; });
+    setOnlineUsers(users);
     setLastUpdated(new Date());
     onTotalChangeRef.current?.(total);
   }, []); // Empty deps — stable forever
@@ -184,6 +202,27 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
           );
         })}
       </div>
+
+      {/* Online Users List */}
+      {onlineUsers.length > 0 && (
+        <div className="mt-4 rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3">
+          <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <Eye className="w-3.5 h-3.5 text-emerald-400" /> Usuários Online Agora
+          </h4>
+          <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
+            {onlineUsers.map((user) => (
+              <div key={user.session_id} className="flex items-center gap-2 text-xs py-1 px-2 rounded-lg bg-[#1a1a1a]">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                </span>
+                <span className="font-medium text-white truncate flex-1">{user.name}</span>
+                <span className="text-[#888] text-[10px] shrink-0">{user.page}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-center mt-3 text-[10px] text-[#666]">
         <span>Atualizado: {lastUpdated.toLocaleTimeString("pt-BR")}</span>

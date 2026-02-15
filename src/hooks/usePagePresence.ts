@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getTrackingData } from "@/lib/trackingDataLayer";
+import { getLeadName } from "@/lib/upsellData";
 
 const PRESENCE_CHANNEL = "funnel-presence";
 
@@ -49,6 +50,7 @@ const getOrCreateChannel = (sessionId: string): ReturnType<typeof supabase.chann
         sharedChannel!.track({
           session_id: sessionId,
           page_id: pendingPageId,
+          lead_name: getLeadName(),
           joined_at: new Date().toISOString(),
         });
         pendingPageId = null;
@@ -74,6 +76,7 @@ export const usePagePresence = (pageId: string): void => {
       channel.track({
         session_id: sessionId,
         page_id: pageId,
+        lead_name: getLeadName(),
         joined_at: new Date().toISOString(),
       });
     } else {
