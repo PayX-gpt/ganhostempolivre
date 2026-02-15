@@ -66,6 +66,15 @@ const QuizFunnel = () => {
     } catch { return {}; }
   });
   const currentSlug = slug || "step-1";
+  const isValidQuizSlug = !slug || STEP_SLUGS.includes(slug as any);
+
+  // Guard: if the slug is not a valid quiz step, render nothing and let React Router re-match
+  useEffect(() => {
+    if (!isValidQuizSlug) {
+      navigate(`/${slug}`, { replace: true });
+    }
+  }, [slug, isValidQuizSlug, navigate]);
+
   const step = Math.max(1, (STEP_SLUGS.indexOf(currentSlug as any) + 1) || 1);
   const stepEnteredAt = useRef<number>(Date.now());
 
@@ -199,6 +208,9 @@ const QuizFunnel = () => {
         return null;
     }
   };
+
+  // Don't render quiz UI for non-quiz slugs (e.g. /upsell1, /upsell2)
+  if (!isValidQuizSlug) return null;
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col">
