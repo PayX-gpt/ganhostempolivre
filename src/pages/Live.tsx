@@ -48,17 +48,24 @@ const MetricCard = ({
   valueClassName?: string; iconClassName?: string;
 }) => (
   <div className={cn(
-    "relative overflow-hidden rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02]",
+    "relative overflow-hidden rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:scale-[1.02]",
     "bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a]",
     "shadow-xl hover:shadow-2xl hover:shadow-emerald-500/5", className
   )}>
     <div className="flex items-start justify-between gap-2">
-      <div className="space-y-2 min-w-0 flex-1">
-        <p className="text-[#888] text-sm font-medium truncate">{title}</p>
-        <p className={cn("text-2xl sm:text-3xl font-bold text-white tracking-tight truncate tabular-nums", valueClassName)}>{value}</p>
-        {subtitle && <p className="text-[#666] text-xs sm:text-sm truncate">{subtitle}</p>}
+      <div className="space-y-1 min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          {Icon && (
+            <div className={cn("p-1.5 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/20 flex-shrink-0", iconClassName)}>
+              <Icon className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+          )}
+          <p className="text-[#888] text-xs font-medium truncate">{title}</p>
+        </div>
+        <p className={cn("text-xl sm:text-2xl font-bold text-white tracking-tight truncate tabular-nums", valueClassName)}>{value}</p>
+        {subtitle && <p className="text-[#666] text-[10px] sm:text-xs truncate">{subtitle}</p>}
         {trendLabel && (
-          <div className={cn("flex items-center gap-1 text-xs font-medium mt-2",
+          <div className={cn("flex items-center gap-1 text-[10px] sm:text-xs font-medium",
             trend === 'up' && "text-emerald-400", trend === 'down' && "text-red-400", trend === 'neutral' && "text-[#888]"
           )}>
             {trend === 'up' && <TrendingUp className="w-3 h-3 flex-shrink-0" />}
@@ -67,13 +74,7 @@ const MetricCard = ({
           </div>
         )}
       </div>
-      {Icon && (
-        <div className={cn("p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/20 flex-shrink-0", iconClassName)}>
-          <Icon className="w-5 h-5 text-emerald-400" />
-        </div>
-      )}
     </div>
-    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
   </div>
 );
 
