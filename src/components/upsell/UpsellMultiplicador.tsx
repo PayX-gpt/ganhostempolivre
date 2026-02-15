@@ -78,7 +78,6 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
       ? `${plan.checkoutUrl}${separator}${utmQs.slice(1)}`
       : plan.checkoutUrl;
     window.open(fullUrl, "_blank");
-    onNext();
   };
 
   return (

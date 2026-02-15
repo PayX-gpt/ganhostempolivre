@@ -76,7 +76,6 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
     const separator = plan.checkoutUrl.includes("?") ? "&" : "?";
     const fullUrl = utmQs ? `${plan.checkoutUrl}${separator}${utmQs.slice(1)}` : plan.checkoutUrl;
     window.open(fullUrl, "_blank");
-    onNext();
   };
 
   return (
