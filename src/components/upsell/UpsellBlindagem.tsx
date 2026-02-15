@@ -11,11 +11,11 @@ interface Props {
 }
 
 const benefits = [
-  "Todas as futuras atualizações da IA incluídas",
-  "Novos robôs e estratégias automaticamente liberados",
-  "Proteções de segurança sempre na versão mais recente",
-  "Sem mensalidades. Pagamento único, acesso vitalício",
-  "Relatórios de performance atualizados com as últimas métricas",
+  "Você recebe todas as melhorias do sistema automaticamente, sem precisar fazer nada",
+  "Novas formas de ganhar dinheiro são adicionadas na sua conta assim que ficam prontas",
+  "O sistema de proteção do seu dinheiro é sempre atualizado com o que há de mais seguro",
+  "Você paga uma vez só. Não tem mensalidade, não tem surpresa",
+  "Você recebe um resumo fácil de entender mostrando como está indo",
 ];
 
 const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
@@ -44,14 +44,13 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
           className="text-[11px] uppercase tracking-widest font-semibold mb-2"
           style={{ color: "#3B82F6" }}
         >
-          Ativando Protocolo de Blindagem e Atualização Futura
+          Proteja seus ganhos para o futuro
         </p>
         <h1
           className="text-[22px] font-extrabold leading-tight"
           style={{ color: "#F8FAFC" }}
         >
-          Sua conta está calibrada para lucros máximos. Agora, vamos proteger
-          seus ganhos para o futuro.
+          Seu sistema está funcionando. Agora vamos garantir que ele continue funcionando pra sempre.
         </h1>
       </div>
 
@@ -69,21 +68,15 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
           className="text-[14px] leading-relaxed"
           style={{ color: "#CBD5E1" }}
         >
-          {firstName ? `"${firstName}, ` : '"'}agora que sua máquina está pronta
-          para gerar dinheiro, temos que falar sobre o futuro. O mercado é vivo.
-          Ele muda. Uma estratégia que funciona hoje pode não funcionar em 6
-          meses. E é aí que 90% das pessoas quebram: elas param de se atualizar
-          e a fonte de renda seca.
+          {firstName ? `"${firstName}, ` : '"'}agora que tudo está funcionando, preciso te falar uma coisa importante. O mercado muda o tempo todo. O que funciona hoje pode parar de funcionar daqui uns meses. E aí muita gente perde o que conquistou, porque o sistema ficou desatualizado.
         </p>
         <p
           className="text-[14px] leading-relaxed mt-3"
           style={{ color: "#CBD5E1" }}
         >
-          Pense nisso como a{" "}
-          <strong style={{ color: "#60A5FA" }}>vacina para o seu dinheiro</strong>.
-          A Blindagem Anual garante que sua plataforma receba todas as futuras
-          atualizações da nossa IA, para sempre. Novas estratégias, novos robôs,
-          novas proteções... tudo, automaticamente."
+          É como um carro:{" "}
+          <strong style={{ color: "#60A5FA" }}>se você não faz a revisão, uma hora ele para</strong>.
+          {" "}A Blindagem garante que seu sistema receba todas as melhorias automaticamente, pra sempre. Você não precisa se preocupar com nada. É pagar uma vez e ficar tranquilo."
         </p>
         <p
           className="text-[12px] italic mt-3 text-right"
@@ -111,10 +104,10 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
               className="text-[18px] font-bold"
               style={{ color: "#F8FAFC" }}
             >
-              Blindagem Anual de Estratégia
+              Blindagem: Proteção para o Futuro
             </h3>
             <p className="text-[12px]" style={{ color: "#60A5FA" }}>
-              Pagamento único · Acesso vitalício
+              Pague uma vez só · Funciona pra sempre
             </p>
           </div>
         </div>
@@ -124,10 +117,7 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
             className="text-[13px] leading-relaxed mb-4"
             style={{ color: "#94A3B8" }}
           >
-            Com um pagamento único, você garante acesso vitalício a todas as
-            futuras atualizações da nossa IA, robôs e estratégias de segurança.
-            Proteja seus ganhos contra as mudanças do mercado e garanta sua
-            tranquilidade a longo prazo.
+            Com um pagamento único, você garante que o seu sistema vai continuar funcionando e melhorando, sem você precisar fazer nada. Todas as melhorias, todas as proteções novas — tudo chega na sua conta automaticamente. É a tranquilidade de saber que seus ganhos estão protegidos.
           </p>
 
           <ul className="flex flex-col gap-2.5">
@@ -148,7 +138,7 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
 
           <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
             <p className="text-[12px]" style={{ color: "#64748B" }}>
-              Taxa Única de Acesso Vitalício
+              Pagamento único — você paga uma vez e nunca mais
             </p>
             <span
               className="text-[32px] font-extrabold"
@@ -169,7 +159,7 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
           >
             {loading
               ? "Processando..."
-              : "ATIVAR BLINDAGEM ANUAL E PROTEGER MEUS GANHOS"}
+              : "QUERO PROTEGER MEUS GANHOS PRA SEMPRE"}
           </button>
         </div>
       </motion.div>
@@ -195,7 +185,7 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
         className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2"
         style={{ color: "#475569" }}
       >
-        Não, obrigado. Entendo os riscos e prefiro não ativar a proteção futura.
+        Não, obrigado. Prefiro seguir sem a proteção por enquanto.
       </button>
     </div>
   );
