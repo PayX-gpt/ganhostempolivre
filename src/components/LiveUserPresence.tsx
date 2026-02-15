@@ -50,23 +50,13 @@ const STEPS: FunnelStep[] = [
   { id: "step19", route: "/step-19", label: "Oferta Final", icon: ShoppingCart, count: 0 },
   { id: "checkout", route: "/checkout", label: "Checkout", icon: Gift, count: 0 },
   { id: "thanks", route: "/thanks", label: "Thanks", icon: CheckCircle2, count: 0 },
-  { id: "upsell-confirm", route: "/upsell-confirmacao", label: "UP: Confirm", icon: Rocket, count: 0 },
-  { id: "upsell-analise", route: "/upsell-analise", label: "UP: Análise", icon: BarChart3, count: 0 },
-  { id: "upsell-planos", route: "/upsell-planos", label: "UP: Planos", icon: ShoppingCart, count: 0 },
-  { id: "upsell-checkout", route: "/upsell-checkout", label: "UP: Checkout", icon: CreditCard, count: 0 },
-  { id: "upsell-downsell", route: "/upsell-downsell", label: "UP: Downsell", icon: ArrowDownCircle, count: 0 },
-  { id: "upsell-sucesso", route: "/upsell-sucesso", label: "UP: Sucesso", icon: Trophy, count: 0 },
+  { id: "upsell", route: "/upsell", label: "Upsell", icon: Rocket, count: 0 },
 ];
 
 const toStepId = (page: string): string | null => {
   const p = page.toLowerCase();
-  // Upsell steps
-  if (p.includes("/upsell-confirmacao")) return "upsell-confirm";
-  if (p.includes("/upsell-analise")) return "upsell-analise";
-  if (p.includes("/upsell-planos")) return "upsell-planos";
-  if (p.includes("/upsell-checkout")) return "upsell-checkout";
-  if (p.includes("/upsell-downsell")) return "upsell-downsell";
-  if (p.includes("/upsell-sucesso")) return "upsell-sucesso";
+  // Any upsell page → single "upsell" step
+  if (p.includes("/upsell")) return "upsell";
   // Original steps
   if (p.includes("/thanks")) return "thanks";
   if (p.includes("/checkout") || p.includes("/processing")) return "checkout";
