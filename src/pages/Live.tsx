@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import LiveRevenueChart from "@/components/LiveRevenueChart";
 import LiveUserPresence from "@/components/LiveUserPresence";
+import LiveIntelligence from "@/components/LiveIntelligence";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import SessionLogsDialog from "@/components/SessionLogsDialog";
@@ -380,6 +381,7 @@ export default function AdminFunnelAudit() {
 
         <LiveUserPresence onTotalChange={handlePresenceTotalChange} />
         <LiveRevenueChart usdToBrl={USD_TO_BRL} />
+        <LiveIntelligence />
 
         <div className="overflow-x-auto -mx-4 px-4">
           <div className="flex lg:grid lg:grid-cols-2 gap-3 min-w-max lg:min-w-0">
