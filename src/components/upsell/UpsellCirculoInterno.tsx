@@ -33,7 +33,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
   const [loading, setLoading] = useState(false);
 
-  const checkoutUrl = "https://pay.kirvano.com/CIRCULO_PLACEHOLDER";
+  const checkoutUrl = "https://pay.kirvano.com/67e759ec-598c-43c6-890e-b993901712b7";
 
   const handleBuy = () => {
     setLoading(true);
