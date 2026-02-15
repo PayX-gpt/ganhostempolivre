@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Brain, TrendingUp, Target, AlertTriangle, Sparkles, RefreshCw, BarChart3 } from "lucide-react";
+import { Brain, TrendingUp, Target, AlertTriangle, Sparkles, RefreshCw, BarChart3, DollarSign, Users, ShoppingCart, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
@@ -31,6 +31,20 @@ interface LeadBehaviorRow {
   account_balance: string | null;
 }
 
+interface BuyerAnalysis {
+  analysis: string;
+  correlation: {
+    totalLeads: number;
+    totalBuyers: number;
+    totalNonBuyers: number;
+    conversionRate: string;
+    buyers: any;
+    nonBuyers: any;
+    segmentComparison: Record<string, any[]>;
+  };
+  priceSuggestions: Record<string, any[]>;
+}
+
 const INTENT_COLORS: Record<string, string> = {
   buyer: "#22c55e", hot: "#f59e0b", warm: "#3b82f6", cold: "#6b7280",
 };
@@ -39,8 +53,10 @@ const PIE_COLORS = ["#6b7280", "#3b82f6", "#f59e0b", "#22c55e"];
 const LiveIntelligence = () => {
   const [leads, setLeads] = useState<LeadBehaviorRow[]>([]);
   const [aiInsights, setAiInsights] = useState<string>("");
+  const [buyerAnalysis, setBuyerAnalysis] = useState<BuyerAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [insightsLoading, setInsightsLoading] = useState(false);
+  const [buyerLoading, setBuyerLoading] = useState(false);
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -68,6 +84,18 @@ const LiveIntelligence = () => {
       setAiInsights("Erro ao gerar insights. Tente novamente.");
     }
     setInsightsLoading(false);
+  }, []);
+
+  const fetchBuyerAnalysis = useCallback(async () => {
+    setBuyerLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-leads", { body: { action: "buyer-analysis" } });
+      if (error) throw error;
+      setBuyerAnalysis(data || null);
+    } catch (e) {
+      console.warn("Buyer analysis failed:", e);
+    }
+    setBuyerLoading(false);
   }, []);
 
   useEffect(() => {
@@ -112,8 +140,9 @@ const LiveIntelligence = () => {
   };
 
   const tooltipStyle = { background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: "12px", color: "#e2e8f0", fontSize: "12px", padding: "8px 12px" };
-
   const avgHesitations = totalLeads > 0 ? (leads.reduce((a, l) => a + (l.cta_hesitation_count || 0), 0) / totalLeads).toFixed(1) : "0";
+
+  const corr = buyerAnalysis?.correlation;
 
   return (
     <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-5 overflow-hidden">
@@ -127,6 +156,11 @@ const LiveIntelligence = () => {
           <p className="text-[10px] text-[#666]">{totalLeads} leads (24h)</p>
         </div>
         <div className="flex gap-1.5 flex-shrink-0">
+          <Button size="sm" onClick={fetchBuyerAnalysis} disabled={buyerLoading}
+            className="h-7 text-[10px] gap-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 px-2">
+            <DollarSign className="w-3 h-3" />
+            <span className="hidden sm:inline">{buyerLoading ? "..." : "Preço"}</span>
+          </Button>
           <Button size="sm" onClick={fetchInsights} disabled={insightsLoading}
             className="h-7 text-[10px] gap-1 rounded-lg bg-violet-500/20 text-violet-400 border border-violet-500/30 hover:bg-violet-500/30 px-2">
             <Sparkles className="w-3 h-3" />
@@ -139,10 +173,9 @@ const LiveIntelligence = () => {
         </div>
       </div>
 
-      {/* ROW 1: Scroll horizontal - Stats + Distribuição + AI Insights */}
+      {/* ROW 1: Stats + Distribuição + AI Insights */}
       <div className="overflow-x-auto -mx-5 px-5 pb-3" style={{ maxWidth: 'calc(100% + 2.5rem)' }}>
         <div className="flex gap-3 w-max">
-          {/* Stats Cards */}
           {[
             { label: "Score Médio", value: `${avgScore}/100`, icon: <Target className="w-4 h-4" />, accent: true },
             { label: "Taxa Checkout", value: `${checkoutRate}%`, icon: <TrendingUp className="w-4 h-4" /> },
@@ -190,7 +223,7 @@ const LiveIntelligence = () => {
             </div>
           </div>
 
-          {/* AI Insights inline */}
+          {/* AI Insights */}
           {aiInsights && (
             <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-3 min-w-[280px] w-[280px] flex-shrink-0">
               <div className="flex items-center gap-2 mb-2">
@@ -203,7 +236,86 @@ const LiveIntelligence = () => {
         </div>
       </div>
 
-      {/* ROW 2: Scroll horizontal - Segmentação */}
+      {/* ROW 2: Buyer Analysis (when loaded) */}
+      {corr && (
+        <div className="overflow-x-auto -mx-5 px-5 pb-3" style={{ maxWidth: 'calc(100% + 2.5rem)' }}>
+          <div className="flex gap-3 w-max">
+            {/* Comprador vs Não-Comprador */}
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 min-w-[320px] w-[320px] flex-shrink-0">
+              <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5" /> Comprador vs Abandonador
+              </h4>
+              <div className="grid grid-cols-3 gap-1 text-[10px] mb-2">
+                <div className="text-[#666]">Métrica</div>
+                <div className="text-emerald-400 text-center">Comprou ({corr.totalBuyers})</div>
+                <div className="text-red-400 text-center">Não ({corr.totalNonBuyers})</div>
+              </div>
+              {[
+                { label: "Tempo (s)", b: corr.buyers?.avgTimeOnPageS, nb: corr.nonBuyers?.avgTimeOnPageS },
+                { label: "Scroll %", b: corr.buyers?.avgScroll, nb: corr.nonBuyers?.avgScroll },
+                { label: "CTA Cliques", b: corr.buyers?.avgCtaClicks, nb: corr.nonBuyers?.avgCtaClicks },
+                { label: "Hesitações", b: corr.buyers?.avgHesitations, nb: corr.nonBuyers?.avgHesitations },
+                { label: "Vídeo %", b: corr.buyers?.videoRate, nb: corr.nonBuyers?.videoRate },
+                { label: "Score", b: corr.buyers?.avgIntentScore, nb: corr.nonBuyers?.avgIntentScore },
+                { label: "Preço R$", b: corr.buyers?.avgDynamicPrice, nb: corr.nonBuyers?.avgDynamicPrice },
+              ].map((row, i) => (
+                <div key={i} className="grid grid-cols-3 gap-1 text-[10px] py-0.5 border-t border-[#1a1a1a]">
+                  <span className="text-[#888]">{row.label}</span>
+                  <span className="text-white text-center font-bold tabular-nums">{row.b ?? "—"}</span>
+                  <span className="text-white text-center tabular-nums">{row.nb ?? "—"}</span>
+                </div>
+              ))}
+              <div className="mt-2 text-[10px] text-emerald-400 font-bold">
+                Taxa: {corr.conversionRate}% conversão
+              </div>
+            </div>
+
+            {/* Sugestões de Preço */}
+            {buyerAnalysis?.priceSuggestions && Object.entries(buyerAnalysis.priceSuggestions).map(([key, suggestions]) => (
+              <div key={key} className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3 min-w-[260px] w-[260px] flex-shrink-0">
+                <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5 text-amber-400" /> Preço: {key}
+                </h4>
+                <div className="space-y-1.5">
+                  {(suggestions as any[]).slice(0, 5).map((seg: any, i: number) => (
+                    <div key={i} className="flex items-center gap-1.5 text-[10px]">
+                      <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0",
+                        seg.recommendation === "pode_aumentar" ? "bg-emerald-400" :
+                        seg.recommendation === "testar_reducao" ? "bg-amber-400" :
+                        seg.recommendation === "revisar_funil" ? "bg-red-400" : "bg-[#555]"
+                      )} />
+                      <span className="text-[#888] truncate w-16">{seg.segment}</span>
+                      <span className="text-white font-bold tabular-nums">{seg.conversionRate}%</span>
+                      <span className={cn("text-[9px] truncate flex-1",
+                        seg.recommendation === "pode_aumentar" ? "text-emerald-400" :
+                        seg.recommendation === "testar_reducao" ? "text-amber-400" :
+                        seg.recommendation === "revisar_funil" ? "text-red-400" : "text-[#666]"
+                      )}>
+                        {seg.recommendation === "pode_aumentar" ? "↑ Aumentar" :
+                         seg.recommendation === "testar_reducao" ? "↓ Reduzir" :
+                         seg.recommendation === "revisar_funil" ? "⚠ Revisar" : "= Manter"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {/* AI Buyer Analysis */}
+            {buyerAnalysis?.analysis && (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 min-w-[320px] w-[320px] flex-shrink-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <Brain className="w-3.5 h-3.5 text-emerald-400" />
+                  <h4 className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Análise de Preço IA</h4>
+                </div>
+                <div className="text-[11px] text-[#ccc] leading-relaxed max-h-28 overflow-y-auto whitespace-pre-wrap">{buyerAnalysis.analysis}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ROW 3: Segmentação */}
       <div className="overflow-x-auto -mx-5 px-5 pb-3" style={{ maxWidth: 'calc(100% + 2.5rem)' }}>
         <div className="flex gap-3 w-max">
           {[
@@ -228,7 +340,7 @@ const LiveIntelligence = () => {
             </div>
           ))}
 
-          {/* Leads table inline como card scrollável */}
+          {/* Leads table */}
           <div className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3 min-w-[480px] w-[480px] flex-shrink-0">
             <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2">Leads Recentes</h4>
             <div className="max-h-32 overflow-y-auto">
