@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ interface LiveUserPresenceProps {
   onTotalChange?: (total: number) => void;
 }
 
-const INITIAL_STEPS: FunnelStep[] = [
+const STEPS: FunnelStep[] = [
   { id: "step1", route: "/step-1", label: "Intro", icon: Zap, count: 0 },
   { id: "step2", route: "/step-2", label: "Idade", icon: Users, count: 0 },
   { id: "step3", route: "/step-3", label: "Nome", icon: UserCheck, count: 0 },
@@ -51,7 +51,7 @@ const INITIAL_STEPS: FunnelStep[] = [
   { id: "thanks", route: "/thanks", label: "Thanks", icon: CheckCircle2, count: 0 },
 ];
 
-const categorizePageToStep = (page: string): string | null => {
+const toStepId = (page: string): string | null => {
   const p = page.toLowerCase();
   if (p.includes("/thanks")) return "thanks";
   if (p.includes("/checkout") || p.includes("/processing")) return "checkout";
@@ -62,105 +62,78 @@ const categorizePageToStep = (page: string): string | null => {
   return null;
 };
 
+const SKIP = new Set(["/admin", "/live", "/docs"]);
+const shouldSkip = (pageId: string) => {
+  const p = pageId.toLowerCase();
+  return Array.from(SKIP).some(s => p.includes(s));
+};
+
 export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProps) {
-  const [funnelSteps, setFunnelSteps] = useState<FunnelStep[]>(INITIAL_STEPS);
+  const [funnelSteps, setFunnelSteps] = useState<FunnelStep[]>(STEPS);
   const [totalOnline, setTotalOnline] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastStableCountRef = useRef<number>(0);
+  const onTotalChangeRef = useRef(onTotalChange);
+  onTotalChangeRef.current = onTotalChange;
 
-  const applyPresenceState = useCallback((presenceState: Record<string, PresencePayload[]>) => {
-    const pageGroups: Record<string, Set<string>> = {};
-    INITIAL_STEPS.forEach(step => { pageGroups[step.id] = new Set(); });
+  // Stable ref-based handler — never changes, never causes channel recreation
+  const handlePresenceSync = useCallback((channel: ReturnType<typeof supabase.channel>) => {
+    const state = channel.presenceState<PresencePayload>();
+    const counts: Record<string, number> = {};
+    STEPS.forEach(s => { counts[s.id] = 0; });
 
-    const uniqueSessions = new Set<string>();
+    let total = 0;
 
-    Object.entries(presenceState).forEach(([sessionId, presences]) => {
+    Object.entries(state).forEach(([, presences]) => {
       if (!presences || presences.length === 0) return;
-      // Take the last tracked presence (most recent)
       const latest = presences[presences.length - 1];
       const pageId = latest.page_id || "";
-
-      if (pageId.includes('/admin') || pageId.includes('/live') || pageId.includes('/docs')) return;
-
-      const stepId = categorizePageToStep(pageId);
-      if (stepId && pageGroups[stepId]) {
-        pageGroups[stepId].add(sessionId);
-        uniqueSessions.add(sessionId);
+      if (shouldSkip(pageId)) return;
+      const stepId = toStepId(pageId);
+      if (stepId && counts[stepId] !== undefined) {
+        counts[stepId]++;
+        total++;
       }
     });
 
-    return { pageGroups, total: uniqueSessions.size };
-  }, []);
+    setFunnelSteps(prev => {
+      // Only update if counts actually changed (avoids unnecessary re-renders)
+      let changed = false;
+      const next = prev.map(step => {
+        const newCount = counts[step.id] || 0;
+        if (step.count !== newCount) { changed = true; return { ...step, count: newCount }; }
+        return step;
+      });
+      return changed ? next : prev;
+    });
 
-  const processPresenceState = useCallback((presenceState: Record<string, PresencePayload[]>) => {
-    const { pageGroups, total } = applyPresenceState(presenceState);
-
-    // Anti-flicker: if the count drops by more than 50% from last stable,
-    // debounce for 800ms to wait for the state to stabilize (reconnection artifact)
-    const dropThreshold = lastStableCountRef.current > 3 && total < lastStableCountRef.current * 0.5;
-
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = null;
-    }
-
-    const commit = () => {
-      setFunnelSteps(prev => prev.map(step => ({ ...step, count: pageGroups[step.id]?.size || 0 })));
-      setTotalOnline(total);
-      setLastUpdated(new Date());
-      lastStableCountRef.current = total;
-      onTotalChange?.(total);
-    };
-
-    if (dropThreshold) {
-      // Wait 800ms — if a new sync comes with higher count, this timer gets cleared
-      debounceTimerRef.current = setTimeout(commit, 800);
-    } else {
-      // Normal update (increase or small decrease) — apply immediately
-      commit();
-    }
-  }, [applyPresenceState, onTotalChange]);
+    setTotalOnline(prev => { if (prev !== total) return total; return prev; });
+    setLastUpdated(new Date());
+    onTotalChangeRef.current?.(total);
+  }, []); // Empty deps — stable forever
 
   useEffect(() => {
     setIsLoading(true);
 
     const channel = supabase.channel("funnel-presence");
-    channelRef.current = channel;
+
+    const sync = () => handlePresenceSync(channel);
 
     channel
-      .on("presence", { event: "sync" }, () => {
-        processPresenceState(channel.presenceState<PresencePayload>());
-        setIsLoading(false);
-      })
-      .on("presence", { event: "join" }, () => {
-        processPresenceState(channel.presenceState<PresencePayload>());
-      })
-      .on("presence", { event: "leave" }, () => {
-        processPresenceState(channel.presenceState<PresencePayload>());
-      })
+      .on("presence", { event: "sync" }, sync)
+      .on("presence", { event: "join" }, sync)
+      .on("presence", { event: "leave" }, sync)
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           setIsLoading(false);
-          processPresenceState(channel.presenceState<PresencePayload>());
+          sync();
         }
       });
 
     return () => {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       supabase.removeChannel(channel);
-      channelRef.current = null;
     };
-  }, [processPresenceState]);
-
-  const handleRefresh = useCallback(() => {
-    if (channelRef.current) {
-      lastStableCountRef.current = 0; // Reset threshold on manual refresh
-      processPresenceState(channelRef.current.presenceState<PresencePayload>());
-    }
-  }, [processPresenceState]);
+  }, [handlePresenceSync]); // handlePresenceSync is stable (empty deps), so this runs once
 
   return (
     <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-5">
@@ -171,7 +144,7 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
           </div>
           <div className="min-w-0">
             <h3 className="font-semibold text-white text-sm truncate">Mapa do Funil — Tempo Real</h3>
-            <p className="text-[10px] text-[#666]">Presença exata (instantâneo)</p>
+            <p className="text-[10px] text-[#666]">Zero delay • Presença instantânea</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -182,7 +155,7 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
             </span>
             {totalOnline}
           </Badge>
-          <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={isLoading}
+          <Button variant="ghost" size="sm" onClick={() => setLastUpdated(new Date())} disabled={isLoading}
             className="h-7 w-7 p-0 text-[#888] hover:text-white hover:bg-white/5 rounded-lg">
             <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
           </Button>
