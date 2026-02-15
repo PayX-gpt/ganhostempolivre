@@ -28,7 +28,6 @@ const UpsellStep5 = ({ name, onBuy, onDecline }: Props) => {
     const separator = checkoutUrl.includes("?") ? "&" : "?";
     const fullUrl = utmQs ? `${checkoutUrl}${separator}${utmQs.slice(1)}` : checkoutUrl;
     window.open(fullUrl, "_blank");
-    setTimeout(onBuy, 2500);
   };
 
   return (

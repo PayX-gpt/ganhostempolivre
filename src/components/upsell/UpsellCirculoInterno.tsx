@@ -44,7 +44,6 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
       ? `${checkoutUrl}${separator}${utmQs.slice(1)}`
       : checkoutUrl;
     window.open(fullUrl, "_blank");
-    setTimeout(onNext, 1500);
   };
 
   return (
