@@ -63,9 +63,9 @@ const Step4TriedOnline = ({ onNext, userName }: Step4Props) => {
 
   return (
     <StepContainer>
-      <StepTitle>Você já tentou ganhar dinheiro pela internet antes?</StepTitle>
+      <StepTitle>Você já tentou <span className="text-gradient-green">ganhar dinheiro</span> pela internet antes?</StepTitle>
       <StepSubtitle>
-        Seja sincero(a). Não existe resposta errada — sua honestidade vai nos ajudar a montar o melhor caminho pra você.
+        Seja sincero(a). Não existe resposta errada — sua honestidade nos ajuda a montar o melhor caminho pra você.
       </StepSubtitle>
 
       <div className="w-full space-y-3 mt-2">

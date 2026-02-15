@@ -77,9 +77,9 @@ const Step2Age = ({ onNext }: Step2Props) => {
 
   return (
     <StepContainer>
-      <StepTitle>Para começar, qual é a sua faixa de idade?</StepTitle>
+      <StepTitle>Para começar, qual é a sua <span className="text-gradient-green">faixa de idade</span>?</StepTitle>
       <StepSubtitle>
-        Essa informação nos ajuda a personalizar o plano ideal para o seu perfil. Não existe idade errada para começar.
+        Essa informação nos ajuda a personalizar o plano ideal para o seu perfil.
       </StepSubtitle>
 
       <div className="w-full space-y-3 mt-2">

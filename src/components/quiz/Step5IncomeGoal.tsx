@@ -67,9 +67,9 @@ const Step5IncomeGoal = ({ onNext, userName }: Step5Props) => {
 
   return (
     <StepContainer>
-      <StepTitle>Quanto você gostaria de ganhar a mais por dia?</StepTitle>
+      <StepTitle>Quanto você gostaria de <span className="text-gradient-green">ganhar a mais</span> por dia?</StepTitle>
       <StepSubtitle>
-        Pense no valor que faria diferença real na sua vida hoje. Não precisa ser um número gigante — o que importa é a consistência.
+        Pense no valor que faria diferença real na sua vida hoje. O que importa é a consistência.
       </StepSubtitle>
 
       <div className="w-full space-y-3 mt-2">

@@ -73,9 +73,9 @@ const Step6Obstacle = ({ onNext, userName }: Step6Props) => {
 
   return (
     <StepContainer>
-      <StepTitle>Qual é o seu maior obstáculo hoje para ganhar dinheiro online?</StepTitle>
+      <StepTitle>Qual é o seu <span className="text-gradient-green">maior obstáculo</span> hoje?</StepTitle>
       <StepSubtitle>
-        Identificar isso é o primeiro passo. Nós já ajudamos milhares de pessoas a superar exatamente esse obstáculo.
+        Identificar isso é o primeiro passo. Já ajudamos milhares de pessoas a superar exatamente esse obstáculo.
       </StepSubtitle>
 
       <div className="w-full space-y-3 mt-2">
