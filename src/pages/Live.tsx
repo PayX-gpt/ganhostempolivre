@@ -404,6 +404,56 @@ export default function AdminFunnelAudit() {
 
       <div className="max-w-[1600px] mx-auto px-4 py-6 space-y-6">
 
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <MetricCard title="Receita Hoje"
+            value={`R$ ${totalRevenueToday.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            icon={DollarSign} trend="up" trendLabel={`${hotmartSalesToday} vendas`} />
+          <MetricCard title="Vendas Hoje" value={hotmartSalesToday} subtitle={`${hotmartRefunded} reembolsos`} icon={ShoppingCart} />
+          <MetricCard title="Taxa de Aprovação" value={`${hotmartApprovalRate.toFixed(1)}%`}
+            subtitle={`${hotmartApproved} aprov. · ${hotmartRefunded} reemb.`} icon={CreditCard} />
+          <MetricCard title="IC → Vendas" value={`${icToSalesRate.toFixed(1)}%`}
+            subtitle={`${frontendICs} ICs · ${icToSalesRatio}`} icon={Target} />
+        </div>
+
+        <div className="grid grid-cols-3 lg:grid-cols-3 gap-3">
+          <MetricCard title="Leads Hoje" value={totalLeadsToday} icon={Users}
+            subtitle={`${qualifiedLeadsToday} qualificados`} />
+          <MetricCard title="Qualificados" value={qualifiedLeadsToday}
+            subtitle={totalLeadsToday > 0 ? `${((qualifiedLeadsToday / totalLeadsToday) * 100).toFixed(1)}% dos leads` : "0%"}
+            icon={Eye} iconClassName="from-violet-500/20 to-violet-600/10 border-violet-500/20" valueClassName="text-violet-400" />
+          <MetricCard title="Taxa Interação" value={`${interactionRateToday.toFixed(1)}%`}
+            subtitle={`${totalLeadsToday} visitantes`}
+            icon={Activity} iconClassName="from-amber-500/20 to-amber-600/10 border-amber-500/20" valueClassName="text-amber-400" />
+        </div>
+
+        <div className="overflow-x-auto pb-2 -mx-4 px-4" style={{ maxWidth: 'calc(100% + 2rem)' }}>
+          <div className="flex gap-3 w-max">
+            {/* Aprovação Gateway */}
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xs font-medium text-[#888] truncate">Aprovação Gateway</h3>
+                <Globe className="w-4 h-4 text-orange-400 flex-shrink-0" />
+              </div>
+              <div className="flex items-center justify-around gap-2">
+                <ProgressRing value={hotmartApprovalRate} label="Aprovação" color="emerald" />
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved} Aprov.</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartRefunded} Reemb.</span></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Presença */}
+            <div className="min-w-[300px] w-[300px] flex-shrink-0"><LiveUserPresence onTotalChange={handlePresenceTotalChange} /></div>
+            {/* Revenue Chart */}
+            <div className="min-w-[320px] w-[320px] flex-shrink-0"><LiveRevenueChart /></div>
+            {/* Intelligence */}
+            <div className="min-w-[320px] w-[320px] flex-shrink-0"><LiveIntelligence /></div>
+          </div>
+        </div>
+
+        <LiveFunnelAnalytics />
+        <LiveLeadsTable />
 
         <Tabs defaultValue="logs" className="space-y-4">
           <div className="overflow-x-auto -mx-4 px-4">
