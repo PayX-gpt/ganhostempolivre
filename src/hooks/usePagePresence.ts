@@ -27,32 +27,60 @@ const getOrCreateSessionId = (): string => {
   return sessionId;
 };
 
+// Singleton channel — never destroyed during the session
+let sharedChannel: ReturnType<typeof supabase.channel> | null = null;
+let sharedSessionId: string | null = null;
+let subscribedStatus: "pending" | "subscribed" = "pending";
+let pendingPageId: string | null = null;
+
+const getOrCreateChannel = (sessionId: string): ReturnType<typeof supabase.channel> => {
+  if (sharedChannel) return sharedChannel;
+
+  sharedSessionId = sessionId;
+  sharedChannel = supabase.channel(PRESENCE_CHANNEL, {
+    config: { presence: { key: sessionId } },
+  });
+
+  sharedChannel.subscribe((status) => {
+    if (status === "SUBSCRIBED") {
+      subscribedStatus = "subscribed";
+      // Track pending page if any
+      if (pendingPageId) {
+        sharedChannel!.track({
+          session_id: sessionId,
+          page_id: pendingPageId,
+          joined_at: new Date().toISOString(),
+        });
+        pendingPageId = null;
+      }
+    }
+  });
+
+  return sharedChannel;
+};
+
 export const usePagePresence = (pageId: string): void => {
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const lastPageRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!pageId || isDevSession()) return;
+    if (lastPageRef.current === pageId) return; // same page, skip
+    lastPageRef.current = pageId;
 
     const sessionId = getOrCreateSessionId();
+    const channel = getOrCreateChannel(sessionId);
 
-    const channel = supabase.channel(PRESENCE_CHANNEL, {
-      config: { presence: { key: sessionId } },
-    });
+    if (subscribedStatus === "subscribed") {
+      channel.track({
+        session_id: sessionId,
+        page_id: pageId,
+        joined_at: new Date().toISOString(),
+      });
+    } else {
+      pendingPageId = pageId;
+    }
 
-    channel.subscribe(async (status) => {
-      if (status === "SUBSCRIBED") {
-        await channel.track({
-          session_id: sessionId,
-          page_id: pageId,
-          joined_at: new Date().toISOString(),
-          user_agent: navigator.userAgent.substring(0, 100),
-        });
-      }
-    });
-
-    channelRef.current = channel;
-
-    // Audit log
+    // Audit log (fire and forget)
     const trackingData = getTrackingData();
     supabase.from("funnel_audit_logs").insert([{
       session_id: sessionId,
@@ -69,12 +97,19 @@ export const usePagePresence = (pageId: string): void => {
       },
     }]).then(() => {});
 
-    return () => {
-      if (channelRef.current) {
-        channelRef.current.untrack();
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
+    // No cleanup — channel persists for the entire tab session
+  }, [pageId]);
+
+  // Cleanup only on full unmount (tab close)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (sharedChannel) {
+        sharedChannel.untrack();
       }
     };
-  }, [pageId]);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 };
