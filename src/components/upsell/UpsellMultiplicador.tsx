@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, Zap, BarChart3, Star, Crown, Diamond, Check } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
-import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
+
 
 interface Props {
   name: string;
@@ -72,12 +71,6 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
 
   const handleSelect = (plan: (typeof plans)[0]) => {
     saveUpsellExtras("multiplicador", { plan: plan.id, price: plan.price });
-    const utmQs = buildTrackingQueryString();
-    const separator = plan.checkoutUrl.includes("?") ? "&" : "?";
-    const fullUrl = utmQs
-      ? `${plan.checkoutUrl}${separator}${utmQs.slice(1)}`
-      : plan.checkoutUrl;
-    window.open(fullUrl, "_blank");
   };
 
   return (
@@ -172,7 +165,7 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
 
           <button
             onClick={() => handleSelect(plan)}
-            className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
+            className="kirvano-payment-trigger w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
             style={{
               background: plan.btnBg,
               color: plan.btnColor,
@@ -186,7 +179,7 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
 
       <button
         onClick={onDecline}
-        className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2"
+        className="kirvano-refuse-trigger text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2"
         style={{ color: "#475569" }}
       >
         Não, obrigado. Prefiro manter o limite de R$25/dia por enquanto.

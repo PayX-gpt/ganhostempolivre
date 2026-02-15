@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Users, MessageCircle, Headphones, Sparkles } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
-import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
+
 
 interface Props {
   name: string;
@@ -33,17 +33,11 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
   const [loading, setLoading] = useState(false);
 
-  const checkoutUrl = "https://pay.kirvano.com/67e759ec-598c-43c6-890e-b993901712b7";
+  
 
   const handleBuy = () => {
     setLoading(true);
     saveUpsellExtras("circulo", { price: 29.9 });
-    const utmQs = buildTrackingQueryString();
-    const separator = checkoutUrl.includes("?") ? "&" : "?";
-    const fullUrl = utmQs
-      ? `${checkoutUrl}${separator}${utmQs.slice(1)}`
-      : checkoutUrl;
-    window.open(fullUrl, "_blank");
   };
 
   return (
@@ -161,7 +155,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
           <button
             onClick={handleBuy}
             disabled={loading}
-            className="w-full mt-4 py-[16px] rounded-xl text-[15px] font-bold transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70"
+            className="kirvano-payment-trigger w-full mt-4 py-[16px] rounded-xl text-[15px] font-bold transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70"
             style={{
               background: "linear-gradient(135deg, #FACC15, #D4A017)",
               color: "#020617",
@@ -192,7 +186,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
 
       <button
         onClick={onDecline}
-        className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2 pb-6"
+        className="kirvano-refuse-trigger text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2 pb-6"
         style={{ color: "#475569" }}
       >
         Não, obrigado. Prefiro seguir sem o grupo por enquanto.
