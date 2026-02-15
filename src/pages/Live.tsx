@@ -128,6 +128,8 @@ export default function AdminFunnelAudit() {
   const [totalLeadsToday, setTotalLeadsToday] = useState(0);
   const [qualifiedLeadsToday, setQualifiedLeadsToday] = useState(0);
   const [interactionRateToday, setInteractionRateToday] = useState(0);
+  const [totalVisitsToday, setTotalVisitsToday] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const saved = localStorage.getItem('live-sound-enabled');
@@ -223,6 +225,15 @@ export default function AdminFunnelAudit() {
     setQualifiedLeadsToday(leadData?.filter(l => (l.intent_score || 0) >= 50).length || 0);
     setInteractionRateToday(tLeads > 0 ? ((leadData?.filter(l => l.cta_clicks > 0).length || 0) / tLeads) * 100 : 0);
 
+    // Count unique visits today
+    const { count: visitsCount } = await supabase.from("funnel_audit_logs")
+      .select("session_id", { count: "exact", head: false })
+      .eq("event_type", "page_loaded")
+      .eq("page_id", "/step-1")
+      .gte("created_at", todayISO);
+    setTotalVisitsToday(visitsCount || 0);
+
+    setLastUpdated(new Date());
     setIsLoading(false);
   }, [getDateRange, eventFilter, sessionFilter]);
 
@@ -341,6 +352,16 @@ export default function AdminFunnelAudit() {
               </span>
               <span className="text-sm font-medium text-emerald-400">{activeUsers} online</span>
             </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#1a1a1a] border border-[#2a2a2a] rounded-full">
+              <Globe className="w-3 h-3 text-sky-400" />
+              <span className="text-sm font-medium text-white tabular-nums">{totalVisitsToday} <span className="text-[#666]">visitas</span></span>
+            </div>
+            {lastUpdated && (
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#1a1a1a] border border-[#2a2a2a] rounded-full">
+                <Clock className="w-3 h-3 text-[#666]" />
+                <span className="text-xs text-[#666] tabular-nums">{lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
