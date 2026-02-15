@@ -51,200 +51,89 @@ const INITIAL_STEPS: FunnelStep[] = [
   { id: "thanks", route: "/thanks", label: "Thanks", icon: CheckCircle2, count: 0 },
 ];
 
+const categorizePageToStep = (page: string): string | null => {
+  const p = page.toLowerCase();
+  if (p.includes("/thanks")) return "thanks";
+  if (p.includes("/checkout") || p.includes("/processing")) return "checkout";
+  for (let i = 19; i >= 1; i--) {
+    if (p.includes(`/step-${i}`)) return `step${i}`;
+  }
+  if (p === "/") return "step1";
+  return null;
+};
+
 export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProps) {
   const [funnelSteps, setFunnelSteps] = useState<FunnelStep[]>(INITIAL_STEPS);
   const [totalOnline, setTotalOnline] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [dataSource, setDataSource] = useState<"presence" | "db" | "realtime">("presence");
-  const realtimeCountsRef = useRef<Record<string, Set<string>>>({});
-
-  // Initialize realtime counts
-  useEffect(() => {
-    const counts: Record<string, Set<string>> = {};
-    INITIAL_STEPS.forEach(s => { counts[s.id] = new Set(); });
-    realtimeCountsRef.current = counts;
-  }, []);
-
-  // DB-based fallback: count unique sessions per step in last 5 minutes
-  const fetchRecentActivity = useCallback(async () => {
-    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    
-    const { data: recentLogs } = await supabase
-      .from("funnel_audit_logs")
-      .select("page_id, session_id, created_at")
-      .eq("event_type", "page_loaded")
-      .gte("created_at", fiveMinAgo)
-      .order("created_at", { ascending: true });
-
-    if (!recentLogs || recentLogs.length === 0) return null;
-
-    // For each session, find the LATEST page they visited (ordered asc, so last entry wins)
-    const sessionLatestPage: Record<string, string> = {};
-    recentLogs.forEach(log => {
-      if (log.page_id) {
-        sessionLatestPage[log.session_id] = log.page_id;
-      }
-    });
-
-    // Count sessions per step
-    const stepCounts: Record<string, number> = {};
-    INITIAL_STEPS.forEach(s => { stepCounts[s.id] = 0; });
-
-    const uniqueSessions = new Set<string>();
-    Object.entries(sessionLatestPage).forEach(([sessionId, pageId]) => {
-      const step = INITIAL_STEPS.find(s => s.route === pageId);
-      if (step) {
-        stepCounts[step.id] = (stepCounts[step.id] || 0) + 1;
-        uniqueSessions.add(sessionId);
-      }
-    });
-
-    return { stepCounts, total: uniqueSessions.size };
-  }, []);
-
-  const updateFromDB = useCallback(async () => {
-    const dbData = await fetchRecentActivity();
-    if (dbData && dbData.total > 0) {
-      setFunnelSteps(prev => prev.map(step => ({ ...step, count: dbData.stepCounts[step.id] || 0 })));
-      setTotalOnline(dbData.total);
-      setDataSource("db");
-      setLastUpdated(new Date());
-      onTotalChange?.(dbData.total);
-    } else {
-      setFunnelSteps(prev => prev.map(step => ({ ...step, count: 0 })));
-      setTotalOnline(0);
-      setLastUpdated(new Date());
-      onTotalChange?.(0);
-    }
-  }, [fetchRecentActivity, onTotalChange]);
-
-  const categorizePageToStep = useCallback((page: string): string | null => {
-    const p = page.toLowerCase();
-    if (p.includes("/thanks")) return "thanks";
-    if (p.includes("/checkout") || p.includes("/processing")) return "checkout";
-    for (let i = 19; i >= 1; i--) {
-      if (p.includes(`/step-${i}`)) return `step${i}`;
-    }
-    if (p === "/") return "step1";
-    return null;
-  }, []);
-
-  const isLikelyDevSession = useCallback((_sessionId: string, pageId: string): boolean => {
-    return pageId.includes('/admin') || pageId.includes('/live') || pageId.includes('/docs');
-  }, []);
-
-  const isStalePresence = useCallback((joinedAt: string): boolean => {
-    try {
-      return (Date.now() - new Date(joinedAt).getTime()) > 10 * 60 * 1000;
-    } catch { return true; }
-  }, []);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const processPresenceState = useCallback((presenceState: Record<string, PresencePayload[]>) => {
     const pageGroups: Record<string, Set<string>> = {};
     INITIAL_STEPS.forEach(step => { pageGroups[step.id] = new Set(); });
 
     const uniqueSessions = new Set<string>();
+
     Object.entries(presenceState).forEach(([sessionId, presences]) => {
-      if (presences.length > 0) {
-        const latest = presences[0];
-        const pageId = latest.page_id || "";
-        const joinedAt = latest.joined_at || "";
-        if (isLikelyDevSession(sessionId, pageId) || isStalePresence(joinedAt)) return;
-        const step = categorizePageToStep(pageId);
-        if (step && pageGroups[step]) {
-          pageGroups[step].add(sessionId);
-        }
+      if (!presences || presences.length === 0) return;
+      const latest = presences[presences.length - 1]; // most recent presence
+      const pageId = latest.page_id || "";
+
+      // Skip admin/dev pages
+      if (pageId.includes('/admin') || pageId.includes('/live') || pageId.includes('/docs')) return;
+
+      const stepId = categorizePageToStep(pageId);
+      if (stepId && pageGroups[stepId]) {
+        pageGroups[stepId].add(sessionId);
         uniqueSessions.add(sessionId);
       }
     });
 
     const total = uniqueSessions.size;
-    
-    if (total === 0) {
-      // Fall back to DB
-      updateFromDB();
-      return;
-    }
 
     setFunnelSteps(prev => prev.map(step => ({ ...step, count: pageGroups[step.id]?.size || 0 })));
     setTotalOnline(total);
-    setDataSource("presence");
     setLastUpdated(new Date());
     onTotalChange?.(total);
-  }, [categorizePageToStep, isLikelyDevSession, isStalePresence, onTotalChange, updateFromDB]);
+  }, [onTotalChange]);
 
   useEffect(() => {
     setIsLoading(true);
 
-    // 1. Subscribe to Presence channel
-    const presenceChannel = supabase.channel("funnel-presence");
-    presenceChannel
-      .on("presence", { event: "sync" }, () => { processPresenceState(presenceChannel.presenceState<PresencePayload>()); setIsLoading(false); })
-      .on("presence", { event: "join" }, () => { processPresenceState(presenceChannel.presenceState<PresencePayload>()); })
-      .on("presence", { event: "leave" }, () => { processPresenceState(presenceChannel.presenceState<PresencePayload>()); })
-      .subscribe((status) => { if (status === "SUBSCRIBED") setIsLoading(false); });
+    const channel = supabase.channel("funnel-presence");
+    channelRef.current = channel;
 
-    // 2. ALSO subscribe to realtime INSERTs on funnel_audit_logs for immediate updates
-    const auditChannel = supabase.channel("funnel-map-realtime")
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "funnel_audit_logs",
-        filter: "event_type=eq.page_loaded",
-      }, (payload) => {
-        const log = payload.new as { page_id: string; session_id: string; created_at: string };
-        if (!log.page_id || log.page_id.includes('/live') || log.page_id.includes('/admin')) return;
-        
-        const stepId = (() => {
-          const p = log.page_id.toLowerCase();
-          if (p.includes("/thanks")) return "thanks";
-          if (p.includes("/checkout")) return "checkout";
-          for (let i = 19; i >= 1; i--) {
-            if (p.includes(`/step-${i}`)) return `step${i}`;
-          }
-          return null;
-        })();
-        
-        if (!stepId) return;
-
-        // Remove session from all other steps and add to current step
-        const counts = realtimeCountsRef.current;
-        INITIAL_STEPS.forEach(s => { counts[s.id]?.delete(log.session_id); });
-        if (!counts[stepId]) counts[stepId] = new Set();
-        counts[stepId].add(log.session_id);
-
-        // Clear stale sessions (>5 min) - do this periodically
-        const allSessions = new Set<string>();
-        INITIAL_STEPS.forEach(s => { counts[s.id]?.forEach(sid => allSessions.add(sid)); });
-
-        setFunnelSteps(prev => prev.map(step => ({
-          ...step,
-          count: counts[step.id]?.size || 0,
-        })));
-        setTotalOnline(allSessions.size);
-        setDataSource("realtime");
-        setLastUpdated(new Date());
-        onTotalChange?.(allSessions.size);
+    channel
+      .on("presence", { event: "sync" }, () => {
+        processPresenceState(channel.presenceState<PresencePayload>());
+        setIsLoading(false);
       })
-      .subscribe();
+      .on("presence", { event: "join" }, () => {
+        processPresenceState(channel.presenceState<PresencePayload>());
+      })
+      .on("presence", { event: "leave" }, () => {
+        processPresenceState(channel.presenceState<PresencePayload>());
+      })
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          setIsLoading(false);
+          // Process initial state
+          processPresenceState(channel.presenceState<PresencePayload>());
+        }
+      });
 
-    // 3. Initial DB fetch + periodic poll every 10s
-    updateFromDB();
-    const dbInterval = setInterval(updateFromDB, 10000);
-
-    return () => { 
-      supabase.removeChannel(presenceChannel);
-      supabase.removeChannel(auditChannel);
-      clearInterval(dbInterval);
+    return () => {
+      supabase.removeChannel(channel);
+      channelRef.current = null;
     };
-  }, [processPresenceState, updateFromDB, onTotalChange]);
+  }, [processPresenceState]);
 
-  const handleRefresh = useCallback(async () => {
-    setIsLoading(true);
-    await updateFromDB();
-    setIsLoading(false);
-  }, [updateFromDB]);
+  const handleRefresh = useCallback(() => {
+    if (channelRef.current) {
+      processPresenceState(channelRef.current.presenceState<PresencePayload>());
+    }
+  }, [processPresenceState]);
 
   return (
     <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-5">
@@ -254,10 +143,8 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
             <Users className="w-5 h-5 text-emerald-400" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-white text-sm truncate">Mapa do Funil</h3>
-            <p className="text-[10px] text-[#666]">
-              {dataSource === "db" ? "Atividade últimos 5 min" : dataSource === "realtime" ? "Realtime DB" : "Presença em tempo real"}
-            </p>
+            <h3 className="font-semibold text-white text-sm truncate">Mapa do Funil — Tempo Real</h3>
+            <p className="text-[10px] text-[#666]">Presença exata (entra/sai instantâneo)</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
