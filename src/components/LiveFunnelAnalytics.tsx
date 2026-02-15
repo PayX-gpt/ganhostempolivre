@@ -36,6 +36,12 @@ const FUNNEL_STEPS = [
   { route: "/step-17", label: "Contato" },
   { route: "/step-18", label: "Input" },
   { route: "/step-19", label: "Oferta" },
+  { route: "/upsell-confirmacao", label: "UP: Confirm" },
+  { route: "/upsell-analise", label: "UP: Análise" },
+  { route: "/upsell-planos", label: "UP: Planos" },
+  { route: "/upsell-checkout", label: "UP: Checkout" },
+  { route: "/upsell-downsell", label: "UP: Downsell" },
+  { route: "/upsell-sucesso", label: "UP: Sucesso" },
 ];
 
 const tooltipStyle = {
