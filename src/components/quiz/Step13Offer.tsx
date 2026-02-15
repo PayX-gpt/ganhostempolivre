@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Shield, Lock, Zap, ArrowRight, Star, Users, Clock, CheckCircle } from "lucide-react";
 import { saveFunnelEvent } from "@/lib/metricsClient";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import { initBehaviorTracker, trackSectionView, trackSectionLeave, trackCtaView, trackCtaHesitation, trackCheckoutClick, trackFaqOpen, trackVideoStart } from "@/lib/behaviorTracker";
 import { Separator } from "@/components/ui/separator";
 import { CTAButton, TrustBadge, VideoPlaceholder } from "./QuizUI";
@@ -77,7 +78,10 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
       <CTAButton onClick={() => {
         trackCheckoutClick();
         saveFunnelEvent("checkout_click", { context: context || "default", product: "chave_token_chatgpt", amount: pricing.price });
-        window.open(pricing.checkoutUrl, "_blank");
+        const utmQs = buildTrackingQueryString();
+        const separator = pricing.checkoutUrl.includes("?") ? "&" : "?";
+        const fullUrl = utmQs ? `${pricing.checkoutUrl}${separator}${utmQs.slice(1)}` : pricing.checkoutUrl;
+        window.open(fullUrl, "_blank");
       }} variant="accent" className="animate-bounce-subtle text-lg sm:text-xl tracking-wider">
         🔑 ATIVAR MINHA CHAVE TOKEN — R${formatPrice(pricing.price)}
       </CTAButton>
