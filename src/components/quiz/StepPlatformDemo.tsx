@@ -360,7 +360,7 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
           <div className="flex items-center gap-1.5">
             <Play className="w-3 h-3 text-[hsl(280,70%,65%)]" fill="currentColor" />
             <span className="text-[11px] font-bold text-foreground tracking-wide">
-              <span className={plat.accent}>TOKEN</span> TRADER PRO
+              <span className={plat.accent}>PLATAFORMA</span> TEMPO LIVRE
             </span>
           </div>
           <div className="flex items-center gap-1.5">
