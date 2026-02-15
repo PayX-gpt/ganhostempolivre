@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { StepContainer, StepTitle, StepSubtitle, OptionCard } from "./QuizUI";
-import { Frown, ThumbsUp, HelpCircle, BarChart3, ShieldCheck, Zap, Lightbulb } from "lucide-react";
-import FeedbackScreen from "./FeedbackScreen";
+import { StepContainer, StepTitle, StepSubtitle, OptionCard, CTAButton } from "./QuizUI";
+import { Frown, ThumbsUp, HelpCircle, CheckCircle, BarChart3 } from "lucide-react";
 
 interface Step4Props {
   onNext: (answer: string) => void;
@@ -10,27 +9,18 @@ interface Step4Props {
 
 const getFeedback = (answer: string, name?: string) => {
   const n = name || "você";
-  const messages: Record<string, { eyebrow: string; icon: React.ReactNode; title: string; message: string; highlight: string }> = {
+  const messages: Record<string, { title: string; message: string }> = {
     sim_falhou: {
-      eyebrow: "Isso muda agora",
-      icon: <ShieldCheck className="w-7 h-7 text-accent" />,
-      title: `${n}, o problema nunca foi você.`,
-      message: `A internet tá cheia de coisa que parece boa e não entrega nada. Você tentou, perdeu tempo, talvez perdeu dinheiro — e ficou com aquele gosto amargo. Eu entendo. Mas o que eu vou te mostrar aqui é diferente de tudo que você já viu. Não depende de sorte. A tecnologia faz o trabalho. Você só acompanha.`,
-      highlight: "Aqui a tecnologia trabalha por você — sem depender de sorte.",
+      title: `${n}, eu preciso te dizer uma coisa.`,
+      message: `Se não deu certo antes, o problema não foi você. A internet tá cheia de coisa que parece boa e não entrega nada. Você tentou, perdeu tempo, talvez perdeu dinheiro — e ficou com aquele gosto amargo. Eu entendo. Mas o que eu vou te mostrar aqui é diferente de tudo que você já viu. Não depende de sorte, não depende de você saber mexer em nada. A tecnologia faz o trabalho. Você só acompanha.`,
     },
     sim_experiencia: {
-      eyebrow: "Próximo nível",
-      icon: <Zap className="w-7 h-7 text-accent" />,
-      title: `Bom, ${n}. Você já sabe que funciona.`,
-      message: `A diferença é que até agora você provavelmente fez tudo sozinho, no braço. Aqui a inteligência artificial cuida de 90% do processo. Você já tem a base — agora imagina o que acontece quando você junta sua experiência com uma tecnologia que trabalha 24 horas sem parar?`,
-      highlight: "Sua experiência + IA = resultados que você nunca viu.",
+      title: `Bom, ${n}. Então você já sabe que funciona.`,
+      message: `A diferença é que até agora você provavelmente fez tudo sozinho, no braço. Aqui a inteligência artificial cuida de 90% do processo. Você já tem a base — agora imagina o que acontece quando você junta sua experiência com uma tecnologia que trabalha 24 horas sem parar? Os resultados aceleram de um jeito que você vai se perguntar por que não encontrou isso antes.`,
     },
     nunca: {
-      eyebrow: "Vantagem sua",
-      icon: <Lightbulb className="w-7 h-7 text-accent" />,
       title: `${n}, e sabe o que é curioso?`,
-      message: `Quem nunca tentou nada costuma ter os melhores resultados. Parece estranho, mas faz sentido: você não tem vícios, não tem aquele "ah, já sei como funciona". Você começa do zero, segue o passo a passo direitinho, e a coisa acontece. Se você sabe usar o WhatsApp, já sabe o suficiente.`,
-      highlight: "Começar do zero é uma vantagem — não uma desvantagem.",
+      message: `Quem nunca tentou nada costuma ter os melhores resultados. Parece estranho, mas faz sentido: você não tem vícios, não tem aquele "ah, já sei como funciona". Você começa do zero, segue o passo a passo direitinho, e a coisa acontece. Não precisa entender de tecnologia. Se você sabe usar o WhatsApp, já sabe o suficiente.`,
     },
   };
   return messages[answer];
@@ -49,14 +39,24 @@ const Step4TriedOnline = ({ onNext, userName }: Step4Props) => {
     const fb = getFeedback(selected, userName);
     if (fb) {
       return (
-        <FeedbackScreen
-          eyebrow={fb.eyebrow}
-          icon={fb.icon}
-          title={fb.title}
-          message={fb.message}
-          highlight={fb.highlight}
-          onNext={() => onNext(selected)}
-        />
+        <StepContainer>
+          <div className="w-full flex flex-col items-center gap-5 py-4">
+            <div className="w-16 h-16 rounded-full bg-primary/15 flex items-center justify-center border-2 border-primary/30">
+              <CheckCircle className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground text-center leading-snug">
+              {fb.title}
+            </h2>
+            <p className="text-base sm:text-lg text-muted-foreground text-center leading-relaxed max-w-md">
+              {fb.message}
+            </p>
+            <div className="w-full mt-2">
+              <CTAButton onClick={() => onNext(selected)}>
+                Continuar →
+              </CTAButton>
+            </div>
+          </div>
+        </StepContainer>
       );
     }
   }

@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { StepContainer, StepTitle, StepSubtitle, OptionCard } from "./QuizUI";
-import { AlertCircle, Clock, Compass, Wallet, Heart, ShieldCheck } from "lucide-react";
-import FeedbackScreen from "./FeedbackScreen";
+import { StepContainer, StepTitle, StepSubtitle, OptionCard, CTAButton } from "./QuizUI";
+import { AlertCircle, Clock, Compass, Wallet, Heart, CheckCircle } from "lucide-react";
 
 interface Step6Props {
   onNext: (answer: string) => void;
