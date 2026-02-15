@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UpsellLayout from "./UpsellLayout";
 import UpsellBlindagem from "./UpsellBlindagem";
+import KirvanoOneClick from "./KirvanoOneClick";
 import { getLeadName } from "@/lib/upsellData";
 import { usePagePresence } from "@/hooks/usePagePresence";
 import { saveFunnelEvent } from "@/lib/metricsClient";
@@ -27,6 +28,11 @@ const Upsell3Page = () => {
 
   return (
     <UpsellLayout progress={95}>
+      <KirvanoOneClick
+        offer="a7cfdcbf-849f-4060-b660-b850f46a0e52"
+        nextPageURL="https://ganhostempolivre.lovable.app/upsell4"
+        refusePageURL="https://ganhostempolivre.lovable.app/upsell4"
+      />
       <UpsellBlindagem name={name} onNext={goNext} onDecline={goNext} />
     </UpsellLayout>
   );
