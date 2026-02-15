@@ -383,8 +383,8 @@ export default function AdminFunnelAudit() {
         <LiveRevenueChart usdToBrl={USD_TO_BRL} />
         <LiveIntelligence />
 
-        <div className="overflow-x-auto -mx-4 px-4 pb-2">
-          <div className="flex gap-3 min-w-max">
+        <div className="overflow-x-auto pb-2 -mx-4 px-4" style={{ maxWidth: 'calc(100% + 2rem)' }}>
+          <div className="flex gap-3 w-max">
             {/* Aprovação Gateway */}
             <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0">
               <div className="flex items-center justify-between mb-3">

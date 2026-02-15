@@ -116,7 +116,7 @@ const LiveIntelligence = () => {
   const avgHesitations = totalLeads > 0 ? (leads.reduce((a, l) => a + (l.cta_hesitation_count || 0), 0) / totalLeads).toFixed(1) : "0";
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-5">
+    <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-5 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -142,8 +142,8 @@ const LiveIntelligence = () => {
       </div>
 
       {/* ROW 1: Scroll horizontal - Stats + Distribuição + AI Insights */}
-      <div className="overflow-x-auto -mx-5 px-5 pb-3">
-        <div className="flex gap-3 min-w-max">
+      <div className="overflow-x-auto -mx-5 px-5 pb-3" style={{ maxWidth: 'calc(100% + 2.5rem)' }}>
+        <div className="flex gap-3 w-max">
           {/* Stats Cards */}
           {[
             { label: "Score Médio", value: `${avgScore}/100`, icon: <Target className="w-4 h-4" />, accent: true },
@@ -206,8 +206,8 @@ const LiveIntelligence = () => {
       </div>
 
       {/* ROW 2: Scroll horizontal - Segmentação */}
-      <div className="overflow-x-auto -mx-5 px-5 pb-3">
-        <div className="flex gap-3 min-w-max">
+      <div className="overflow-x-auto -mx-5 px-5 pb-3" style={{ maxWidth: 'calc(100% + 2.5rem)' }}>
+        <div className="flex gap-3 w-max">
           {[
             { label: "Por Faixa Etária", data: segmentConversion("age") },
             { label: "Por Obstáculo", data: segmentConversion("obstacle") },
