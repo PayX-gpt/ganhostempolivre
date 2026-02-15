@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Check, Shield, Zap, MessageCircle, BarChart3, Headphones } from "lucide-react";
 import { saveUpsellChoice } from "@/lib/upsellData";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
 
@@ -71,7 +72,10 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
 
   const handleSelect = (plan: typeof plans[0]) => {
     saveUpsellChoice({ accelerator: plan.id, guide: false, price: plan.price });
-    window.open(plan.checkoutUrl, "_blank");
+    const utmQs = buildTrackingQueryString();
+    const separator = plan.checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${plan.checkoutUrl}${separator}${utmQs.slice(1)}` : plan.checkoutUrl;
+    window.open(fullUrl, "_blank");
     onNext();
   };
 
