@@ -1,0 +1,293 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { action } = await req.json();
+
+    if (action === "score") {
+      // Score unscored leads
+      const { data: leads } = await supabase
+        .from("lead_behavior")
+        .select("*")
+        .is("intent_score", null)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (!leads || leads.length === 0) {
+        return new Response(JSON.stringify({ scored: 0 }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Score each lead based on behavior signals
+      let scored = 0;
+      for (const lead of leads) {
+        const score = computeIntentScore(lead);
+        const label = score >= 80 ? "buyer" : score >= 60 ? "hot" : score >= 35 ? "warm" : "cold";
+        const tags = computeSegmentTags(lead);
+
+        await supabase
+          .from("lead_behavior")
+          .update({ intent_score: score, intent_label: label, segment_tags: tags })
+          .eq("id", lead.id);
+        scored++;
+      }
+
+      return new Response(JSON.stringify({ scored }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "insights") {
+      // Get recent behavior data for AI analysis
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: leads } = await supabase
+        .from("lead_behavior")
+        .select("*")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (!leads || leads.length === 0) {
+        return new Response(JSON.stringify({ insights: "Sem dados suficientes nas últimas 24h para gerar insights." }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Aggregate stats for AI
+      const stats = aggregateStats(leads);
+
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            {
+              role: "system",
+              content: `Você é um analista de conversão especializado em funis de vendas digitais no Brasil. 
+Analise os dados comportamentais e gere insights ACIONÁVEIS em português brasileiro.
+Foque em:
+1. Por que leads não estão comprando (padrões de abandono)
+2. Quais segmentos convertem melhor
+3. Oportunidades de upsell (quem poderia pagar mais)
+4. Sugestões concretas de otimização do funil
+5. Padrões de hesitação nos CTAs
+
+Responda em formato estruturado com emojis, máximo 500 palavras. Seja direto e prático.`,
+            },
+            {
+              role: "user",
+              content: `Dados das últimas 24h do funil de vendas:
+
+RESUMO GERAL:
+- Total de leads na oferta: ${stats.total}
+- Clicaram no checkout: ${stats.checkoutClicks} (${stats.checkoutRate}%)
+- Score médio de intenção: ${stats.avgScore}/100
+- Tempo médio na página: ${stats.avgTimeOnPage}s
+- Scroll médio: ${stats.avgScroll}%
+- Assistiram vídeo: ${stats.videoStarted} (${stats.videoRate}%)
+
+SEGMENTAÇÃO POR FAIXA ETÁRIA:
+${JSON.stringify(stats.byAge, null, 2)}
+
+SEGMENTAÇÃO POR OBSTÁCULO:
+${JSON.stringify(stats.byObstacle, null, 2)}
+
+SEGMENTAÇÃO POR META DE RENDA:
+${JSON.stringify(stats.byGoal, null, 2)}
+
+SEGMENTAÇÃO POR SALDO:
+${JSON.stringify(stats.byBalance, null, 2)}
+
+COMPORTAMENTO CTA:
+- Média de visualizações do CTA: ${stats.avgCtaViews}
+- Média de hesitações (scrollou sem clicar): ${stats.avgHesitations}
+- Tempo médio até primeiro clique: ${stats.avgFirstClickMs}ms
+
+TOP FAQs ABERTAS:
+${JSON.stringify(stats.topFaqs, null, 2)}
+
+DISTRIBUIÇÃO DE SCORES:
+- Cold (0-34): ${stats.scoreDist.cold}
+- Warm (35-59): ${stats.scoreDist.warm}
+- Hot (60-79): ${stats.scoreDist.hot}
+- Buyer (80-100): ${stats.scoreDist.buyer}`,
+            },
+          ],
+        }),
+      });
+
+      if (!aiResponse.ok) {
+        const errText = await aiResponse.text();
+        console.error("AI error:", aiResponse.status, errText);
+
+        if (aiResponse.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit exceeded, try again later." }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (aiResponse.status === 402) {
+          return new Response(JSON.stringify({ error: "Payment required for AI analysis." }), {
+            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        return new Response(JSON.stringify({ error: "AI analysis failed" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const aiData = await aiResponse.json();
+      const insights = aiData.choices?.[0]?.message?.content || "Sem insights disponíveis.";
+
+      return new Response(JSON.stringify({ insights, stats }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ error: "Invalid action" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("analyze-leads error:", e);
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
+
+function computeIntentScore(lead: any): number {
+  let score = 0;
+
+  // Time on page (max 20 pts)
+  const timeS = (lead.time_on_page_ms || 0) / 1000;
+  if (timeS > 300) score += 20;
+  else if (timeS > 120) score += 15;
+  else if (timeS > 60) score += 10;
+  else if (timeS > 30) score += 5;
+
+  // Scroll depth (max 20 pts)
+  const scroll = lead.max_scroll_depth || 0;
+  score += Math.min(20, Math.round(scroll / 5));
+
+  // Video engagement (max 15 pts)
+  if (lead.video_started) score += 5;
+  const watchS = (lead.video_watch_time_ms || 0) / 1000;
+  if (watchS > 120) score += 10;
+  else if (watchS > 60) score += 7;
+  else if (watchS > 30) score += 3;
+
+  // CTA interaction (max 25 pts)
+  if (lead.cta_clicks > 0) score += 15;
+  if (lead.checkout_clicked) score += 10;
+
+  // Sections viewed (max 10 pts)
+  const sections = lead.sections_viewed?.length || 0;
+  score += Math.min(10, sections * 2);
+
+  // FAQ engagement (max 10 pts)
+  const faqs = lead.faq_opened?.length || 0;
+  score += Math.min(10, faqs * 3);
+
+  // Hesitation penalty (-5 per hesitation, max -10)
+  const hesitations = lead.cta_hesitation_count || 0;
+  if (hesitations > 0 && !lead.checkout_clicked) {
+    score -= Math.min(10, hesitations * 5);
+  }
+
+  return Math.max(0, Math.min(100, score));
+}
+
+function computeSegmentTags(lead: any): string[] {
+  const tags: string[] = [];
+  const answers = lead.quiz_answers || {};
+
+  if (answers.age) tags.push(`idade:${answers.age}`);
+  if (answers.incomeGoal) tags.push(`meta:${answers.incomeGoal}`);
+  if (answers.obstacle) tags.push(`obstaculo:${answers.obstacle}`);
+  if (answers.accountBalance) tags.push(`saldo:${answers.accountBalance}`);
+  if (answers.device) tags.push(`device:${answers.device}`);
+  if (answers.financialDream) tags.push(`sonho:${answers.financialDream}`);
+
+  const timeS = (lead.time_on_page_ms || 0) / 1000;
+  if (timeS > 180) tags.push("engajado");
+  if (lead.checkout_clicked) tags.push("checkout");
+  if ((lead.cta_hesitation_count || 0) > 2) tags.push("hesitante");
+  if (lead.video_started) tags.push("video_viewer");
+  if ((lead.max_scroll_depth || 0) > 80) tags.push("scroll_completo");
+
+  return tags;
+}
+
+function aggregateStats(leads: any[]) {
+  const total = leads.length;
+  const checkoutClicks = leads.filter(l => l.checkout_clicked).length;
+  const scores = leads.filter(l => l.intent_score != null).map(l => l.intent_score);
+  const avgScore = scores.length > 0 ? Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length) : 0;
+  const avgTimeOnPage = Math.round(leads.reduce((a, l) => a + (l.time_on_page_ms || 0), 0) / total / 1000);
+  const avgScroll = Math.round(leads.reduce((a, l) => a + (l.max_scroll_depth || 0), 0) / total);
+  const videoStarted = leads.filter(l => l.video_started).length;
+  const avgCtaViews = (leads.reduce((a, l) => a + (l.cta_views || 0), 0) / total).toFixed(1);
+  const avgHesitations = (leads.reduce((a, l) => a + (l.cta_hesitation_count || 0), 0) / total).toFixed(1);
+  const clickLeads = leads.filter(l => l.first_cta_click_ms);
+  const avgFirstClickMs = clickLeads.length > 0 ? Math.round(clickLeads.reduce((a, l) => a + l.first_cta_click_ms, 0) / clickLeads.length) : 0;
+
+  // Segmentation helpers
+  const segmentBy = (key: string) => {
+    const groups: Record<string, { total: number; checkout: number; avgScore: number }> = {};
+    leads.forEach(l => {
+      const val = l.quiz_answers?.[key] || "unknown";
+      if (!groups[val]) groups[val] = { total: 0, checkout: 0, avgScore: 0 };
+      groups[val].total++;
+      if (l.checkout_clicked) groups[val].checkout++;
+      groups[val].avgScore += l.intent_score || 0;
+    });
+    Object.values(groups).forEach(g => { g.avgScore = g.total > 0 ? Math.round(g.avgScore / g.total) : 0; });
+    return groups;
+  };
+
+  // FAQ aggregation
+  const faqCounts: Record<string, number> = {};
+  leads.forEach(l => {
+    (l.faq_opened || []).forEach((f: string) => { faqCounts[f] = (faqCounts[f] || 0) + 1; });
+  });
+  const topFaqs = Object.entries(faqCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  // Score distribution
+  const scoreDist = { cold: 0, warm: 0, hot: 0, buyer: 0 };
+  scores.forEach(s => {
+    if (s >= 80) scoreDist.buyer++;
+    else if (s >= 60) scoreDist.hot++;
+    else if (s >= 35) scoreDist.warm++;
+    else scoreDist.cold++;
+  });
+
+  return {
+    total, checkoutClicks,
+    checkoutRate: total > 0 ? ((checkoutClicks / total) * 100).toFixed(1) : "0",
+    avgScore, avgTimeOnPage, avgScroll,
+    videoStarted, videoRate: total > 0 ? ((videoStarted / total) * 100).toFixed(1) : "0",
+    avgCtaViews, avgHesitations, avgFirstClickMs,
+    byAge: segmentBy("age"),
+    byObstacle: segmentBy("obstacle"),
+    byGoal: segmentBy("incomeGoal"),
+    byBalance: segmentBy("accountBalance"),
+    topFaqs, scoreDist,
+  };
+}

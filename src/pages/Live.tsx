@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Users, Eye, Activity, Clock, TrendingUp, BarChart3, ArrowDown, Zap, Table, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import LiveIntelligence from "@/components/LiveIntelligence";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar,
 } from "recharts";
@@ -788,6 +789,9 @@ const Live = () => {
             )}
           </div>
         </section>
+
+        {/* ─── BEHAVIORAL INTELLIGENCE ─────────────── */}
+        <LiveIntelligence />
 
         {/* ─── RESPOSTAS DO FUNIL (spreadsheet view) ── */}
         <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
