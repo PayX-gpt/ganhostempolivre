@@ -383,9 +383,10 @@ export default function AdminFunnelAudit() {
         <LiveRevenueChart usdToBrl={USD_TO_BRL} />
         <LiveIntelligence />
 
-        <div className="overflow-x-auto -mx-4 px-4">
-          <div className="flex lg:grid lg:grid-cols-2 gap-3 min-w-max lg:min-w-0">
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] lg:min-w-0">
+        <div className="overflow-x-auto -mx-4 px-4 pb-2">
+          <div className="flex gap-3 min-w-max">
+            {/* Aprovação Gateway */}
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-medium text-[#888]">Aprovação Gateway</h3>
                 <Globe className="w-4 h-4 text-orange-400" />
@@ -399,7 +400,9 @@ export default function AdminFunnelAudit() {
                 </div>
               </div>
             </div>
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] lg:min-w-0">
+
+            {/* Funil IC → Venda */}
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-medium text-[#888]">Funil IC → Venda</h3>
                 <Target className="w-4 h-4 text-emerald-400" />
@@ -410,6 +413,38 @@ export default function AdminFunnelAudit() {
                   <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500" /><span className="text-xs text-white">{frontendICs} ICs</span></div>
                   <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span className="text-xs text-white">{hotmartSalesToday} Vendas</span></div>
                   <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500" /><span className="text-xs text-white">Ratio {icToSalesRatio}</span></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sessões Únicas */}
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-medium text-[#888]">Sessões Únicas</h3>
+                <Eye className="w-4 h-4 text-sky-400" />
+              </div>
+              <div className="flex items-center justify-around">
+                <ProgressRing value={frontendICs > 0 ? Math.min((activeUsers / frontendICs) * 100, 100) : 0} label="Ativas" color="violet" />
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500" /><span className="text-xs text-white">{activeUsers} Online</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500" /><span className="text-xs text-white">{frontendICs} ICs hoje</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span className="text-xs text-white">{hotmartSalesToday} Compraram</span></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Receita por Venda */}
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-medium text-[#888]">Ticket Médio</h3>
+                <DollarSign className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="flex items-center justify-around">
+                <ProgressRing value={Math.min(hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday / 200) * 100 : 0, 100)} label="Ticket" color="amber" />
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span className="text-xs text-white">R$ {hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : '0'}</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500" /><span className="text-xs text-white">R$ {totalRevenueToday.toFixed(0)} total</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500" /><span className="text-xs text-white">{hotmartSalesToday} vendas</span></div>
                 </div>
               </div>
             </div>
