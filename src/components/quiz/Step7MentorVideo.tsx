@@ -16,11 +16,9 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Scroll video into view on mount so it's not behind the header
+  // Scroll to top on mount so title is visible first
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    window.scrollTo({ top: 0, behavior: "instant" });
   }, []);
 
   useEffect(() => {
