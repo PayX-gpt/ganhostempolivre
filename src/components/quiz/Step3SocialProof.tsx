@@ -16,11 +16,9 @@ const Step3SocialProof = ({ onNext }: Step3Props) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Scroll video into view on mount
+  // Scroll to top on mount
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    window.scrollTo({ top: 0, behavior: "instant" });
   }, []);
 
   useEffect(() => {
