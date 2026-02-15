@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Check, AlertTriangle, ShieldCheck, Clock } from "lucide-react";
 
@@ -5,6 +6,25 @@ interface Props { name: string; onNext: () => void; }
 
 const UpsellStep1 = ({ name, onNext }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+
+  // Load Vturb player script
+  useEffect(() => {
+    if (!videoContainerRef.current) return;
+    // Avoid duplicate script
+    if (document.getElementById("vturb-upsell-script")) return;
+
+    const s = document.createElement("script");
+    s.id = "vturb-upsell-script";
+    s.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/69922e8aaa67549cb8e929ab/v4/player.js";
+    s.async = true;
+    document.head.appendChild(s);
+
+    return () => {
+      const existing = document.getElementById("vturb-upsell-script");
+      if (existing) existing.remove();
+    };
+  }, []);
 
   return (
     <div className="flex flex-col items-center gap-5 pt-6">
@@ -35,8 +55,17 @@ const UpsellStep1 = ({ name, onNext }: Props) => {
 
       <p className="text-[15px] text-center leading-relaxed" style={{ color: "#94A3B8" }}>
         Seu acesso está sendo configurado agora mesmo.{" "}
-        {firstName ? `Mas ${firstName}, ` : "Mas "}antes de liberar tudo, preciso te mostrar algo que vai definir a velocidade dos seus primeiros resultados.
+        {firstName ? `Mas ${firstName}, ` : "Mas "}antes de liberar tudo, assista esse vídeo rápido:
       </p>
+
+      {/* Video Player */}
+      <div ref={videoContainerRef} className="w-full rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div
+          dangerouslySetInnerHTML={{
+            __html: `<vturb-smartplayer id="vid-69922e8aaa67549cb8e929ab" style="display:block;margin:0 auto;width:100%;max-width:400px;"></vturb-smartplayer>`,
+          }}
+        />
+      </div>
 
       {/* Warning card */}
       <div className="w-full rounded-xl p-4" style={{ background: "linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6))", borderLeft: "3px solid #FACC15" }}>
@@ -49,15 +78,6 @@ const UpsellStep1 = ({ name, onNext }: Props) => {
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Personal touch */}
-      <div className="w-full rounded-xl p-4" style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <p className="text-[14px] leading-relaxed" style={{ color: "#CBD5E1" }}>
-          {firstName
-            ? `${firstName}, eu sei que você não investiu nesse acesso pra ficar 7 dias olhando pra tela esperando alguma coisa acontecer. Ninguém quer essa sensação. Por isso, quero te dar a chance de pular essa etapa agora.`
-            : "Você não investiu nesse acesso pra ficar 7 dias esperando. Ninguém quer isso. Por isso, quero te dar a chance de pular essa etapa agora."}
-        </p>
       </div>
 
       {/* Trust indicators */}
