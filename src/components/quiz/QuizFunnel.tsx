@@ -98,7 +98,7 @@ const QuizFunnel = () => {
     trackStepComplete();
     const nextStep = Math.min(step + 1, TOTAL_STEPS);
     navigate(`/${STEP_SLUGS[nextStep - 1]}`);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0 });
   }, [step, navigate, trackStepComplete]);
 
   const updateAndNext = useCallback(
@@ -111,7 +111,7 @@ const QuizFunnel = () => {
       });
       const nextStep = Math.min(step + 1, TOTAL_STEPS);
       navigate(`/${STEP_SLUGS[nextStep - 1]}`);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0 });
     },
     [step, navigate, trackStepComplete]
   );
@@ -190,7 +190,7 @@ const QuizFunnel = () => {
         {step > 1 && step < TOTAL_STEPS && <ProgressBar current={step - 1} total={TOTAL_STEPS - 2} />}
       </header>
 
-      <main className="flex-1 flex items-start justify-center" key={step}>
+      <main className="flex-1 flex items-start justify-center pt-2" key={step}>
         {renderStep()}
       </main>
 
