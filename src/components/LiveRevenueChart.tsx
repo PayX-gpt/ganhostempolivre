@@ -123,21 +123,21 @@ export default function LiveRevenueChart({ usdToBrl = 1 }: { usdToBrl?: number }
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="p-3 rounded-xl bg-[#0d0d0d] border border-[#2a2a2a]">
+        <div className="p-3 rounded-xl bg-[#0d0d0d] border border-[#2a2a2a] overflow-hidden min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <DollarSign className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs text-[#888]">Receita 24h</span>
+            <DollarSign className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span className="text-xs text-[#888] truncate">Receita 24h</span>
           </div>
-          <p className="text-xl font-bold text-white">
+          <p className="text-lg sm:text-xl font-bold text-white truncate tabular-nums">
             R$ {totals.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-[#0d0d0d] border border-[#2a2a2a]">
+        <div className="p-3 rounded-xl bg-[#0d0d0d] border border-[#2a2a2a] overflow-hidden min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <ShoppingCart className="w-4 h-4 text-violet-400" />
-            <span className="text-xs text-[#888]">Vendas 24h</span>
+            <ShoppingCart className="w-4 h-4 text-violet-400 flex-shrink-0" />
+            <span className="text-xs text-[#888] truncate">Vendas 24h</span>
           </div>
-          <p className="text-xl font-bold text-white">{totals.sales}</p>
+          <p className="text-lg sm:text-xl font-bold text-white tabular-nums">{totals.sales}</p>
         </div>
       </div>
 

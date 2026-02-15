@@ -241,12 +241,12 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
           const hasUsers = step.count > 0;
           return (
             <div key={step.id} className={cn(
-              "flex flex-col items-center p-1.5 sm:p-2.5 rounded-xl transition-all",
+              "flex flex-col items-center justify-center p-1.5 sm:p-2.5 rounded-xl transition-all overflow-hidden",
               "bg-[#0d0d0d] border",
               hasUsers ? "border-emerald-500/30 shadow-lg shadow-emerald-500/10" : "border-[#2a2a2a]"
             )}>
-              <Icon className={cn("w-3.5 h-3.5 mb-0.5", hasUsers ? "text-emerald-400" : "text-[#666]")} />
-              <span className={cn("text-sm sm:text-lg font-bold", hasUsers ? "text-white" : "text-[#444]")}>{step.count}</span>
+              <Icon className={cn("w-3.5 h-3.5 mb-0.5 flex-shrink-0", hasUsers ? "text-emerald-400" : "text-[#666]")} />
+              <span className={cn("text-sm sm:text-lg font-bold tabular-nums leading-none", hasUsers ? "text-white" : "text-[#444]")}>{step.count}</span>
               <span className="text-[7px] sm:text-[9px] text-[#666] text-center leading-tight truncate w-full">{step.label}</span>
             </div>
           );
