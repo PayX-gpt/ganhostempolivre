@@ -38,10 +38,7 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
 
   return (
     <StepContainer>
-      <div className="flex items-center gap-2">
-        <Target className="w-5 h-5 text-primary shrink-0" />
-        <StepTitle>Ótima notícia: seu perfil é compatível!</StepTitle>
-      </div>
+      <StepTitle>Ótima notícia: seu perfil é <span className="text-gradient-green">compatível!</span></StepTitle>
 
       <p className="text-xs sm:text-sm text-muted-foreground text-center -mt-1">
         Pessoas com o mesmo perfil que o seu já estão tendo resultados reais.
