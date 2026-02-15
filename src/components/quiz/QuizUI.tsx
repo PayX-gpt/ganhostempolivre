@@ -26,14 +26,14 @@ export const ProgressBar = ({ current, total }: ProgressBarProps) => {
   const percentage = Math.round((current / total) * 100);
 
   return (
-    <div className="w-full px-4 py-3">
-      <div className="w-full h-2.5 bg-secondary rounded-full overflow-hidden">
+    <div className="w-full px-4 py-2">
+      <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
         <div
           className="h-full progress-bar-fill rounded-full transition-all duration-700 ease-out"
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <p className="text-sm text-muted-foreground mt-2 text-right font-medium">
+      <p className="text-xs text-muted-foreground mt-1.5 text-right font-medium">
         {percentage}% completo
       </p>
     </div>
@@ -121,13 +121,13 @@ export const StepContainer = ({ children }: { children: React.ReactNode }) => (
 );
 
 export const StepTitle = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground text-center leading-snug">
+  <h2 className="font-display text-[1.4rem] sm:text-[1.7rem] font-bold text-foreground text-center leading-[1.3] tracking-tight">
     {children}
   </h2>
 );
 
 export const StepSubtitle = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-base text-muted-foreground text-center leading-relaxed">
+  <p className="text-[0.95rem] sm:text-base text-muted-foreground text-center leading-relaxed max-w-md">
     {children}
   </p>
 );
