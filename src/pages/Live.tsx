@@ -334,8 +334,8 @@ export default function AdminFunnelAudit() {
     <div className="min-h-screen bg-[#0a0a0a]">
       <SEOHead title="Live Dashboard" description="Real-time analytics and monitoring dashboard" url="/live" />
 
-      <div className="sticky top-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-[#1a1a1a]">
-        <div className="max-w-[1600px] mx-auto px-4 py-3 space-y-2">
+      <div className="max-w-[1600px] mx-auto px-4 py-6 space-y-6">
+        <header className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <div className="w-6 h-6 rounded-md bg-gradient-to-br from-emerald-500/80 to-emerald-700/80 flex items-center justify-center flex-shrink-0">
               <Activity className="w-3 h-3 text-white" />
@@ -399,10 +399,7 @@ export default function AdminFunnelAudit() {
               </div>
             )}
           </div>
-        </div>
-      </div>
-
-      <div className="max-w-[1600px] mx-auto px-4 py-6 space-y-6">
+        </header>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <MetricCard title="Receita Hoje"
@@ -439,21 +436,67 @@ export default function AdminFunnelAudit() {
                 <div className="flex flex-col gap-2 min-w-0">
                   <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved} Aprov.</span></div>
                   <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartRefunded} Reemb.</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#666] flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved + hotmartRefunded} Total</span></div>
                 </div>
               </div>
             </div>
 
-            {/* Presença */}
-            <div className="min-w-[300px] w-[300px] flex-shrink-0"><LiveUserPresence onTotalChange={handlePresenceTotalChange} /></div>
-            {/* Revenue Chart */}
-            <div className="min-w-[320px] w-[320px] flex-shrink-0"><LiveRevenueChart /></div>
-            {/* Intelligence */}
-            <div className="min-w-[320px] w-[320px] flex-shrink-0"><LiveIntelligence /></div>
+            {/* Funil IC → Venda */}
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xs font-medium text-[#888] truncate">Funil IC → Venda</h3>
+                <Target className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              </div>
+              <div className="flex items-center justify-around gap-2">
+                <ProgressRing value={icToSalesRate} label="Conversão" color="emerald" />
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{frontendICs} ICs</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} Vendas</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">Ratio {icToSalesRatio}</span></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sessões Únicas */}
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xs font-medium text-[#888] truncate">Sessões Únicas</h3>
+                <Eye className="w-4 h-4 text-sky-400 flex-shrink-0" />
+              </div>
+              <div className="flex items-center justify-around gap-2">
+                <ProgressRing value={frontendICs > 0 ? Math.min((activeUsers / frontendICs) * 100, 100) : 0} label="Ativas" color="violet" />
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{activeUsers} Online</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{frontendICs} ICs hoje</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} Compraram</span></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Ticket Médio */}
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xs font-medium text-[#888] truncate">Ticket Médio</h3>
+                <DollarSign className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              </div>
+              <div className="flex items-center justify-around gap-2">
+                <ProgressRing value={Math.min(hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday / 200) * 100 : 0, 100)} label="Ticket" color="amber" />
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">R$ {hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : '0'}</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">R$ {totalRevenueToday.toFixed(0)} total</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} vendas</span></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
+        <LiveUserPresence onTotalChange={handlePresenceTotalChange} />
         <LiveFunnelAnalytics />
+        <LiveRevenueChart usdToBrl={USD_TO_BRL} />
+        <LiveIntelligence />
         <LiveLeadsTable />
+
 
         <Tabs defaultValue="logs" className="space-y-4">
           <div className="overflow-x-auto -mx-4 px-4">
