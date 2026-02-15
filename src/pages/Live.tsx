@@ -381,12 +381,6 @@ export default function AdminFunnelAudit() {
             subtitle={`${frontendICs} ICs · ${icToSalesRatio}`} icon={Target} />
         </div>
 
-        <LiveUserPresence onTotalChange={handlePresenceTotalChange} />
-        <LiveFunnelAnalytics />
-        <LiveRevenueChart usdToBrl={USD_TO_BRL} />
-        <LiveIntelligence />
-        <LiveLeadsTable />
-
         <div className="overflow-x-auto pb-2 -mx-4 px-4" style={{ maxWidth: 'calc(100% + 2rem)' }}>
           <div className="flex gap-3 w-max">
             {/* Aprovação Gateway */}
@@ -437,7 +431,7 @@ export default function AdminFunnelAudit() {
               </div>
             </div>
 
-            {/* Receita por Venda */}
+            {/* Ticket Médio */}
             <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-medium text-[#888]">Ticket Médio</h3>
@@ -454,6 +448,13 @@ export default function AdminFunnelAudit() {
             </div>
           </div>
         </div>
+
+        <LiveUserPresence onTotalChange={handlePresenceTotalChange} />
+        <LiveFunnelAnalytics />
+        <LiveRevenueChart usdToBrl={USD_TO_BRL} />
+        <LiveIntelligence />
+        <LiveLeadsTable />
+
 
         <Tabs defaultValue="logs" className="space-y-4">
           <div className="overflow-x-auto -mx-4 px-4">
