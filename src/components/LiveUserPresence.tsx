@@ -58,13 +58,19 @@ const STEPS: FunnelStep[] = [
   { id: "step19", route: "/step-19", label: "Oferta Final", icon: ShoppingCart, count: 0 },
   { id: "checkout", route: "/checkout", label: "Checkout", icon: Gift, count: 0 },
   { id: "thanks", route: "/thanks", label: "Thanks", icon: CheckCircle2, count: 0 },
-  { id: "upsell", route: "/upsell", label: "Upsell", icon: Rocket, count: 0 },
+  { id: "upsell1", route: "/upsell1", label: "UP1 Acel.", icon: Rocket, count: 0 },
+  { id: "upsell2", route: "/upsell2", label: "UP2 Multi.", icon: BarChart3, count: 0 },
+  { id: "upsell3", route: "/upsell3", label: "UP3 Blind.", icon: CreditCard, count: 0 },
+  { id: "upsell4", route: "/upsell4", label: "UP4 Círc.", icon: Trophy, count: 0 },
 ];
 
 const toStepId = (page: string): string | null => {
   const p = page.toLowerCase();
-  // Any upsell page → single "upsell" step
-  if (p.includes("/upsell")) return "upsell";
+  // Map individual upsell pages
+  if (p.includes("/upsell4") || p.includes("/upsell-sucesso")) return "upsell4";
+  if (p.includes("/upsell3")) return "upsell3";
+  if (p.includes("/upsell2")) return "upsell2";
+  if (p.includes("/upsell")) return "upsell1"; // /upsell1, /upsell-confirmacao, /upsell-analise etc
   // Original steps
   if (p.includes("/thanks")) return "thanks";
   if (p.includes("/checkout") || p.includes("/processing")) return "checkout";
