@@ -47,6 +47,31 @@ const tutorialTips = [
 ];
 const tipDelays = [3000, 10000, 20000, 32000, 45000];
 
+/* ─── Coach Bubble (professional tooltip) ─── */
+const CoachBubble = ({ step, total, text, position = "bottom" }: { 
+  step: number; total: number; text: string; position?: "top" | "bottom";
+}) => (
+  <div className="animate-fade-in">
+    <div className="relative bg-foreground text-background rounded-xl px-3 py-2.5 shadow-lg">
+      {position === "top" && (
+        <div className="absolute -bottom-1.5 left-6 w-3 h-3 bg-foreground rotate-45 rounded-sm" />
+      )}
+      {position === "bottom" && (
+        <div className="absolute -top-1.5 left-6 w-3 h-3 bg-foreground rotate-45 rounded-sm" />
+      )}
+      <div className="flex items-start gap-2.5 relative z-10">
+        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0 mt-0.5">
+          <span className="text-[10px] font-bold text-primary-foreground">{step}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] text-background/60 font-medium">Passo {step} de {total}</p>
+          <p className="text-[11px] font-semibold leading-snug mt-0.5">{text}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 /* ─── Tutorial Tip (compact) ─── */
 const TutorialTip = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
   <div className="w-full animate-fade-in">
@@ -144,6 +169,7 @@ const GoalPopup = ({ onSubmit, userName }: { onSubmit: (goal: number, time: stri
           <h3 className="font-display font-bold text-base text-foreground">{firstName ? `${firstName}, configure` : "Configure"} sua meta</h3>
           <p className="text-[11px] text-[hsl(260,15%,55%)] mt-1">A IA vai operar até bater automaticamente</p>
         </div>
+          <CoachBubble step={2} total={3} text='Digite quanto quer ganhar por dia. Pode ser qualquer valor acima de R$10.' position="top" />
         <div className="px-4 py-4 space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
@@ -169,6 +195,12 @@ const GoalPopup = ({ onSubmit, userName }: { onSubmit: (goal: number, time: stri
               ))}
             </div>
           </div>
+          {goalNum >= 10 && !time && (
+            <CoachBubble step={3} total={3} text='Agora escolha quanto tempo você tem disponível.' position="top" />
+          )}
+          {goalNum >= 10 && time && (
+            <CoachBubble step={3} total={3} text='Tudo pronto! Toque em "Iniciar Robô" abaixo.' position="top" />
+          )}
           <button onClick={() => canSubmit && onSubmit(goalNum, time)} disabled={!canSubmit}
             className={`w-full py-3.5 rounded-2xl font-extrabold text-sm tracking-wide transition-all duration-300 ${
               canSubmit ? "text-white cursor-pointer hover:brightness-110 active:scale-[0.98] bg-gradient-to-r from-[hsl(280,70%,55%)] to-[hsl(260,60%,55%)]" : "bg-[hsl(260,22%,18%)] text-[hsl(260,15%,40%)] cursor-not-allowed"
@@ -450,17 +482,9 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
                 <Bot className="w-3.5 h-3.5" /> Selecionar Robô
               </button>
             </div>
-            {/* Tooltip bubble pointing at the button */}
-            <div className="mt-2 animate-fade-in">
-              <div className="relative bg-foreground text-background rounded-xl px-3 py-2 shadow-lg">
-                <div className="absolute -top-1.5 left-6 w-3 h-3 bg-foreground rotate-45 rounded-sm" />
-                <div className="flex items-center gap-2 relative z-10">
-                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
-                    <span className="text-[10px] font-bold text-primary-foreground">1</span>
-                  </div>
-                  <p className="text-[11px] font-semibold leading-snug">Toque em <span className="text-primary font-bold">"Iniciar Robô"</span> para ativar a IA</p>
-                </div>
-              </div>
+            {/* Coach bubble step 1 */}
+            <div className="mt-2">
+              <CoachBubble step={1} total={3} text='Toque no botão verde "Iniciar Robô" para ativar a inteligência artificial.' />
             </div>
           </div>
         )}
@@ -514,14 +538,33 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
         </div>
       </div>
 
-      {/* No more external onboarding list — tooltips are inside the platform */}
-
-      {isActive && !goalReached && currentTipIndex >= 0 && (
-        <TutorialTip
-          key={currentTipIndex}
-          icon={tutorialTips[currentTipIndex].icon}
-          text={tutorialTips[currentTipIndex].text}
-        />
+      {/* Active operation coach bubble with time estimate */}
+      {isActive && !goalReached && (
+        <div className="w-full space-y-2">
+          <div className="animate-fade-in">
+            <div className="relative bg-foreground text-background rounded-xl px-3 py-2.5 shadow-lg">
+              <div className="absolute -top-1.5 left-6 w-3 h-3 bg-foreground rotate-45 rounded-sm" />
+              <div className="flex items-start gap-2.5 relative z-10">
+                <div className="w-6 h-6 rounded-full bg-[hsl(280,70%,65%)] flex items-center justify-center shrink-0 mt-0.5">
+                  <Clock className="w-3 h-3 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-background/60 font-medium">Tempo estimado</p>
+                  <p className="text-[11px] font-semibold leading-snug mt-0.5">
+                    Aguarde cerca de <span className="text-primary font-bold">1 minuto</span>. A IA está operando sozinha — você não precisa fazer nada.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          {currentTipIndex >= 0 && (
+            <TutorialTip
+              key={currentTipIndex}
+              icon={tutorialTips[currentTipIndex].icon}
+              text={tutorialTips[currentTipIndex].text}
+            />
+          )}
+        </div>
       )}
 
       {/* Trust line */}
