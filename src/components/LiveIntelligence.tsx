@@ -54,9 +54,11 @@ const LiveIntelligence = () => {
   const [leads, setLeads] = useState<LeadBehaviorRow[]>([]);
   const [aiInsights, setAiInsights] = useState<string>("");
   const [buyerAnalysis, setBuyerAnalysis] = useState<BuyerAnalysis | null>(null);
+  const [fullFunnelAnalysis, setFullFunnelAnalysis] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [buyerLoading, setBuyerLoading] = useState(false);
+  const [fullFunnelLoading, setFullFunnelLoading] = useState(false);
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -92,10 +94,18 @@ const LiveIntelligence = () => {
       const { data, error } = await supabase.functions.invoke("analyze-leads", { body: { action: "buyer-analysis" } });
       if (error) throw error;
       setBuyerAnalysis(data || null);
-    } catch (e) {
-      console.warn("Buyer analysis failed:", e);
-    }
+    } catch (e) { console.warn("Buyer analysis failed:", e); }
     setBuyerLoading(false);
+  }, []);
+
+  const fetchFullFunnel = useCallback(async () => {
+    setFullFunnelLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-leads", { body: { action: "full-funnel" } });
+      if (error) throw error;
+      setFullFunnelAnalysis(data?.analysis || "");
+    } catch (e) { console.warn("Full funnel analysis failed:", e); }
+    setFullFunnelLoading(false);
   }, []);
 
   useEffect(() => {
@@ -156,6 +166,11 @@ const LiveIntelligence = () => {
           <p className="text-[10px] text-[#666]">{totalLeads} leads (24h)</p>
         </div>
         <div className="flex gap-1.5 flex-shrink-0">
+          <Button size="sm" onClick={fetchFullFunnel} disabled={fullFunnelLoading}
+            className="h-7 text-[10px] gap-1 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30 hover:bg-sky-500/30 px-2">
+            <BarChart3 className="w-3 h-3" />
+            <span className="hidden sm:inline">{fullFunnelLoading ? "..." : "Funil"}</span>
+          </Button>
           <Button size="sm" onClick={fetchBuyerAnalysis} disabled={buyerLoading}
             className="h-7 text-[10px] gap-1 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 px-2">
             <DollarSign className="w-3 h-3" />
@@ -231,6 +246,17 @@ const LiveIntelligence = () => {
                 <h4 className="text-[10px] font-bold text-violet-400 uppercase tracking-wider">Insights da IA</h4>
               </div>
               <div className="text-[11px] text-[#ccc] leading-relaxed max-h-20 overflow-y-auto whitespace-pre-wrap">{aiInsights}</div>
+            </div>
+          )}
+
+          {/* Full Funnel Analysis */}
+          {fullFunnelAnalysis && (
+            <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-3 min-w-[360px] w-[360px] flex-shrink-0">
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="w-3.5 h-3.5 text-sky-400" />
+                <h4 className="text-[10px] font-bold text-sky-400 uppercase tracking-wider">Análise Funil Completo</h4>
+              </div>
+              <div className="text-[11px] text-[#ccc] leading-relaxed max-h-32 overflow-y-auto whitespace-pre-wrap">{fullFunnelAnalysis}</div>
             </div>
           )}
         </div>
