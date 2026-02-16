@@ -1399,7 +1399,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
               </motion.div>
 
               <h2 className="text-[24px] font-extrabold" style={{ color: "#F8FAFC" }}>
-                + Garantia de 7 Dias
+                + Garantia de 30 Dias
               </h2>
 
               <div className="w-full p-5 rounded-xl text-left space-y-3" style={{ background: "#0F172A", border: "1px solid rgba(34,197,94,0.2)" }}>
@@ -1407,7 +1407,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                   Ative agora.
                 </p>
                 <p className="text-[15px]" style={{ color: "#CBD5E1" }}>
-                  Teste por <strong style={{ color: "#F8FAFC" }}>7 dias</strong>.
+                  Teste por <strong style={{ color: "#F8FAFC" }}>30 dias</strong>.
                 </p>
                 <p className="text-[15px]" style={{ color: "#CBD5E1" }}>
                   Não gostou? <strong style={{ color: "#22C55E" }}>Devolvemos 100% do valor</strong>.
