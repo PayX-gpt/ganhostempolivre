@@ -343,6 +343,94 @@ const TestimonialsCarousel = ({ testimonials }: { testimonials: { name: string; 
   );
 };
 
+/* ─── Step Card with scroll animation ─── */
+const StepCard = ({ item, index, isLast }: { item: { step: string; icon: React.ElementType; title: string; desc: string; detail: string }; index: number; isLast: boolean }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setInView(true); },
+      { threshold: 0.3 }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const IconComp = item.icon;
+
+  return (
+    <div ref={ref} className="relative">
+      {/* Animated connector line */}
+      {!isLast && (
+        <motion.div
+          className="absolute left-[22px] top-[56px] w-[2px] origin-top"
+          style={{ background: "linear-gradient(to bottom, hsl(var(--primary) / 0.4), hsl(var(--primary) / 0.05))" }}
+          initial={{ height: 0 }}
+          animate={inView ? { height: "calc(100% - 16px)" } : { height: 0 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+        />
+      )}
+
+      <div className="flex gap-4 items-start">
+        {/* Animated circle */}
+        <motion.div
+          initial={{ scale: 0, rotate: -90 }}
+          animate={inView ? { scale: 1, rotate: 0 } : { scale: 0, rotate: -90 }}
+          transition={{ delay: 0.1, type: "spring", stiffness: 180, damping: 14 }}
+          className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border-2 border-primary/30 bg-primary/10 relative"
+        >
+          <IconComp className="w-5 h-5 text-primary" />
+          {/* Pulse ring on appear */}
+          <motion.div
+            className="absolute inset-0 rounded-full border-2 border-primary/40"
+            initial={{ scale: 1, opacity: 0.6 }}
+            animate={inView ? { scale: 1.6, opacity: 0 } : { scale: 1, opacity: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          />
+        </motion.div>
+
+        {/* Content */}
+        <motion.div
+          className="flex-1 space-y-1.5 pb-4"
+          initial={{ opacity: 0, x: -24, y: 8 }}
+          animate={inView ? { opacity: 1, x: 0, y: 0 } : { opacity: 0, x: -24, y: 8 }}
+          transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
+        >
+          <motion.div
+            className="flex items-center gap-2"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
+          >
+            <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+              Passo {item.step}
+            </span>
+          </motion.div>
+          <h4 className="font-bold text-foreground text-base">{item.title}</h4>
+          <motion.p
+            className="text-sm text-muted-foreground leading-relaxed"
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+          >
+            {item.desc}
+          </motion.p>
+          <motion.p
+            className="text-xs text-primary/80 font-medium mt-1"
+            initial={{ opacity: 0, x: -12 }}
+            animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -12 }}
+            transition={{ delay: 0.45, duration: 0.4 }}
+          >
+            <ArrowRight className="w-3 h-3 inline mr-1" />{item.detail}
+          </motion.p>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
 /* ─── FAQ Item ─── */
 const FAQItem = ({ question, answer, icon: Icon }: { question: string; answer: string; icon: React.ElementType }) => {
   const [open, setOpen] = useState(false);
@@ -1029,64 +1117,34 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             </p>
           </div>
 
-          {([
-            {
-              step: "1",
-              icon: Smartphone,
-              title: "Acesse pelo celular",
-              desc: "Você recebe o acesso por e-mail e WhatsApp. Abre no celular — como abrir qualquer site. Não precisa instalar nada.",
-              detail: "Funciona em qualquer celular, mesmo os mais simples.",
-            },
-            {
-              step: "2",
-              icon: Bot,
-              title: "Ative a IA com 1 clique",
-              desc: "A inteligência artificial do ChatGPT começa a trabalhar por você automaticamente. É como apertar um botão e deixar a máquina fazer o trabalho.",
-              detail: "Você não precisa entender como funciona por dentro. Só ativar.",
-            },
-            {
-              step: "3",
-              icon: TrendingUp,
-              title: "Acompanhe seus ganhos",
-              desc: "Os resultados aparecem no seu painel. Você acompanha pelo celular, na hora que quiser. Pode sacar quando quiser.",
-              detail: "A maioria dos alunos vê o primeiro resultado no mesmo dia.",
-            },
-          ] as const).map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.15 * i, duration: 0.4 }}
-              className="relative"
-            >
-              {/* Connector line */}
-              {i < 2 && (
-                <div className="absolute left-[22px] top-[56px] w-[2px] h-[calc(100%-16px)] bg-gradient-to-b from-primary/30 to-transparent" />
-              )}
-              <div className="flex gap-4 items-start">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.1 + 0.15 * i, type: "spring", stiffness: 200 }}
-                  className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border-2 border-primary/30 bg-primary/10"
-                >
-                  <item.icon className="w-5 h-5 text-primary" />
-                </motion.div>
-                <div className="flex-1 space-y-1.5 pb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                      Passo {item.step}
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-foreground text-base">{item.title}</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                  <p className="text-xs text-primary/80 font-medium mt-1">
-                    <ArrowRight className="w-3 h-3 inline mr-1" />{item.detail}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+          {(() => {
+            const steps = [
+              {
+                step: "1",
+                icon: Smartphone,
+                title: "Acesse pelo celular",
+                desc: "Você recebe o acesso por e-mail e WhatsApp. Abre no celular — como abrir qualquer site. Não precisa instalar nada.",
+                detail: "Funciona em qualquer celular, mesmo os mais simples.",
+              },
+              {
+                step: "2",
+                icon: Bot,
+                title: "Ative a IA com 1 clique",
+                desc: "A inteligência artificial do ChatGPT começa a trabalhar por você automaticamente. É como apertar um botão e deixar a máquina fazer o trabalho.",
+                detail: "Você não precisa entender como funciona por dentro. Só ativar.",
+              },
+              {
+                step: "3",
+                icon: TrendingUp,
+                title: "Acompanhe seus ganhos",
+                desc: "Os resultados aparecem no seu painel. Você acompanha pelo celular, na hora que quiser. Pode sacar quando quiser.",
+                detail: "A maioria dos alunos vê o primeiro resultado no mesmo dia.",
+              },
+            ];
+            return steps.map((item, i) => (
+              <StepCard key={i} item={item} index={i} isLast={i === steps.length - 1} />
+            ));
+          })()}
 
           <div className="funnel-card border-primary/20 bg-primary/5 text-center space-y-2">
             <p className="text-sm text-foreground font-medium leading-relaxed">
