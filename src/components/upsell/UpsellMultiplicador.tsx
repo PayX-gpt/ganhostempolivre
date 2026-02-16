@@ -56,7 +56,7 @@ const plans = [
     btnColor: "#020617",
     btnBorder: "none",
     btnText: "ATIVAR MULTIPLICAÇÃO 10X",
-    badge: "⭐ MAIS ESCOLHIDO",
+    badge: "MAIS ESCOLHIDO",
     checkoutUrl: "https://pay.kirvano.com/2f8e1d23-b71c-4c4b-9da1-672a6ca75c9b",
   },
   {
@@ -1223,26 +1223,28 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                     >
                       {isRecommended && (
                         <span
-                          className="absolute -top-3 left-1/2 -translate-x-1/2 text-[11px] font-bold px-4 py-1 rounded-full whitespace-nowrap"
+                          className="absolute -top-3 left-1/2 -translate-x-1/2 text-[11px] font-bold px-4 py-1 rounded-full whitespace-nowrap flex items-center gap-1.5"
                           style={{
                             background: "linear-gradient(135deg, #16A34A, #22C55E)",
                             color: "#fff",
                             boxShadow: "0 2px 8px rgba(22,163,74,0.4)",
                           }}
                         >
-                          ✨ IDEAL PRO SEU PERFIL
+                          <Sparkles className="w-3.5 h-3.5" />
+                          IDEAL PRO SEU PERFIL
                         </span>
                       )}
 
                       {!isRecommended && plan.badge && (
                         <span
-                          className="absolute -top-3 left-1/2 -translate-x-1/2 text-[11px] font-bold px-4 py-1 rounded-full whitespace-nowrap"
+                          className="absolute -top-3 left-1/2 -translate-x-1/2 text-[11px] font-bold px-4 py-1 rounded-full whitespace-nowrap flex items-center gap-1.5"
                           style={{
                             background: "linear-gradient(135deg, #FACC15, #EAB308)",
                             color: "#020617",
                             boxShadow: "0 2px 8px rgba(250,204,21,0.3)",
                           }}
                         >
+                          <Crown className="w-3.5 h-3.5" />
                           {plan.badge}
                         </span>
                       )}
@@ -1337,7 +1339,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                         </span>
                       </div>
                       <p className="text-[11px] mt-1" style={{ color: "#22C55E" }}>
-                        💳 Pagamento único • Acesso vitalício
+                        <span className="flex items-center gap-1.5"><Lock className="w-3 h-3" /> Pagamento único • Acesso vitalício</span>
                       </p>
 
                       <button
