@@ -28,6 +28,7 @@ const FunnelGuard = ({ children }: Props) => {
     try {
       const params = new URLSearchParams(window.location.search);
       if (params.get("kirvano_upsell")) return true;
+      if (params.get("__lovable_token")) return true;
       if (sessionStorage.getItem("kirvano_upsell_token")) return true;
     } catch {}
 
