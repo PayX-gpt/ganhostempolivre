@@ -17,24 +17,38 @@ function extractAmount(body: any): number | null {
     const val = parseFloat(body.fiscal.total_value);
     if (!isNaN(val) && val > 0) return val;
   }
-  // 3. Try products[0].price "R$ 37,00"
+  // 3. Try fiscal.original_value
+  if (body.fiscal?.original_value) {
+    const val = parseFloat(body.fiscal.original_value);
+    if (!isNaN(val) && val > 0) return val;
+  }
+  // 4. Try products[0].price "R$ 37,00"
   if (body.products?.[0]?.price && typeof body.products[0].price === "string") {
     const cleaned = body.products[0].price.replace(/[^\d,.-]/g, "").replace(",", ".");
     const val = parseFloat(cleaned);
     if (!isNaN(val) && val > 0) return val;
   }
-  // 4. Try direct numeric fields
-  const directFields = ["amount", "valor", "price", "preco", "value"];
+  // 5. Try products[0].offer_name (Kirvano uses this as "37.00", "47.00", etc.)
+  if (body.products?.[0]?.offer_name) {
+    const val = parseFloat(body.products[0].offer_name);
+    if (!isNaN(val) && val > 0) return val;
+  }
+  // 6. Try direct numeric fields
+  const directFields = ["amount", "valor", "price", "preco", "value", "automaticDiscount"];
   for (const field of directFields) {
-    if (body[field]) {
+    if (body[field] && field !== "automaticDiscount") {
       const val = parseFloat(body[field]);
       if (!isNaN(val) && val > 0) return val;
     }
   }
-  // 5. Try fiscal.commission (net value for producer)
+  // 7. Try fiscal.commission (net value for producer)
   if (body.fiscal?.commission) {
     const val = parseFloat(body.fiscal.commission);
     if (!isNaN(val) && val > 0) return val;
+  }
+  // 8. Final fallback: product is known, use default price R$37
+  if (body.products?.[0]?.name?.includes("CHATGPT") || body.products?.[0]?.name?.includes("TOKEN")) {
+    return 37;
   }
   return null;
 }
