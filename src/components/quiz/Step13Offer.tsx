@@ -24,6 +24,15 @@ import avatarCarlos from "@/assets/avatar-carlos.jpg";
 import avatarJose from "@/assets/avatar-jose.jpg";
 import avatarLucia from "@/assets/avatar-lucia.jpg";
 import avatarRegina from "@/assets/avatar-regina.jpg";
+import depo1 from "@/assets/depo-1.png";
+import depo2 from "@/assets/depo-2.png";
+import depo3 from "@/assets/depo-3.png";
+import depo4 from "@/assets/depo-4.jpg";
+import depo5 from "@/assets/depo-5.jpg";
+import depo6 from "@/assets/depo-6.jpg";
+import depo7 from "@/assets/depo-7.jpg";
+import depo8 from "@/assets/depo-8.jpg";
+import depo9 from "@/assets/depo-9.jpg";
 
 interface Step13Props {
   userName?: string;
@@ -903,6 +912,64 @@ const VideoTestimonialsSection = () => {
   );
 };
 
+/* ─── Photo Proof Gallery ─── */
+const PhotoProofGallery = ({ title, subtitle, images }: { title: React.ReactNode; subtitle: string; images: string[] }) => {
+  const [selected, setSelected] = useState<number | null>(null);
+
+  return (
+    <div className="w-full space-y-4">
+      <div className="text-center space-y-1.5">
+        <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 mx-auto">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Resultados reais</span>
+        </div>
+        <h3 className="font-display text-xl font-bold text-foreground">{title}</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed">{subtitle}</p>
+      </div>
+
+      {/* Selected image expanded */}
+      {selected !== null && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full rounded-2xl overflow-hidden border border-primary/20 shadow-lg cursor-pointer"
+          onClick={() => setSelected(null)}
+        >
+          <img src={images[selected]} alt={`Depoimento ${selected + 1}`} className="w-full h-auto" />
+        </motion.div>
+      )}
+
+      {/* Grid of thumbnails */}
+      <div className="grid grid-cols-3 gap-2">
+        {images.map((img, i) => (
+          <motion.button
+            key={i}
+            onClick={() => setSelected(selected === i ? null : i)}
+            className="relative rounded-xl overflow-hidden border-2 transition-all duration-300 cursor-pointer p-0 aspect-[3/4]"
+            style={{
+              borderColor: selected === i ? "hsl(var(--primary))" : "hsl(var(--border))",
+            }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            <img src={img} alt={`Print ${i + 1}`} className="w-full h-full object-cover" />
+            {selected === i && (
+              <motion.div
+                layoutId="photo-proof-ring"
+                className="absolute inset-0 border-2 border-primary rounded-xl"
+              />
+            )}
+          </motion.button>
+        ))}
+      </div>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Toque em qualquer imagem para ampliar · <span className="text-primary font-bold">{images.length} prints verificados</span>
+      </p>
+    </div>
+  );
+};
+
 /* ─── Section Divider ─── */
 const Divider = () => (
   <div className="w-full flex items-center gap-4 py-1">
@@ -1229,6 +1296,17 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         </div>
       </SectionTracker>
 
+      {/* ═══ PRINTS REAIS — antes de Como Funciona ═══ */}
+      <ScrollReveal>
+        <PhotoProofGallery
+          title={<>Alunos lucrando <span className="text-gradient-green">todos os dias</span></>}
+          subtitle="Prints reais enviados pelos alunos no grupo. Sem edição."
+          images={[depo1, depo2, depo3, depo4, depo5]}
+        />
+      </ScrollReveal>
+
+      <Divider />
+
       {/* ═══ COMO FUNCIONA — 3 passos ═══ */}
       <SectionTracker id="how_it_works">
         <div className="w-full space-y-5">
@@ -1304,6 +1382,17 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       {/* ═══ 9. CTA 2 ═══ */}
       <CTABlock showCTA={showCTA} pricing={pricing} />
+
+      <Divider />
+
+      {/* ═══ PRINTS REAIS 2 — antes de Acesso Completo ═══ */}
+      <ScrollReveal>
+        <PhotoProofGallery
+          title={<>Veja o que falam da <span className="text-gradient-green">plataforma</span></>}
+          subtitle="Mensagens espontâneas de quem já usa o método no dia a dia."
+          images={[depo5, depo6, depo7, depo8, depo9]}
+        />
+      </ScrollReveal>
 
       <Divider />
 
