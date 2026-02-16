@@ -415,21 +415,15 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
   /* ── Time to goal per plan ── */
   const getTimeToGoalForPlan = (dailyLimit: number): string => {
     const totalNeeded = getTotalGoalValue();
-    // Efficiency based on profile
-    const efficiency = answers.profile === "agressivo" ? 0.7 : answers.profile === "equilibrado" ? 0.6 : 0.5;
-    const effectiveDaily = dailyLimit * efficiency;
-    const daysNeeded = Math.ceil(totalNeeded / effectiveDaily);
-    if (daysNeeded <= 7) return "~1 semana";
-    if (daysNeeded <= 14) return "~2 semanas";
-    if (daysNeeded <= 21) return "~3 semanas";
-    if (daysNeeded <= 30) return "~1 mês";
-    if (daysNeeded <= 45) return "~1,5 mês";
-    if (daysNeeded <= 60) return "~2 meses";
-    if (daysNeeded <= 90) return "~3 meses";
-    if (daysNeeded <= 120) return "~4 meses";
-    if (daysNeeded <= 150) return "~5 meses";
-    if (daysNeeded <= 180) return "~6 meses";
-    if (daysNeeded <= 270) return "~9 meses";
+    const monthlyEarning = dailyLimit * 30;
+    const monthsNeeded = Math.ceil(totalNeeded / monthlyEarning);
+    if (monthsNeeded <= 1) return "~1 mês";
+    if (monthsNeeded <= 2) return "~2 meses";
+    if (monthsNeeded <= 3) return "~3 meses";
+    if (monthsNeeded <= 4) return "~4 meses";
+    if (monthsNeeded <= 5) return "~5 meses";
+    if (monthsNeeded <= 6) return "~6 meses";
+    if (monthsNeeded <= 9) return "~9 meses";
     return "~12+ meses";
   };
 
