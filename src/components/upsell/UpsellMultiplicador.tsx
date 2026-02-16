@@ -199,10 +199,16 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     const t3 = setTimeout(() => setAnalysisPhase(3), 2200);
     const t4 = setTimeout(() => setAnalysisPhase(4), 3000);
     const t5 = setTimeout(() => {
-      // Smart recommendation: balance urgency with affordability
+      // Smart recommendation: balance urgency, goal amount, and affordability
       let rec = "ouro"; // default — best cost-benefit
+      const goalAmt = answers.goalAmount || 2000;
       
-      if (answers.profile === "conservador" && (answers.timeline === "longo" || answers.timeline === "medio")) {
+      // High monthly goals (R$ 5000+) → needs stronger multiplier
+      if (goalAmt >= 10000) {
+        rec = "diamante";
+      } else if (goalAmt >= 5000 && answers.situation !== "endividado") {
+        rec = answers.profile === "conservador" ? "ouro" : "diamante";
+      } else if (answers.profile === "conservador" && (answers.timeline === "longo" || answers.timeline === "medio")) {
         rec = "prata"; // conservador + prazo longo = opção mais suave
       } else if (answers.profile === "agressivo" && answers.situation === "confortavel") {
         rec = "diamante"; // só recomenda diamante se tem condição financeira
@@ -210,7 +216,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
         // Endividado: NUNCA empurrar o mais caro — ouro é o melhor custo-benefício
         rec = answers.profile === "conservador" ? "prata" : "ouro";
       } else if (answers.timeline === "30dias" || answers.timeline === "urgente") {
-        // Prazo curto mas não endividado: ouro (equilíbrio)
+        // Prazo curto + meta acessível: ouro (equilíbrio)
         rec = answers.situation === "confortavel" ? "diamante" : "ouro";
       }
       
@@ -380,86 +386,94 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
 
   /* ── Fully personalized projections based on ALL answers ── */
 
-  // Monthly goal amount — uses the user's own input
+  // Monthly goal amount — uses the user's own input (ALWAYS monthly now)
   const getGoalAmount = (): number => {
     if (answers.goalAmount > 0) return answers.goalAmount;
     return 2000; // fallback
   };
 
+  // ALWAYS show /mês — all goals now ask for monthly values
   const getGoalAmountLabel = (): string => {
     const amount = getGoalAmount();
-    const isMonthly = answers.goal === "renda" || answers.goal === "liberdade";
     const formatted = amount.toLocaleString("pt-BR");
-    return isMonthly ? `R$ ${formatted}/mês` : `R$ ${formatted}`;
+    return `R$ ${formatted}/mês`;
   };
 
-  // Total amount needed (for time calculations)
-  const getTotalGoalValue = (): number => {
-    const monthly = getGoalAmount();
-    if (answers.goal === "renda" || answers.goal === "liberdade") {
-      // For monthly income goals, calculate how much total to build up
-      // (roughly 3-6 months of the monthly goal as "runway")
-      const months = answers.timeline === "30dias" ? 1 : answers.timeline === "urgente" ? 3 : answers.timeline === "medio" ? 4 : 6;
-      return monthly * months;
-    }
-    // For lump sum goals (contas, familia), use directly
-    return monthly;
-  };
+  /* ── Time to goal calculations ── 
+   * All goals are now MONTHLY targets.
+   * Basic mode: R$ 25/day × ~20 working days = R$ 750/mês (max realistic monthly)
+   * With multiplier: R$ 25/day × multiplier × 30 days
+   * "Time to goal" = how many months until monthly earnings reach the target
+   */
+  const BASIC_MONTHLY = 750; // R$ 25/day realistic monthly output
 
-  // Multiplier factor based on profile
-  const getMultiplierFactor = (): number => {
-    if (answers.profile === "agressivo") return 3.5;
-    if (answers.profile === "equilibrado") return 2.5;
-    return 1.8; // conservador
-  };
-
-  /* ── Time to goal per plan ── */
-  const getTimeToGoalForPlan = (dailyLimit: number): string => {
-    const speedFactor = Math.round(dailyLimit / 25);
-    return `${speedFactor}x mais rápido que no modo básico`;
+  const getMonthsToGoalBasic = (): number => {
+    const monthlyGoal = getGoalAmount();
+    // At R$ 750/mês, how many months to accumulate enough for 1 month of the goal?
+    // Really: they'll never "reach" R$ 5000/mês if they only make R$ 750/mês
+    // So we show how long to ACCUMULATE that amount
+    return Math.ceil(monthlyGoal / BASIC_MONTHLY);
   };
 
   const getTimeToGoalBasic = (): string => {
-    const totalNeeded = getTotalGoalValue();
-    const effectiveDaily = 25 * 0.5; // R$25/day at conservative 50% efficiency
-    const daysNeeded = Math.ceil(totalNeeded / effectiveDaily);
-    if (daysNeeded <= 30) return "~1 mês";
-    if (daysNeeded <= 60) return "~2 meses";
-    if (daysNeeded <= 90) return "~3 meses";
-    if (daysNeeded <= 120) return "~4 meses";
-    if (daysNeeded <= 180) return "~6 meses";
-    if (daysNeeded <= 270) return "~9 meses";
-    if (daysNeeded <= 365) return "~12 meses";
-    if (daysNeeded <= 540) return "~18 meses";
-    return "mais de 2 anos";
+    const months = getMonthsToGoalBasic();
+    if (months <= 1) return "~1 mês";
+    if (months <= 2) return "~2 meses";
+    if (months <= 3) return "~3 meses";
+    if (months <= 4) return "~4 meses";
+    if (months <= 6) return "~6 meses";
+    if (months <= 9) return "~9 meses";
+    if (months <= 12) return "~12 meses";
+    if (months <= 18) return "~18 meses";
+    if (months <= 24) return "~2 anos";
+    if (months <= 36) return "~3 anos";
+    return "mais de 3 anos";
   };
 
-  /* ── Dynamic comparison values for step 14 ── */
+  /* ── Time to goal PER PLAN — shows real months ── */
+  const getTimeToGoalForPlan = (dailyLimit: number): string => {
+    const monthlyGoal = getGoalAmount();
+    const planMonthly = dailyLimit * 30; // monthly earnings with this plan
+    if (planMonthly >= monthlyGoal) return "menos de 1 mês";
+    const months = Math.ceil(monthlyGoal / planMonthly);
+    if (months <= 1) return "~1 mês";
+    if (months <= 2) return "~2 meses";
+    if (months <= 3) return "~3 meses";
+    if (months <= 6) return "~6 meses";
+    return `~${months} meses`;
+  };
+
+  /* ── Recommended plan multiplier for comparisons ── */
+  const getRecommendedMultiplier = (): number => {
+    const rec = plans.find(p => p.id === recommendedPlan);
+    return rec ? rec.multFactor : 10;
+  };
+
+  /* ── Dynamic comparison values for step 14 — uses recommended plan ── */
   const getComparisonData = () => {
-    const base = 25;
-    const mult = getMultiplierFactor();
-    const goalVal = getTotalGoalValue();
+    const recMult = getRecommendedMultiplier();
+    const monthlyGoal = getGoalAmount();
 
     const sem = [
-      { mes: 1, val: Math.round(base * 30 * 0.5) },
-      { mes: 3, val: Math.round(base * 90 * 0.5) },
-      { mes: 6, val: Math.round(base * 180 * 0.5) },
-      { mes: 12, val: Math.round(base * 360 * 0.5) },
+      { mes: 1, val: BASIC_MONTHLY },
+      { mes: 3, val: BASIC_MONTHLY * 3 },
+      { mes: 6, val: BASIC_MONTHLY * 6 },
+      { mes: 12, val: BASIC_MONTHLY * 12 },
     ];
-    const com = sem.map(s => ({ mes: s.mes, val: s.val * 20 }));
+    const com = sem.map(s => ({ mes: s.mes, val: Math.round(s.val * recMult) }));
 
     let goalMonth: number | null = null;
     for (const c of com) {
-      if (c.val >= goalVal && !goalMonth) goalMonth = c.mes;
+      if (c.val >= monthlyGoal && !goalMonth) goalMonth = c.mes;
     }
 
     return { sem, com, goalMonth };
   };
 
-  /* ── Comparison table: without vs with Multiplicador (20x) for step 15 ── */
+  /* ── Comparison table: uses recommended plan multiplier ── */
   const getComparisonRows = () => {
-    const base = 25; // base daily without multiplicador
-    const multiplier = 20; // 20x multiplicador
+    const base = 25;
+    const recMult = getRecommendedMultiplier();
     const periods = [
       { label: "1 semana", days: 7 },
       { label: "15 dias", days: 15 },
@@ -469,7 +483,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     ];
     return periods.map(p => {
       const without = base * p.days;
-      const withMult = base * p.days * multiplier;
+      const withMult = Math.round(base * p.days * recMult);
       const diff = withMult - without;
       return { ...p, without, withMult, diff };
     });
@@ -646,7 +660,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
 
           {/* ═══ STEP 7: Q3 — Meta financeira ═══ */}
           {step === 7 && renderQuestionStep(
-            "Qual é a sua META financeira MAIS GRANDE?",
+            "Qual é a sua MAIOR meta financeira?",
             q3Options,
             "goal",
           )}
@@ -815,23 +829,34 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                   Para alcançar <strong style={{ color: "#F8FAFC" }}>{goalLabel(answers.goal)}</strong> em <strong style={{ color: "#F8FAFC" }}>{timelineLabel(answers.timeline)}</strong>...
                 </p>
                 <p className="text-[14px]" style={{ color: "#94A3B8" }}>
-                  Você precisa gerar aproximadamente:
+                  Você precisa gerar:
                 </p>
                 <p className="text-[36px] font-extrabold text-center" style={{ color: "#22C55E" }}>
                   {getGoalAmountLabel()}
                 </p>
               </div>
 
-              <div className="p-5 rounded-xl space-y-2" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <p className="text-[14px]" style={{ color: "#CBD5E1" }}>
-                  Com sua IA atual (ganhos diários):
-                </p>
-                <p className="text-[14px]" style={{ color: "#F8FAFC" }}>
-                  → Gerando em média <strong style={{ color: "#22C55E" }}>R$ 25/dia</strong>
-                </p>
-                <p className="text-[14px]" style={{ color: "#F8FAFC" }}>
-                  → Alcança sua meta em <strong style={{ color: "#EF4444" }}>{getTimeToGoalBasic()}</strong>
-                </p>
+              {/* GAP dramático: sem multiplicador */}
+              <div className="rounded-2xl overflow-hidden" style={{ border: "1.5px solid rgba(239,68,68,0.3)" }}>
+                <div className="px-4 py-3 flex items-center gap-2.5" style={{ background: "rgba(239,68,68,0.12)" }}>
+                  <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
+                  <span className="text-[13px] font-bold uppercase tracking-wide" style={{ color: "#EF4444" }}>
+                    Realidade atual
+                  </span>
+                </div>
+                <div className="px-4 py-4 space-y-2" style={{ background: "rgba(239,68,68,0.04)" }}>
+                  <p className="text-[14px] text-center" style={{ color: "#CBD5E1" }}>
+                    Com a IA básica, você gera no <strong style={{ color: "#F8FAFC" }}>máximo R$ 750/mês</strong>
+                  </p>
+                  <p className="text-[14px] text-center" style={{ color: "#F8FAFC" }}>
+                    Para atingir {getGoalAmountLabel()} levaria: <strong style={{ color: "#EF4444" }}>{getTimeToGoalBasic()}</strong>
+                  </p>
+                  {getMonthsToGoalBasic() > 6 && (
+                    <p className="text-[13px] text-center font-bold mt-1" style={{ color: "#EF4444" }}>
+                      Isso está MUITO LONGE da sua meta de {timelineLabel(answers.timeline)}.
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Mensagem de retenção — evita que o lead saia pelo espanto */}
@@ -869,29 +894,36 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
           {step === 12 && (
             <div className="space-y-6 py-4">
               <h1 className="text-[26px] font-extrabold text-center leading-tight" style={{ color: "#F8FAFC" }}>
-                {userName}, você está <span style={{ color: "#22C55E" }}>MUITO PERTO</span> da sua meta.
+                {userName}, existe um <span style={{ color: "#EF4444" }}>PROBLEMA</span> no seu sistema.
               </h1>
 
               <div className="p-5 rounded-xl text-center space-y-3" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}>
                 <p className="text-[17px] font-extrabold" style={{ color: "#F8FAFC" }}>
-                  Mas tem um problema:
+                  Sua meta: <span style={{ color: "#FACC15" }}>{getGoalAmountLabel()}</span>
                 </p>
                 <p className="text-[15px]" style={{ color: "#CBD5E1" }}>
-                  Sua IA está em <strong style={{ color: "#EF4444" }}>MODO BÁSICO</strong>.
+                  Mas sua IA está em <strong style={{ color: "#EF4444" }}>MODO BÁSICO</strong>.
                 </p>
                 <p className="text-[14px]" style={{ color: "#94A3B8" }}>
                   Ela gera ganhos... mas não os <strong style={{ color: "#F8FAFC" }}>MULTIPLICA</strong>.
                 </p>
               </div>
 
-              <p className="text-[15px] text-center leading-relaxed" style={{ color: "#CBD5E1" }}>
-                É como ter um carro potente mas só andar em <strong style={{ color: "#FACC15" }}>1ª marcha</strong>.
-              </p>
+              <div className="p-4 rounded-xl" style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.1)" }}>
+                <p className="text-[15px] text-center leading-relaxed" style={{ color: "#CBD5E1" }}>
+                  É como ter um carro potente mas só andar em <strong style={{ color: "#FACC15" }}>1ª marcha</strong>.
+                </p>
+              </div>
 
-              <p className="text-[14px] text-center leading-relaxed" style={{ color: "#94A3B8" }}>
-                O limite de <strong style={{ color: "#FACC15" }}>R$ 25/dia</strong> é uma trava de segurança pra iniciantes. Pra desbloquear o potencial real, 
-                você precisa aumentar esse limite — e é isso que vou te mostrar agora.
-              </p>
+              <div className="p-4 rounded-xl" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <p className="text-[14px] text-center leading-relaxed" style={{ color: "#94A3B8" }}>
+                  Com o limite de <strong style={{ color: "#EF4444" }}>R$ 25/dia</strong> (apenas <strong style={{ color: "#EF4444" }}>R$ 750/mês</strong>), 
+                  sua meta de <strong style={{ color: "#FACC15" }}>{getGoalAmountLabel()}</strong> levaria <strong style={{ color: "#EF4444" }}>{getTimeToGoalBasic()}</strong>.
+                </p>
+                <p className="text-[15px] font-bold text-center mt-2" style={{ color: "#F8FAFC" }}>
+                  Está MUITO LONGE do que você precisa.
+                </p>
+              </div>
 
               <button
                 onClick={goNext}
@@ -1062,7 +1094,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                   </div>
                   <div className="flex items-center justify-center gap-1">
                     <Rocket className="w-3.5 h-3.5" style={{ color: "#22C55E" }} />
-                    <span className="text-[11px] font-bold" style={{ color: "#22C55E" }}>20x</span>
+                    <span className="text-[11px] font-bold" style={{ color: "#22C55E" }}>Com Mult.</span>
                   </div>
                 </div>
 
@@ -1200,12 +1232,14 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                   <div className="flex items-center justify-center gap-3">
                     <span className="text-[32px] font-extrabold" style={{ color: "#FCA5A5" }}>R$ 25</span>
                     <span className="text-[14px] font-semibold" style={{ color: "#94A3B8" }}>por dia</span>
+                    <span className="text-[12px] font-medium px-2 py-0.5 rounded" style={{ color: "#94A3B8", background: "rgba(255,255,255,0.05)" }}>=</span>
+                    <span className="text-[18px] font-bold" style={{ color: "#FCA5A5" }}>R$ 750/mês</span>
                   </div>
                   <p className="text-[13px] leading-relaxed text-center" style={{ color: "#FCA5A5" }}>
-                    Seu sistema está operando em <strong style={{ color: "#F8FAFC" }}>velocidade 1x</strong>. Isso significa que o <strong style={{ color: "#F8FAFC" }}>máximo</strong> que você pode ganhar é <strong style={{ color: "#F8FAFC" }}>R$ 25 por dia</strong>.
+                    Sua meta é <strong style={{ color: "#F8FAFC" }}>{getGoalAmountLabel()}</strong>. No ritmo atual de <strong style={{ color: "#F8FAFC" }}>R$ 750/mês</strong>, levaria <strong style={{ color: "#EF4444" }}>{getTimeToGoalBasic()}</strong>.
                   </p>
-                  <p className="text-[13px] leading-relaxed text-center" style={{ color: "#EF4444" }}>
-                    <strong>No ritmo atual, vai demorar MUITO MAIS para bater a sua meta.</strong>
+                  <p className="text-[13px] leading-relaxed text-center font-bold" style={{ color: "#EF4444" }}>
+                    Está muito longe do que você precisa.
                   </p>
                 </div>
               </div>
@@ -1352,7 +1386,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                         </span>
                       </div>
                       <p className="text-[11px] mt-1" style={{ color: "#22C55E" }}>
-                        <span className="flex items-center gap-1.5"><Lock className="w-3 h-3" /> Pagamento único • Acesso vitalício</span>
+                        <span className="flex items-center gap-1.5"><Lock className="w-3 h-3" /> Pagamento único • Garantia 30 dias</span>
                       </p>
 
                       <button
