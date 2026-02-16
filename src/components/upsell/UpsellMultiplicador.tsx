@@ -458,12 +458,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
       { mes: 6, val: Math.round(base * 180 * 0.5) },
       { mes: 12, val: Math.round(base * 360 * 0.5) },
     ];
-    const com = [
-      { mes: 1, val: Math.round(base * mult * 30 * 0.6) },
-      { mes: 3, val: Math.round(base * mult * 90 * 0.65 * 1.1) },
-      { mes: 6, val: Math.round(base * mult * 180 * 0.7 * 1.25) },
-      { mes: 12, val: Math.round(base * mult * 360 * 0.75 * 1.5) },
-    ];
+    const com = sem.map(s => ({ mes: s.mes, val: s.val * 20 }));
 
     let goalMonth: number | null = null;
     for (const c of com) {
