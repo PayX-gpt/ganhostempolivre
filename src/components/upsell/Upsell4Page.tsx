@@ -17,8 +17,9 @@ const Upsell4Page = () => {
 
   useEffect(() => {
     captureKirvanoToken();
-    window.history.pushState(null, "", "/upsell4");
-    const onPop = () => window.history.pushState(null, "", "/upsell4");
+    const qs = window.location.search;
+    window.history.pushState(null, "", `/upsell4${qs}`);
+    const onPop = () => window.history.pushState(null, "", `/upsell4${qs}`);
     window.addEventListener("popstate", onPop);
     saveFunnelEvent("upsell_step_view", { page_id: "/upsell4", name });
     return () => window.removeEventListener("popstate", onPop);
