@@ -1395,10 +1395,6 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           ))}
         </div>
 
-        <p className="text-xs text-muted-foreground/50 pt-4 leading-relaxed">
-          Este produto não garante a obtenção de resultados. Qualquer referência ao desempenho é uma estimativa baseada em resultados médios de alunos com perfis semelhantes.
-          Resultados individuais podem variar conforme dedicação e outros fatores.
-        </p>
       </div>
     </div>
   );
