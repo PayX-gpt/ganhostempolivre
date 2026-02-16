@@ -777,6 +777,81 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         </div>
       </SectionTracker>
 
+      {/* ═══ COMO FUNCIONA — 3 passos ═══ */}
+      <SectionTracker id="how_it_works">
+        <div className="w-full space-y-5">
+          <div className="text-center">
+            <p className="text-[11px] uppercase tracking-widest font-semibold text-primary mb-1.5">
+              Simples assim
+            </p>
+            <h3 className="font-display text-xl font-bold text-foreground">
+              Como funciona na prática?
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              3 passos. Sem complicação. Sem conhecimento técnico.
+            </p>
+          </div>
+
+          {[
+            {
+              step: "1",
+              emoji: "📱",
+              title: "Acesse pelo celular",
+              desc: "Você recebe o acesso por e-mail e WhatsApp. Abre no celular — como abrir qualquer site. Não precisa instalar nada.",
+              detail: "Funciona em qualquer celular, mesmo os mais simples.",
+            },
+            {
+              step: "2",
+              emoji: "🤖",
+              title: "Ative a IA com 1 clique",
+              desc: "A inteligência artificial do ChatGPT começa a trabalhar por você automaticamente. É como apertar um botão e deixar a máquina fazer o trabalho.",
+              detail: "Você não precisa entender como funciona por dentro. Só ativar.",
+            },
+            {
+              step: "3",
+              emoji: "💰",
+              title: "Acompanhe seus ganhos",
+              desc: "Os resultados aparecem no seu painel. Você acompanha pelo celular, na hora que quiser. Pode sacar quando quiser.",
+              detail: "A maioria dos alunos vê o primeiro resultado no mesmo dia.",
+            },
+          ].map((item, i) => (
+            <div key={i} className="relative">
+              {/* Connector line */}
+              {i < 2 && (
+                <div className="absolute left-[22px] top-[56px] w-[2px] h-[calc(100%-16px)] bg-gradient-to-b from-primary/30 to-transparent" />
+              )}
+              <div className="flex gap-4 items-start">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border-2 border-primary/30 bg-primary/10">
+                  <span className="text-lg">{item.emoji}</span>
+                </div>
+                <div className="flex-1 space-y-1.5 pb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                      Passo {item.step}
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-foreground text-base">{item.title}</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                  <p className="text-xs text-primary/80 font-medium mt-1">→ {item.detail}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <div className="funnel-card border-primary/20 bg-primary/5 text-center space-y-2">
+            <p className="text-sm text-foreground font-medium leading-relaxed">
+              <span className="font-bold">Resumo:</span> você acessa, ativa e acompanha.{" "}
+              <span className="text-primary font-bold">A IA faz o resto.</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Tempo médio pra configurar: <span className="font-bold text-foreground">menos de 10 minutos</span>
+            </p>
+          </div>
+        </div>
+      </SectionTracker>
+
+      <Divider />
+
       {/* ═══ 6. CTA 1 ═══ */}
       <CTABlock showCTA={showCTA} context="Restam apenas poucas vagas hoje" pricing={pricing} />
 
