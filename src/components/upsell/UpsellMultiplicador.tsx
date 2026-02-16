@@ -845,36 +845,32 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 </p>
               </div>
 
-              <div className="p-5 rounded-xl" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <div className="flex items-end justify-between gap-2 h-24 mb-3">
-                  {[20, 35, 50, 65, 80, 100].map((h, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ height: 0 }}
-                      animate={{ height: `${h}%` }}
-                      transition={{ delay: 0.1 * i, duration: 0.5 }}
-                      className="flex-1 rounded-t-md"
-                      style={{ background: `linear-gradient(180deg, #1E40AF, #3B82F6)` }}
-                    />
-                  ))}
+              {/* Mensagem de retenção — evita que o lead saia pelo espanto */}
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="p-4 rounded-xl flex items-start gap-3"
+                style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}
+              >
+                <Sparkles className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#22C55E" }} />
+                <div>
+                  <p className="text-[14px] font-bold" style={{ color: "#F8FAFC" }}>
+                    Mas calma, {userName}. Tenho uma solução.
+                  </p>
+                  <p className="text-[13px] mt-1" style={{ color: "#94A3B8" }}>
+                    Existe uma forma de <strong style={{ color: "#22C55E" }}>acelerar drasticamente</strong> esse tempo. 
+                    Vou te mostrar agora.
+                  </p>
                 </div>
-                <div className="flex justify-between text-[11px]" style={{ color: "#64748B" }}>
-                  {["M1", "M2", "M3", "M4", "M5", "M6"].map(m => (
-                    <span key={m}>{m}</span>
-                  ))}
-                </div>
-              </div>
-
-              <p className="text-[14px] text-center" style={{ color: "#94A3B8" }}>
-                Está vendo esse crescimento <strong style={{ color: "#F8FAFC" }}>LINEAR</strong>?
-              </p>
+              </motion.div>
 
               <button
                 onClick={goNext}
                 className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
                 style={{ background: "linear-gradient(90deg, #0EA5E9, #22D3EE)", color: "#fff" }}
               >
-                CONTINUAR
+                VER A SOLUÇÃO
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>
