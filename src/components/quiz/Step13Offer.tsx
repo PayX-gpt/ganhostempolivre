@@ -468,20 +468,20 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
                 <TrendingUp className="w-4 h-4 text-accent" />
                 <span className="text-xs font-bold text-accent uppercase tracking-wider">Projeção para seu perfil</span>
               </div>
-              <div className="px-4 py-3 space-y-3" style={{ background: "hsl(var(--accent) / 0.03)" }}>
+              <div className="px-3 py-3 space-y-3" style={{ background: "hsl(var(--accent) / 0.03)" }}>
                 {/* Projections grid */}
-                <div className="grid grid-cols-3 gap-1.5">
-                  <div className="text-center p-2 rounded-lg bg-card border border-border overflow-hidden">
-                    <p className="text-[9px] uppercase text-muted-foreground mb-1">Semana 1</p>
-                    <p className="text-[11px] sm:text-xs font-bold text-foreground leading-tight">Primeiros ganhos</p>
+                <div className="grid grid-cols-3 gap-1">
+                  <div className="text-center p-1.5 rounded-lg bg-card border border-border overflow-hidden min-w-0">
+                    <p className="text-[8px] uppercase text-muted-foreground mb-0.5">Sem. 1</p>
+                    <p className="text-[10px] font-bold text-foreground leading-tight truncate">1ºs ganhos</p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-card border border-border overflow-hidden">
-                    <p className="text-[9px] uppercase text-muted-foreground mb-1">Semana 2-3</p>
-                    <p className="text-[11px] sm:text-xs font-bold text-primary leading-tight">{getGoalWeekly(answers?.incomeGoal)}</p>
+                  <div className="text-center p-1.5 rounded-lg bg-card border border-border overflow-hidden min-w-0">
+                    <p className="text-[8px] uppercase text-muted-foreground mb-0.5">Sem. 2-3</p>
+                    <p className="text-[10px] font-bold text-primary leading-tight truncate tabular-nums">{getGoalWeekly(answers?.incomeGoal)}</p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-card border border-border overflow-hidden">
-                    <p className="text-[9px] uppercase text-muted-foreground mb-1">Mês 1</p>
-                    <p className="text-[11px] sm:text-xs font-bold text-accent leading-tight">{getGoalMonthly(answers?.incomeGoal)}</p>
+                  <div className="text-center p-1.5 rounded-lg bg-card border border-border overflow-hidden min-w-0">
+                    <p className="text-[8px] uppercase text-muted-foreground mb-0.5">Mês 1</p>
+                    <p className="text-[10px] font-bold text-accent leading-tight truncate tabular-nums">{getGoalMonthly(answers?.incomeGoal)}</p>
                   </div>
                 </div>
 
