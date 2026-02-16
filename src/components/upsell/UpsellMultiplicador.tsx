@@ -466,16 +466,18 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     return { sem, com, goalMonth };
   };
 
-  /* ── Dynamic compound interest table for step 15 ── */
+  /* ── Dynamic multiplier table for step 15 ── */
   const getCompoundRows = () => {
-    const base = 25;
-    // Daily compound rate varies by profile
     const dailyRate = answers.profile === "agressivo" ? 0.025 : answers.profile === "equilibrado" ? 0.02 : 0.015;
-    const days = [1, 2, 3, 10, 30, 60, 90];
+    const days = [1, 7, 15, 30, 60, 90];
     return days.map(d => {
-      const valor = base * Math.pow(1 + dailyRate, d - 1);
-      const pct = d === 1 ? null : `+${Math.round((valor / base - 1) * 100)}%`;
-      return { dia: d, valor: Math.round(valor * 100) / 100, pct };
+      const multiplier = Math.pow(1 + dailyRate, d - 1);
+      return {
+        dia: d,
+        label: d === 1 ? "Dia 1" : d <= 30 ? `Dia ${d}` : `Dia ${d}`,
+        multiplier: Math.round(multiplier * 10) / 10,
+        isHighlight: d >= 30,
+      };
     });
   };
 
@@ -1019,13 +1021,14 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
             return (
               <div className="space-y-5 py-4">
                 <h1 className="text-[24px] font-extrabold text-center leading-tight" style={{ color: "#F8FAFC" }}>
-                  O Multiplicador usa{" "}
-                  <span style={{ color: "#22C55E" }}>JUROS COMPOSTOS</span>.
+                  Veja o poder do{" "}
+                  <span style={{ color: "#22C55E" }}>MULTIPLICADOR</span>
                 </h1>
 
-                <div className="text-center space-y-1">
-                  <p className="text-[14px]" style={{ color: "#94A3B8" }}>O que significa isso?</p>
-                  <p className="text-[16px] font-bold" style={{ color: "#F8FAFC" }}>Simples:</p>
+                <div className="text-center">
+                  <p className="text-[14px]" style={{ color: "#94A3B8" }}>
+                    Seus ganhos se multiplicam a cada dia:
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -1034,26 +1037,42 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                       key={r.dia}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.08 * i }}
+                      transition={{ delay: 0.1 * i }}
                       className="flex justify-between items-center p-3.5 rounded-xl"
-                      style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.06)" }}
+                      style={{
+                        background: r.isHighlight ? "rgba(34,197,94,0.08)" : "#0F172A",
+                        border: r.isHighlight ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(255,255,255,0.06)",
+                      }}
                     >
-                      <span className="text-[14px]" style={{ color: "#94A3B8" }}>Dia {r.dia}</span>
+                      <span className="text-[14px]" style={{ color: r.isHighlight ? "#F8FAFC" : "#94A3B8" }}>
+                        {r.label}
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[16px] font-bold" style={{ color: "#22C55E" }}>
-                          R$ {r.valor.toFixed(2).replace(".", ",")}
+                        <span
+                          className="font-bold"
+                          style={{
+                            color: r.isHighlight ? "#22C55E" : "#CBD5E1",
+                            fontSize: r.isHighlight ? "18px" : "16px",
+                          }}
+                        >
+                          {r.multiplier}x
                         </span>
-                        {r.pct && (
-                          <span className="text-[12px]" style={{ color: "#94A3B8" }}>{r.pct}</span>
+                        {r.isHighlight && (
+                          <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold" style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E" }}>
+                            {r.dia === 90 ? "🔥 MAX" : r.dia === 60 ? "⚡ TURBO" : "✅ META"}
+                          </span>
                         )}
                       </div>
                     </motion.div>
                   ))}
                 </div>
 
-                <div className="p-4 rounded-xl text-center" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                <div className="p-4 rounded-xl text-center space-y-2" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
                   <p className="text-[16px] font-bold" style={{ color: "#F8FAFC" }}>
-                    Seus ganhos <strong style={{ color: "#22C55E" }}>CRESCEM automaticamente</strong>.
+                    Seus ganhos <strong style={{ color: "#22C55E" }}>CRESCEM sozinhos</strong>, todo dia.
+                  </p>
+                  <p className="text-[12px]" style={{ color: "#64748B" }}>
+                    Isso é possível graças ao efeito de juros compostos aplicados pela IA.
                   </p>
                 </div>
 
