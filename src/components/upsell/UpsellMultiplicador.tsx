@@ -16,54 +16,57 @@ const plans = [
   {
     id: "prata",
     icon: Shield,
-    name: "Modo Moderado",
-    subtitle: "Limite de até R$ 250/dia",
+    name: "Multiplicação Moderada",
+    subtitle: "3x mais rápido",
     subtitleColor: "#94A3B8",
-    dailyLimit: 250,
-    description: "O sistema passa a buscar operações maiores com mais frequência. É como aumentar o ritmo do motor — com segurança e constância.",
+    multFactor: 3,
+    dailyBonus: 75,
+    description: "O sistema de juros compostos acelera 3x. Seus ganhos diários são reinvestidos automaticamente com mais frequência, gerando um efeito bola de neve mais rápido.",
     price: 47,
     installments: "5x de R$ 9,90",
     border: "1px solid rgba(255,255,255,0.08)",
     btnBg: "transparent",
     btnColor: "#94A3B8",
     btnBorder: "1.5px solid #94A3B8",
-    btnText: "LIBERAR ESTE LIMITE",
+    btnText: "ATIVAR MULTIPLICAÇÃO 3X",
     badge: null,
     checkoutUrl: "https://pay.kirvano.com/b61b6335-9325-4ecb-9b87-8214d948e90e",
   },
   {
     id: "ouro",
     icon: Crown,
-    name: "Modo Avançado",
-    subtitle: "Limite de até R$ 500/dia",
+    name: "Multiplicação Avançada",
+    subtitle: "10x mais rápido",
     subtitleColor: "#FACC15",
-    dailyLimit: 500,
-    description: "Além de operar com mais força, o sistema ganha um 'vigia' automático que monitora tudo 24h. Você não precisa fazer nada — ele cuida de tudo.",
+    multFactor: 10,
+    dailyBonus: 250,
+    description: "O efeito de juros compostos é turbinado: a IA reinveste seus ganhos 10x mais rápido, com monitoramento 24h. Seus lucros se multiplicam enquanto você dorme.",
     price: 67,
     installments: "7x de R$ 9,90",
     border: "2px solid #FACC15",
     btnBg: "linear-gradient(135deg, #FACC15, #EAB308)",
     btnColor: "#020617",
     btnBorder: "none",
-    btnText: "LIBERAR ESTE LIMITE",
+    btnText: "ATIVAR MULTIPLICAÇÃO 10X",
     badge: "⭐ MAIS ESCOLHIDO",
     checkoutUrl: "https://pay.kirvano.com/2f8e1d23-b71c-4c4b-9da1-672a6ca75c9b",
   },
   {
     id: "diamante",
     icon: Diamond,
-    name: "Modo Máximo",
-    subtitle: "Sem limite de ganho diário",
+    name: "Multiplicação Máxima",
+    subtitle: "20x mais rápido",
     subtitleColor: "#60A5FA",
-    dailyLimit: 1000,
-    description: "O sistema opera no máximo, 24 horas por dia, sem teto. Você ainda recebe um relatório semanal no WhatsApp com tudo que o sistema fez por você.",
+    multFactor: 20,
+    dailyBonus: 500,
+    description: "O nível máximo de juros compostos: a IA opera no potencial total, reinvestindo e multiplicando 24h por dia, sem teto. Você ainda recebe relatório semanal no WhatsApp.",
     price: 97,
     installments: "10x de R$ 9,90",
     border: "1px solid rgba(96,165,250,0.25)",
     btnBg: "linear-gradient(135deg, #3B82F6, #2563EB)",
     btnColor: "#fff",
     btnBorder: "none",
-    btnText: "LIBERAR ESTE LIMITE",
+    btnText: "ATIVAR MULTIPLICAÇÃO 20X",
     badge: null,
     checkoutUrl: "https://pay.kirvano.com/e7d1995f-9b55-47d0-a1c4-762b07721162",
   },
@@ -1033,19 +1036,19 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
             <div className="space-y-5">
               <div className="text-center">
                 <h2 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
-                  {userName}, escolha seu novo limite:
+                  {userName}, escolha sua velocidade de multiplicação:
                 </h2>
                 <p className="text-[13px] mt-2 leading-relaxed" style={{ color: "#94A3B8" }}>
-                  Baseado no seu perfil, o sistema recomendou a melhor opção pra você.
+                  Quanto mais rápido seus juros compostos operam, mais rápido seus ganhos se multiplicam.
                   <strong style={{ color: "#FACC15" }}> Pagamento único, sem mensalidade.</strong>
                 </p>
               </div>
 
-              {/* Current limit warning */}
+              {/* Current speed warning */}
               <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}>
                 <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
                 <p className="text-[12px] leading-snug" style={{ color: "#FCA5A5" }}>
-                  Limite atual: <strong>R$ 25/dia</strong> (modo proteção). Sem upgrade, seus ganhos ficam travados nesse teto.
+                  Velocidade atual: <strong>1x</strong> (modo básico). Seus juros compostos estão operando na velocidade mínima.
                 </p>
               </div>
 
@@ -1058,7 +1061,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 })
                 .map((plan, i) => {
                   const isRecommended = plan.id === recommendedPlan;
-                  const timeToGoal = getTimeToGoalForPlan(plan.dailyLimit);
+                  const timeToGoal = getTimeToGoalForPlan(plan.dailyBonus);
                   return (
                     <motion.div
                       key={plan.id}
@@ -1104,15 +1107,31 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                           {plan.name}
                         </h3>
                       </div>
-                      <p className="text-[13px] font-semibold" style={{ color: plan.subtitleColor }}>
-                        {plan.subtitle}
-                      </p>
+
+                      {/* Main focus: multiplication factor */}
+                      <div className="mt-2 p-3 rounded-xl text-center" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.12)" }}>
+                        <p className="text-[32px] font-extrabold" style={{ color: plan.subtitleColor }}>
+                          {plan.multFactor}x
+                        </p>
+                        <p className="text-[12px] font-semibold" style={{ color: "#94A3B8" }}>
+                          velocidade de multiplicação
+                        </p>
+                      </div>
+
                       <p className="text-[13px] mt-3 leading-relaxed" style={{ color: "#94A3B8" }}>
                         {plan.description}
                       </p>
 
+                      {/* Daily profit as EXTRA bonus */}
+                      <div className="mt-3 flex items-center gap-2 p-2.5 rounded-lg" style={{ background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.12)" }}>
+                        <Zap className="w-4 h-4 shrink-0" style={{ color: "#FACC15" }} />
+                        <p className="text-[12px] leading-snug" style={{ color: "#FDE68A" }}>
+                          Bônus: lucro extra de até <strong style={{ color: "#F8FAFC" }}>R$ {plan.dailyBonus}/dia</strong>
+                        </p>
+                      </div>
+
                       {/* Time to goal */}
-                      <div className="mt-3 flex items-center gap-2 p-2.5 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)" }}>
+                      <div className="mt-2 flex items-center gap-2 p-2.5 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)" }}>
                         <Target className="w-4 h-4 shrink-0" style={{ color: "#22C55E" }} />
                         <p className="text-[12px] leading-snug" style={{ color: "#86EFAC" }}>
                           Alcança <strong style={{ color: "#F8FAFC" }}>{goalLabel(answers.goal)}</strong> em <strong style={{ color: "#22C55E" }}>{timeToGoal}</strong>
