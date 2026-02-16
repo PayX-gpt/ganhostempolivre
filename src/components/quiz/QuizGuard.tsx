@@ -1,6 +1,7 @@
 import { ReactNode, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { initializeTrackingDataLayer } from "@/lib/trackingDataLayer";
+import GhostPage from "../upsell/GhostPage";
 
 interface Props {
   children: ReactNode;
@@ -104,8 +105,7 @@ const QuizGuard = ({ children }: Props) => {
   }, [isAuthorized]);
 
   if (!isAuthorized) {
-    window.location.replace("https://inlead.digital/quiz-f-plataforma");
-    return null;
+    return <GhostPage />;
   }
 
   return <>{children}</>;
