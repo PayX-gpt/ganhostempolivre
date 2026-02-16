@@ -3,6 +3,7 @@ import { Shield, Zap, BarChart3, Star, Crown, Diamond, Check } from "lucide-reac
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 
 interface Props {
   name: string;
@@ -74,6 +75,10 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
     saveUpsellExtras("multiplicador", { plan: plan.id, price: plan.price });
     saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell2", plan: plan.id, price: plan.price });
     logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell2", metadata: { plan: plan.id, price: plan.price } });
+    const utmQs = buildTrackingQueryString();
+    const separator = plan.checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${plan.checkoutUrl}${separator}${utmQs.slice(1)}` : plan.checkoutUrl;
+    window.open(fullUrl, "_blank");
   };
 
   return (
@@ -169,7 +174,7 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
           <button
             id={`btn-${plan.id}`}
             onClick={() => handleSelect(plan)}
-            className="kirvano-payment-trigger w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
+            className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
             style={{
               background: plan.btnBg,
               color: plan.btnColor,
@@ -183,7 +188,7 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
 
       <button
         onClick={() => { saveFunnelEvent("upsell_oneclick_decline", { page: "/upsell2" }); logAuditEvent({ eventType: "upsell_oneclick_decline", pageId: "/upsell2" }); onDecline(); }}
-        className="kirvano-refuse-trigger text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2"
+        className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2"
         style={{ color: "#475569" }}
       >
         Não, obrigado. Prefiro manter o limite de R$25/dia por enquanto.

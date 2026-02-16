@@ -4,6 +4,7 @@ import { ShieldCheck, Check, Lock, Infinity, RefreshCw } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 
 interface Props {
   name: string;
@@ -30,6 +31,11 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
     saveUpsellExtras("blindagem", { price: 197 });
     saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell3", product: "blindagem", price: 197 });
     logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell3", metadata: { product: "blindagem", price: 197 } });
+    const checkoutUrl = "https://pay.kirvano.com/a7cfdcbf-849f-4060-b660-b850f46a0e52";
+    const utmQs = buildTrackingQueryString();
+    const separator = checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${checkoutUrl}${separator}${utmQs.slice(1)}` : checkoutUrl;
+    window.open(fullUrl, "_blank");
   };
 
   return (
@@ -147,7 +153,7 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
           <button
             onClick={handleBuy}
             disabled={loading}
-            className="kirvano-payment-trigger w-full mt-4 py-[16px] rounded-xl text-[15px] font-bold text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70"
+            className="w-full mt-4 py-[16px] rounded-xl text-[15px] font-bold text-white transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70"
             style={{
               background: "linear-gradient(135deg, #3B82F6, #2563EB)",
               boxShadow: "0 0 20px rgba(59,130,246,0.25), 0 4px 12px rgba(0,0,0,0.3)",
@@ -178,7 +184,7 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
 
       <button
         onClick={() => { saveFunnelEvent("upsell_oneclick_decline", { page: "/upsell3" }); logAuditEvent({ eventType: "upsell_oneclick_decline", pageId: "/upsell3" }); onDecline(); }}
-        className="kirvano-refuse-trigger text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2"
+        className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2"
         style={{ color: "#475569" }}
       >
         Não, obrigado. Prefiro seguir sem a proteção por enquanto.
