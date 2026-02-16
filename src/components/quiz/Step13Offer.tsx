@@ -13,7 +13,7 @@ import mentorPhoto from "@/assets/mentor-new.webp";
 import bonusStack from "@/assets/bonus-stack.jpg";
 import guaranteeSeal from "@/assets/guarantee-seal.jpg";
 import giftBox from "@/assets/gift-box.jpg";
-import chatgptLogo from "@/assets/chatgpt-logo.webp";
+import chatgptLogo from "@/assets/chatgpt-logo.png";
 import feedback1 from "@/assets/feedback-1.png";
 import feedback2 from "@/assets/feedback-2.jpg";
 import feedback3 from "@/assets/feedback-3.jpg";
