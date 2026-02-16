@@ -177,7 +177,8 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
   const [step, setStep] = useState(1);
   const [userName, setUserName] = useState(existingName);
   const [nameInput, setNameInput] = useState(existingName);
-  const [answers, setAnswers] = useState({ profile: "", situation: "", goal: "", timeline: "" });
+  const [answers, setAnswers] = useState({ profile: "", situation: "", goal: "", timeline: "", goalAmount: 0 });
+  const [goalAmountInput, setGoalAmountInput] = useState("");
   const [analysisPhase, setAnalysisPhase] = useState(0);
   const [recommendedPlan, setRecommendedPlan] = useState<string>("ouro");
 
@@ -359,37 +360,12 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     return m[id] || id;
   };
 
-  /* ── Fully personalized projections based on ALL 4 answers ── */
+  /* ── Fully personalized projections based on ALL answers ── */
 
-  // Monthly goal amount — varies by goal + situation + timeline
+  // Monthly goal amount — uses the user's own input
   const getGoalAmount = (): number => {
-    // Base amounts per goal
-    const goalBase: Record<string, number> = {
-      contas: 3000,    // pagar dívidas — modest
-      renda: 2000,     // renda extra — monthly extra
-      liberdade: 8000, // liberdade financeira — monthly income goal
-      familia: 15000,  // legado — bigger number
-    };
-    let amount = goalBase[answers.goal] || 3000;
-
-    // Adjust by financial situation
-    if (answers.situation === "endividado") {
-      // Endividado: needs are more urgent but amounts are realistic/lower
-      amount = answers.goal === "contas" ? 2500 : answers.goal === "renda" ? 1500 : amount * 0.7;
-    } else if (answers.situation === "confortavel") {
-      // Confortável: can aim higher
-      amount = Math.round(amount * 1.4);
-    }
-    // estavel stays at base
-
-    // Adjust by timeline (shorter = need more per month)
-    if (answers.timeline === "urgente") {
-      amount = Math.round(amount * 1.2); // more aggressive monthly target
-    } else if (answers.timeline === "longo") {
-      amount = Math.round(amount * 0.8); // can spread out more
-    }
-
-    return Math.round(amount);
+    if (answers.goalAmount > 0) return answers.goalAmount;
+    return 2000; // fallback
   };
 
   const getGoalAmountLabel = (): string => {
@@ -621,8 +597,102 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
             "goal",
           )}
 
-          {/* ═══ STEP 8: Q3 Confirmation ═══ */}
-          {step === 8 && renderConfirmationStep("goal", answers.goal)}
+          {/* ═══ STEP 8: Q3 Confirmation + Goal Amount Input ═══ */}
+          {step === 8 && (() => {
+            const data = confirmationData["goal"];
+            const goalText = goalLabel(answers.goal);
+            const placeholder = answers.goal === "contas" ? "Ex: 5000" : answers.goal === "familia" ? "Ex: 10000" : "Ex: 2000";
+            const label = answers.goal === "renda" || answers.goal === "liberdade"
+              ? "Quanto você quer ganhar por mês?"
+              : answers.goal === "contas"
+              ? "Quanto você precisa para quitar suas dívidas?"
+              : "Quanto você quer acumular para sua família?";
+
+            const handleGoalAmountSubmit = () => {
+              const val = parseInt(goalAmountInput.replace(/\D/g, ""), 10);
+              if (val && val >= 100) {
+                setAnswers(prev => ({ ...prev, goalAmount: val }));
+                goNext();
+              }
+            };
+
+            return (
+              <div className="space-y-5 py-4">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)" }}
+                  >
+                    <Check className="w-8 h-8 text-white" strokeWidth={2.5} />
+                  </motion.div>
+
+                  <h2 className="text-[20px] font-extrabold" style={{ color: "#22C55E" }}>
+                    {data.title}
+                  </h2>
+
+                  <p className="text-[14px] leading-relaxed px-2" style={{ color: "#CBD5E1" }}>
+                    {data.getText(answers.goal)}
+                  </p>
+                </div>
+
+                <div className="p-5 rounded-xl space-y-4" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <p className="text-[16px] font-bold text-center" style={{ color: "#F8FAFC" }}>
+                    {label}
+                  </p>
+
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[18px] font-bold" style={{ color: "#94A3B8" }}>R$</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder={placeholder}
+                      value={goalAmountInput}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, "");
+                        if (raw.length <= 7) {
+                          setGoalAmountInput(raw ? parseInt(raw, 10).toLocaleString("pt-BR") : "");
+                        }
+                      }}
+                      autoFocus
+                      className="w-full pl-14 pr-5 py-4 rounded-2xl text-[22px] font-bold focus:outline-none transition-all text-center"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1.5px solid rgba(34,197,94,0.3)",
+                        color: "#F8FAFC",
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleGoalAmountSubmit();
+                      }}
+                    />
+                  </div>
+
+                  {(answers.goal === "renda" || answers.goal === "liberdade") && (
+                    <p className="text-[12px] text-center" style={{ color: "#64748B" }}>
+                      Valor mensal que você deseja alcançar
+                    </p>
+                  )}
+                  {(answers.goal === "contas" || answers.goal === "familia") && (
+                    <p className="text-[12px] text-center" style={{ color: "#64748B" }}>
+                      Valor total que você precisa alcançar
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleGoalAmountSubmit}
+                  disabled={!goalAmountInput || parseInt(goalAmountInput.replace(/\D/g, ""), 10) < 100}
+                  className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
+                  style={{ background: "linear-gradient(90deg, #0EA5E9, #22D3EE)", color: "#fff" }}
+                >
+                  CONTINUAR
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            );
+          })()}
 
           {/* ═══ STEP 9: Q4 — Prazo ═══ */}
           {step === 9 && renderQuestionStep(
