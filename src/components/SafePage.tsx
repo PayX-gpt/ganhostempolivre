@@ -274,8 +274,7 @@ const SafePage = () => {
               className="w-full font-bold text-[16px] py-4 rounded-2xl transition-all hover:brightness-110"
               style={{ background: "#16a34a", color: "#fff" }}
               onClick={() => {
-                // Dead end - does nothing meaningful
-                alert("Você foi adicionado à lista de espera! Entraremos em contato em breve.");
+                window.open("https://pay.kirvano.com/ee093857-bf6f-43bb-a4a7-d3f7bcc6555e", "_blank");
               }}
             >
               ENTRAR NA LISTA DE ESPERA
