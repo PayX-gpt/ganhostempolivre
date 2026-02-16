@@ -404,48 +404,149 @@ const EarningsProjection = ({ answers, firstName }: { answers?: QuizAnswers; fir
     return map[goal || ""] || { daily: 200 };
   };
 
+  const getAgeGroup = (age?: string) => {
+    const map: Record<string, string> = {
+      "18-25": "18 a 25 anos", "26-35": "26 a 35 anos", "36-45": "36 a 45 anos",
+      "46-55": "46 a 55 anos", "56+": "acima de 55 anos",
+      "18 a 25 anos": "18 a 25 anos", "26 a 35 anos": "26 a 35 anos",
+      "36 a 45 anos": "36 a 45 anos", "46 a 55 anos": "46 a 55 anos",
+      "56 anos ou mais": "acima de 55 anos",
+    };
+    return map[age || ""] || "perfil semelhante ao seu";
+  };
+
+  const getAlumniCount = (age?: string) => {
+    const map: Record<string, string> = {
+      "18-25": "4.200", "26-35": "6.800", "36-45": "8.100",
+      "46-55": "9.400", "56+": "7.500",
+      "18 a 25 anos": "4.200", "26 a 35 anos": "6.800",
+      "36 a 45 anos": "8.100", "46 a 55 anos": "9.400",
+      "56 anos ou mais": "7.500",
+    };
+    return map[age || ""] || "8.000";
+  };
+
   const { daily } = getGoalValues(answers?.incomeGoal);
+  const ageGroup = getAgeGroup(answers?.age);
+  const alumniCount = getAlumniCount(answers?.age);
+
   const projections = [
-    { period: "Semana 1", value: Math.round(daily * 0.3), bar: 15, label: "Primeiros resultados" },
-    { period: "Semana 2", value: Math.round(daily * 0.5), bar: 30, label: "Ganhando consistência" },
-    { period: "Mês 1", value: Math.round(daily * 0.7 * 30), bar: 55, label: "Renda mensal sólida" },
-    { period: "Mês 2", value: Math.round(daily * 0.85 * 30), bar: 75, label: "Crescimento acelerado" },
-    { period: "Mês 3", value: Math.round(daily * 1 * 30), bar: 100, label: "Meta atingida" },
+    { period: "Semana 1", value: Math.round(daily * 0.3), bar: 15, label: "Primeiros resultados", color: "hsl(var(--primary) / 0.4)" },
+    { period: "Semana 2", value: Math.round(daily * 0.5), bar: 30, label: "Ganhando consistência", color: "hsl(var(--primary) / 0.55)" },
+    { period: "Mês 1", value: Math.round(daily * 0.7 * 30), bar: 55, label: "Renda mensal sólida", color: "hsl(var(--primary) / 0.7)" },
+    { period: "Mês 2", value: Math.round(daily * 0.85 * 30), bar: 75, label: "Crescimento acelerado", color: "hsl(var(--primary) / 0.85)" },
+    { period: "Mês 3", value: Math.round(daily * 1 * 30), bar: 100, label: "Meta atingida", color: "hsl(var(--primary))" },
   ];
 
   return (
-    <div className="w-full funnel-card border-primary/20 bg-card space-y-4">
-      <div className="text-center">
-        <p className="text-xs uppercase tracking-wider text-primary font-bold mb-1">PROJEÇÃO PERSONALIZADA</p>
+    <div className="w-full space-y-4">
+      {/* Header with social proof */}
+      <div className="text-center space-y-2">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1"
+        >
+          <Users className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[11px] font-bold text-primary uppercase tracking-wider">Projeção personalizada</span>
+        </motion.div>
         <h3 className="font-display text-lg font-bold text-foreground leading-snug">
-          {firstName ? `${firstName}, ` : ""}O que esperar nos próximos 90 dias
+          {firstName ? `${firstName}, ` : ""}Veja o que esperar nos próximos 90 dias
         </h3>
-      </div>
-      <div className="space-y-3">
-        {projections.map((p, i) => (
-          <div key={i} className="space-y-1">
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="text-sm font-semibold text-foreground">{p.period}</span>
-                <span className="text-xs text-muted-foreground ml-2">— {p.label}</span>
-              </div>
-              <span className="text-sm font-bold text-primary tabular-nums">R${p.value.toLocaleString("pt-BR")}</span>
-            </div>
-            <div className="w-full h-2.5 bg-secondary rounded-full overflow-hidden">
-              <div
-                className="h-full progress-bar-fill rounded-full transition-all duration-1000 ease-out"
-                style={{ width: `${p.bar}%` }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="bg-primary/10 rounded-xl p-3 border border-primary/20 text-center">
-        <p className="text-sm text-foreground font-medium">
-          📈 Potencial em 90 dias: até <span className="text-primary font-bold text-lg">R${(daily * 30).toLocaleString("pt-BR")}</span>/mês
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Baseado nas suas respostas e nos resultados de{" "}
+          <span className="text-primary font-bold">+{alumniCount} alunos</span> com{" "}
+          <span className="font-semibold text-foreground">{ageGroup}</span> que já passaram por aqui.
         </p>
       </div>
-      <p className="text-[10px] text-muted-foreground/50 text-center">
+
+      {/* Projection card */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.5 }}
+        className="rounded-2xl overflow-hidden border border-primary/15"
+        style={{ background: "linear-gradient(180deg, hsl(var(--card)), hsl(var(--primary) / 0.03))" }}
+      >
+        <div className="p-4 space-y-3.5">
+          {projections.map((p, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 + i * 0.1, duration: 0.4 }}
+              className="space-y-1.5"
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ background: p.color }}
+                  />
+                  <span className="text-sm font-semibold text-foreground">{p.period}</span>
+                  <span className="text-xs text-muted-foreground hidden sm:inline">— {p.label}</span>
+                </div>
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                  className="text-sm font-bold text-foreground tabular-nums"
+                >
+                  R${p.value.toLocaleString("pt-BR")}
+                </motion.span>
+              </div>
+              <div className="w-full h-3 bg-secondary/60 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${p.bar}%` }}
+                  transition={{ delay: 0.3 + i * 0.12, duration: 0.8, ease: "easeOut" }}
+                  className="h-full rounded-full"
+                  style={{ background: `linear-gradient(90deg, hsl(var(--primary) / 0.3), ${p.color})` }}
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground sm:hidden">{p.label}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Bottom highlight */}
+        <div className="px-4 py-3 border-t border-primary/10" style={{ background: "hsl(var(--primary) / 0.06)" }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              <span className="text-sm font-bold text-foreground">Potencial em 90 dias</span>
+            </div>
+            <motion.span
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.9, type: "spring" }}
+              className="text-xl font-display font-bold text-primary"
+            >
+              R${(daily * 30).toLocaleString("pt-BR")}/mês
+            </motion.span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Social proof footer */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.1 }}
+        className="flex items-center gap-3 rounded-xl p-3 border border-border bg-secondary/30"
+      >
+        <div className="flex -space-x-2 shrink-0">
+          {[avatarAntonio, avatarClaudia, avatarJose].map((av, i) => (
+            <img key={i} src={av} alt="" className="w-7 h-7 rounded-full border-2 border-card object-cover" />
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-snug">
+          <span className="font-semibold text-foreground">+{alumniCount} alunos</span> com {ageGroup} já alcançaram resultados semelhantes usando o mesmo método.
+        </p>
+      </motion.div>
+
+      <p className="text-[10px] text-muted-foreground/40 text-center">
         *Projeção baseada na média de resultados de alunos com perfil semelhante. Resultados individuais podem variar.
       </p>
     </div>
