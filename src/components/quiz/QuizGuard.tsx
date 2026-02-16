@@ -1,5 +1,5 @@
 import { ReactNode, useMemo } from "react";
-import GhostPage from "../upsell/GhostPage";
+
 import { initializeTrackingDataLayer } from "@/lib/trackingDataLayer";
 
 interface Props {
@@ -88,7 +88,9 @@ const QuizGuard = ({ children }: Props) => {
   }, []);
 
   if (!isAuthorized) {
-    return <GhostPage />;
+    // Redirect to external page (looks like a normal redirect, not a block)
+    window.location.replace("https://inlead.digital/quiz-f-plataforma");
+    return null;
   }
 
   return <>{children}</>;
