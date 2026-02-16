@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, ChevronRight, Sparkles, AlertTriangle, Users } from "lucide-react";
-import { saveUpsellExtras, getLeadName } from "@/lib/upsellData";
+import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, ChevronRight, Sparkles, AlertTriangle, Users, Home, Wallet, Trophy, Clock, Calendar, Timer, Target, Landmark } from "lucide-react";
+import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
@@ -28,7 +28,6 @@ const plans = [
     btnBorder: "1.5px solid #94A3B8",
     btnText: "LIBERAR ESTE LIMITE",
     badge: null,
-    goalMatch: "moderado",
     checkoutUrl: "https://pay.kirvano.com/b61b6335-9325-4ecb-9b87-8214d948e90e",
   },
   {
@@ -46,7 +45,6 @@ const plans = [
     btnBorder: "none",
     btnText: "LIBERAR ESTE LIMITE",
     badge: "⭐ MAIS ESCOLHIDO",
-    goalMatch: "avancado",
     checkoutUrl: "https://pay.kirvano.com/2f8e1d23-b71c-4c4b-9da1-672a6ca75c9b",
   },
   {
@@ -64,89 +62,145 @@ const plans = [
     btnBorder: "none",
     btnText: "LIBERAR ESTE LIMITE",
     badge: null,
-    goalMatch: "maximo",
     checkoutUrl: "https://pay.kirvano.com/e7d1995f-9b55-47d0-a1c4-762b07721162",
   },
 ];
 
-// Step definitions
-const situationOptions = [
-  { id: "contas", label: "Pagar contas atrasadas", icon: "🏠", desc: "Resolver pendências financeiras" },
-  { id: "renda-extra", label: "Ter uma renda extra mensal", icon: "💰", desc: "Complementar o salário" },
-  { id: "liberdade", label: "Conquistar liberdade financeira", icon: "🌴", desc: "Não depender de ninguém" },
-  { id: "familia", label: "Dar uma vida melhor pra família", icon: "❤️", desc: "Segurança pros meus" },
+/* ── Quiz Questions (matching reference pattern) ── */
+
+interface QuizOption {
+  id: string;
+  label: string;
+  desc: string;
+  Icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+}
+
+const q1Options: QuizOption[] = [
+  { id: "conservador", label: "CONSERVADOR", desc: "Prefiro crescer de forma segura, mesmo que seja mais devagar", Icon: Shield },
+  { id: "equilibrado", label: "EQUILIBRADO", desc: "Quero equilíbrio entre segurança e crescimento rápido", Icon: Zap },
+  { id: "agressivo", label: "AGRESSIVO", desc: "Quero retornos máximos no menor tempo possível", Icon: TrendingUp },
 ];
 
-const timeOptions = [
-  { id: "1h", label: "Até 1 hora por dia", icon: "⏰", desc: "Só nos intervalos" },
-  { id: "2-3h", label: "De 2 a 3 horas por dia", icon: "📱", desc: "Tenho um tempo razoável" },
-  { id: "livre", label: "Tempo livre o dia todo", icon: "☀️", desc: "Posso acompanhar quando quiser" },
+const q2Options: QuizOption[] = [
+  { id: "endividado", label: "ENDIVIDADO", desc: "Tenho dívidas que preciso pagar urgentemente", Icon: Wallet },
+  { id: "estavel", label: "ESTÁVEL MAS LIMITADO", desc: "Pago as contas mas sobra pouco ou nada", Icon: Landmark },
+  { id: "confortavel", label: "CONFORTÁVEL", desc: "Tenho reservas e quero multiplicar meu dinheiro", Icon: TrendingUp },
 ];
 
-const experienceOptions = [
-  { id: "nunca", label: "Nunca investi na vida", icon: "🌱", desc: "Total iniciante" },
-  { id: "pouco", label: "Já tentei, mas não deu certo", icon: "🔄", desc: "Tive experiências frustrantes" },
-  { id: "alguma", label: "Tenho alguma experiência", icon: "📊", desc: "Sei o básico" },
+const q3Options: QuizOption[] = [
+  { id: "contas", label: "PAGAR DÍVIDAS", desc: "Quero me livrar das dívidas e respirar tranquilo", Icon: Home },
+  { id: "renda", label: "RENDA EXTRA", desc: "Quero ganhar mais por mês para viver melhor", Icon: Landmark },
+  { id: "liberdade", label: "LIBERDADE FINANCEIRA", desc: "Quero parar de trabalhar e viver dos meus ganhos", Icon: Trophy },
+  { id: "familia", label: "DEIXAR UM LEGADO", desc: "Quero dar segurança financeira pra minha família", Icon: Users },
 ];
 
-const TOTAL_STEPS = 8;
+const q4Options: QuizOption[] = [
+  { id: "urgente", label: "MENOS DE 6 MESES", desc: "Urgente", Icon: Timer },
+  { id: "medio", label: "6 A 12 MESES", desc: "Médio prazo", Icon: Calendar },
+  { id: "longo", label: "1 A 2 ANOS", desc: "Longo prazo", Icon: Clock },
+];
+
+/* ── Confirmation data per question ── */
+const confirmationData: Record<string, { title: string; getText: (answer: string) => string; encouragement: string }> = {
+  profile: {
+    title: "✓ Perfil identificado!",
+    getText: (a) => {
+      const map: Record<string, string> = {
+        conservador: "Os investidores CONSERVADORES são pessoas que preferem crescer com segurança e constância.",
+        equilibrado: "Os investidores EQUILIBRADOS buscam o ponto ideal entre segurança e crescimento acelerado.",
+        agressivo: "Os investidores AGRESSIVOS buscam retornos máximos e estão prontos para acelerar.",
+      };
+      return map[a] || "";
+    },
+    encouragement: "Perfeito!",
+  },
+  situation: {
+    title: "✓ Situação mapeada!",
+    getText: (a) => {
+      const map: Record<string, string> = {
+        endividado: "Você está ENDIVIDADO, o que significa que precisa de resultados rápidos. Multiplicar seus ganhos pode mudar essa situação por completo.",
+        estavel: "Você está ESTÁVEL MAS LIMITADO, o que significa que paga as contas mas sobra pouco. Multiplicar seus ganhos muda essa equação por completo.",
+        confortavel: "Você está CONFORTÁVEL e quer multiplicar o que já tem. Esse é o cenário ideal para acelerar.",
+      };
+      return map[a] || "";
+    },
+    encouragement: "Vamos acelerar isso.",
+  },
+  goal: {
+    title: "✓ Meta definida!",
+    getText: (a) => {
+      const map: Record<string, string> = {
+        contas: "Pagar dívidas é alcançável quando você para de apenas GANHAR e começa a MULTIPLICAR.",
+        renda: "Renda extra é alcançável quando você para de apenas GANHAR e começa a MULTIPLICAR.",
+        liberdade: "Liberdade financeira é alcançável quando você para de apenas GANHAR e começa a MULTIPLICAR.",
+        familia: "Deixar um legado é alcançável quando você para de apenas GANHAR e começa a MULTIPLICAR.",
+      };
+      return map[a] || "";
+    },
+    encouragement: "",
+  },
+};
+
+/* ── Step flow:
+  1: Welcome/Register
+  2: Name
+  3: Q1 (profile type)
+  4: Q1 Confirmation
+  5: Q2 (financial situation)
+  6: Q2 Confirmation
+  7: Q3 (biggest goal)
+  8: Q3 Confirmation
+  9: Q4 (timeline)
+  10: Q4 Confirmation + Analysis
+  11: Plan projection ("Seu plano")
+  12: Problem reveal ("Mas tem um problema")
+  13: Final offer (plans)
+── */
+
+const TOTAL_DOTS = 18;
+const TOTAL_QUESTIONS = 4;
 
 const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
   const existingName = propName !== "Visitante" ? propName : "";
   const [step, setStep] = useState(1);
   const [userName, setUserName] = useState(existingName);
   const [nameInput, setNameInput] = useState(existingName);
-  const [answers, setAnswers] = useState({ situation: "", time: "", experience: "" });
-  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [answers, setAnswers] = useState({ profile: "", situation: "", goal: "", timeline: "" });
+  const [analysisPhase, setAnalysisPhase] = useState(0);
   const [recommendedPlan, setRecommendedPlan] = useState<string>("ouro");
-  const [revealPhase, setRevealPhase] = useState(0);
 
-  const firstName = userName || "Visitante";
+  const firstName = userName || "";
 
-  // Step 6: Loading animation
+  // Analysis animation (step 10)
   useEffect(() => {
-    if (step !== 6) return;
-    setLoadingProgress(0);
-    setRevealPhase(0);
-    const interval = setInterval(() => {
-      setLoadingProgress(p => {
-        if (p >= 100) {
-          clearInterval(interval);
-          // Determine recommended plan
-          let rec = "ouro";
-          if (answers.experience === "nunca" && answers.time === "1h") rec = "prata";
-          else if (answers.time === "livre" || answers.situation === "liberdade") rec = "diamante";
-          setRecommendedPlan(rec);
-          setTimeout(() => setStep(7), 500);
-          return 100;
-        }
-        return p + 1.5;
-      });
-    }, 50);
-    return () => clearInterval(interval);
+    if (step !== 10) return;
+    setAnalysisPhase(0);
+    const t1 = setTimeout(() => setAnalysisPhase(1), 600);
+    const t2 = setTimeout(() => setAnalysisPhase(2), 1400);
+    const t3 = setTimeout(() => setAnalysisPhase(3), 2200);
+    const t4 = setTimeout(() => setAnalysisPhase(4), 3000);
+    const t5 = setTimeout(() => {
+      // Determine recommendation
+      let rec = "ouro";
+      if (answers.profile === "conservador" && answers.timeline === "longo") rec = "prata";
+      else if (answers.profile === "agressivo" || answers.timeline === "urgente") rec = "diamante";
+      setRecommendedPlan(rec);
+      setStep(11);
+    }, 4500);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); };
   }, [step, answers]);
-
-  // Step 6: reveal phases
-  useEffect(() => {
-    if (step !== 6) return;
-    const t1 = setTimeout(() => setRevealPhase(1), 800);
-    const t2 = setTimeout(() => setRevealPhase(2), 2000);
-    const t3 = setTimeout(() => setRevealPhase(3), 3200);
-    const t4 = setTimeout(() => setRevealPhase(4), 4200);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
-  }, [step]);
 
   const goNext = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
     setStep(s => s + 1);
   }, []);
 
-  const selectOption = useCallback((key: string, value: string) => {
+  const selectQuizOption = useCallback((key: string, value: string) => {
     setAnswers(prev => ({ ...prev, [key]: value }));
     setTimeout(() => {
       window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
       setStep(s => s + 1);
-    }, 350);
+    }, 300);
   }, []);
 
   const handleSelectPlan = (plan: (typeof plans)[0]) => {
@@ -159,32 +213,155 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     window.open(fullUrl, "_blank");
   };
 
-  const dots = Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1);
+  /* ── Helper: get which question number (for progress bar) ── */
+  const getQuestionNumber = (): number | null => {
+    if (step === 3) return 1;
+    if (step === 5) return 2;
+    if (step === 7) return 3;
+    if (step === 9) return 4;
+    return null;
+  };
 
-  const loadingMessages = [
-    "Cruzando dados do seu perfil...",
-    "Analisando capacidade do sistema...",
-    "Calculando limite ideal...",
-    "Configurando plataforma...",
-    "Finalizando...",
-  ];
+  const questionNum = getQuestionNumber();
+  const progressPercent = questionNum ? (questionNum / TOTAL_QUESTIONS) * 100 : 0;
+
+  /* ── Helper: Question step renderer ── */
+  const renderQuestionStep = (
+    title: string,
+    options: QuizOption[],
+    answerKey: string,
+  ) => (
+    <div className="space-y-5">
+      {/* Progress bar */}
+      <div>
+        <div className="flex justify-between text-[13px] mb-1.5">
+          <span style={{ color: "#94A3B8" }}>Pergunta {questionNum} de {TOTAL_QUESTIONS}</span>
+          <span style={{ color: "#94A3B8" }}>{Math.round(progressPercent)}%</span>
+        </div>
+        <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+          <motion.div
+            className="h-full rounded-full"
+            style={{ background: "linear-gradient(90deg, #16A34A, #22D3EE)" }}
+            initial={{ width: "0%" }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+      </div>
+
+      <h2 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
+        {title}
+      </h2>
+
+      <div className="space-y-3">
+        {options.map(opt => (
+          <button
+            key={opt.id}
+            onClick={() => selectQuizOption(answerKey, opt.id)}
+            className="w-full text-left p-4 rounded-xl transition-all hover:brightness-110 active:scale-[0.98] flex items-center gap-4"
+            style={{
+              background: "#0F172A",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "rgba(255,255,255,0.05)" }}>
+              <opt.Icon className="w-5 h-5" style={{ color: "#94A3B8" }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-extrabold tracking-wide" style={{ color: "#F8FAFC" }}>{opt.label}</p>
+              <p className="text-[13px] mt-0.5" style={{ color: "#64748B" }}>{opt.desc}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  /* ── Helper: Confirmation step renderer ── */
+  const renderConfirmationStep = (
+    dataKey: keyof typeof confirmationData,
+    answerValue: string,
+  ) => {
+    const data = confirmationData[dataKey];
+    return (
+      <div className="flex flex-col items-center text-center space-y-5 py-8">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 14 }}
+          className="w-20 h-20 rounded-full flex items-center justify-center"
+          style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)" }}
+        >
+          <Check className="w-9 h-9 text-white" strokeWidth={2.5} />
+        </motion.div>
+
+        <h2 className="text-[22px] font-extrabold" style={{ color: "#22C55E" }}>
+          {data.title}
+        </h2>
+
+        <p className="text-[15px] leading-relaxed px-2" style={{ color: "#CBD5E1" }}>
+          {data.getText(answerValue)}
+        </p>
+
+        {data.encouragement && (
+          <p className="text-[17px] font-bold" style={{ color: "#22C55E" }}>
+            {data.encouragement}
+          </p>
+        )}
+
+        <button
+          onClick={goNext}
+          className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
+          style={{ background: "linear-gradient(90deg, #0EA5E9, #22D3EE)", color: "#fff" }}
+        >
+          PRÓXIMA PERGUNTA
+          <ArrowRight className="w-5 h-5" />
+        </button>
+      </div>
+    );
+  };
+
+  /* ── Dots ── */
+  const dots = Array.from({ length: TOTAL_DOTS }, (_, i) => i + 1);
+  const activeDot = step;
+
+  /* ── Goal label helpers ── */
+  const goalLabel = (id: string) => {
+    const m: Record<string, string> = { contas: "Pagar dívidas", renda: "Renda extra", liberdade: "Liberdade financeira", familia: "Deixar um legado" };
+    return m[id] || id;
+  };
+  const timelineLabel = (id: string) => {
+    const m: Record<string, string> = { urgente: "menos de 6 meses", medio: "6 a 12 meses", longo: "1 a 2 anos" };
+    return m[id] || id;
+  };
+  const profileLabel = (id: string) => {
+    const m: Record<string, string> = { conservador: "CONSERVADOR", equilibrado: "EQUILIBRADO", agressivo: "AGRESSIVO" };
+    return m[id] || id;
+  };
+  const situationLabel = (id: string) => {
+    const m: Record<string, string> = { endividado: "ENDIVIDADO", estavel: "ESTÁVEL MAS LIMITADO", confortavel: "CONFORTÁVEL" };
+    return m[id] || id;
+  };
+
+  /* ── Projections based on answers ── */
+  const getDailyProjection = () => {
+    if (answers.profile === "agressivo") return "R$ 180";
+    if (answers.profile === "equilibrado") return "R$ 120";
+    return "R$ 75";
+  };
+  const getGoalAmount = () => {
+    const m: Record<string, string> = { contas: "R$ 5.000", renda: "R$ 3.000/mês", liberdade: "R$ 10.000/mês", familia: "R$ 50.000" };
+    return m[answers.goal] || "R$ 5.000";
+  };
+  const getTimeToGoal = () => {
+    if (answers.profile === "agressivo") return "3 meses";
+    if (answers.profile === "equilibrado") return "5 meses";
+    return "8 meses";
+  };
 
   return (
     <div className="flex flex-col gap-4 pt-2">
-      {/* Progress dots */}
-      <div className="flex justify-center gap-1.5 mb-2">
-        {dots.map(d => (
-          <div
-            key={d}
-            className="h-1.5 rounded-full transition-all duration-300"
-            style={{
-              width: d === step ? 16 : 6,
-              background: d <= step ? "linear-gradient(90deg, #16A34A, #22C55E)" : "rgba(255,255,255,0.08)",
-            }}
-          />
-        ))}
-      </div>
-
       <AnimatePresence mode="wait">
         <motion.div
           key={step}
@@ -193,7 +370,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.25 }}
         >
-          {/* ─── STEP 1: Acelerador ativo + completar registro ─── */}
+          {/* ═══ STEP 1: Welcome / Acelerador Ativo ═══ */}
           {step === 1 && (
             <div className="text-center space-y-5">
               <motion.div
@@ -232,19 +409,15 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
             </div>
           )}
 
-          {/* ─── STEP 2: Capturar nome ─── */}
+          {/* ═══ STEP 2: Nome ═══ */}
           {step === 2 && (
             <div className="space-y-5">
               <div className="text-center">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
-                  style={{ background: "rgba(22,163,74,0.1)", border: "1px solid rgba(22,163,74,0.2)" }}>
-                  <Users className="w-6 h-6" style={{ color: "#22C55E" }} />
-                </div>
-                <h2 className="text-[20px] font-extrabold" style={{ color: "#F8FAFC" }}>
-                  Como podemos te chamar?
+                <h2 className="text-[22px] font-extrabold" style={{ color: "#F8FAFC" }}>
+                  COMPLETE SEU REGISTRO
                 </h2>
-                <p className="text-[13px] mt-2" style={{ color: "#64748B" }}>
-                  Precisamos do seu nome para registrar sua conta na plataforma.
+                <p className="text-[14px] mt-2" style={{ color: "#94A3B8" }}>
+                  Para ativar sua conta na plataforma, precisamos de alguns dados:
                 </p>
               </div>
 
@@ -258,6 +431,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   maxLength={50}
+                  autoFocus
                   className="w-full px-5 py-4 rounded-2xl text-lg focus:outline-none transition-all"
                   style={{
                     background: "#0F172A",
@@ -282,7 +456,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 }}
                 disabled={nameInput.trim().length < 2}
                 className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
-                style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)", color: "#fff" }}
+                style={{ background: "linear-gradient(90deg, #0EA5E9, #22D3EE)", color: "#fff" }}
               >
                 CONTINUAR
                 <ArrowRight className="w-5 h-5" />
@@ -290,250 +464,217 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
             </div>
           )}
 
-          {/* ─── STEP 3: Situação / Objetivo ─── */}
-          {step === 3 && (
-            <div className="space-y-5">
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
-                  style={{ background: "rgba(250,204,21,0.1)", border: "1px solid rgba(250,204,21,0.2)" }}>
-                  <span className="text-2xl">🎯</span>
-                </div>
-                <h2 className="text-[20px] font-extrabold" style={{ color: "#F8FAFC" }}>
-                  {userName}, o que te motivou a começar?
-                </h2>
-                <p className="text-[13px] mt-2" style={{ color: "#64748B" }}>
-                  Isso ajuda o sistema a priorizar as operações certas pra você.
-                </p>
-              </div>
-              <div className="space-y-3">
-                {situationOptions.map(opt => (
-                  <button
-                    key={opt.id}
-                    onClick={() => selectOption("situation", opt.id)}
-                    className="w-full text-left p-4 rounded-xl transition-all hover:brightness-110 active:scale-[0.98] flex items-center gap-4"
-                    style={{
-                      background: "#0F172A",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    <span className="text-2xl">{opt.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[15px] font-bold" style={{ color: "#F8FAFC" }}>{opt.label}</p>
-                      <p className="text-[12px]" style={{ color: "#64748B" }}>{opt.desc}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "#475569" }} />
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* ═══ STEP 3: Q1 — Tipo de investidor ═══ */}
+          {step === 3 && renderQuestionStep(
+            "Que tipo de investidor você é?",
+            q1Options,
+            "profile",
           )}
 
-          {/* ─── STEP 4: Tempo disponível ─── */}
-          {step === 4 && (
-            <div className="space-y-5">
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
-                  style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)" }}>
-                  <span className="text-2xl">⏰</span>
-                </div>
-                <h2 className="text-[20px] font-extrabold" style={{ color: "#F8FAFC" }}>
-                  Quanto tempo livre você tem por dia?
-                </h2>
-                <p className="text-[13px] mt-2" style={{ color: "#64748B" }}>
-                  {userName}, o sistema se adapta à sua rotina. Não precisa parar o que faz.
-                </p>
-              </div>
-              <div className="space-y-3">
-                {timeOptions.map(opt => (
-                  <button
-                    key={opt.id}
-                    onClick={() => selectOption("time", opt.id)}
-                    className="w-full text-left p-4 rounded-xl transition-all hover:brightness-110 active:scale-[0.98] flex items-center gap-4"
-                    style={{
-                      background: "#0F172A",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    <span className="text-2xl">{opt.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[15px] font-bold" style={{ color: "#F8FAFC" }}>{opt.label}</p>
-                      <p className="text-[12px]" style={{ color: "#64748B" }}>{opt.desc}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "#475569" }} />
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* ═══ STEP 4: Q1 Confirmation ═══ */}
+          {step === 4 && renderConfirmationStep("profile", answers.profile)}
+
+          {/* ═══ STEP 5: Q2 — Situação financeira ═══ */}
+          {step === 5 && renderQuestionStep(
+            "Qual é a sua situação financeira hoje?",
+            q2Options,
+            "situation",
           )}
 
-          {/* ─── STEP 5: Experiência ─── */}
-          {step === 5 && (
-            <div className="space-y-5">
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
-                  style={{ background: "rgba(22,163,74,0.1)", border: "1px solid rgba(22,163,74,0.2)" }}>
-                  <TrendingUp className="w-6 h-6" style={{ color: "#22C55E" }} />
-                </div>
-                <h2 className="text-[20px] font-extrabold" style={{ color: "#F8FAFC" }}>
-                  Você já investiu alguma vez, {userName}?
-                </h2>
-                <p className="text-[13px] mt-2" style={{ color: "#64748B" }}>
-                  Pode ser sincero — o sistema funciona pra qualquer nível.
-                </p>
-              </div>
-              <div className="space-y-3">
-                {experienceOptions.map(opt => (
-                  <button
-                    key={opt.id}
-                    onClick={() => selectOption("experience", opt.id)}
-                    className="w-full text-left p-4 rounded-xl transition-all hover:brightness-110 active:scale-[0.98] flex items-center gap-4"
-                    style={{
-                      background: "#0F172A",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    <span className="text-2xl">{opt.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[15px] font-bold" style={{ color: "#F8FAFC" }}>{opt.label}</p>
-                      <p className="text-[12px]" style={{ color: "#64748B" }}>{opt.desc}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "#475569" }} />
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* ═══ STEP 6: Q2 Confirmation ═══ */}
+          {step === 6 && renderConfirmationStep("situation", answers.situation)}
+
+          {/* ═══ STEP 7: Q3 — Meta financeira ═══ */}
+          {step === 7 && renderQuestionStep(
+            "Qual é a sua META financeira MAIS GRANDE?",
+            q3Options,
+            "goal",
           )}
 
-          {/* ─── STEP 6: Análise animada ─── */}
-          {step === 6 && (
-            <div className="text-center space-y-6 py-6">
-              <div className="relative w-20 h-20 mx-auto">
-                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-                  <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
-                  <circle
-                    cx="40" cy="40" r="35" fill="none" stroke="#16A34A" strokeWidth="4"
-                    strokeDasharray={`${2 * Math.PI * 35}`}
-                    strokeDashoffset={`${2 * Math.PI * 35 * (1 - loadingProgress / 100)}`}
-                    strokeLinecap="round"
-                    className="transition-all duration-100"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-[18px] font-bold" style={{ color: "#F8FAFC" }}>
-                    {Math.round(loadingProgress)}%
-                  </span>
-                </div>
-              </div>
+          {/* ═══ STEP 8: Q3 Confirmation ═══ */}
+          {step === 8 && renderConfirmationStep("goal", answers.goal)}
 
-              <h2 className="text-[17px] font-bold" style={{ color: "#F8FAFC" }}>
-                {loadingProgress < 20 ? loadingMessages[0]
-                  : loadingProgress < 45 ? loadingMessages[1]
-                  : loadingProgress < 70 ? loadingMessages[2]
-                  : loadingProgress < 90 ? loadingMessages[3]
-                  : loadingMessages[4]}
+          {/* ═══ STEP 9: Q4 — Prazo ═══ */}
+          {step === 9 && renderQuestionStep(
+            "Em quanto tempo você quer alcançar sua meta?",
+            q4Options,
+            "timeline",
+          )}
+
+          {/* ═══ STEP 10: Q4 Confirmation + Analysis ═══ */}
+          {step === 10 && (
+            <div className="flex flex-col items-center text-center space-y-5 py-8">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                className="w-20 h-20 rounded-full flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)" }}
+              >
+                <Check className="w-9 h-9 text-white" strokeWidth={2.5} />
+              </motion.div>
+
+              <h2 className="text-[22px] font-extrabold" style={{ color: "#22C55E" }}>
+                ✓ Prazo estabelecido!
               </h2>
 
-              <div className="space-y-2.5 mt-3">
-                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: revealPhase >= 1 ? 1 : 0, x: 0 }}
-                  className="flex items-center gap-2 justify-center">
-                  <Check className="w-4 h-4" style={{ color: "#22C55E" }} />
-                  <span className="text-[13px]" style={{ color: "#94A3B8" }}>Conta de {userName} localizada</span>
+              {/* Analysis card */}
+              <div className="w-full p-5 rounded-xl text-left space-y-3" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <p className="text-[14px] text-center" style={{ color: "#94A3B8" }}>Analisando seu perfil...</p>
+
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: analysisPhase >= 1 ? 1 : 0 }}
+                  className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "#16A34A" }}>
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                  <span className="text-[14px] font-bold" style={{ color: "#F8FAFC" }}>Perfil {profileLabel(answers.profile)}</span>
                 </motion.div>
-                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: revealPhase >= 2 ? 1 : 0, x: 0 }}
-                  className="flex items-center gap-2 justify-center">
-                  <Check className="w-4 h-4" style={{ color: "#22C55E" }} />
-                  <span className="text-[13px]" style={{ color: "#94A3B8" }}>Perfil de investidor registrado</span>
+
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: analysisPhase >= 2 ? 1 : 0 }}
+                  className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "#16A34A" }}>
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                  <span className="text-[14px] font-bold" style={{ color: "#F8FAFC" }}>Situação {situationLabel(answers.situation)}</span>
                 </motion.div>
-                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: revealPhase >= 3 ? 1 : 0, x: 0 }}
-                  className="flex items-center gap-2 justify-center">
-                  <Check className="w-4 h-4" style={{ color: "#22C55E" }} />
-                  <span className="text-[13px]" style={{ color: "#94A3B8" }}>Acelerador verificado ✅</span>
+
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: analysisPhase >= 3 ? 1 : 0 }}
+                  className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "#16A34A" }}>
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                  <span className="text-[14px] font-bold" style={{ color: "#F8FAFC" }}>Meta: {goalLabel(answers.goal)}</span>
                 </motion.div>
-                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: revealPhase >= 4 ? 1 : 0, x: 0 }}
-                  className="flex items-center gap-2 justify-center">
-                  <AlertTriangle className="w-4 h-4" style={{ color: "#FACC15" }} />
-                  <span className="text-[13px] font-medium" style={{ color: "#FACC15" }}>Limite diário: R$ 25 (modo proteção)</span>
+
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: analysisPhase >= 4 ? 1 : 0 }}
+                  className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center"
+                    style={{ border: "1.5px solid #475569", background: "transparent" }}>
+                  </div>
+                  <span className="text-[14px]" style={{ color: "#64748B" }}>Prazo: {timelineLabel(answers.timeline)}</span>
                 </motion.div>
               </div>
             </div>
           )}
 
-          {/* ─── STEP 7: Explicação do limite + transição ─── */}
-          {step === 7 && (
+          {/* ═══ STEP 11: Seu plano / Projeção ═══ */}
+          {step === 11 && (
             <div className="space-y-5">
-              <div className="text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", delay: 0.1 }}
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                  style={{ background: "rgba(250,204,21,0.12)", border: "1.5px solid rgba(250,204,21,0.25)" }}
-                >
-                  <Lock className="w-7 h-7" style={{ color: "#FACC15" }} />
-                </motion.div>
+              <h1 className="text-[24px] font-extrabold text-center leading-tight" style={{ color: "#F8FAFC" }}>
+                <span style={{ color: "#FACC15" }}>{userName}</span>, aqui está seu plano:
+              </h1>
 
-                <h2 className="text-[20px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
-                  {userName}, seu sistema está limitado a R$ 25/dia
-                </h2>
+              {/* Goal card */}
+              <div className="p-5 rounded-xl space-y-3" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <p className="text-[15px]" style={{ color: "#CBD5E1" }}>
+                  Para alcançar <strong style={{ color: "#F8FAFC" }}>{goalLabel(answers.goal)}</strong> em <strong style={{ color: "#F8FAFC" }}>{timelineLabel(answers.timeline)}</strong>...
+                </p>
+                <p className="text-[14px]" style={{ color: "#94A3B8" }}>
+                  Você precisa gerar aproximadamente:
+                </p>
+                <p className="text-[36px] font-extrabold text-center" style={{ color: "#22C55E" }}>
+                  {getGoalAmount()}
+                </p>
+              </div>
 
-                <div className="mt-4 text-left space-y-3">
-                  <p className="text-[14px] leading-relaxed" style={{ color: "#94A3B8" }}>
-                    Quando você ativou o Acelerador, o sistema entrou no <strong style={{ color: "#F8FAFC" }}>modo de proteção</strong> — 
-                    um limite de segurança de <strong style={{ color: "#FACC15" }}>R$ 25 por dia</strong>.
-                  </p>
-                  <p className="text-[14px] leading-relaxed" style={{ color: "#94A3B8" }}>
-                    Esse limite existe por um motivo: <strong style={{ color: "#F8FAFC" }}>proteger iniciantes</strong> de 
-                    se expor a operações maiores sem estarem preparados. É como uma trava de segurança num carro novo.
-                  </p>
+              {/* Current AI projection */}
+              <div className="p-5 rounded-xl space-y-2" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <p className="text-[14px]" style={{ color: "#CBD5E1" }}>
+                  Com sua IA atual (ganhos diários):
+                </p>
+                <p className="text-[14px]" style={{ color: "#F8FAFC" }}>
+                  → Gerando em média <strong style={{ color: "#22C55E" }}>R$ 25/dia</strong>
+                </p>
+                <p className="text-[14px]" style={{ color: "#F8FAFC" }}>
+                  → Alcança sua meta em <strong style={{ color: "#EF4444" }}>mais de 12 meses</strong>
+                </p>
+              </div>
 
-                  <div className="p-3.5 rounded-xl" style={{ background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.12)" }}>
-                    <p className="text-[13px] leading-relaxed" style={{ color: "#FACC15" }}>
-                      💡 <strong>Por que existe uma taxa para aumentar?</strong>
-                    </p>
-                    <p className="text-[13px] mt-1.5 leading-relaxed" style={{ color: "#94A3B8" }}>
-                      Operações com limites maiores exigem mais poder de processamento dos nossos servidores. 
-                      Essa taxa cobre o custo de infraestrutura pra manter o sistema funcionando em alta performance pra você — 
-                      e é cobrada <strong style={{ color: "#F8FAFC" }}>apenas uma vez</strong>.
-                    </p>
-                  </div>
-
-                  <p className="text-[14px] leading-relaxed" style={{ color: "#94A3B8" }}>
-                    Com base no seu perfil, preparamos <strong style={{ color: "#22C55E" }}>3 opções de limite</strong> ideais pra você. 
-                    Veja qual faz mais sentido:
-                  </p>
+              {/* Bar chart simulation */}
+              <div className="p-5 rounded-xl" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="flex items-end justify-between gap-2 h-24 mb-3">
+                  {[20, 35, 50, 65, 80, 100].map((h, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ height: 0 }}
+                      animate={{ height: `${h}%` }}
+                      transition={{ delay: 0.1 * i, duration: 0.5 }}
+                      className="flex-1 rounded-t-md"
+                      style={{ background: `linear-gradient(180deg, #1E40AF, #3B82F6)` }}
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-between text-[11px]" style={{ color: "#64748B" }}>
+                  {["M1", "M2", "M3", "M4", "M5", "M6"].map(m => (
+                    <span key={m}>{m}</span>
+                  ))}
                 </div>
               </div>
+
+              <p className="text-[14px] text-center" style={{ color: "#94A3B8" }}>
+                Está vendo esse crescimento <strong style={{ color: "#F8FAFC" }}>LINEAR</strong>?
+              </p>
 
               <button
                 onClick={goNext}
                 className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
-                style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)", color: "#fff" }}
+                style={{ background: "linear-gradient(90deg, #0EA5E9, #22D3EE)", color: "#fff" }}
               >
-                VER MEUS LIMITES DISPONÍVEIS
+                CONTINUAR
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>
           )}
 
-          {/* ─── STEP 8: Oferta dos planos ─── */}
-          {step === 8 && (
+          {/* ═══ STEP 12: Problema — Modo básico ═══ */}
+          {step === 12 && (
+            <div className="space-y-6 py-4">
+              <h1 className="text-[26px] font-extrabold text-center leading-tight" style={{ color: "#F8FAFC" }}>
+                Você está <span style={{ color: "#22C55E" }}>MUITO PERTO</span> da sua meta.
+              </h1>
+
+              <div className="p-5 rounded-xl text-center space-y-3" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}>
+                <p className="text-[17px] font-extrabold" style={{ color: "#F8FAFC" }}>
+                  Mas tem um problema:
+                </p>
+                <p className="text-[15px]" style={{ color: "#CBD5E1" }}>
+                  Sua IA está em <strong style={{ color: "#EF4444" }}>MODO BÁSICO</strong>.
+                </p>
+                <p className="text-[14px]" style={{ color: "#94A3B8" }}>
+                  Ela gera ganhos... mas não os <strong style={{ color: "#F8FAFC" }}>MULTIPLICA</strong>.
+                </p>
+              </div>
+
+              <p className="text-[15px] text-center leading-relaxed" style={{ color: "#CBD5E1" }}>
+                É como ter um carro potente mas só andar em <strong style={{ color: "#FACC15" }}>1ª marcha</strong>.
+              </p>
+
+              <p className="text-[14px] text-center leading-relaxed" style={{ color: "#94A3B8" }}>
+                O limite de <strong style={{ color: "#FACC15" }}>R$ 25/dia</strong> é uma trava de segurança pra iniciantes. Pra desbloquear o potencial real, 
+                você precisa aumentar esse limite — e é isso que vou te mostrar agora.
+              </p>
+
+              <button
+                onClick={goNext}
+                className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
+                style={{ background: "linear-gradient(90deg, #0EA5E9, #22D3EE)", color: "#fff" }}
+              >
+                <Sparkles className="w-5 h-5" />
+                VER A SOLUÇÃO
+              </button>
+            </div>
+          )}
+
+          {/* ═══ STEP 13: Oferta final — Planos ═══ */}
+          {step === 13 && (
             <div className="space-y-5">
               <div className="text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", delay: 0.1 }}
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                  style={{ background: "linear-gradient(135deg, #FACC15, #EAB308)" }}
-                >
-                  <Sparkles className="w-7 h-7" style={{ color: "#020617" }} />
-                </motion.div>
-                <h2 className="text-[20px] font-extrabold" style={{ color: "#F8FAFC" }}>
+                <h2 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
                   {userName}, escolha seu novo limite:
                 </h2>
                 <p className="text-[13px] mt-2 leading-relaxed" style={{ color: "#94A3B8" }}>
                   Baseado no seu perfil, o sistema recomendou a melhor opção pra você.
-                  Ative agora — <strong style={{ color: "#FACC15" }}>pagamento único, sem mensalidade</strong>.
+                  <strong style={{ color: "#FACC15" }}> Pagamento único, sem mensalidade.</strong>
                 </p>
               </div>
 
@@ -542,6 +683,17 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
                 <p className="text-[12px] leading-snug" style={{ color: "#FCA5A5" }}>
                   Limite atual: <strong>R$ 25/dia</strong> (modo proteção). Sem upgrade, seus ganhos ficam travados nesse teto.
+                </p>
+              </div>
+
+              {/* Explanation */}
+              <div className="p-3.5 rounded-xl" style={{ background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.12)" }}>
+                <p className="text-[13px] leading-relaxed" style={{ color: "#FACC15" }}>
+                  💡 <strong>Por que existe uma taxa?</strong>
+                </p>
+                <p className="text-[12px] mt-1 leading-relaxed" style={{ color: "#94A3B8" }}>
+                  Operações com limites maiores exigem mais poder de processamento dos nossos servidores. 
+                  Essa taxa cobre o custo de infraestrutura — e é cobrada <strong style={{ color: "#F8FAFC" }}>apenas uma vez</strong>.
                 </p>
               </div>
 
@@ -667,6 +819,24 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
           )}
         </motion.div>
       </AnimatePresence>
+
+      {/* ── Bottom dots ── */}
+      <div className="flex justify-center gap-1 mt-2 pb-2 flex-wrap">
+        {dots.map(d => (
+          <div
+            key={d}
+            className="h-2 rounded-full transition-all duration-300"
+            style={{
+              width: d === activeDot ? 14 : 6,
+              background: d < activeDot
+                ? "#16A34A"
+                : d === activeDot
+                ? "#3B82F6"
+                : "rgba(255,255,255,0.1)",
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 };
