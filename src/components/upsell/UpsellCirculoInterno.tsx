@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, Users, MessageCircle, Headphones, Sparkles } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
+import { fetchOfferData, type OfferPlan } from "@/lib/offerDataClient";
 
 interface Props {
   name: string;
@@ -34,18 +35,23 @@ const benefits = [
 const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
   const [loading, setLoading] = useState(false);
+  const [offerData, setOfferData] = useState<OfferPlan | null>(null);
 
-  
+  useEffect(() => {
+    fetchOfferData("circulo").then((plans) => {
+      if (plans && plans.length > 0) setOfferData(plans[0]);
+    });
+  }, []);
 
   const handleBuy = () => {
+    if (!offerData) return;
     setLoading(true);
-    saveUpsellExtras("circulo", { price: 29.9 });
-    saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell4", product: "circulo", price: 29.9 });
-    logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell4", metadata: { product: "circulo", price: 29.9 } });
-    const checkoutUrl = "https://pay.kirvano.com/67e759ec-598c-43c6-890e-b993901712b7";
+    saveUpsellExtras("circulo", { price: offerData.price });
+    saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell4", product: "circulo", price: offerData.price });
+    logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell4", metadata: { product: "circulo", price: offerData.price } });
     const utmQs = buildTrackingQueryString();
-    const separator = checkoutUrl.includes("?") ? "&" : "?";
-    const fullUrl = utmQs ? `${checkoutUrl}${separator}${utmQs.slice(1)}` : checkoutUrl;
+    const separator = offerData.checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${offerData.checkoutUrl}${separator}${utmQs.slice(1)}` : offerData.checkoutUrl;
     window.open(fullUrl, "_blank");
   };
 
@@ -146,14 +152,14 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
             style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
           >
             <p className="text-[12px]" style={{ color: "#64748B" }}>
-              Só R$ 29,90 por mês (você cancela quando quiser, sem burocracia)
+              {offerData ? `Só R$ ${offerData.price.toFixed(2).replace(".", ",")} por mês (você cancela quando quiser, sem burocracia)` : "Carregando..."}
             </p>
             <div className="flex items-baseline gap-1 mt-1">
               <span
                 className="text-[32px] font-extrabold"
                 style={{ color: "#F8FAFC" }}
               >
-                R$ 29,90
+                {offerData ? `R$ ${offerData.price.toFixed(2).replace(".", ",")}` : "..."}
               </span>
               <span className="text-[14px]" style={{ color: "#64748B" }}>
                 /mês

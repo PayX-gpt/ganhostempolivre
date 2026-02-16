@@ -5,6 +5,7 @@ import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
+import { fetchOfferData, type OfferPlan } from "@/lib/offerDataClient";
 import avatarCarlos from "@/assets/avatar-carlos.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
 import avatarJose from "@/assets/avatar-jose.jpg";
@@ -28,15 +29,15 @@ const plans = [
     multFactor: 5,
     dailyBonus: 125,
     description: "Seus juros compostos passam a operar 5x mais rápido, desbloqueando um novo limite diário de R$ 125. É como trocar da 1ª marcha pra 5ª — mais velocidade com segurança.",
-    price: 47,
-    installments: "5x de R$ 9,90",
+    price: 0,
+    installments: "...",
     border: "1px solid rgba(255,255,255,0.08)",
     btnBg: "transparent",
     btnColor: "#94A3B8",
     btnBorder: "1.5px solid #94A3B8",
     btnText: "ATIVAR MULTIPLICAÇÃO 5X",
     badge: null,
-    checkoutUrl: "https://pay.kirvano.com/b61b6335-9325-4ecb-9b87-8214d948e90e",
+    checkoutUrl: "",
   },
   {
     id: "ouro",
@@ -49,15 +50,15 @@ const plans = [
     multFactor: 10,
     dailyBonus: 250,
     description: "Juros compostos turbinados a 10x: a IA reinveste e multiplica seus ganhos 24h, desbloqueando até R$ 250/dia. Seus lucros crescem enquanto você dorme.",
-    price: 67,
-    installments: "7x de R$ 9,90",
+    price: 0,
+    installments: "...",
     border: "2px solid #FACC15",
     btnBg: "linear-gradient(135deg, #FACC15, #EAB308)",
     btnColor: "#020617",
     btnBorder: "none",
     btnText: "ATIVAR MULTIPLICAÇÃO 10X",
     badge: "MAIS ESCOLHIDO",
-    checkoutUrl: "https://pay.kirvano.com/2f8e1d23-b71c-4c4b-9da1-672a6ca75c9b",
+    checkoutUrl: "",
   },
   {
     id: "diamante",
@@ -70,15 +71,15 @@ const plans = [
     multFactor: 20,
     dailyBonus: 500,
     description: "Sem teto de multiplicação. Você define o quanto quer multiplicar seus ganhos. A IA opera 24h reinvestindo no seu potencial máximo + relatório semanal no WhatsApp.",
-    price: 97,
-    installments: "10x de R$ 9,90",
+    price: 0,
+    installments: "...",
     border: "1px solid rgba(96,165,250,0.25)",
     btnBg: "linear-gradient(135deg, #3B82F6, #2563EB)",
     btnColor: "#fff",
     btnBorder: "none",
     btnText: "ATIVAR MULTIPLICAÇÃO ILIMITADA",
     badge: null,
-    checkoutUrl: "https://pay.kirvano.com/e7d1995f-9b55-47d0-a1c4-762b07721162",
+    checkoutUrl: "",
   },
 ];
 
@@ -187,8 +188,16 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
   const [analysisPhase, setAnalysisPhase] = useState(0);
   const [recommendedPlan, setRecommendedPlan] = useState<string>("ouro");
   const [customMultiplier, setCustomMultiplier] = useState(25);
+  const [remotePlans, setRemotePlans] = useState<OfferPlan[]>([]);
 
   const firstName = userName || "";
+
+  // Fetch offer data from backend
+  useEffect(() => {
+    fetchOfferData("multiplicador").then((data) => {
+      if (data) setRemotePlans(data);
+    });
+  }, []);
 
   // Analysis animation (step 10)
   useEffect(() => {
@@ -199,24 +208,20 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     const t3 = setTimeout(() => setAnalysisPhase(3), 2200);
     const t4 = setTimeout(() => setAnalysisPhase(4), 3000);
     const t5 = setTimeout(() => {
-      // Smart recommendation: balance urgency, goal amount, and affordability
-      let rec = "ouro"; // default — best cost-benefit
+      let rec = "ouro";
       const goalAmt = answers.goalAmount || 2000;
       
-      // High monthly goals (R$ 5000+) → needs stronger multiplier
       if (goalAmt >= 10000) {
         rec = "diamante";
       } else if (goalAmt >= 5000 && answers.situation !== "endividado") {
         rec = answers.profile === "conservador" ? "ouro" : "diamante";
       } else if (answers.profile === "conservador" && (answers.timeline === "longo" || answers.timeline === "medio")) {
-        rec = "prata"; // conservador + prazo longo = opção mais suave
+        rec = "prata";
       } else if (answers.profile === "agressivo" && answers.situation === "confortavel") {
-        rec = "diamante"; // só recomenda diamante se tem condição financeira
+        rec = "diamante";
       } else if (answers.situation === "endividado") {
-        // Endividado: NUNCA empurrar o mais caro — ouro é o melhor custo-benefício
         rec = answers.profile === "conservador" ? "prata" : "ouro";
       } else if (answers.timeline === "30dias" || answers.timeline === "urgente") {
-        // Prazo curto + meta acessível: ouro (equilíbrio)
         rec = answers.situation === "confortavel" ? "diamante" : "ouro";
       }
       
@@ -245,12 +250,14 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
   }, []);
 
   const handleSelectPlan = (plan: (typeof plans)[0]) => {
-    saveUpsellExtras("multiplicador", { plan: plan.id, price: plan.price });
-    saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell2", plan: plan.id, price: plan.price });
-    logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell2", metadata: { plan: plan.id, price: plan.price } });
+    const remote = remotePlans.find((r) => r.id === plan.id);
+    if (!remote) return;
+    saveUpsellExtras("multiplicador", { plan: plan.id, price: remote.price });
+    saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell2", plan: plan.id, price: remote.price });
+    logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell2", metadata: { plan: plan.id, price: remote.price } });
     const utmQs = buildTrackingQueryString();
-    const separator = plan.checkoutUrl.includes("?") ? "&" : "?";
-    const fullUrl = utmQs ? `${plan.checkoutUrl}${separator}${utmQs.slice(1)}` : plan.checkoutUrl;
+    const separator = remote.checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${remote.checkoutUrl}${separator}${utmQs.slice(1)}` : remote.checkoutUrl;
     window.open(fullUrl, "_blank");
   };
 
@@ -1374,33 +1381,43 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                         </p>
                       </div>
 
-                      <div className="mt-4 flex items-baseline gap-2">
-                        <span className="text-[13px] line-through" style={{ color: "#475569" }}>
-                          R$ {plan.price * 3}
-                        </span>
-                        <span className="text-[28px] font-extrabold" style={{ color: "#F8FAFC" }}>
-                          R$ {plan.price}
-                        </span>
-                        <span className="text-[12px]" style={{ color: "#64748B" }}>
-                          ou {plan.installments}
-                        </span>
-                      </div>
-                      <p className="text-[11px] mt-1" style={{ color: "#22C55E" }}>
-                        <span className="flex items-center gap-1.5"><Lock className="w-3 h-3" /> Pagamento único • Garantia 30 dias</span>
-                      </p>
+                      {(() => {
+                        const remote = remotePlans.find((r) => r.id === plan.id);
+                        const displayPrice = remote?.price || plan.price;
+                        const displayInstallments = remote?.installments || plan.installments;
+                        return (
+                          <>
+                            <div className="mt-4 flex items-baseline gap-2">
+                              <span className="text-[13px] line-through" style={{ color: "#475569" }}>
+                                R$ {displayPrice * 3}
+                              </span>
+                              <span className="text-[28px] font-extrabold" style={{ color: "#F8FAFC" }}>
+                                {displayPrice ? `R$ ${displayPrice}` : "Carregando..."}
+                              </span>
+                              <span className="text-[12px]" style={{ color: "#64748B" }}>
+                                ou {displayInstallments}
+                              </span>
+                            </div>
+                            <p className="text-[11px] mt-1" style={{ color: "#22C55E" }}>
+                              <span className="flex items-center gap-1.5"><Lock className="w-3 h-3" /> Pagamento único • Garantia 30 dias</span>
+                            </p>
 
-                      <button
-                        id={`btn-${plan.id}`}
-                        onClick={() => handleSelectPlan(plan)}
-                        className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
-                        style={{
-                          background: isRecommended ? "linear-gradient(135deg, #16A34A, #22C55E)" : plan.btnBg,
-                          color: isRecommended ? "#fff" : plan.btnColor,
-                          border: isRecommended ? "none" : plan.btnBorder,
-                        }}
-                      >
-                        {plan.btnText}
-                      </button>
+                            <button
+                              id={`btn-${plan.id}`}
+                              onClick={() => handleSelectPlan(plan)}
+                              disabled={!remote}
+                              className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+                              style={{
+                                background: isRecommended ? "linear-gradient(135deg, #16A34A, #22C55E)" : plan.btnBg,
+                                color: isRecommended ? "#fff" : plan.btnColor,
+                                border: isRecommended ? "none" : plan.btnBorder,
+                              }}
+                            >
+                              {plan.btnText}
+                            </button>
+                          </>
+                        );
+                      })()}
                     </motion.div>
                   );
                 })}
