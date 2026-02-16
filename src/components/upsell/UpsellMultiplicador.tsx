@@ -414,10 +414,8 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
 
   /* ── Time to goal per plan ── */
   const getTimeToGoalForPlan = (dailyLimit: number): string => {
-    const totalNeeded = getTotalGoalValue();
-    const daysNeeded = Math.ceil(totalNeeded / dailyLimit);
-    if (daysNeeded <= 1) return "1 dia";
-    return `${daysNeeded} dias`;
+    const speedFactor = Math.round(dailyLimit / 25);
+    return `${speedFactor}x mais rápido que no modo básico`;
   };
 
   const getTimeToGoalBasic = (): string => {
