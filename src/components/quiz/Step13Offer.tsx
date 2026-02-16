@@ -1387,12 +1387,54 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
         <CTABlock showCTA={showCTA} context="Garantia de 30 dias · Acesso imediato · Suporte humano" pricing={pricing} />
 
-        <TrustBadge>Pagamento 100% seguro · Garantia de 30 dias · Suporte em português</TrustBadge>
+        <div className="w-full space-y-4 pt-2">
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs text-muted-foreground font-medium">Compra segura</span>
+            </div>
+            <div className="w-px h-4 bg-border" />
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs text-muted-foreground font-medium">Garantia 30 dias</span>
+            </div>
+            <div className="w-px h-4 bg-border" />
+            <div className="flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs text-muted-foreground font-medium">Suporte real</span>
+            </div>
+          </div>
 
-        <div className="flex flex-wrap justify-center gap-3 opacity-60 pt-2">
-          {["Visa", "Mastercard", "Pix", "Boleto", "Elo", "Amex"].map((b) => (
-            <span key={b} className="text-xs text-muted-foreground bg-secondary px-3 py-1 rounded-md">{b}</span>
-          ))}
+          <div className="flex flex-wrap justify-center gap-2">
+            {["Visa", "Mastercard", "Pix", "Boleto", "Elo", "Amex"].map((b) => (
+              <span key={b} className="text-[11px] text-muted-foreground bg-secondary/60 border border-border/50 px-3 py-1.5 rounded-lg font-medium">{b}</span>
+            ))}
+          </div>
+
+          <div className="flex items-start gap-3 rounded-xl p-3 border border-primary/15 bg-primary/5 text-left">
+            <img src={mentorPhoto} alt="Ricardo" className="w-10 h-10 rounded-full object-cover border-2 border-primary/30 shrink-0" />
+            <div>
+              <p className="text-xs text-foreground leading-relaxed">
+                "Se em 30 dias você não tiver nenhum resultado, eu pessoalmente devolvo seu dinheiro. Sem pergunta, sem formulário. Minha palavra."
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-1 font-semibold">— Ricardo Almeida, criador do método</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-center rounded-lg bg-secondary/30 py-2.5 px-2">
+              <p className="text-base font-bold text-foreground">36.847</p>
+              <p className="text-[10px] text-muted-foreground">alunos ativos</p>
+            </div>
+            <div className="text-center rounded-lg bg-secondary/30 py-2.5 px-2">
+              <p className="text-base font-bold text-foreground">4.8<span className="text-xs text-muted-foreground">/5</span></p>
+              <p className="text-[10px] text-muted-foreground">satisfação</p>
+            </div>
+            <div className="text-center rounded-lg bg-secondary/30 py-2.5 px-2">
+              <p className="text-base font-bold text-foreground">2 min</p>
+              <p className="text-[10px] text-muted-foreground">resposta suporte</p>
+            </div>
+          </div>
         </div>
 
       </div>
