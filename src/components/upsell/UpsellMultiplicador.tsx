@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, ChevronRight, Sparkles, AlertTriangle, Users, Home, Wallet, Trophy, Clock, Calendar, Timer, Target, Landmark, ShieldCheck, XCircle, CheckCircle2, Flame, Rocket } from "lucide-react";
+import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, ChevronRight, Sparkles, AlertTriangle, Users, Home, Wallet, Trophy, Clock, Calendar, Timer, Target, Landmark, ShieldCheck, XCircle, CheckCircle2, Flame, Rocket, UserCheck } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
@@ -512,6 +512,12 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
 
               {/* Main content */}
               <div className="text-center space-y-3">
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-2"
+                  style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.2), rgba(59,130,246,0.05))", border: "1px solid rgba(59,130,246,0.3)" }}
+                >
+                  <UserCheck className="w-7 h-7" style={{ color: "#3B82F6" }} />
+                </div>
                 <h1 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
                   {existingName ? `${existingName}, falta ` : "Falta "}apenas 1 etapa
                 </h1>
