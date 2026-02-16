@@ -107,6 +107,7 @@ const q3Options: QuizOption[] = [
 ];
 
 const q4Options: QuizOption[] = [
+  { id: "30dias", label: "EM 30 DIAS", desc: "O mais rápido possível", Icon: Zap },
   { id: "urgente", label: "MENOS DE 6 MESES", desc: "Urgente", Icon: Timer },
   { id: "medio", label: "6 A 12 MESES", desc: "Médio prazo", Icon: Calendar },
   { id: "longo", label: "1 A 2 ANOS", desc: "Longo prazo", Icon: Clock },
@@ -195,7 +196,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     const t5 = setTimeout(() => {
       let rec = "ouro";
       if (answers.profile === "conservador" && answers.timeline === "longo") rec = "prata";
-      else if (answers.profile === "agressivo" || answers.timeline === "urgente") rec = "diamante";
+      else if (answers.profile === "agressivo" || answers.timeline === "urgente" || answers.timeline === "30dias") rec = "diamante";
       setRecommendedPlan(rec);
       setStep(11);
     }, 4500);
@@ -348,7 +349,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     return m[id] || id;
   };
   const timelineLabel = (id: string) => {
-    const m: Record<string, string> = { urgente: "menos de 6 meses", medio: "6 a 12 meses", longo: "1 a 2 anos" };
+    const m: Record<string, string> = { "30dias": "30 dias", urgente: "menos de 6 meses", medio: "6 a 12 meses", longo: "1 a 2 anos" };
     return m[id] || id;
   };
   const profileLabel = (id: string) => {
@@ -381,7 +382,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     if (answers.goal === "renda" || answers.goal === "liberdade") {
       // For monthly income goals, calculate how much total to build up
       // (roughly 3-6 months of the monthly goal as "runway")
-      const months = answers.timeline === "urgente" ? 3 : answers.timeline === "medio" ? 4 : 6;
+      const months = answers.timeline === "30dias" ? 1 : answers.timeline === "urgente" ? 3 : answers.timeline === "medio" ? 4 : 6;
       return monthly * months;
     }
     // For lump sum goals (contas, familia), use directly
