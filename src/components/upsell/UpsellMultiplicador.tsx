@@ -62,21 +62,21 @@ const plans = [
   {
     id: "diamante",
     icon: Diamond,
-    name: "Multiplicação Máxima",
-    multLabel: "20x",
-    dailyLimit: "Sem limite",
+    name: "Multiplicação Ilimitada",
+    multLabel: "∞",
+    dailyLimit: "Você escolhe",
     dailyLimitValue: 500,
     subtitleColor: "#60A5FA",
     multFactor: 20,
     dailyBonus: 500,
-    description: "Nível máximo de juros compostos: multiplicação 20x, operando 24h sem teto de ganhos. O sistema reinveste no potencial total + relatório semanal no WhatsApp.",
+    description: "Sem teto de multiplicação. Você define o quanto quer multiplicar seus ganhos. A IA opera 24h reinvestindo no seu potencial máximo + relatório semanal no WhatsApp.",
     price: 97,
     installments: "10x de R$ 9,90",
     border: "1px solid rgba(96,165,250,0.25)",
     btnBg: "linear-gradient(135deg, #3B82F6, #2563EB)",
     btnColor: "#fff",
     btnBorder: "none",
-    btnText: "ATIVAR MULTIPLICAÇÃO 20X",
+    btnText: "ATIVAR MULTIPLICAÇÃO ILIMITADA",
     badge: null,
     checkoutUrl: "https://pay.kirvano.com/e7d1995f-9b55-47d0-a1c4-762b07721162",
   },
@@ -186,6 +186,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
   const [goalAmountInput, setGoalAmountInput] = useState("");
   const [analysisPhase, setAnalysisPhase] = useState(0);
   const [recommendedPlan, setRecommendedPlan] = useState<string>("ouro");
+  const [customMultiplier, setCustomMultiplier] = useState(25);
 
   const firstName = userName || "";
 
@@ -1205,7 +1206,8 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 })
                 .map((plan, i) => {
                   const isRecommended = plan.id === recommendedPlan;
-                  const timeToGoal = getTimeToGoalForPlan(plan.dailyLimitValue);
+                  const effectiveDaily = plan.id === "diamante" ? 25 * customMultiplier : plan.dailyLimitValue;
+                  const timeToGoal = plan.id === "diamante" ? `${customMultiplier}x mais rápido que no modo básico` : getTimeToGoalForPlan(plan.dailyLimitValue);
                   return (
                     <motion.div
                       key={plan.id}
@@ -1254,25 +1256,61 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
 
                       {/* Main focus: multiplication + daily limit */}
                       <div className="mt-2 p-3 rounded-xl" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.12)" }}>
-                        <div className="flex items-center justify-between">
-                          <div className="text-center flex-1">
-                            <p className="text-[28px] font-extrabold" style={{ color: plan.subtitleColor }}>
-                              {plan.multLabel}
-                            </p>
-                            <p className="text-[10px] font-semibold" style={{ color: "#94A3B8" }}>
-                              juros compostos
-                            </p>
+                        {plan.id === "diamante" ? (
+                          <div className="space-y-3">
+                            <div className="text-center">
+                              <p className="text-[32px] font-extrabold" style={{ color: "#60A5FA" }}>
+                                {customMultiplier}x
+                              </p>
+                              <p className="text-[10px] font-semibold" style={{ color: "#94A3B8" }}>
+                                sua multiplicação personalizada
+                              </p>
+                            </div>
+                            <input
+                              type="range"
+                              min={20}
+                              max={100}
+                              step={5}
+                              value={customMultiplier}
+                              onChange={(e) => setCustomMultiplier(Number(e.target.value))}
+                              className="w-full accent-blue-500 cursor-pointer"
+                              style={{ height: "6px" }}
+                            />
+                            <div className="flex justify-between text-[10px]" style={{ color: "#64748B" }}>
+                              <span>20x</span>
+                              <span>50x</span>
+                              <span>100x</span>
+                            </div>
+                            <div className="text-center pt-1">
+                              <p className="text-[16px] font-extrabold" style={{ color: "#F8FAFC" }}>
+                                R$ {(25 * customMultiplier).toLocaleString("pt-BR")}/dia
+                              </p>
+                              <p className="text-[10px] font-semibold" style={{ color: "#94A3B8" }}>
+                                novo limite diário
+                              </p>
+                            </div>
                           </div>
-                          <div className="w-px h-10" style={{ background: "rgba(255,255,255,0.1)" }} />
-                          <div className="text-center flex-1">
-                            <p className="text-[18px] font-extrabold" style={{ color: "#F8FAFC" }}>
-                              {plan.dailyLimit}
-                            </p>
-                            <p className="text-[10px] font-semibold" style={{ color: "#94A3B8" }}>
-                              novo limite diário
-                            </p>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="text-center flex-1">
+                              <p className="text-[28px] font-extrabold" style={{ color: plan.subtitleColor }}>
+                                {plan.multLabel}
+                              </p>
+                              <p className="text-[10px] font-semibold" style={{ color: "#94A3B8" }}>
+                                juros compostos
+                              </p>
+                            </div>
+                            <div className="w-px h-10" style={{ background: "rgba(255,255,255,0.1)" }} />
+                            <div className="text-center flex-1">
+                              <p className="text-[18px] font-extrabold" style={{ color: "#F8FAFC" }}>
+                                {plan.dailyLimit}
+                              </p>
+                              <p className="text-[10px] font-semibold" style={{ color: "#94A3B8" }}>
+                                novo limite diário
+                              </p>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       <p className="text-[13px] mt-3 leading-relaxed" style={{ color: "#94A3B8" }}>
