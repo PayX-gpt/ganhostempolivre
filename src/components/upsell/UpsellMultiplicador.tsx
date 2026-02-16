@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, ChevronRight, Sparkles, AlertTriangle, Users, Home, Wallet, Trophy, Clock, Calendar, Timer, Target, Landmark, ShieldCheck } from "lucide-react";
+import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, ChevronRight, Sparkles, AlertTriangle, Users, Home, Wallet, Trophy, Clock, Calendar, Timer, Target, Landmark, ShieldCheck, XCircle, CheckCircle2, Flame, Rocket } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
@@ -466,10 +466,10 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     return { sem, com, goalMonth };
   };
 
-  /* ── Comparison table: without vs with Multiplicador for step 15 ── */
+  /* ── Comparison table: without vs with Multiplicador (20x) for step 15 ── */
   const getComparisonRows = () => {
     const base = 25; // base daily without multiplicador
-    const multiplierRate = answers.profile === "agressivo" ? 0.025 : answers.profile === "equilibrado" ? 0.02 : 0.015;
+    const multiplier = 20; // 20x multiplicador
     const periods = [
       { label: "1 semana", days: 7 },
       { label: "15 dias", days: 15 },
@@ -479,7 +479,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     ];
     return periods.map(p => {
       const without = base * p.days;
-      const withMult = Math.round(base * p.days * Math.pow(1 + multiplierRate, p.days - 1));
+      const withMult = base * p.days * multiplier;
       const diff = withMult - without;
       return { ...p, without, withMult, diff };
     });
@@ -1032,8 +1032,14 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 {/* Header */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <span className="text-[11px] font-bold" style={{ color: "#64748B" }}>Período</span>
-                  <span className="text-[11px] font-bold" style={{ color: "#EF4444" }}>❌ Sem</span>
-                  <span className="text-[11px] font-bold" style={{ color: "#22C55E" }}>✅ Com</span>
+                  <div className="flex items-center justify-center gap-1">
+                    <XCircle className="w-3.5 h-3.5" style={{ color: "#EF4444" }} />
+                    <span className="text-[11px] font-bold" style={{ color: "#EF4444" }}>Sem</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1">
+                    <Rocket className="w-3.5 h-3.5" style={{ color: "#22C55E" }} />
+                    <span className="text-[11px] font-bold" style={{ color: "#22C55E" }}>20x</span>
+                  </div>
                 </div>
 
                 {/* Rows */}
