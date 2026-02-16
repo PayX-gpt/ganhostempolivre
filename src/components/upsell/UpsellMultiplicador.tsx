@@ -1189,11 +1189,25 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
               </div>
 
               {/* Current limit warning */}
-              <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}>
-                <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
-                <p className="text-[12px] leading-snug" style={{ color: "#FCA5A5" }}>
-                  Agora: juros compostos em <strong>1x</strong> → limite de apenas <strong>R$ 25/dia</strong>. Seus ganhos estão travados no mínimo.
-                </p>
+              <div className="rounded-2xl overflow-hidden" style={{ border: "1.5px solid rgba(239,68,68,0.3)" }}>
+                <div className="px-4 py-3 flex items-center gap-2.5" style={{ background: "rgba(239,68,68,0.12)" }}>
+                  <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
+                  <span className="text-[13px] font-bold uppercase tracking-wide" style={{ color: "#EF4444" }}>
+                    Limite atual do seu sistema
+                  </span>
+                </div>
+                <div className="px-4 py-4 space-y-3" style={{ background: "rgba(239,68,68,0.04)" }}>
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-[32px] font-extrabold" style={{ color: "#FCA5A5" }}>R$ 25</span>
+                    <span className="text-[14px] font-semibold" style={{ color: "#94A3B8" }}>por dia</span>
+                  </div>
+                  <p className="text-[13px] leading-relaxed text-center" style={{ color: "#FCA5A5" }}>
+                    Seu sistema está operando em <strong style={{ color: "#F8FAFC" }}>velocidade 1x</strong>. Isso significa que o <strong style={{ color: "#F8FAFC" }}>máximo</strong> que você pode ganhar é <strong style={{ color: "#F8FAFC" }}>R$ 25 por dia</strong>.
+                  </p>
+                  <p className="text-[13px] leading-relaxed text-center" style={{ color: "#EF4444" }}>
+                    <strong>No ritmo atual, vai demorar MUITO MAIS para bater a sua meta.</strong>
+                  </p>
+                </div>
               </div>
 
               {/* Plan cards — recommended first */}
