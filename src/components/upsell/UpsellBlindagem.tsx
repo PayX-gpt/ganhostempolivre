@@ -9,6 +9,7 @@ import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
+import mentorPhoto from "@/assets/mentor-new.webp";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarClaudia from "@/assets/avatar-claudia.jpg";
 
@@ -205,12 +206,12 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
         }}
       >
         <div className="flex items-start gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: "rgba(59,130,246,0.15)" }}
-          >
-            <Crown className="w-5 h-5" style={{ color: "#3B82F6" }} />
-          </div>
+          <img
+            src={mentorPhoto}
+            alt="Ricardo Almeida"
+            className="w-11 h-11 rounded-full object-cover shrink-0"
+            style={{ border: "2px solid rgba(59,130,246,0.3)" }}
+          />
           <div>
             <p className="text-[14px] font-bold" style={{ color: "#F8FAFC" }}>
               Negociação exclusiva para membros fundadores
