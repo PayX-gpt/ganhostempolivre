@@ -282,24 +282,30 @@ const TestimonialCard = ({ name, age, city, avatar, text, result }: { name: stri
 );
 
 /* ─── FAQ Item ─── */
-const FAQItem = ({ question, answer }: { question: string; answer: string }) => {
+const FAQItem = ({ question, answer, emoji }: { question: string; answer: string; emoji: string }) => {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-border rounded-xl overflow-hidden">
+    <div className="border border-border rounded-xl overflow-hidden transition-all duration-200" style={{ background: open ? "rgba(250,204,21,0.03)" : "transparent" }}>
       <button
         onClick={() => {
           const next = !open;
           setOpen(next);
           if (next) trackFaqOpen(question);
         }}
-        className="w-full flex items-center justify-between px-4 py-3.5 text-left cursor-pointer hover:bg-secondary/50 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-4 text-left cursor-pointer hover:bg-secondary/30 transition-colors"
       >
-        <span className="font-semibold text-foreground text-sm pr-4">{question}</span>
-        <span className="text-muted-foreground text-xl shrink-0 transition-transform duration-200" style={{ transform: open ? "rotate(45deg)" : "rotate(0)" }}>+</span>
+        <div className="flex items-center gap-2.5 pr-3">
+          <span className="text-lg shrink-0">{emoji}</span>
+          <span className="font-bold text-foreground text-[15px] leading-snug">{question}</span>
+        </div>
+        <span 
+          className="text-muted-foreground text-xl shrink-0 transition-transform duration-300 font-light" 
+          style={{ transform: open ? "rotate(45deg)" : "rotate(0)" }}
+        >+</span>
       </button>
       {open && (
-        <div className="px-4 pb-4 animate-fade-in">
-          <p className="text-sm text-muted-foreground leading-relaxed">{answer}</p>
+        <div className="px-4 pb-4 animate-fade-in ml-[34px]">
+          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{answer}</p>
         </div>
       )}
     </div>
@@ -657,13 +663,46 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   ];
 
   const faqs = [
-    { question: "Preciso ter experiência com internet?", answer: "Não. O método foi criado pra quem nunca fez nada online. Se você usa WhatsApp, você consegue. Tudo é explicado do zero com suporte humano." },
-    { question: "Funciona pelo celular mesmo?", answer: "Sim, 100%. A maioria dos nossos 36.000 alunos usa apenas o celular. Não precisa de computador nem internet rápida." },
-    { question: "Em quanto tempo vejo resultado?", answer: "Muitos alunos fazem a primeira operação e veem resultado no mesmo dia. O método foi feito pra gerar renda no curto prazo." },
-    { question: "E se eu não gostar? Perco meu dinheiro?", answer: "Impossível. Você tem 30 dias de garantia total. Se não gostar, devolvemos cada centavo. Sem perguntas, sem burocracia." },
-    { question: `R$${formatPrice(pricing.price)} é o preço final? Tem taxa escondida?`, answer: `R$${formatPrice(pricing.price)} é o valor total. Não existe mensalidade, taxa extra, ou venda dentro da plataforma. Pagou uma vez, acesso completo.` },
-    { question: "Já fui enganado na internet. Isso é golpe?", answer: "Entendemos. Por isso: garantia de 30 dias, suporte humano real, +36.000 alunos ativos, e você pode testar sem risco nenhum." },
-    { question: "Preciso investir mais dinheiro depois?", answer: "Não. O método ensina a gerar renda sem investimento. O único valor é R$" + formatPrice(pricing.price) + ". Depois disso, tudo que ganhar é lucro líquido." },
+    { 
+      emoji: "🤔", 
+      question: "Eu não entendo nada de tecnologia. Vou conseguir?", 
+      answer: `Essa é a dúvida mais comum — e a resposta é sim.\n\nO método foi feito pra quem nunca abriu nada além do WhatsApp. São instruções passo a passo, com vídeos curtos e suporte humano real. Dos nossos 36.000 alunos, a maioria tem entre 45 e 65 anos e começou do zero absoluto.\n\nSe você está lendo isso agora, você já tem a habilidade necessária.`
+    },
+    { 
+      emoji: "📱", 
+      question: "Funciona só pelo celular? Preciso de computador?", 
+      answer: `Funciona 100% pelo celular. Na verdade, a maioria dos nossos alunos que mais ganham usa apenas o celular — deitados no sofá, no intervalo do almoço, ou esperando o ônibus.\n\nNão precisa de internet rápida, não precisa de computador, não precisa de nada especial. Só o celular que já está na sua mão.`
+    },
+    { 
+      emoji: "⏰", 
+      question: "Quanto tempo por dia eu preciso dedicar?", 
+      answer: `15 a 30 minutos. Sério.\n\nIsso não é um segundo emprego. É uma ferramenta que trabalha pra você. Você configura uma vez, acompanha quando quiser, e os ganhos aparecem.\n\nTem aluno que olha de manhã e de noite. Tem aluno que olha uma vez por dia. Cada um no seu ritmo.`
+    },
+    { 
+      emoji: "💰", 
+      question: "Mas em quanto tempo eu começo a ganhar?", 
+      answer: `Muitos alunos veem o primeiro resultado no mesmo dia que configuram. Outros levam 2-3 dias pra se acostumar com o painel.\n\nO ponto é: não é um curso de 6 meses onde você só vê resultado depois. Aqui, você aplica hoje e vê o resultado hoje. É renda prática, não teoria.`
+    },
+    { 
+      emoji: "🛡️", 
+      question: "E se eu não gostar? Perco meu dinheiro?", 
+      answer: `Impossível perder.\n\nVocê tem 30 dias de garantia incondicional. Se não gostar — por qualquer motivo, mesmo que seja "mudei de ideia" — você manda uma mensagem e devolvemos 100% do valor. Sem perguntas, sem formulário, sem espera.\n\nO risco é zero. Literalmente zero. Se não funcionar pra você, quem perde somos nós — não você.`
+    },
+    { 
+      emoji: "🚨", 
+      question: "Já fui enganado antes. Como sei que não é golpe?", 
+      answer: `Sua desconfiança é 100% válida. A internet está cheia de promessas vazias.\n\nMas repare: nós oferecemos 30 dias de garantia total, temos suporte humano que responde em minutos, e mais de 36.000 pessoas já passaram por aqui. Você pode testar o método inteiro e, se achar que não vale, recebe tudo de volta.\n\nGolpe não oferece garantia. Golpe não tem suporte. Golpe não deixa você testar antes. Nós fazemos tudo isso porque sabemos que funciona.`
+    },
+    { 
+      emoji: "💳", 
+      question: `R$${formatPrice(pricing.price)} é tudo? Tem alguma taxa depois?`, 
+      answer: `R$${formatPrice(pricing.price)} é o valor total. Ponto final.\n\nNão tem mensalidade, não tem taxa escondida, não tem "desbloqueio premium" por mais dinheiro. Você paga uma única vez e recebe acesso completo — ao método, à plataforma, ao suporte humano e a todos os bônus.\n\nÉ menos que uma pizza. E o retorno pode aparecer no mesmo dia.`
+    },
+    { 
+      emoji: "🔒", 
+      question: "Preciso colocar mais dinheiro depois pra funcionar?", 
+      answer: `Não. Zero.\n\nO método ensina a gerar ganhos sem investimento adicional. O único valor envolvido é o R$${formatPrice(pricing.price)} de acesso. Tudo que vier depois é lucro líquido pra você.\n\nNão pedimos PIX, não pedimos depósito, não pedimos nada além do acesso. Quem diz o contrário está mentindo.`
+    },
   ];
 
   const fixedAges = getFixedAges(answers?.age);
@@ -1032,13 +1071,26 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       <Divider />
 
       {/* ═══ 23. FAQ ═══ */}
-      <div className="w-full space-y-3">
-        <h3 className="font-display text-xl font-bold text-foreground text-center">
-          Perguntas Frequentes
-        </h3>
+      <div className="w-full space-y-2.5">
+        <div className="text-center mb-4">
+          <p className="text-[11px] uppercase tracking-widest font-semibold text-primary mb-1.5">
+            Tire suas dúvidas
+          </p>
+          <h3 className="font-display text-xl font-bold text-foreground">
+            Tudo o que você precisa saber
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            Se a sua dúvida não estiver aqui, nosso suporte responde em minutos.
+          </p>
+        </div>
         {faqs.map((faq, i) => (
           <FAQItem key={i} {...faq} />
         ))}
+        <div className="text-center pt-2">
+          <p className="text-xs text-muted-foreground">
+            Ainda com dúvida? <span className="text-primary font-semibold">O suporte está online agora.</span>
+          </p>
+        </div>
       </div>
 
       <Divider />
