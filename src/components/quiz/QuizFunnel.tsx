@@ -68,12 +68,20 @@ const QuizFunnel = () => {
   const currentSlug = slug || "step-1";
   const isValidQuizSlug = !slug || STEP_SLUGS.includes(slug as any);
 
-  // Guard: if the slug is not a valid quiz step, render nothing and let React Router re-match
+  // Guard: if the slug belongs to a known non-quiz route, bail out immediately
+  const NON_QUIZ_ROUTES = ["upsell1", "upsell2", "upsell3", "upsell4", "live"];
+  const isNonQuizRoute = slug && NON_QUIZ_ROUTES.includes(slug);
+
   useEffect(() => {
+    if (isNonQuizRoute) {
+      // Force a hard navigation to break out of the /:slug catch-all
+      window.location.replace(`/${slug}${window.location.search}`);
+      return;
+    }
     if (!isValidQuizSlug) {
       navigate(`/${slug}`, { replace: true });
     }
-  }, [slug, isValidQuizSlug, navigate]);
+  }, [slug, isValidQuizSlug, isNonQuizRoute, navigate]);
 
   const step = Math.max(1, (STEP_SLUGS.indexOf(currentSlug as any) + 1) || 1);
   const stepEnteredAt = useRef<number>(Date.now());
@@ -210,7 +218,7 @@ const QuizFunnel = () => {
   };
 
   // Don't render quiz UI for non-quiz slugs (e.g. /upsell1, /upsell2)
-  if (!isValidQuizSlug) return null;
+  if (!isValidQuizSlug || isNonQuizRoute) return null;
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col">
