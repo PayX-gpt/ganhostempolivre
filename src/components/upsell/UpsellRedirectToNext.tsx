@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Check, ArrowRight } from "lucide-react";
+import { navigateToUpsell } from "@/lib/upsellData";
 
 interface Props { name: string; }
 
@@ -11,7 +12,7 @@ const UpsellRedirectToNext = ({ name }: Props) => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate("/upsell2", { replace: true });
+      navigateToUpsell(navigate, "/upsell2", true);
     }, 3000);
     return () => clearTimeout(timer);
   }, [navigate]);

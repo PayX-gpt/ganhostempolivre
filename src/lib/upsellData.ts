@@ -93,6 +93,50 @@ export const getUpsellExtras = (): UpsellExtras => {
   return {};
 };
 
+const KIRVANO_TOKEN_KEY = "kirvano_upsell_token";
+const KIRVANO_REF_KEY = "kirvano_ref";
+
+/**
+ * Captures and stores the Kirvano one-click token from the URL.
+ * Should be called on every upsell page load.
+ */
+export const captureKirvanoToken = () => {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("kirvano_upsell");
+  const ref = params.get("ref");
+  if (token) sessionStorage.setItem(KIRVANO_TOKEN_KEY, token);
+  if (ref) sessionStorage.setItem(KIRVANO_REF_KEY, ref);
+};
+
+/**
+ * Returns the stored Kirvano token query string (e.g. "?kirvano_upsell=...&ref=...")
+ * or empty string if no token is stored.
+ */
+export const getKirvanoTokenQS = (): string => {
+  const token = sessionStorage.getItem(KIRVANO_TOKEN_KEY);
+  if (!token) return "";
+  const ref = sessionStorage.getItem(KIRVANO_REF_KEY);
+  let qs = `?kirvano_upsell=${encodeURIComponent(token)}`;
+  if (ref) qs += `&ref=${encodeURIComponent(ref)}`;
+  return qs;
+};
+
+/**
+ * Builds a full upsell URL with the Kirvano token preserved.
+ */
+export const buildUpsellURL = (path: string): string => {
+  return `${path}${getKirvanoTokenQS()}`;
+};
+
+/**
+ * Navigates to an upsell path preserving the Kirvano token in the URL.
+ * Use this instead of navigate() for all upsell-to-upsell navigation.
+ */
+export const navigateToUpsell = (navigate: (path: string, opts?: { replace?: boolean }) => void, path: string, replace = false) => {
+  const tokenQS = getKirvanoTokenQS();
+  navigate(`${path}${tokenQS}`, { replace });
+};
+
 /**
  * Hook: listens for purchase confirmation via Supabase Realtime.
  * When a SALE_APPROVED event is detected for any matching session/email,
