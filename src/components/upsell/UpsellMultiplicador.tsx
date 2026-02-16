@@ -415,16 +415,9 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
   /* ── Time to goal per plan ── */
   const getTimeToGoalForPlan = (dailyLimit: number): string => {
     const totalNeeded = getTotalGoalValue();
-    const monthlyEarning = dailyLimit * 30;
-    const monthsNeeded = Math.ceil(totalNeeded / monthlyEarning);
-    if (monthsNeeded <= 1) return "~1 mês";
-    if (monthsNeeded <= 2) return "~2 meses";
-    if (monthsNeeded <= 3) return "~3 meses";
-    if (monthsNeeded <= 4) return "~4 meses";
-    if (monthsNeeded <= 5) return "~5 meses";
-    if (monthsNeeded <= 6) return "~6 meses";
-    if (monthsNeeded <= 9) return "~9 meses";
-    return "~12+ meses";
+    const daysNeeded = Math.ceil(totalNeeded / dailyLimit);
+    if (daysNeeded <= 1) return "1 dia";
+    return `${daysNeeded} dias`;
   };
 
   const getTimeToGoalBasic = (): string => {
