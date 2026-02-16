@@ -11,6 +11,7 @@ import Upsell2Page from "./components/upsell/Upsell2Page";
 import Upsell3Page from "./components/upsell/Upsell3Page";
 import Upsell4Page from "./components/upsell/Upsell4Page";
 import FunnelGuard from "./components/upsell/FunnelGuard";
+import QuizGuard from "./components/quiz/QuizGuard";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +28,7 @@ const App = () => (
           <Route path="/upsell2" element={<FunnelGuard><Upsell2Page /></FunnelGuard>} />
           <Route path="/upsell3" element={<FunnelGuard><Upsell3Page /></FunnelGuard>} />
           <Route path="/upsell4" element={<FunnelGuard><Upsell4Page /></FunnelGuard>} />
-          <Route path="/:slug" element={<Index />} />
+          <Route path="/:slug" element={<QuizGuard><Index /></QuizGuard>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
