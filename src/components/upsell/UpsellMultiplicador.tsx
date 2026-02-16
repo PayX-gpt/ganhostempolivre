@@ -497,30 +497,69 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
         >
           {/* ═══ STEP 1: Welcome / Acelerador Ativo ═══ */}
           {step === 1 && (
-            <div className="text-center space-y-5">
+            <div className="space-y-6">
+              {/* Status card */}
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-lg"
-                style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)" }}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 rounded-2xl flex items-center gap-4"
+                style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}
               >
-                <Check className="w-8 h-8 text-white" strokeWidth={3} />
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                  className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)" }}
+                >
+                  <Check className="w-6 h-6 text-white" strokeWidth={3} />
+                </motion.div>
+                <div>
+                  <p className="text-[13px] font-semibold" style={{ color: "#22C55E" }}>ACELERADOR ATIVO</p>
+                  <p className="text-[12px]" style={{ color: "#64748B" }}>Plano base configurado com sucesso</p>
+                </div>
               </motion.div>
 
-              <div>
+              {/* Main content */}
+              <div className="text-center space-y-3">
                 <h1 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
-                  {existingName ? `${existingName}, seu ` : "Seu "}Acelerador está ativo! ✅
+                  {existingName ? `${existingName}, falta ` : "Falta "}apenas 1 etapa
                 </h1>
-                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "#94A3B8" }}>
-                  Agora precisamos <strong style={{ color: "#F8FAFC" }}>completar a ativação</strong> da sua conta na 
-                  Plataforma de Ganhos com Tempo Livre e configurar o seu <strong style={{ color: "#FACC15" }}>limite diário de ganhos</strong>.
+                <p className="text-[14px] leading-relaxed" style={{ color: "#94A3B8" }}>
+                  Precisamos <strong style={{ color: "#F8FAFC" }}>completar a ativação</strong> da sua conta 
+                  e configurar o seu <strong style={{ color: "#FACC15" }}>limite diário de ganhos</strong>.
                 </p>
-                <div className="mt-4 p-3 rounded-xl" style={{ background: "rgba(250,204,21,0.08)", border: "1px solid rgba(250,204,21,0.15)" }}>
-                  <p className="text-[13px] leading-relaxed" style={{ color: "#FACC15" }}>
-                    ⚡ Leva menos de 1 minuto — são apenas algumas perguntas rápidas.
-                  </p>
+              </div>
+
+              {/* Status indicators */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <CheckCircle2 className="w-5 h-5 shrink-0" style={{ color: "#22C55E" }} />
+                  <span className="text-[13px]" style={{ color: "#64748B" }}>Conta criada</span>
+                  <span className="ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22C55E" }}>Concluído</span>
                 </div>
+                <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <CheckCircle2 className="w-5 h-5 shrink-0" style={{ color: "#22C55E" }} />
+                  <span className="text-[13px]" style={{ color: "#64748B" }}>Acelerador ativado</span>
+                  <span className="ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22C55E" }}>Concluído</span>
+                </div>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex items-center gap-3 p-3 rounded-xl"
+                  style={{ background: "rgba(250,204,21,0.04)", border: "1px solid rgba(250,204,21,0.15)" }}
+                >
+                  <Clock className="w-5 h-5 shrink-0" style={{ color: "#FACC15" }} />
+                  <span className="text-[13px] font-medium" style={{ color: "#F8FAFC" }}>Configurar limite de ganhos</span>
+                  <span className="ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(250,204,21,0.12)", color: "#FACC15" }}>Pendente</span>
+                </motion.div>
+              </div>
+
+              {/* Time estimate */}
+              <div className="flex items-center justify-center gap-2 py-1">
+                <Timer className="w-4 h-4" style={{ color: "#64748B" }} />
+                <span className="text-[12px]" style={{ color: "#64748B" }}>Leva menos de 1 minuto</span>
               </div>
 
               <button
@@ -528,7 +567,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
                 style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)", color: "#fff" }}
               >
-                COMPLETAR MEU REGISTRO
+                COMPLETAR ATIVAÇÃO
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>
