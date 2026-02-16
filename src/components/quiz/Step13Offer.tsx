@@ -86,7 +86,7 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
         const fullUrl = utmQs ? `${pricing.checkoutUrl}${separator}${utmQs.slice(1)}` : pricing.checkoutUrl;
         window.open(fullUrl, "_blank");
       }} variant="accent" className="animate-bounce-subtle text-lg sm:text-xl tracking-wider">
-        🔑 ATIVAR MINHA CHAVE TOKEN — R${formatPrice(pricing.price)}
+        🔑 ATIVAR MINHA CHAVE TOKEN AGORA
       </CTAButton>
       <div className="flex items-center justify-center gap-2">
         <Lock className="w-3.5 h-3.5 text-muted-foreground" />
