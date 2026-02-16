@@ -466,18 +466,22 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     return { sem, com, goalMonth };
   };
 
-  /* ── Dynamic multiplier table for step 15 ── */
-  const getCompoundRows = () => {
-    const dailyRate = answers.profile === "agressivo" ? 0.025 : answers.profile === "equilibrado" ? 0.02 : 0.015;
-    const days = [1, 7, 15, 30, 60, 90];
-    return days.map(d => {
-      const multiplier = Math.pow(1 + dailyRate, d - 1);
-      return {
-        dia: d,
-        label: d === 1 ? "Dia 1" : d <= 30 ? `Dia ${d}` : `Dia ${d}`,
-        multiplier: Math.round(multiplier * 10) / 10,
-        isHighlight: d >= 30,
-      };
+  /* ── Comparison table: without vs with Multiplicador for step 15 ── */
+  const getComparisonRows = () => {
+    const base = 25; // base daily without multiplicador
+    const multiplierRate = answers.profile === "agressivo" ? 0.025 : answers.profile === "equilibrado" ? 0.02 : 0.015;
+    const periods = [
+      { label: "1 semana", days: 7 },
+      { label: "15 dias", days: 15 },
+      { label: "1 mês", days: 30 },
+      { label: "2 meses", days: 60 },
+      { label: "3 meses", days: 90 },
+    ];
+    return periods.map(p => {
+      const without = base * p.days;
+      const withMult = Math.round(base * p.days * Math.pow(1 + multiplierRate, p.days - 1));
+      const diff = withMult - without;
+      return { ...p, without, withMult, diff };
     });
   };
 
@@ -1015,73 +1019,75 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
             );
           })()}
 
-          {/* ═══ STEP 15: Juros Compostos ═══ */}
+          {/* ═══ STEP 15: Comparação clara SEM vs COM Multiplicador ═══ */}
           {step === 15 && (() => {
-            const rows = getCompoundRows();
+            const rows = getComparisonRows();
             return (
               <div className="space-y-5 py-4">
-                <h1 className="text-[24px] font-extrabold text-center leading-tight" style={{ color: "#F8FAFC" }}>
-                  Veja o poder do{" "}
-                  <span style={{ color: "#22C55E" }}>MULTIPLICADOR</span>
+                <h1 className="text-[22px] font-extrabold text-center leading-tight" style={{ color: "#F8FAFC" }}>
+                  {userName}, veja a diferença{" "}
+                  <span style={{ color: "#22C55E" }}>com o Multiplicador</span>:
                 </h1>
 
-                <div className="text-center">
-                  <p className="text-[14px]" style={{ color: "#94A3B8" }}>
-                    Seus ganhos se multiplicam a cada dia:
-                  </p>
+                {/* Header */}
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <span className="text-[11px] font-bold" style={{ color: "#64748B" }}>Período</span>
+                  <span className="text-[11px] font-bold" style={{ color: "#EF4444" }}>❌ Sem</span>
+                  <span className="text-[11px] font-bold" style={{ color: "#22C55E" }}>✅ Com</span>
                 </div>
 
+                {/* Rows */}
                 <div className="space-y-2">
                   {rows.map((r, i) => (
                     <motion.div
-                      key={r.dia}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 * i }}
-                      className="flex justify-between items-center p-3.5 rounded-xl"
+                      key={r.label}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.12 * i }}
+                      className="grid grid-cols-3 gap-2 items-center p-3 rounded-xl"
                       style={{
-                        background: r.isHighlight ? "rgba(34,197,94,0.08)" : "#0F172A",
-                        border: r.isHighlight ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(255,255,255,0.06)",
+                        background: i >= 3 ? "rgba(34,197,94,0.06)" : "#0F172A",
+                        border: i >= 3 ? "1px solid rgba(34,197,94,0.2)" : "1px solid rgba(255,255,255,0.06)",
                       }}
                     >
-                      <span className="text-[14px]" style={{ color: r.isHighlight ? "#F8FAFC" : "#94A3B8" }}>
+                      <span className="text-[13px] font-medium" style={{ color: "#CBD5E1" }}>
                         {r.label}
                       </span>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="font-bold"
-                          style={{
-                            color: r.isHighlight ? "#22C55E" : "#CBD5E1",
-                            fontSize: r.isHighlight ? "18px" : "16px",
-                          }}
-                        >
-                          {r.multiplier}x
+                      <span className="text-[14px] text-center line-through" style={{ color: "#64748B" }}>
+                        R$ {r.without.toLocaleString("pt-BR")}
+                      </span>
+                      <div className="text-right">
+                        <span className="text-[15px] font-bold" style={{ color: "#22C55E" }}>
+                          R$ {r.withMult.toLocaleString("pt-BR")}
                         </span>
-                        {r.isHighlight && (
-                          <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold" style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E" }}>
-                            {r.dia === 90 ? "🔥 MAX" : r.dia === 60 ? "⚡ TURBO" : "✅ META"}
-                          </span>
-                        )}
                       </div>
                     </motion.div>
                   ))}
                 </div>
 
-                <div className="p-4 rounded-xl text-center space-y-2" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
-                  <p className="text-[16px] font-bold" style={{ color: "#F8FAFC" }}>
-                    Seus ganhos <strong style={{ color: "#22C55E" }}>CRESCEM sozinhos</strong>, todo dia.
+                {/* Highlight da diferença nos 3 meses */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.8 }}
+                  className="p-4 rounded-xl text-center space-y-1"
+                  style={{ background: "rgba(250,204,21,0.08)", border: "1px solid rgba(250,204,21,0.2)" }}
+                >
+                  <p className="text-[13px]" style={{ color: "#94A3B8" }}>Em 3 meses você ganharia</p>
+                  <p className="text-[22px] font-extrabold" style={{ color: "#FACC15" }}>
+                    +R$ {rows[rows.length - 1].diff.toLocaleString("pt-BR")} a mais
                   </p>
                   <p className="text-[12px]" style={{ color: "#64748B" }}>
-                    Isso é possível graças ao efeito de juros compostos aplicados pela IA.
+                    Graças ao efeito de juros compostos aplicados pela IA
                   </p>
-                </div>
+                </motion.div>
 
                 <button
                   onClick={goNext}
                   className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
                   style={{ background: "linear-gradient(135deg, #16A34A, #22D3EE)", color: "#fff" }}
                 >
-                  ENTENDI, E AGORA?
+                  COMO ATIVAR ISSO?
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
