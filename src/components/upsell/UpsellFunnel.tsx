@@ -23,13 +23,15 @@ const UPSELL_PAGE_IDS: Record<number, string> = {
 };
 
 const UpsellFunnel = () => {
+  // Capture token immediately on render (before any navigation helpers need it)
+  captureKirvanoToken();
+
   const [step, setStep] = useState(1);
   const name = getLeadName();
 
   usePagePresence(UPSELL_PAGE_IDS[step] || "/upsell1");
 
   useEffect(() => {
-    captureKirvanoToken();
     const qs = window.location.search;
     window.history.pushState(null, "", `/upsell1${qs}`);
     const onPop = () => window.history.pushState(null, "", `/upsell1${qs}`);

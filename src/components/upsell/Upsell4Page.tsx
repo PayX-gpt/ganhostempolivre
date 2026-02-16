@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import UpsellLayout from "./UpsellLayout";
 import UpsellCirculoInterno from "./UpsellCirculoInterno";
 import UpsellStep6 from "./UpsellStep6";
@@ -6,17 +6,18 @@ import KirvanoOneClick from "./KirvanoOneClick";
 import { getLeadName, captureKirvanoToken } from "@/lib/upsellData";
 import { usePagePresence } from "@/hooks/usePagePresence";
 import { saveFunnelEvent } from "@/lib/metricsClient";
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Upsell4Page = () => {
+  // Capture token immediately on render
+  captureKirvanoToken();
+
   const name = getLeadName();
   const [showSuccess, setShowSuccess] = useState(false);
 
   usePagePresence(showSuccess ? "/upsell4-sucesso" : "/upsell4");
 
   useEffect(() => {
-    captureKirvanoToken();
     const qs = window.location.search;
     window.history.pushState(null, "", `/upsell4${qs}`);
     const onPop = () => window.history.pushState(null, "", `/upsell4${qs}`);
