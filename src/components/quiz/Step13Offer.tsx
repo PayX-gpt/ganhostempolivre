@@ -343,6 +343,96 @@ const TestimonialsCarousel = ({ testimonials }: { testimonials: { name: string; 
   );
 };
 
+/* ─── WhatsApp Prints Carousel ─── */
+const whatsappPrints = [
+  { img: null as unknown as string, caption: "Primeiro saque em 3 dias 🔥" },
+  { img: null as unknown as string, caption: "Resultado da primeira semana 💰" },
+  { img: null as unknown as string, caption: "Sem acreditar no que vi 😱" },
+  { img: null as unknown as string, caption: "Mostrei pro meu marido 🥹" },
+];
+
+const WhatsAppPrintsCarousel = () => {
+  const [current, setCurrent] = useState(0);
+  const imgs = [feedback1, feedback2, feedback3, feedback4];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % imgs.length);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="space-y-3">
+      {/* Main image */}
+      <div className="relative rounded-2xl overflow-hidden border border-primary/20 shadow-lg" style={{ background: "hsl(var(--card))" }}>
+        <div className="relative" style={{ minHeight: 300 }}>
+          {imgs.map((img, i) => (
+            <motion.div
+              key={i}
+              initial={false}
+              animate={{
+                opacity: i === current ? 1 : 0,
+                scale: i === current ? 1 : 0.95,
+                position: i === current ? "relative" : "absolute",
+              }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="w-full top-0 left-0"
+              style={{ pointerEvents: i === current ? "auto" : "none" }}
+            >
+              <img src={img} alt={`Print WhatsApp ${i + 1}`} className="w-full h-auto object-cover" />
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Caption overlay */}
+        <motion.div
+          key={current}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute bottom-0 left-0 right-0 px-4 py-3"
+          style={{ background: "linear-gradient(to top, hsl(var(--card)), transparent)" }}
+        >
+          <p className="text-sm font-bold text-foreground text-center">
+            {whatsappPrints[current].caption}
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Thumbnails */}
+      <div className="flex gap-2 justify-center">
+        {imgs.map((img, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className="relative rounded-lg overflow-hidden border-2 transition-all duration-300 cursor-pointer p-0"
+            style={{
+              width: 56,
+              height: 56,
+              borderColor: i === current ? "hsl(var(--primary))" : "hsl(var(--border))",
+              opacity: i === current ? 1 : 0.5,
+              transform: i === current ? "scale(1.1)" : "scale(1)",
+            }}
+          >
+            <img src={img} alt="" className="w-full h-full object-cover" />
+            {i === current && (
+              <motion.div
+                layoutId="print-indicator"
+                className="absolute inset-0 border-2 border-primary rounded-lg"
+              />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Counter */}
+      <p className="text-center text-xs text-muted-foreground">
+        <span className="text-primary font-bold">{current + 1}</span> de {imgs.length} prints verificados
+      </p>
+    </div>
+  );
+};
+
 /* ─── Step Card with scroll animation ─── */
 const StepCard = ({ item, index, isLast }: { item: { step: string; icon: React.ElementType; title: string; desc: string; detail: string }; index: number; isLast: boolean }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -1441,17 +1531,21 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       {/* ═══ 19. WHATSAPP FEEDBACK SCREENSHOTS ═══ */}
       <ScrollReveal>
-      <div className="w-full space-y-3">
-        <h3 className="font-display text-lg font-bold text-foreground text-center">
-          Prints <span className="text-gradient-green">reais</span> do WhatsApp
-        </h3>
-        <div className="grid grid-cols-2 gap-3">
-          {[feedback1, feedback2, feedback3, feedback4].map((img, i) => (
-            <div key={i} className="rounded-xl overflow-hidden border border-border shadow-md hover:scale-[1.02] transition-transform">
-              <img src={img} alt={`Feedback ${i + 1}`} className="w-full h-auto object-cover" />
-            </div>
-          ))}
+      <div className="w-full space-y-4">
+        <div className="text-center space-y-1.5">
+          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 mx-auto">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Conversas reais</span>
+          </div>
+          <h3 className="font-display text-xl font-bold text-foreground">
+            Olha o que estão mandando <span className="text-gradient-green">agora mesmo</span>
+          </h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Prints diretos do grupo de alunos. Sem edição, sem filtro.
+          </p>
         </div>
+
+        <WhatsAppPrintsCarousel />
       </div>
       </ScrollReveal>
 
