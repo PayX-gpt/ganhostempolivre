@@ -186,6 +186,10 @@ const UrgencyStrip = ({ minutes, seconds, show, priceLabel, installmentLabel }: 
 
 /* ─── Profile Analysis Card ─── */
 const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstName: string }) => {
+  const [phase, setPhase] = useState(0); // 0=scanning, 1=items reveal, 2=projection
+  const [revealedItems, setRevealedItems] = useState(0);
+  const [compatPercent, setCompatPercent] = useState(0);
+
   const getObstacleLabel = (o?: string) => {
     const map: Record<string, string> = {
       medo: "Medo de errar", tempo: "Falta de tempo",
@@ -200,6 +204,14 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
       "300-500": "R$300–R$500/dia", "500+": "+R$500/dia",
     };
     return map[g || ""] || "Renda extra diária";
+  };
+
+  const getGoalMonthly = (g?: string) => {
+    const map: Record<string, string> = {
+      "50-100": "R$1.500–R$3.000", "100-300": "R$3.000–R$9.000",
+      "300-500": "R$9.000–R$15.000", "500+": "+R$15.000",
+    };
+    return map[g || ""] || "R$3.000+";
   };
 
   const getDeviceLabel = (d?: string) => {
@@ -254,48 +266,261 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
     return map[b || ""] || "—";
   };
 
+  const getObstacleInsight = (o?: string) => {
+    const map: Record<string, string> = {
+      medo: "Nosso sistema elimina o risco — a IA toma as decisões por você.",
+      tempo: "Perfeito: bastam poucos minutos por dia. A IA trabalha 24h.",
+      inicio: "Ideal para iniciantes — tudo é guiado passo a passo.",
+      dinheiro: "O sistema foi feito para começar com qualquer valor.",
+    };
+    return map[o || ""] || "Você está no caminho certo.";
+  };
+
+  const getDreamInsight = (d?: string) => {
+    const map: Record<string, string> = {
+      contas: "Alunos como você já cobrem todas as contas do mês em até 3 semanas.",
+      dividas: "Com a renda extra gerada, muitos quitam dívidas em 60 dias.",
+      viagem: "Imagine reservar aquela viagem sem se preocupar com o cartão.",
+      independencia: "Você está a um passo de não depender mais de ninguém.",
+      aposentadoria: "O complemento ideal para garantir sua tranquilidade.",
+      negocio: "A IA faz o trabalho pesado — você só gerencia os resultados.",
+      valorizado: "As pessoas ao seu redor vão perceber a diferença.",
+      familia: "Cuide de quem você ama com a segurança que merece.",
+      liberdade: "Tempo e dinheiro: é exatamente isso que esse sistema entrega.",
+    };
+    return map[d || ""] || "Seus objetivos estão ao alcance.";
+  };
+
   const items = [
-    { label: "Faixa etária", value: getAgeLabel(answers?.age), highlight: false },
-    { label: "Meta de renda", value: getGoalLabel(answers?.incomeGoal), highlight: true },
-    { label: "Maior desafio", value: getObstacleLabel(answers?.obstacle), highlight: false },
-    { label: "Sonho financeiro", value: getDreamLabel(answers?.financialDream), highlight: false },
-    { label: "Dispositivo", value: getDeviceLabel(answers?.device), highlight: false },
-    { label: "Tempo disponível", value: getAvailabilityLabel(answers?.availability), highlight: false },
-    { label: "Experiência online", value: getTriedLabel(answers?.triedOnline), highlight: false },
-    { label: "Capital atual", value: getBalanceLabel(answers?.accountBalance), highlight: false },
+    { icon: <Users className="w-4 h-4" />, label: "Faixa etária", value: getAgeLabel(answers?.age), color: "text-foreground" },
+    { icon: <TrendingUp className="w-4 h-4" />, label: "Meta de renda", value: getGoalLabel(answers?.incomeGoal), color: "text-primary" },
+    { icon: <AlertTriangle className="w-4 h-4" />, label: "Maior desafio", value: getObstacleLabel(answers?.obstacle), color: "text-foreground" },
+    { icon: <Heart className="w-4 h-4" />, label: "Sonho financeiro", value: getDreamLabel(answers?.financialDream), color: "text-foreground" },
+    { icon: <Smartphone className="w-4 h-4" />, label: "Dispositivo", value: getDeviceLabel(answers?.device), color: "text-foreground" },
+    { icon: <Clock className="w-4 h-4" />, label: "Tempo disponível", value: getAvailabilityLabel(answers?.availability), color: "text-foreground" },
+    { icon: <Eye className="w-4 h-4" />, label: "Experiência online", value: getTriedLabel(answers?.triedOnline), color: "text-foreground" },
+    { icon: <CircleDollarSign className="w-4 h-4" />, label: "Capital atual", value: getBalanceLabel(answers?.accountBalance), color: "text-foreground" },
   ];
 
-  return (
-    <div className="w-full space-y-3">
-      {/* Approved badge */}
-      <div className="flex items-center justify-center gap-2 py-2">
-        <div className="flex items-center gap-2 bg-primary/15 border border-primary/30 rounded-full px-4 py-2">
-          <CheckCircle className="w-5 h-5 text-primary" />
-          <span className="text-sm font-bold text-primary">PERFIL APROVADO</span>
-        </div>
-      </div>
+  // Phase animation controller
+  useEffect(() => {
+    // Phase 0: scanning (1.5s)
+    const t1 = setTimeout(() => setPhase(1), 1500);
+    return () => clearTimeout(t1);
+  }, []);
 
-      <div className="funnel-card border-primary/30 bg-primary/5 space-y-3">
-        <p className="text-sm text-muted-foreground text-center">
-          {firstName ? `${firstName}, com` : "Com"} base nas suas respostas, seu perfil foi aprovado para acessar a plataforma:
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          {items.map((item, i) => (
-            <div key={i} className={`rounded-xl p-3 text-center ${item.highlight ? "bg-primary/10 border border-primary/20" : "bg-secondary/50"}`}>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{item.label}</p>
-              <p className={`text-xs sm:text-sm font-bold ${item.highlight ? "text-primary" : "text-foreground"}`}>{item.value}</p>
-            </div>
-          ))}
+  // Item reveal sequence
+  useEffect(() => {
+    if (phase < 1) return;
+    if (revealedItems >= items.length) {
+      const t = setTimeout(() => setPhase(2), 600);
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(() => setRevealedItems((p) => p + 1), 180);
+    return () => clearTimeout(t);
+  }, [phase, revealedItems, items.length]);
+
+  // Compat % counter
+  useEffect(() => {
+    if (phase < 2) return;
+    const target = 97;
+    const t = setInterval(() => {
+      setCompatPercent((p) => {
+        if (p >= target) { clearInterval(t); return target; }
+        return p + 3;
+      });
+    }, 30);
+    return () => clearInterval(t);
+  }, [phase]);
+
+  return (
+    <div className="w-full space-y-4">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center space-y-2"
+      >
+        <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/25 rounded-full px-4 py-2">
+          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span className="text-xs font-bold text-primary uppercase tracking-wider">
+            {phase < 1 ? "Analisando perfil..." : phase < 2 ? "Processando dados..." : "Análise completa"}
+          </span>
         </div>
-        <div className="bg-card rounded-xl p-3 border border-border">
-          <div className="flex items-center gap-2 mb-1">
-            <Zap className="w-4 h-4 text-accent" />
-            <span className="text-xs font-bold text-accent">COMPATIBILIDADE: 97%</span>
+      </motion.div>
+
+      {/* Main card */}
+      <div
+        className="rounded-2xl overflow-hidden border border-primary/20"
+        style={{ background: "linear-gradient(180deg, hsl(var(--card)), hsl(var(--primary) / 0.03))" }}
+      >
+        {/* Title bar */}
+        <div className="px-4 py-3 border-b border-primary/10 flex items-center gap-3" style={{ background: "hsl(var(--primary) / 0.06)" }}>
+          <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
+            <Bot className="w-4 h-4 text-primary" />
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Seu perfil é altamente compatível com o método. Alunos semelhantes geram em média {getGoalLabel(answers?.incomeGoal)} nos primeiros 30 dias.
-          </p>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-foreground truncate">
+              Relatório personalizado {firstName ? `para ${firstName}` : ""}
+            </p>
+            <p className="text-[10px] text-muted-foreground">Gerado pela IA com base em 8 pontos de dados</p>
+          </div>
         </div>
+
+        {/* Scanning phase */}
+        {phase < 1 && (
+          <div className="px-5 py-8 text-center space-y-4">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+              className="w-12 h-12 mx-auto rounded-full border-2 border-primary/20 border-t-primary"
+            />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">Cruzando suas respostas com nossa base de dados...</p>
+              <p className="text-xs text-muted-foreground">Comparando com +36.000 perfis de alunos ativos</p>
+            </div>
+          </div>
+        )}
+
+        {/* Items reveal */}
+        {phase >= 1 && (
+          <div className="px-4 py-4 space-y-2">
+            {items.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{
+                  opacity: i < revealedItems ? 1 : 0,
+                  x: i < revealedItems ? 0 : -20,
+                }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                style={{
+                  background: i < revealedItems
+                    ? item.color === "text-primary"
+                      ? "hsl(var(--primary) / 0.08)"
+                      : "hsl(var(--secondary) / 0.5)"
+                    : "transparent",
+                }}
+              >
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                  item.color === "text-primary" ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+                }`}>
+                  {item.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none mb-0.5">{item.label}</p>
+                  <p className={`text-sm font-bold ${item.color} truncate`}>{item.value}</p>
+                </div>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: i < revealedItems ? 1 : 0 }}
+                  transition={{ delay: 0.15, type: "spring", stiffness: 300 }}
+                >
+                  <CheckCircle className="w-4 h-4 text-primary shrink-0" />
+                </motion.div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* Compatibility + projection */}
+        {phase >= 2 && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="px-4 pb-4 space-y-3"
+          >
+            {/* Compat bar */}
+            <div className="rounded-xl p-4 border border-primary/20" style={{ background: "hsl(var(--primary) / 0.06)" }}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-accent" />
+                  <span className="text-xs font-bold text-foreground uppercase tracking-wider">Compatibilidade</span>
+                </div>
+                <span className="text-2xl font-display font-black text-primary">{compatPercent}%</span>
+              </div>
+              <div className="w-full h-2.5 rounded-full bg-secondary overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full progress-bar-fill"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${compatPercent}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                Seu perfil está entre os <span className="text-primary font-bold">top 3%</span> com maior chance de resultado rápido.
+              </p>
+            </div>
+
+            {/* Personalized projection */}
+            <div className="rounded-xl overflow-hidden border border-accent/20">
+              <div className="px-4 py-2.5 flex items-center gap-2 border-b border-accent/10" style={{ background: "hsl(var(--accent) / 0.08)" }}>
+                <TrendingUp className="w-4 h-4 text-accent" />
+                <span className="text-xs font-bold text-accent uppercase tracking-wider">Projeção para seu perfil</span>
+              </div>
+              <div className="px-4 py-3 space-y-3" style={{ background: "hsl(var(--accent) / 0.03)" }}>
+                {/* Projections grid */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-center p-2 rounded-lg bg-card border border-border">
+                    <p className="text-[9px] uppercase text-muted-foreground mb-1">Semana 1</p>
+                    <p className="text-sm font-bold text-foreground">Primeiros lucros</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-card border border-border">
+                    <p className="text-[9px] uppercase text-muted-foreground mb-1">Semana 2-3</p>
+                    <p className="text-sm font-bold text-primary">{getGoalLabel(answers?.incomeGoal)}</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-card border border-border">
+                    <p className="text-[9px] uppercase text-muted-foreground mb-1">Mês 1</p>
+                    <p className="text-sm font-bold text-accent">{getGoalMonthly(answers?.incomeGoal)}</p>
+                  </div>
+                </div>
+
+                {/* Insight based on obstacle */}
+                <div className="rounded-lg p-3 bg-card border border-primary/10">
+                  <div className="flex gap-2">
+                    <Shield className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-foreground mb-0.5">Sobre seu desafio: "{getObstacleLabel(answers?.obstacle)}"</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{getObstacleInsight(answers?.obstacle)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Insight based on dream */}
+                <div className="rounded-lg p-3 bg-card border border-accent/10">
+                  <div className="flex gap-2">
+                    <Sun className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-foreground mb-0.5">Seu objetivo: "{getDreamLabel(answers?.financialDream)}"</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{getDreamInsight(answers?.financialDream)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Final verdict */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.4 }}
+              className="rounded-xl p-4 text-center border border-primary/25"
+              style={{ background: "linear-gradient(180deg, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.02))" }}
+            >
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <CheckCircle className="w-5 h-5 text-primary" />
+                <span className="text-sm font-bold text-primary uppercase tracking-wide">Perfil aprovado</span>
+              </div>
+              <p className="text-sm text-foreground leading-relaxed">
+                {firstName}, tudo indica que <span className="font-bold text-primary">esse sistema foi feito para o seu momento</span>. 
+                Com {getAvailabilityLabel(answers?.availability)} no seu {getDeviceLabel(answers?.device)?.toLowerCase()}, 
+                você já tem o necessário para começar a gerar resultados.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
       </div>
     </div>
   );
