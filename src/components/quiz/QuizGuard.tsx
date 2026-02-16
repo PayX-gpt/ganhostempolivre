@@ -1,7 +1,7 @@
 import { ReactNode, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { initializeTrackingDataLayer } from "@/lib/trackingDataLayer";
-import GhostPage from "../upsell/GhostPage";
+import SafePage from "../SafePage";
 
 interface Props {
   children: ReactNode;
@@ -105,7 +105,7 @@ const QuizGuard = ({ children }: Props) => {
   }, [isAuthorized]);
 
   if (!isAuthorized) {
-    return <GhostPage />;
+    return <SafePage />;
   }
 
   return <>{children}</>;
