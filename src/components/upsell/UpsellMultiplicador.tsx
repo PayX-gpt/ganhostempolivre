@@ -194,9 +194,21 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     const t3 = setTimeout(() => setAnalysisPhase(3), 2200);
     const t4 = setTimeout(() => setAnalysisPhase(4), 3000);
     const t5 = setTimeout(() => {
-      let rec = "ouro";
-      if (answers.profile === "conservador" && answers.timeline === "longo") rec = "prata";
-      else if (answers.profile === "agressivo" || answers.timeline === "urgente" || answers.timeline === "30dias") rec = "diamante";
+      // Smart recommendation: balance urgency with affordability
+      let rec = "ouro"; // default — best cost-benefit
+      
+      if (answers.profile === "conservador" && (answers.timeline === "longo" || answers.timeline === "medio")) {
+        rec = "prata"; // conservador + prazo longo = opção mais suave
+      } else if (answers.profile === "agressivo" && answers.situation === "confortavel") {
+        rec = "diamante"; // só recomenda diamante se tem condição financeira
+      } else if (answers.situation === "endividado") {
+        // Endividado: NUNCA empurrar o mais caro — ouro é o melhor custo-benefício
+        rec = answers.profile === "conservador" ? "prata" : "ouro";
+      } else if (answers.timeline === "30dias" || answers.timeline === "urgente") {
+        // Prazo curto mas não endividado: ouro (equilíbrio)
+        rec = answers.situation === "confortavel" ? "diamante" : "ouro";
+      }
+      
       setRecommendedPlan(rec);
       setStep(11);
     }, 4500);
