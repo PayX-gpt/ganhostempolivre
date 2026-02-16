@@ -655,12 +655,12 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
           {step === 8 && (() => {
             const data = confirmationData["goal"];
             const goalText = goalLabel(answers.goal);
-            const placeholder = answers.goal === "contas" ? "Ex: 5000" : answers.goal === "familia" ? "Ex: 10000" : "Ex: 2000";
-            const label = answers.goal === "renda" || answers.goal === "liberdade"
-              ? "Quanto você quer ganhar por mês?"
-              : answers.goal === "contas"
-              ? "Quanto você precisa para quitar suas dívidas?"
-              : "Quanto você quer acumular para sua família?";
+            const placeholder = answers.goal === "contas" ? "Ex: 3000" : answers.goal === "familia" ? "Ex: 5000" : "Ex: 2000";
+            const label = answers.goal === "contas"
+              ? "Quanto você quer ganhar por mês para quitar suas dívidas?"
+              : answers.goal === "familia"
+              ? "Quanto você quer ganhar por mês para sua família?"
+              : "Quanto você quer ganhar por mês?";
 
             const handleGoalAmountSubmit = () => {
               const val = parseInt(goalAmountInput.replace(/\D/g, ""), 10);
@@ -723,16 +723,9 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                     />
                   </div>
 
-                  {(answers.goal === "renda" || answers.goal === "liberdade") && (
-                    <p className="text-[12px] text-center" style={{ color: "#64748B" }}>
-                      Valor mensal que você deseja alcançar
-                    </p>
-                  )}
-                  {(answers.goal === "contas" || answers.goal === "familia") && (
-                    <p className="text-[12px] text-center" style={{ color: "#64748B" }}>
-                      Valor total que você precisa alcançar
-                    </p>
-                  )}
+                  <p className="text-[12px] text-center" style={{ color: "#64748B" }}>
+                    Valor mensal que você deseja alcançar
+                  </p>
                 </div>
 
                 <button
