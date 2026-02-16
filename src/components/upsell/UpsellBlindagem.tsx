@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShieldCheck, Check, Lock, Infinity, RefreshCw } from "lucide-react";
+import { ShieldCheck, Check, Lock, RefreshCw, Zap, CheckCircle2 } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
@@ -40,6 +40,30 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
 
   return (
     <div className="flex flex-col gap-5 pt-4">
+      {/* Multiplicador confirmation */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-4 rounded-2xl flex items-center gap-3"
+        style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}
+      >
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)" }}
+        >
+          <CheckCircle2 className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <p className="text-[13px] font-semibold" style={{ color: "#22C55E" }}>
+            Multiplicador ativado com sucesso
+          </p>
+          <p className="text-[11px]" style={{ color: "#64748B" }}>
+            Seus ganhos já estão sendo multiplicados
+          </p>
+        </div>
+        <Zap className="w-5 h-5 ml-auto shrink-0" style={{ color: "#22C55E" }} />
+      </motion.div>
+
       {/* Header */}
       <div className="text-center">
         <p
@@ -52,7 +76,7 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
           className="text-[22px] font-extrabold leading-tight"
           style={{ color: "#F8FAFC" }}
         >
-          Seu sistema está funcionando. Agora vamos garantir que ele continue funcionando pra sempre.
+          {firstName ? `${firstName}, seu` : "Seu"} sistema está funcionando. Agora vamos garantir que ele continue funcionando pra sempre.
         </h1>
       </div>
 
