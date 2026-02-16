@@ -8,13 +8,15 @@ import { usePagePresence } from "@/hooks/usePagePresence";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 
 const Upsell3Page = () => {
+  // CRITICAL: capture token BEFORE buildUpsellURL runs
+  captureKirvanoToken();
+
   const name = getLeadName();
   const navigate = useNavigate();
 
   usePagePresence("/upsell3");
 
   useEffect(() => {
-    captureKirvanoToken();
     const qs = window.location.search;
     window.history.pushState(null, "", `/upsell3${qs}`);
     const onPop = () => window.history.pushState(null, "", `/upsell3${qs}`);
@@ -28,6 +30,7 @@ const Upsell3Page = () => {
     navigateToUpsell(navigate, "/upsell4");
   };
 
+  // Token is already in sessionStorage from captureKirvanoToken above
   const upsell4URL = buildUpsellURL("https://ganhostempolivre.lovable.app/upsell4");
 
   return (
