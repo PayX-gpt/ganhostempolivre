@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Crown, Diamond, Check, ArrowRight, Target, Clock, TrendingUp, Zap, Loader2, ChevronRight, Sparkles } from "lucide-react";
-import { saveUpsellExtras } from "@/lib/upsellData";
+import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, ChevronRight, Sparkles, AlertTriangle, Users } from "lucide-react";
+import { saveUpsellExtras, getLeadName } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
@@ -16,112 +16,125 @@ const plans = [
   {
     id: "prata",
     icon: Shield,
-    name: "Plano Prata",
-    subtitle: "Ganhe até R$ 250 por dia",
+    name: "Modo Moderado",
+    subtitle: "Limite de até R$ 250/dia",
     subtitleColor: "#94A3B8",
-    description:
-      "O sistema passa a buscar ganhos maiores pra você, mas ainda com bastante cuidado. É como trocar a marcha do carro — você anda mais rápido, mas com segurança.",
+    description: "O sistema passa a buscar operações maiores com mais frequência. É como aumentar o ritmo do motor — com segurança e constância.",
     price: 47,
     installments: "5x de R$ 9,90",
     border: "1px solid rgba(255,255,255,0.08)",
     btnBg: "transparent",
     btnColor: "#94A3B8",
     btnBorder: "1.5px solid #94A3B8",
-    btnText: "ATIVAR PLANO PRATA",
+    btnText: "LIBERAR ESTE LIMITE",
     badge: null,
-    goalMatch: "100-250",
+    goalMatch: "moderado",
     checkoutUrl: "https://pay.kirvano.com/b61b6335-9325-4ecb-9b87-8214d948e90e",
   },
   {
     id: "ouro",
     icon: Crown,
-    name: "Plano Ouro",
-    subtitle: "Ganhe até R$ 500 por dia",
+    name: "Modo Avançado",
+    subtitle: "Limite de até R$ 500/dia",
     subtitleColor: "#FACC15",
-    description:
-      "Além de buscar ganhos maiores, o sistema ganha um 'vigia' automático que fica de olho nas operações o dia todo. Você não precisa fazer nada — ele cuida de tudo pra você.",
+    description: "Além de operar com mais força, o sistema ganha um 'vigia' automático que monitora tudo 24h. Você não precisa fazer nada — ele cuida de tudo.",
     price: 67,
     installments: "7x de R$ 9,90",
     border: "2px solid #FACC15",
     btnBg: "linear-gradient(135deg, #FACC15, #EAB308)",
     btnColor: "#020617",
     btnBorder: "none",
-    btnText: "ATIVAR PLANO OURO",
+    btnText: "LIBERAR ESTE LIMITE",
     badge: "⭐ MAIS ESCOLHIDO",
-    goalMatch: "250-500",
+    goalMatch: "avancado",
     checkoutUrl: "https://pay.kirvano.com/2f8e1d23-b71c-4c4b-9da1-672a6ca75c9b",
   },
   {
     id: "diamante",
     icon: Diamond,
-    name: "Plano Diamante",
-    subtitle: "Ganhos sem limite",
+    name: "Modo Máximo",
+    subtitle: "Sem limite de ganho diário",
     subtitleColor: "#60A5FA",
-    description:
-      "O sistema trabalha no máximo, 24 horas por dia, sem limite de ganho. Você ainda recebe um resumo toda semana no seu WhatsApp mostrando quanto ganhou.",
+    description: "O sistema opera no máximo, 24 horas por dia, sem teto. Você ainda recebe um relatório semanal no WhatsApp com tudo que o sistema fez por você.",
     price: 97,
     installments: "10x de R$ 9,90",
     border: "1px solid rgba(96,165,250,0.25)",
     btnBg: "linear-gradient(135deg, #3B82F6, #2563EB)",
     btnColor: "#fff",
     btnBorder: "none",
-    btnText: "ATIVAR PLANO DIAMANTE",
+    btnText: "LIBERAR ESTE LIMITE",
     badge: null,
-    goalMatch: "sem-limite",
+    goalMatch: "maximo",
     checkoutUrl: "https://pay.kirvano.com/e7d1995f-9b55-47d0-a1c4-762b07721162",
   },
 ];
 
-// Quiz step data
-const goalOptions = [
-  { id: "100-250", label: "Até R$ 250 por dia", icon: "🎯", desc: "Crescimento seguro e constante" },
-  { id: "250-500", label: "Até R$ 500 por dia", icon: "🚀", desc: "Ganhos maiores com monitoramento" },
-  { id: "sem-limite", label: "Sem limite de ganho", icon: "💎", desc: "Máximo potencial, 24h por dia" },
+// Step definitions
+const situationOptions = [
+  { id: "contas", label: "Pagar contas atrasadas", icon: "🏠", desc: "Resolver pendências financeiras" },
+  { id: "renda-extra", label: "Ter uma renda extra mensal", icon: "💰", desc: "Complementar o salário" },
+  { id: "liberdade", label: "Conquistar liberdade financeira", icon: "🌴", desc: "Não depender de ninguém" },
+  { id: "familia", label: "Dar uma vida melhor pra família", icon: "❤️", desc: "Segurança pros meus" },
+];
+
+const timeOptions = [
+  { id: "1h", label: "Até 1 hora por dia", icon: "⏰", desc: "Só nos intervalos" },
+  { id: "2-3h", label: "De 2 a 3 horas por dia", icon: "📱", desc: "Tenho um tempo razoável" },
+  { id: "livre", label: "Tempo livre o dia todo", icon: "☀️", desc: "Posso acompanhar quando quiser" },
 ];
 
 const experienceOptions = [
-  { id: "iniciante", label: "Estou começando agora", icon: "🌱", desc: "Quero ir no meu ritmo" },
-  { id: "intermediario", label: "Já tenho alguma experiência", icon: "📊", desc: "Sei o básico de investimentos" },
-  { id: "avancado", label: "Já conheço o mercado", icon: "⚡", desc: "Quero escalar rápido" },
+  { id: "nunca", label: "Nunca investi na vida", icon: "🌱", desc: "Total iniciante" },
+  { id: "pouco", label: "Já tentei, mas não deu certo", icon: "🔄", desc: "Tive experiências frustrantes" },
+  { id: "alguma", label: "Tenho alguma experiência", icon: "📊", desc: "Sei o básico" },
 ];
 
-const monitorOptions = [
-  { id: "nenhum", label: "Prefiro não acompanhar", icon: "😌", desc: "O sistema cuida de tudo" },
-  { id: "semanal", label: "Uma vez por semana", icon: "📅", desc: "Resumo semanal no WhatsApp" },
-  { id: "diario", label: "Todo dia", icon: "📱", desc: "Quero ver tudo de perto" },
-];
+const TOTAL_STEPS = 8;
 
-const TOTAL_STEPS = 6;
-
-const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
-  const firstName = name !== "Visitante" ? name : "";
+const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
+  const existingName = propName !== "Visitante" ? propName : "";
   const [step, setStep] = useState(1);
-  const [answers, setAnswers] = useState({ goal: "", experience: "", monitor: "" });
+  const [userName, setUserName] = useState(existingName);
+  const [nameInput, setNameInput] = useState(existingName);
+  const [answers, setAnswers] = useState({ situation: "", time: "", experience: "" });
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [recommendedPlan, setRecommendedPlan] = useState<string>("ouro");
+  const [revealPhase, setRevealPhase] = useState(0);
 
-  // Step 5: Loading animation
+  const firstName = userName || "Visitante";
+
+  // Step 6: Loading animation
   useEffect(() => {
-    if (step !== 5) return;
+    if (step !== 6) return;
     setLoadingProgress(0);
+    setRevealPhase(0);
     const interval = setInterval(() => {
       setLoadingProgress(p => {
         if (p >= 100) {
           clearInterval(interval);
-          // Determine recommended plan based on answers
+          // Determine recommended plan
           let rec = "ouro";
-          if (answers.goal === "100-250") rec = "prata";
-          else if (answers.goal === "sem-limite") rec = "diamante";
-          else if (answers.experience === "avancado") rec = "diamante";
+          if (answers.experience === "nunca" && answers.time === "1h") rec = "prata";
+          else if (answers.time === "livre" || answers.situation === "liberdade") rec = "diamante";
           setRecommendedPlan(rec);
-          setTimeout(() => setStep(6), 400);
+          setTimeout(() => setStep(7), 500);
           return 100;
         }
-        return p + 2;
+        return p + 1.5;
       });
-    }, 60);
+    }, 50);
     return () => clearInterval(interval);
   }, [step, answers]);
+
+  // Step 6: reveal phases
+  useEffect(() => {
+    if (step !== 6) return;
+    const t1 = setTimeout(() => setRevealPhase(1), 800);
+    const t2 = setTimeout(() => setRevealPhase(2), 2000);
+    const t3 = setTimeout(() => setRevealPhase(3), 3200);
+    const t4 = setTimeout(() => setRevealPhase(4), 4200);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
+  }, [step]);
 
   const goNext = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
@@ -133,7 +146,7 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
     setTimeout(() => {
       window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
       setStep(s => s + 1);
-    }, 300);
+    }, 350);
   }, []);
 
   const handleSelectPlan = (plan: (typeof plans)[0]) => {
@@ -146,14 +159,14 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
     window.open(fullUrl, "_blank");
   };
 
-  // Progress dots
   const dots = Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1);
 
   const loadingMessages = [
-    "Analisando seu perfil de investidor...",
-    "Calculando o melhor plano pra você...",
-    "Configurando o sistema...",
-    "Quase pronto...",
+    "Cruzando dados do seu perfil...",
+    "Analisando capacidade do sistema...",
+    "Calculando limite ideal...",
+    "Configurando plataforma...",
+    "Finalizando...",
   ];
 
   return (
@@ -180,60 +193,127 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.25 }}
         >
-          {/* STEP 1: Welcome / Confirmation */}
+          {/* ─── STEP 1: Acelerador ativo + completar registro ─── */}
           {step === 1 && (
             <div className="text-center space-y-5">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-lg"
-                style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)" }}>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-lg"
+                style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)" }}
+              >
                 <Check className="w-8 h-8 text-white" strokeWidth={3} />
-              </div>
+              </motion.div>
+
               <div>
                 <h1 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
-                  {firstName ? `${firstName}, seu` : "Seu"} Acelerador está ativo!
+                  {existingName ? `${existingName}, seu ` : "Seu "}Acelerador está ativo! ✅
                 </h1>
                 <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "#94A3B8" }}>
-                  Agora vamos configurar o <strong style={{ color: "#FACC15" }}>limite de ganho diário</strong> do seu sistema. 
-                  Hoje ele está em <strong style={{ color: "#F8FAFC" }}>R$ 25/dia</strong> — que é o modo de proteção para iniciantes.
+                  Agora precisamos <strong style={{ color: "#F8FAFC" }}>completar a ativação</strong> da sua conta na 
+                  Plataforma de Ganhos com Tempo Livre e configurar o seu <strong style={{ color: "#FACC15" }}>limite diário de ganhos</strong>.
                 </p>
-                <p className="text-[13px] mt-3 leading-relaxed" style={{ color: "#64748B" }}>
-                  Responda 3 perguntas rápidas para descobrir qual configuração é ideal pra você.
-                </p>
+                <div className="mt-4 p-3 rounded-xl" style={{ background: "rgba(250,204,21,0.08)", border: "1px solid rgba(250,204,21,0.15)" }}>
+                  <p className="text-[13px] leading-relaxed" style={{ color: "#FACC15" }}>
+                    ⚡ Leva menos de 1 minuto — são apenas algumas perguntas rápidas.
+                  </p>
+                </div>
               </div>
+
               <button
                 onClick={goNext}
                 className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
                 style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)", color: "#fff" }}
               >
-                CONFIGURAR MEU SISTEMA
+                COMPLETAR MEU REGISTRO
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>
           )}
 
-          {/* STEP 2: Daily goal */}
+          {/* ─── STEP 2: Capturar nome ─── */}
           {step === 2 && (
             <div className="space-y-5">
               <div className="text-center">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
-                  style={{ background: "rgba(250,204,21,0.1)", border: "1px solid rgba(250,204,21,0.2)" }}>
-                  <Target className="w-6 h-6" style={{ color: "#FACC15" }} />
+                  style={{ background: "rgba(22,163,74,0.1)", border: "1px solid rgba(22,163,74,0.2)" }}>
+                  <Users className="w-6 h-6" style={{ color: "#22C55E" }} />
                 </div>
                 <h2 className="text-[20px] font-extrabold" style={{ color: "#F8FAFC" }}>
-                  Quanto você gostaria de ganhar por dia?
+                  Como podemos te chamar?
                 </h2>
                 <p className="text-[13px] mt-2" style={{ color: "#64748B" }}>
-                  Isso define o limite do multiplicador do seu sistema.
+                  Precisamos do seu nome para registrar sua conta na plataforma.
+                </p>
+              </div>
+
+              <div>
+                <label className="text-[13px] font-medium block mb-1.5" style={{ color: "#94A3B8" }}>
+                  Seu primeiro nome
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Carlos"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  maxLength={50}
+                  className="w-full px-5 py-4 rounded-2xl text-lg focus:outline-none transition-all"
+                  style={{
+                    background: "#0F172A",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    color: "#F8FAFC",
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && nameInput.trim().length > 1) {
+                      setUserName(nameInput.trim());
+                      goNext();
+                    }
+                  }}
+                />
+              </div>
+
+              <button
+                onClick={() => {
+                  if (nameInput.trim().length > 1) {
+                    setUserName(nameInput.trim());
+                    goNext();
+                  }
+                }}
+                disabled={nameInput.trim().length < 2}
+                className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
+                style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)", color: "#fff" }}
+              >
+                CONTINUAR
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+
+          {/* ─── STEP 3: Situação / Objetivo ─── */}
+          {step === 3 && (
+            <div className="space-y-5">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+                  style={{ background: "rgba(250,204,21,0.1)", border: "1px solid rgba(250,204,21,0.2)" }}>
+                  <span className="text-2xl">🎯</span>
+                </div>
+                <h2 className="text-[20px] font-extrabold" style={{ color: "#F8FAFC" }}>
+                  {userName}, o que te motivou a começar?
+                </h2>
+                <p className="text-[13px] mt-2" style={{ color: "#64748B" }}>
+                  Isso ajuda o sistema a priorizar as operações certas pra você.
                 </p>
               </div>
               <div className="space-y-3">
-                {goalOptions.map(opt => (
+                {situationOptions.map(opt => (
                   <button
                     key={opt.id}
-                    onClick={() => selectOption("goal", opt.id)}
+                    onClick={() => selectOption("situation", opt.id)}
                     className="w-full text-left p-4 rounded-xl transition-all hover:brightness-110 active:scale-[0.98] flex items-center gap-4"
                     style={{
-                      background: answers.goal === opt.id ? "rgba(22,163,74,0.15)" : "#0F172A",
-                      border: answers.goal === opt.id ? "1.5px solid rgba(22,163,74,0.5)" : "1px solid rgba(255,255,255,0.06)",
+                      background: "#0F172A",
+                      border: "1px solid rgba(255,255,255,0.06)",
                     }}
                   >
                     <span className="text-2xl">{opt.icon}</span>
@@ -248,19 +328,57 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
             </div>
           )}
 
-          {/* STEP 3: Experience level */}
-          {step === 3 && (
+          {/* ─── STEP 4: Tempo disponível ─── */}
+          {step === 4 && (
             <div className="space-y-5">
               <div className="text-center">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
                   style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)" }}>
-                  <TrendingUp className="w-6 h-6" style={{ color: "#60A5FA" }} />
+                  <span className="text-2xl">⏰</span>
                 </div>
                 <h2 className="text-[20px] font-extrabold" style={{ color: "#F8FAFC" }}>
-                  Qual sua experiência com investimentos?
+                  Quanto tempo livre você tem por dia?
                 </h2>
                 <p className="text-[13px] mt-2" style={{ color: "#64748B" }}>
-                  O sistema se adapta ao seu nível para você se sentir confortável.
+                  {userName}, o sistema se adapta à sua rotina. Não precisa parar o que faz.
+                </p>
+              </div>
+              <div className="space-y-3">
+                {timeOptions.map(opt => (
+                  <button
+                    key={opt.id}
+                    onClick={() => selectOption("time", opt.id)}
+                    className="w-full text-left p-4 rounded-xl transition-all hover:brightness-110 active:scale-[0.98] flex items-center gap-4"
+                    style={{
+                      background: "#0F172A",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    <span className="text-2xl">{opt.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[15px] font-bold" style={{ color: "#F8FAFC" }}>{opt.label}</p>
+                      <p className="text-[12px]" style={{ color: "#64748B" }}>{opt.desc}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "#475569" }} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ─── STEP 5: Experiência ─── */}
+          {step === 5 && (
+            <div className="space-y-5">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+                  style={{ background: "rgba(22,163,74,0.1)", border: "1px solid rgba(22,163,74,0.2)" }}>
+                  <TrendingUp className="w-6 h-6" style={{ color: "#22C55E" }} />
+                </div>
+                <h2 className="text-[20px] font-extrabold" style={{ color: "#F8FAFC" }}>
+                  Você já investiu alguma vez, {userName}?
+                </h2>
+                <p className="text-[13px] mt-2" style={{ color: "#64748B" }}>
+                  Pode ser sincero — o sistema funciona pra qualquer nível.
                 </p>
               </div>
               <div className="space-y-3">
@@ -270,8 +388,8 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
                     onClick={() => selectOption("experience", opt.id)}
                     className="w-full text-left p-4 rounded-xl transition-all hover:brightness-110 active:scale-[0.98] flex items-center gap-4"
                     style={{
-                      background: answers.experience === opt.id ? "rgba(96,165,250,0.15)" : "#0F172A",
-                      border: answers.experience === opt.id ? "1.5px solid rgba(96,165,250,0.5)" : "1px solid rgba(255,255,255,0.06)",
+                      background: "#0F172A",
+                      border: "1px solid rgba(255,255,255,0.06)",
                     }}
                   >
                     <span className="text-2xl">{opt.icon}</span>
@@ -286,47 +404,9 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
             </div>
           )}
 
-          {/* STEP 4: Monitoring preference */}
-          {step === 4 && (
-            <div className="space-y-5">
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
-                  style={{ background: "rgba(22,163,74,0.1)", border: "1px solid rgba(22,163,74,0.2)" }}>
-                  <Clock className="w-6 h-6" style={{ color: "#22C55E" }} />
-                </div>
-                <h2 className="text-[20px] font-extrabold" style={{ color: "#F8FAFC" }}>
-                  Como quer acompanhar seus ganhos?
-                </h2>
-                <p className="text-[13px] mt-2" style={{ color: "#64748B" }}>
-                  Escolha como prefere receber atualizações do sistema.
-                </p>
-              </div>
-              <div className="space-y-3">
-                {monitorOptions.map(opt => (
-                  <button
-                    key={opt.id}
-                    onClick={() => selectOption("monitor", opt.id)}
-                    className="w-full text-left p-4 rounded-xl transition-all hover:brightness-110 active:scale-[0.98] flex items-center gap-4"
-                    style={{
-                      background: answers.monitor === opt.id ? "rgba(22,163,74,0.15)" : "#0F172A",
-                      border: answers.monitor === opt.id ? "1.5px solid rgba(22,163,74,0.5)" : "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    <span className="text-2xl">{opt.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[15px] font-bold" style={{ color: "#F8FAFC" }}>{opt.label}</p>
-                      <p className="text-[12px]" style={{ color: "#64748B" }}>{opt.desc}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "#475569" }} />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* STEP 5: Loading / Analysis */}
-          {step === 5 && (
-            <div className="text-center space-y-6 py-8">
+          {/* ─── STEP 6: Análise animada ─── */}
+          {step === 6 && (
+            <div className="text-center space-y-6 py-6">
               <div className="relative w-20 h-20 mx-auto">
                 <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
                   <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
@@ -340,63 +420,104 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-[18px] font-bold" style={{ color: "#F8FAFC" }}>
-                    {loadingProgress}%
+                    {Math.round(loadingProgress)}%
                   </span>
                 </div>
               </div>
 
-              <div>
-                <h2 className="text-[18px] font-bold" style={{ color: "#F8FAFC" }}>
-                  {loadingProgress < 30
-                    ? loadingMessages[0]
-                    : loadingProgress < 60
-                    ? loadingMessages[1]
-                    : loadingProgress < 90
-                    ? loadingMessages[2]
-                    : loadingMessages[3]}
-                </h2>
-              </div>
+              <h2 className="text-[17px] font-bold" style={{ color: "#F8FAFC" }}>
+                {loadingProgress < 20 ? loadingMessages[0]
+                  : loadingProgress < 45 ? loadingMessages[1]
+                  : loadingProgress < 70 ? loadingMessages[2]
+                  : loadingProgress < 90 ? loadingMessages[3]
+                  : loadingMessages[4]}
+              </h2>
 
-              {/* Summary of answers */}
-              <div className="space-y-2 mt-4">
-                {answers.goal && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: loadingProgress > 10 ? 1 : 0, x: 0 }}
-                    className="flex items-center gap-2 justify-center"
-                  >
-                    <Check className="w-4 h-4" style={{ color: "#22C55E" }} />
-                    <span className="text-[13px]" style={{ color: "#94A3B8" }}>Meta diária definida</span>
-                  </motion.div>
-                )}
-                {answers.experience && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: loadingProgress > 35 ? 1 : 0, x: 0 }}
-                    className="flex items-center gap-2 justify-center"
-                  >
-                    <Check className="w-4 h-4" style={{ color: "#22C55E" }} />
-                    <span className="text-[13px]" style={{ color: "#94A3B8" }}>Perfil de investidor analisado</span>
-                  </motion.div>
-                )}
-                {answers.monitor && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: loadingProgress > 60 ? 1 : 0, x: 0 }}
-                    className="flex items-center gap-2 justify-center"
-                  >
-                    <Check className="w-4 h-4" style={{ color: "#22C55E" }} />
-                    <span className="text-[13px]" style={{ color: "#94A3B8" }}>Preferência de acompanhamento salva</span>
-                  </motion.div>
-                )}
+              <div className="space-y-2.5 mt-3">
+                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: revealPhase >= 1 ? 1 : 0, x: 0 }}
+                  className="flex items-center gap-2 justify-center">
+                  <Check className="w-4 h-4" style={{ color: "#22C55E" }} />
+                  <span className="text-[13px]" style={{ color: "#94A3B8" }}>Conta de {userName} localizada</span>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: revealPhase >= 2 ? 1 : 0, x: 0 }}
+                  className="flex items-center gap-2 justify-center">
+                  <Check className="w-4 h-4" style={{ color: "#22C55E" }} />
+                  <span className="text-[13px]" style={{ color: "#94A3B8" }}>Perfil de investidor registrado</span>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: revealPhase >= 3 ? 1 : 0, x: 0 }}
+                  className="flex items-center gap-2 justify-center">
+                  <Check className="w-4 h-4" style={{ color: "#22C55E" }} />
+                  <span className="text-[13px]" style={{ color: "#94A3B8" }}>Acelerador verificado ✅</span>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: revealPhase >= 4 ? 1 : 0, x: 0 }}
+                  className="flex items-center gap-2 justify-center">
+                  <AlertTriangle className="w-4 h-4" style={{ color: "#FACC15" }} />
+                  <span className="text-[13px] font-medium" style={{ color: "#FACC15" }}>Limite diário: R$ 25 (modo proteção)</span>
+                </motion.div>
               </div>
             </div>
           )}
 
-          {/* STEP 6: Plans reveal */}
-          {step === 6 && (
+          {/* ─── STEP 7: Explicação do limite + transição ─── */}
+          {step === 7 && (
             <div className="space-y-5">
-              {/* Result header */}
+              <div className="text-center">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", delay: 0.1 }}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  style={{ background: "rgba(250,204,21,0.12)", border: "1.5px solid rgba(250,204,21,0.25)" }}
+                >
+                  <Lock className="w-7 h-7" style={{ color: "#FACC15" }} />
+                </motion.div>
+
+                <h2 className="text-[20px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
+                  {userName}, seu sistema está limitado a R$ 25/dia
+                </h2>
+
+                <div className="mt-4 text-left space-y-3">
+                  <p className="text-[14px] leading-relaxed" style={{ color: "#94A3B8" }}>
+                    Quando você ativou o Acelerador, o sistema entrou no <strong style={{ color: "#F8FAFC" }}>modo de proteção</strong> — 
+                    um limite de segurança de <strong style={{ color: "#FACC15" }}>R$ 25 por dia</strong>.
+                  </p>
+                  <p className="text-[14px] leading-relaxed" style={{ color: "#94A3B8" }}>
+                    Esse limite existe por um motivo: <strong style={{ color: "#F8FAFC" }}>proteger iniciantes</strong> de 
+                    se expor a operações maiores sem estarem preparados. É como uma trava de segurança num carro novo.
+                  </p>
+
+                  <div className="p-3.5 rounded-xl" style={{ background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.12)" }}>
+                    <p className="text-[13px] leading-relaxed" style={{ color: "#FACC15" }}>
+                      💡 <strong>Por que existe uma taxa para aumentar?</strong>
+                    </p>
+                    <p className="text-[13px] mt-1.5 leading-relaxed" style={{ color: "#94A3B8" }}>
+                      Operações com limites maiores exigem mais poder de processamento dos nossos servidores. 
+                      Essa taxa cobre o custo de infraestrutura pra manter o sistema funcionando em alta performance pra você — 
+                      e é cobrada <strong style={{ color: "#F8FAFC" }}>apenas uma vez</strong>.
+                    </p>
+                  </div>
+
+                  <p className="text-[14px] leading-relaxed" style={{ color: "#94A3B8" }}>
+                    Com base no seu perfil, preparamos <strong style={{ color: "#22C55E" }}>3 opções de limite</strong> ideais pra você. 
+                    Veja qual faz mais sentido:
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={goNext}
+                className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
+                style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)", color: "#fff" }}
+              >
+                VER MEUS LIMITES DISPONÍVEIS
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+
+          {/* ─── STEP 8: Oferta dos planos ─── */}
+          {step === 8 && (
+            <div className="space-y-5">
               <div className="text-center">
                 <motion.div
                   initial={{ scale: 0 }}
@@ -408,11 +529,19 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
                   <Sparkles className="w-7 h-7" style={{ color: "#020617" }} />
                 </motion.div>
                 <h2 className="text-[20px] font-extrabold" style={{ color: "#F8FAFC" }}>
-                  {firstName ? `${firstName}, ` : ""}seu plano ideal está pronto!
+                  {userName}, escolha seu novo limite:
                 </h2>
                 <p className="text-[13px] mt-2 leading-relaxed" style={{ color: "#94A3B8" }}>
-                  Com base nas suas respostas, o sistema identificou a melhor configuração pra você.
-                  Escolha o plano e ative agora — <strong style={{ color: "#FACC15" }}>leva menos de 1 minuto</strong>.
+                  Baseado no seu perfil, o sistema recomendou a melhor opção pra você.
+                  Ative agora — <strong style={{ color: "#FACC15" }}>pagamento único, sem mensalidade</strong>.
+                </p>
+              </div>
+
+              {/* Current limit warning */}
+              <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}>
+                <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
+                <p className="text-[12px] leading-snug" style={{ color: "#FCA5A5" }}>
+                  Limite atual: <strong>R$ 25/dia</strong> (modo proteção). Sem upgrade, seus ganhos ficam travados nesse teto.
                 </p>
               </div>
 
@@ -447,7 +576,7 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
                             boxShadow: "0 2px 8px rgba(22,163,74,0.4)",
                           }}
                         >
-                          ✨ RECOMENDADO PRA VOCÊ
+                          ✨ IDEAL PRO SEU PERFIL
                         </span>
                       )}
 
@@ -464,13 +593,13 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
                         </span>
                       )}
 
-                      <div className="flex items-center gap-2.5 mb-1">
+                      <div className="flex items-center gap-2.5 mb-1 mt-1">
                         <plan.icon className="w-5 h-5" style={{ color: plan.subtitleColor }} />
                         <h3 className="text-[17px] font-bold" style={{ color: "#F8FAFC" }}>
                           {plan.name}
                         </h3>
                       </div>
-                      <p className="text-[13px] font-medium" style={{ color: plan.subtitleColor }}>
+                      <p className="text-[13px] font-semibold" style={{ color: plan.subtitleColor }}>
                         {plan.subtitle}
                       </p>
                       <p className="text-[13px] mt-3 leading-relaxed" style={{ color: "#94A3B8" }}>
@@ -478,6 +607,9 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
                       </p>
 
                       <div className="mt-4 flex items-baseline gap-2">
+                        <span className="text-[13px] line-through" style={{ color: "#475569" }}>
+                          R$ {plan.price * 3}
+                        </span>
                         <span className="text-[28px] font-extrabold" style={{ color: "#F8FAFC" }}>
                           R$ {plan.price}
                         </span>
@@ -485,15 +617,16 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
                           ou {plan.installments}
                         </span>
                       </div>
+                      <p className="text-[11px] mt-1" style={{ color: "#22C55E" }}>
+                        💳 Pagamento único • Acesso vitalício
+                      </p>
 
                       <button
                         id={`btn-${plan.id}`}
                         onClick={() => handleSelectPlan(plan)}
                         className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
                         style={{
-                          background: isRecommended
-                            ? "linear-gradient(135deg, #16A34A, #22C55E)"
-                            : plan.btnBg,
+                          background: isRecommended ? "linear-gradient(135deg, #16A34A, #22C55E)" : plan.btnBg,
                           color: isRecommended ? "#fff" : plan.btnColor,
                           border: isRecommended ? "none" : plan.btnBorder,
                         }}
@@ -504,6 +637,21 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
                   );
                 })}
 
+              {/* Social proof */}
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <div className="flex -space-x-2">
+                  {["C", "M", "J", "R"].map((l, i) => (
+                    <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold"
+                      style={{ background: ["#16A34A", "#FACC15", "#3B82F6", "#8B5CF6"][i], color: "#fff", border: "2px solid #0F172A" }}>
+                      {l}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[12px]" style={{ color: "#64748B" }}>
+                  <strong style={{ color: "#94A3B8" }}>2.847 pessoas</strong> já aumentaram o limite
+                </p>
+              </div>
+
               <button
                 onClick={() => {
                   saveFunnelEvent("upsell_oneclick_decline", { page: "/upsell2" });
@@ -513,7 +661,7 @@ const UpsellMultiplicador = ({ name, onNext, onDecline }: Props) => {
                 className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto block py-2"
                 style={{ color: "#475569" }}
               >
-                Não, obrigado. Prefiro manter o limite de R$25/dia por enquanto.
+                Não, obrigado. Prefiro manter o limite de R$ 25/dia por enquanto.
               </button>
             </div>
           )}
