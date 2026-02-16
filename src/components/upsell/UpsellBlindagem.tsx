@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShieldCheck, Check, Lock, RefreshCw, Zap, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, Check, Lock, RefreshCw, Zap, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
@@ -40,28 +40,44 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
 
   return (
     <div className="flex flex-col gap-5 pt-4">
-      {/* Multiplicador confirmation */}
+      {/* Alert banner */}
       <motion.div
-        initial={{ opacity: 0, y: -8 }}
+        initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-4 rounded-2xl flex items-center gap-3"
-        style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}
+        className="rounded-xl overflow-hidden"
+        style={{ border: "1px solid rgba(239,68,68,0.3)" }}
       >
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-          style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)" }}
-        >
-          <CheckCircle2 className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <p className="text-[13px] font-semibold" style={{ color: "#22C55E" }}>
-            Multiplicador ativado com sucesso
-          </p>
-          <p className="text-[11px]" style={{ color: "#64748B" }}>
-            Seus ganhos já estão sendo multiplicados
+        <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: "rgba(239,68,68,0.1)" }}>
+          <AlertTriangle className="w-4.5 h-4.5 shrink-0" style={{ color: "#EF4444" }} />
+          <p className="text-[13px] font-bold" style={{ color: "#FCA5A5" }}>
+            ATENÇÃO: <span style={{ color: "#F8FAFC" }}>Seu acesso à Plataforma de Ganhos com Tempo Livre expira em 6 meses.</span>
           </p>
         </div>
-        <Zap className="w-5 h-5 ml-auto shrink-0" style={{ color: "#22C55E" }} />
+      </motion.div>
+
+      {/* Active items */}
+      <motion.div
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="rounded-xl p-4 space-y-2.5"
+        style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <p className="text-[11px] uppercase tracking-wider font-semibold mb-2" style={{ color: "#64748B" }}>
+          Você já tem ativo:
+        </p>
+        <div className="flex items-center gap-2.5">
+          <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#22C55E" }} />
+          <span className="text-[13px]" style={{ color: "#CBD5E1" }}>Plataforma de Ganhos com Tempo Livre</span>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#22C55E" }} />
+          <span className="text-[13px]" style={{ color: "#CBD5E1" }}>Plano Acelerador</span>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "#22C55E" }} />
+          <span className="text-[13px]" style={{ color: "#CBD5E1" }}>Multiplicador de Lucros</span>
+        </div>
       </motion.div>
 
       {/* Header */}
