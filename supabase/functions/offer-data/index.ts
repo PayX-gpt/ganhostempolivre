@@ -13,7 +13,8 @@ const corsHeaders = {
 interface OfferPlan {
   id: string;
   price: number;
-  installments: string;
+  installment?: number;
+  installments: string | number;
   checkoutUrl: string;
 }
 
@@ -23,6 +24,12 @@ interface OfferData {
 
 // All sensitive checkout URLs live HERE, not in frontend code
 const OFFER_DATA: OfferData = {
+  // Main offer (Step13 - dynamic pricing by account balance)
+  "oferta_menos100":   [{ id: "menos100",   price: 37.00,  installment: 3.88,  installments: 12, checkoutUrl: "https://pay.kirvano.com/4630333d-d5d1-4591-b767-2151f77c6b13" }],
+  "oferta_100-500":    [{ id: "100-500",    price: 47.00,  installment: 4.67,  installments: 12, checkoutUrl: "https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c" }],
+  "oferta_500-2000":   [{ id: "500-2000",   price: 66.83,  installment: 6.64,  installments: 12, checkoutUrl: "https://pay.kirvano.com/5e882c8e-e569-4d9b-b895-69cb1d1285f4" }],
+  "oferta_2000-10000": [{ id: "2000-10000", price: 97.00,  installment: 9.64,  installments: 12, checkoutUrl: "https://pay.kirvano.com/b9bbad45-8e94-40c0-b910-73e814b03c8c" }],
+  "oferta_10000+":     [{ id: "10000+",     price: 147.00, installment: 14.61, installments: 12, checkoutUrl: "https://pay.kirvano.com/a007f8f3-4831-4d20-9736-22f196ea6a96" }],
   // UpsellStep3 (Acelerador)
   acelerador: [
     { id: "basico", price: 19, installments: "2x de R$ 9,90", checkoutUrl: "https://pay.kirvano.com/863c8fe9-ca48-452f-9fa4-22e14df182cf" },
