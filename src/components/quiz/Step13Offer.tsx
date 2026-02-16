@@ -206,12 +206,20 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
     return map[g || ""] || "Renda extra diária";
   };
 
+  const getGoalWeekly = (g?: string) => {
+    const map: Record<string, string> = {
+      "50-100": "R$80/dia", "100-300": "R$150/dia",
+      "300-500": "R$250/dia", "500+": "R$350/dia",
+    };
+    return map[g || ""] || "R$80/dia";
+  };
+
   const getGoalMonthly = (g?: string) => {
     const map: Record<string, string> = {
-      "50-100": "R$1.500–R$3.000", "100-300": "R$3.000–R$9.000",
-      "300-500": "R$9.000–R$15.000", "500+": "+R$15.000",
+      "50-100": "R$2.000/mês", "100-300": "R$4.500/mês",
+      "300-500": "R$7.000/mês", "500+": "R$10.000/mês",
     };
-    return map[g || ""] || "R$3.000+";
+    return map[g || ""] || "R$2.000/mês";
   };
 
   const getDeviceLabel = (d?: string) => {
@@ -462,18 +470,18 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
               </div>
               <div className="px-4 py-3 space-y-3" style={{ background: "hsl(var(--accent) / 0.03)" }}>
                 {/* Projections grid */}
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="text-center p-2 rounded-lg bg-card border border-border">
+                <div className="grid grid-cols-3 gap-1.5">
+                  <div className="text-center p-2 rounded-lg bg-card border border-border overflow-hidden">
                     <p className="text-[9px] uppercase text-muted-foreground mb-1">Semana 1</p>
-                    <p className="text-sm font-bold text-foreground">Primeiros lucros</p>
+                    <p className="text-[11px] sm:text-xs font-bold text-foreground leading-tight">Primeiros ganhos</p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-card border border-border">
+                  <div className="text-center p-2 rounded-lg bg-card border border-border overflow-hidden">
                     <p className="text-[9px] uppercase text-muted-foreground mb-1">Semana 2-3</p>
-                    <p className="text-sm font-bold text-primary">{getGoalLabel(answers?.incomeGoal)}</p>
+                    <p className="text-[11px] sm:text-xs font-bold text-primary leading-tight">{getGoalWeekly(answers?.incomeGoal)}</p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-card border border-border">
+                  <div className="text-center p-2 rounded-lg bg-card border border-border overflow-hidden">
                     <p className="text-[9px] uppercase text-muted-foreground mb-1">Mês 1</p>
-                    <p className="text-sm font-bold text-accent">{getGoalMonthly(answers?.incomeGoal)}</p>
+                    <p className="text-[11px] sm:text-xs font-bold text-accent leading-tight">{getGoalMonthly(answers?.incomeGoal)}</p>
                   </div>
                 </div>
 
