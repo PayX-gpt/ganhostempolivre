@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, ChevronRight, Sparkles, AlertTriangle, Users, Home, Wallet, Trophy, Clock, Calendar, Timer, Target, Landmark } from "lucide-react";
+import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, ChevronRight, Sparkles, AlertTriangle, Users, Home, Wallet, Trophy, Clock, Calendar, Timer, Target, Landmark, ShieldCheck } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
@@ -19,6 +19,7 @@ const plans = [
     name: "Modo Moderado",
     subtitle: "Limite de até R$ 250/dia",
     subtitleColor: "#94A3B8",
+    dailyLimit: 250,
     description: "O sistema passa a buscar operações maiores com mais frequência. É como aumentar o ritmo do motor — com segurança e constância.",
     price: 47,
     installments: "5x de R$ 9,90",
@@ -36,6 +37,7 @@ const plans = [
     name: "Modo Avançado",
     subtitle: "Limite de até R$ 500/dia",
     subtitleColor: "#FACC15",
+    dailyLimit: 500,
     description: "Além de operar com mais força, o sistema ganha um 'vigia' automático que monitora tudo 24h. Você não precisa fazer nada — ele cuida de tudo.",
     price: 67,
     installments: "7x de R$ 9,90",
@@ -53,6 +55,7 @@ const plans = [
     name: "Modo Máximo",
     subtitle: "Sem limite de ganho diário",
     subtitleColor: "#60A5FA",
+    dailyLimit: 1000,
     description: "O sistema opera no máximo, 24 horas por dia, sem teto. Você ainda recebe um relatório semanal no WhatsApp com tudo que o sistema fez por você.",
     price: 97,
     installments: "10x de R$ 9,90",
@@ -66,7 +69,7 @@ const plans = [
   },
 ];
 
-/* ── Quiz Questions (matching reference pattern) ── */
+/* ── Quiz Questions ── */
 
 interface QuizOption {
   id: string;
@@ -154,10 +157,12 @@ const confirmationData: Record<string, { title: string; getText: (answer: string
   10: Q4 Confirmation + Analysis
   11: Plan projection ("Seu plano")
   12: Problem reveal ("Mas tem um problema")
-  13: Final offer (plans)
+  13: Final offer (plans) — decline → step 14 (guarantee)
+  14: Guarantee page — "Ativar" → step 13, "Ainda tenho dúvidas" → step 15
+  15: Urgency page — "Ativar" → step 13, "Não, continuar sem multiplicar" → onDecline (upsell3)
 ── */
 
-const TOTAL_DOTS = 18;
+const TOTAL_DOTS = 20;
 const TOTAL_QUESTIONS = 4;
 
 const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
@@ -180,7 +185,6 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     const t3 = setTimeout(() => setAnalysisPhase(3), 2200);
     const t4 = setTimeout(() => setAnalysisPhase(4), 3000);
     const t5 = setTimeout(() => {
-      // Determine recommendation
       let rec = "ouro";
       if (answers.profile === "conservador" && answers.timeline === "longo") rec = "prata";
       else if (answers.profile === "agressivo" || answers.timeline === "urgente") rec = "diamante";
@@ -189,6 +193,11 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     }, 4500);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); };
   }, [step, answers]);
+
+  const goTo = useCallback((s: number) => {
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    setStep(s);
+  }, []);
 
   const goNext = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
@@ -213,7 +222,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     window.open(fullUrl, "_blank");
   };
 
-  /* ── Helper: get which question number (for progress bar) ── */
+  /* ── Helper: get which question number ── */
   const getQuestionNumber = (): number | null => {
     if (step === 3) return 1;
     if (step === 5) return 2;
@@ -232,7 +241,6 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     answerKey: string,
   ) => (
     <div className="space-y-5">
-      {/* Progress bar */}
       <div>
         <div className="flex justify-between text-[13px] mb-1.5">
           <span style={{ color: "#94A3B8" }}>Pergunta {questionNum} de {TOTAL_QUESTIONS}</span>
@@ -324,7 +332,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
 
   /* ── Dots ── */
   const dots = Array.from({ length: TOTAL_DOTS }, (_, i) => i + 1);
-  const activeDot = step;
+  const activeDot = Math.min(step, TOTAL_DOTS);
 
   /* ── Goal label helpers ── */
   const goalLabel = (id: string) => {
@@ -345,19 +353,44 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
   };
 
   /* ── Projections based on answers ── */
-  const getDailyProjection = () => {
-    if (answers.profile === "agressivo") return "R$ 180";
-    if (answers.profile === "equilibrado") return "R$ 120";
-    return "R$ 75";
-  };
   const getGoalAmount = () => {
+    const m: Record<string, number> = { contas: 5000, renda: 3000, liberdade: 10000, familia: 50000 };
+    return m[answers.goal] || 5000;
+  };
+  const getGoalAmountLabel = () => {
     const m: Record<string, string> = { contas: "R$ 5.000", renda: "R$ 3.000/mês", liberdade: "R$ 10.000/mês", familia: "R$ 50.000" };
     return m[answers.goal] || "R$ 5.000";
   };
-  const getTimeToGoal = () => {
-    if (answers.profile === "agressivo") return "3 meses";
-    if (answers.profile === "equilibrado") return "5 meses";
-    return "8 meses";
+
+  /* ── Time to goal per plan ── */
+  const getTimeToGoalForPlan = (dailyLimit: number) => {
+    const goalValue = getGoalAmount();
+    // Conservative: assume 60% efficiency of daily limit
+    const effectiveDaily = dailyLimit * 0.6;
+    const daysNeeded = Math.ceil(goalValue / effectiveDaily);
+    if (daysNeeded <= 7) return "~1 semana";
+    if (daysNeeded <= 14) return "~2 semanas";
+    if (daysNeeded <= 21) return "~3 semanas";
+    if (daysNeeded <= 30) return "~1 mês";
+    if (daysNeeded <= 60) return "~2 meses";
+    if (daysNeeded <= 90) return "~3 meses";
+    if (daysNeeded <= 120) return "~4 meses";
+    if (daysNeeded <= 150) return "~5 meses";
+    if (daysNeeded <= 180) return "~6 meses";
+    if (daysNeeded <= 270) return "~9 meses";
+    return "~12+ meses";
+  };
+
+  const getTimeToGoalBasic = () => {
+    const goalValue = getGoalAmount();
+    const effectiveDaily = 25 * 0.6; // R$25/day basic limit at 60% efficiency
+    const daysNeeded = Math.ceil(goalValue / effectiveDaily);
+    if (daysNeeded <= 30) return "~1 mês";
+    if (daysNeeded <= 60) return "~2 meses";
+    if (daysNeeded <= 90) return "~3 meses";
+    if (daysNeeded <= 180) return "~6 meses";
+    if (daysNeeded <= 365) return "~12 meses";
+    return "mais de 1 ano";
   };
 
   return (
@@ -518,7 +551,6 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 ✓ Prazo estabelecido!
               </h2>
 
-              {/* Analysis card */}
               <div className="w-full p-5 rounded-xl text-left space-y-3" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
                 <p className="text-[14px] text-center" style={{ color: "#94A3B8" }}>Analisando seu perfil...</p>
 
@@ -564,7 +596,6 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 <span style={{ color: "#FACC15" }}>{userName}</span>, aqui está seu plano:
               </h1>
 
-              {/* Goal card */}
               <div className="p-5 rounded-xl space-y-3" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
                 <p className="text-[15px]" style={{ color: "#CBD5E1" }}>
                   Para alcançar <strong style={{ color: "#F8FAFC" }}>{goalLabel(answers.goal)}</strong> em <strong style={{ color: "#F8FAFC" }}>{timelineLabel(answers.timeline)}</strong>...
@@ -573,11 +604,10 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                   Você precisa gerar aproximadamente:
                 </p>
                 <p className="text-[36px] font-extrabold text-center" style={{ color: "#22C55E" }}>
-                  {getGoalAmount()}
+                  {getGoalAmountLabel()}
                 </p>
               </div>
 
-              {/* Current AI projection */}
               <div className="p-5 rounded-xl space-y-2" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
                 <p className="text-[14px]" style={{ color: "#CBD5E1" }}>
                   Com sua IA atual (ganhos diários):
@@ -586,11 +616,10 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                   → Gerando em média <strong style={{ color: "#22C55E" }}>R$ 25/dia</strong>
                 </p>
                 <p className="text-[14px]" style={{ color: "#F8FAFC" }}>
-                  → Alcança sua meta em <strong style={{ color: "#EF4444" }}>mais de 12 meses</strong>
+                  → Alcança sua meta em <strong style={{ color: "#EF4444" }}>{getTimeToGoalBasic()}</strong>
                 </p>
               </div>
 
-              {/* Bar chart simulation */}
               <div className="p-5 rounded-xl" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
                 <div className="flex items-end justify-between gap-2 h-24 mb-3">
                   {[20, 35, 50, 65, 80, 100].map((h, i) => (
@@ -706,6 +735,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 })
                 .map((plan, i) => {
                   const isRecommended = plan.id === recommendedPlan;
+                  const timeToGoal = getTimeToGoalForPlan(plan.dailyLimit);
                   return (
                     <motion.div
                       key={plan.id}
@@ -758,6 +788,14 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                         {plan.description}
                       </p>
 
+                      {/* Time to goal */}
+                      <div className="mt-3 flex items-center gap-2 p-2.5 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)" }}>
+                        <Target className="w-4 h-4 shrink-0" style={{ color: "#22C55E" }} />
+                        <p className="text-[12px] leading-snug" style={{ color: "#86EFAC" }}>
+                          Alcança <strong style={{ color: "#F8FAFC" }}>{goalLabel(answers.goal)}</strong> em <strong style={{ color: "#22C55E" }}>{timeToGoal}</strong>
+                        </p>
+                      </div>
+
                       <div className="mt-4 flex items-baseline gap-2">
                         <span className="text-[13px] line-through" style={{ color: "#475569" }}>
                           R$ {plan.price * 3}
@@ -804,16 +842,127 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 </p>
               </div>
 
+              {/* Decline → Guarantee page */}
+              <button
+                onClick={() => {
+                  saveFunnelEvent("upsell_guarantee_click", { page: "/upsell2" });
+                  goTo(14);
+                }}
+                className="text-[13px] underline cursor-pointer bg-transparent border-none mx-auto block py-2"
+                style={{ color: "#64748B" }}
+              >
+                Quero saber sobre a garantia primeiro
+              </button>
+            </div>
+          )}
+
+          {/* ═══ STEP 14: Garantia ═══ */}
+          {step === 14 && (
+            <div className="flex flex-col items-center text-center space-y-6 py-8">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                className="w-20 h-20 rounded-full flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #16A34A, #22C55E)" }}
+              >
+                <ShieldCheck className="w-10 h-10 text-white" />
+              </motion.div>
+
+              <h2 className="text-[24px] font-extrabold" style={{ color: "#F8FAFC" }}>
+                + Garantia de 7 Dias
+              </h2>
+
+              <div className="w-full p-5 rounded-xl text-left space-y-3" style={{ background: "#0F172A", border: "1px solid rgba(34,197,94,0.2)" }}>
+                <p className="text-[15px]" style={{ color: "#CBD5E1" }}>
+                  Ative agora.
+                </p>
+                <p className="text-[15px]" style={{ color: "#CBD5E1" }}>
+                  Teste por <strong style={{ color: "#F8FAFC" }}>7 dias</strong>.
+                </p>
+                <p className="text-[15px]" style={{ color: "#CBD5E1" }}>
+                  Não gostou? <strong style={{ color: "#22C55E" }}>Devolvemos 100% do valor</strong>.
+                </p>
+                <p className="text-[17px] font-bold mt-2" style={{ color: "#F8FAFC" }}>
+                  Sem perguntas. Sem complicações.
+                </p>
+              </div>
+
+              <button
+                onClick={() => goTo(13)}
+                className="w-full py-4 rounded-2xl font-bold text-[16px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
+                style={{ background: "linear-gradient(135deg, #16A34A, #22D3EE)", color: "#fff" }}
+              >
+                ATIVAR MULTIPLICADOR DE IA
+              </button>
+
+              <button
+                onClick={() => {
+                  saveFunnelEvent("upsell_still_doubts_click", { page: "/upsell2" });
+                  goTo(15);
+                }}
+                className="text-[13px] underline cursor-pointer bg-transparent border-none py-2"
+                style={{ color: "#64748B" }}
+              >
+                Ainda tenho dúvidas
+              </button>
+            </div>
+          )}
+
+          {/* ═══ STEP 15: Urgência / Última Oportunidade ═══ */}
+          {step === 15 && (
+            <div className="flex flex-col items-center text-center space-y-6 py-8">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 12 }}
+                className="w-full p-6 rounded-2xl"
+                style={{
+                  background: "rgba(239,68,68,0.08)",
+                  border: "1px solid rgba(239,68,68,0.3)",
+                  boxShadow: "0 0 30px rgba(239,68,68,0.1)",
+                }}
+              >
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ background: "rgba(239,68,68,0.15)" }}>
+                  <AlertTriangle className="w-7 h-7" style={{ color: "#EF4444" }} />
+                </div>
+
+                <h2 className="text-[22px] font-extrabold italic" style={{ color: "#F87171" }}>
+                  ÚLTIMA OPORTUNIDADE
+                </h2>
+
+                <p className="text-[15px] mt-3" style={{ color: "#CBD5E1" }}>
+                  Esta oferta está <strong style={{ color: "#F8FAFC" }}>disponível apenas AGORA</strong>.
+                </p>
+                <p className="text-[14px] mt-2" style={{ color: "#94A3B8" }}>
+                  Sair desta página = perder o acesso permanentemente.
+                </p>
+              </motion.div>
+
+              <button
+                onClick={() => goTo(13)}
+                className="w-full py-4 rounded-2xl font-bold text-[16px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
+                style={{ background: "linear-gradient(135deg, #16A34A, #22D3EE)", color: "#fff" }}
+              >
+                ATIVAR MULTIPLICADOR DE IA
+              </button>
+
+              <div className="flex items-center justify-center gap-2">
+                <Lock className="w-3.5 h-3.5" style={{ color: "#64748B" }} />
+                <span className="text-[12px]" style={{ color: "#64748B" }}>Pagamento seguro • Criptografia SSL</span>
+              </div>
+
               <button
                 onClick={() => {
                   saveFunnelEvent("upsell_oneclick_decline", { page: "/upsell2" });
                   logAuditEvent({ eventType: "upsell_oneclick_decline", pageId: "/upsell2" });
                   onDecline();
                 }}
-                className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto block py-2"
+                className="text-[12px] underline cursor-pointer bg-transparent border-none py-2"
                 style={{ color: "#475569" }}
               >
-                Não, obrigado. Prefiro manter o limite de R$ 25/dia por enquanto.
+                Não, quero continuar sem multiplicar
               </button>
             </div>
           )}
