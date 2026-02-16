@@ -79,20 +79,51 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
   }, [showCTA]);
 
   return showCTA ? (
-    <div ref={ref} className="w-full space-y-3">
-      <div className="text-center space-y-1">
-        <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">CHAVE TOKEN CHATGPT</p>
-        <p className="text-lg sm:text-xl font-display font-bold text-foreground">
-          {pricing.installments}x de
-        </p>
-        <p className="text-4xl sm:text-5xl font-display font-bold text-foreground leading-none">
-          R$<span className="text-gradient-green">{formatPrice(pricing.installment)}</span>
-        </p>
-        <p className="text-sm text-muted-foreground mt-1">ou R${formatPrice(pricing.price)} à vista no Pix</p>
-        <p className="text-xs text-muted-foreground mt-2 leading-relaxed max-w-xs mx-auto italic">
-          Menos do que você gasta num café por dia — por algo que pode transformar sua tranquilidade financeira.
-        </p>
+    <div ref={ref} className="w-full space-y-5">
+      {/* Price card */}
+      <div
+        className="w-full rounded-2xl overflow-hidden border border-primary/25"
+        style={{ background: "linear-gradient(180deg, hsl(var(--card)), hsl(var(--primary) / 0.04))" }}
+      >
+        {/* Top label */}
+        <div className="px-4 py-2.5 text-center border-b border-primary/10" style={{ background: "hsl(var(--primary) / 0.06)" }}>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Chave Token ChatGPT</p>
+        </div>
+
+        {/* Price area */}
+        <div className="px-5 py-6 sm:py-8 text-center space-y-4">
+          {/* Installment — hero */}
+          <div className="space-y-1">
+            <p className="text-sm sm:text-base text-muted-foreground font-medium">{pricing.installments}x de</p>
+            <p className="text-[3.2rem] sm:text-[4rem] font-display font-black text-foreground leading-none tracking-tight">
+              R$<span className="text-gradient-green">{formatPrice(pricing.installment)}</span>
+            </p>
+          </div>
+
+          {/* Divider line */}
+          <div className="flex items-center gap-3 px-6">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">ou</span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+
+          {/* Lump sum */}
+          <p className="text-base sm:text-lg text-foreground font-semibold">
+            R${formatPrice(pricing.price)} <span className="text-muted-foreground font-normal text-sm">à vista no Pix</span>
+          </p>
+        </div>
+
+        {/* Emotional anchor */}
+        <div className="px-5 pb-5">
+          <div className="rounded-xl p-3 border border-accent/15 bg-accent/5 text-center">
+            <p className="text-sm text-foreground leading-relaxed">
+              Isso é <span className="text-primary font-bold">menos que um lanche no fim de semana</span> — por algo que pode trazer tranquilidade financeira pra você e sua família.
+            </p>
+          </div>
+        </div>
       </div>
+
+      {/* CTA */}
       <CTAButton onClick={() => {
         trackCheckoutClick();
         saveFunnelEvent("checkout_click", { context: context || "default", product: "chave_token_chatgpt", amount: pricing.price });
@@ -103,11 +134,18 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
       }} variant="accent" className="animate-bounce-subtle text-lg sm:text-xl tracking-wider">
         🔑 ATIVAR MINHA CHAVE TOKEN AGORA
       </CTAButton>
-      <div className="flex items-center justify-center gap-2">
-        <Lock className="w-3.5 h-3.5 text-muted-foreground" />
-        <p className="text-xs text-muted-foreground">
-          {context || "Pagamento 100% seguro · Acesso imediato"}
-        </p>
+
+      {/* Trust badges */}
+      <div className="flex items-center justify-center gap-4 flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <Lock className="w-3.5 h-3.5 text-primary" />
+          <span className="text-xs text-muted-foreground font-medium">Compra segura</span>
+        </div>
+        <div className="w-px h-4 bg-border" />
+        <div className="flex items-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+          <span className="text-xs text-muted-foreground font-medium">{context || "Acesso imediato"}</span>
+        </div>
       </div>
     </div>
   ) : (
@@ -1542,18 +1580,30 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
           <Separator />
 
-          <div className="space-y-2">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Você paga apenas:</p>
-            <p className="text-lg sm:text-xl font-display font-bold text-foreground">
-              {pricing.installments}x de
+          {/* Price hero inside card */}
+          <div className="pt-2 pb-1 space-y-5">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Você paga apenas</p>
+
+            <div className="space-y-1">
+              <p className="text-sm sm:text-base text-muted-foreground font-medium">{pricing.installments}x de</p>
+              <p className="text-[3.2rem] sm:text-[4rem] font-display font-black text-foreground leading-none tracking-tight">
+                R$<span className="text-gradient-green">{formatPrice(pricing.installment)}</span>
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 justify-center">
+              <div className="flex-1 max-w-[60px] h-px bg-border" />
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">ou</span>
+              <div className="flex-1 max-w-[60px] h-px bg-border" />
+            </div>
+
+            <p className="text-base sm:text-lg text-foreground font-semibold">
+              R${formatPrice(pricing.price)} <span className="text-muted-foreground font-normal text-sm">à vista no Pix</span>
             </p>
-            <p className="text-5xl sm:text-6xl font-display font-bold text-foreground leading-none">
-              R$<span className="text-gradient-green">{formatPrice(pricing.installment)}</span>
-            </p>
-            <p className="text-base text-muted-foreground mt-1">ou R${formatPrice(pricing.price)} à vista no Pix</p>
-            <div className="bg-secondary/50 rounded-xl p-3 mt-3">
-              <p className="text-sm text-foreground leading-relaxed">
-                Isso é <span className="text-primary font-bold">menos do que um lanche no fim de semana</span> — por algo que pode trazer tranquilidade financeira pra você e sua família.
+
+            <div className="rounded-xl p-3 border border-accent/15 bg-accent/5">
+              <p className="text-sm text-foreground leading-relaxed text-center">
+                Isso é <span className="text-primary font-bold">menos que um lanche no fim de semana</span> — por algo que pode trazer tranquilidade financeira pra você e sua família.
               </p>
             </div>
           </div>
