@@ -350,26 +350,78 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     return m[id] || id;
   };
 
-  /* ── Projections based on answers ── */
-  const getGoalAmount = () => {
-    const m: Record<string, number> = { contas: 5000, renda: 3000, liberdade: 10000, familia: 50000 };
-    return m[answers.goal] || 5000;
+  /* ── Fully personalized projections based on ALL 4 answers ── */
+
+  // Monthly goal amount — varies by goal + situation + timeline
+  const getGoalAmount = (): number => {
+    // Base amounts per goal
+    const goalBase: Record<string, number> = {
+      contas: 3000,    // pagar dívidas — modest
+      renda: 2000,     // renda extra — monthly extra
+      liberdade: 8000, // liberdade financeira — monthly income goal
+      familia: 15000,  // legado — bigger number
+    };
+    let amount = goalBase[answers.goal] || 3000;
+
+    // Adjust by financial situation
+    if (answers.situation === "endividado") {
+      // Endividado: needs are more urgent but amounts are realistic/lower
+      amount = answers.goal === "contas" ? 2500 : answers.goal === "renda" ? 1500 : amount * 0.7;
+    } else if (answers.situation === "confortavel") {
+      // Confortável: can aim higher
+      amount = Math.round(amount * 1.4);
+    }
+    // estavel stays at base
+
+    // Adjust by timeline (shorter = need more per month)
+    if (answers.timeline === "urgente") {
+      amount = Math.round(amount * 1.2); // more aggressive monthly target
+    } else if (answers.timeline === "longo") {
+      amount = Math.round(amount * 0.8); // can spread out more
+    }
+
+    return Math.round(amount);
   };
-  const getGoalAmountLabel = () => {
-    const m: Record<string, string> = { contas: "R$ 5.000", renda: "R$ 3.000/mês", liberdade: "R$ 10.000/mês", familia: "R$ 50.000" };
-    return m[answers.goal] || "R$ 5.000";
+
+  const getGoalAmountLabel = (): string => {
+    const amount = getGoalAmount();
+    const isMonthly = answers.goal === "renda" || answers.goal === "liberdade";
+    const formatted = amount.toLocaleString("pt-BR");
+    return isMonthly ? `R$ ${formatted}/mês` : `R$ ${formatted}`;
+  };
+
+  // Total amount needed (for time calculations)
+  const getTotalGoalValue = (): number => {
+    const monthly = getGoalAmount();
+    if (answers.goal === "renda" || answers.goal === "liberdade") {
+      // For monthly income goals, calculate how much total to build up
+      // (roughly 3-6 months of the monthly goal as "runway")
+      const months = answers.timeline === "urgente" ? 3 : answers.timeline === "medio" ? 4 : 6;
+      return monthly * months;
+    }
+    // For lump sum goals (contas, familia), use directly
+    return monthly;
+  };
+
+  // Multiplier factor based on profile
+  const getMultiplierFactor = (): number => {
+    if (answers.profile === "agressivo") return 3.5;
+    if (answers.profile === "equilibrado") return 2.5;
+    return 1.8; // conservador
   };
 
   /* ── Time to goal per plan ── */
-  const getTimeToGoalForPlan = (dailyLimit: number) => {
-    const goalValue = getGoalAmount();
-    // Conservative: assume 60% efficiency of daily limit
-    const effectiveDaily = dailyLimit * 0.6;
-    const daysNeeded = Math.ceil(goalValue / effectiveDaily);
+  const getTimeToGoalForPlan = (dailyLimit: number): string => {
+    const totalNeeded = getTotalGoalValue();
+    // Efficiency based on profile
+    const efficiency = answers.profile === "agressivo" ? 0.7 : answers.profile === "equilibrado" ? 0.6 : 0.5;
+    const effectiveDaily = dailyLimit * efficiency;
+    const daysNeeded = Math.ceil(totalNeeded / effectiveDaily);
     if (daysNeeded <= 7) return "~1 semana";
     if (daysNeeded <= 14) return "~2 semanas";
     if (daysNeeded <= 21) return "~3 semanas";
     if (daysNeeded <= 30) return "~1 mês";
+    if (daysNeeded <= 45) return "~1,5 mês";
     if (daysNeeded <= 60) return "~2 meses";
     if (daysNeeded <= 90) return "~3 meses";
     if (daysNeeded <= 120) return "~4 meses";
@@ -379,16 +431,59 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     return "~12+ meses";
   };
 
-  const getTimeToGoalBasic = () => {
-    const goalValue = getGoalAmount();
-    const effectiveDaily = 25 * 0.6; // R$25/day basic limit at 60% efficiency
-    const daysNeeded = Math.ceil(goalValue / effectiveDaily);
+  const getTimeToGoalBasic = (): string => {
+    const totalNeeded = getTotalGoalValue();
+    const effectiveDaily = 25 * 0.5; // R$25/day at conservative 50% efficiency
+    const daysNeeded = Math.ceil(totalNeeded / effectiveDaily);
     if (daysNeeded <= 30) return "~1 mês";
     if (daysNeeded <= 60) return "~2 meses";
     if (daysNeeded <= 90) return "~3 meses";
+    if (daysNeeded <= 120) return "~4 meses";
     if (daysNeeded <= 180) return "~6 meses";
+    if (daysNeeded <= 270) return "~9 meses";
     if (daysNeeded <= 365) return "~12 meses";
-    return "mais de 1 ano";
+    if (daysNeeded <= 540) return "~18 meses";
+    return "mais de 2 anos";
+  };
+
+  /* ── Dynamic comparison values for step 14 ── */
+  const getComparisonData = () => {
+    const base = 25;
+    const mult = getMultiplierFactor();
+    const goalVal = getTotalGoalValue();
+
+    const sem = [
+      { mes: 1, val: Math.round(base * 30 * 0.5) },
+      { mes: 3, val: Math.round(base * 90 * 0.5) },
+      { mes: 6, val: Math.round(base * 180 * 0.5) },
+      { mes: 12, val: Math.round(base * 360 * 0.5) },
+    ];
+    const com = [
+      { mes: 1, val: Math.round(base * mult * 30 * 0.6) },
+      { mes: 3, val: Math.round(base * mult * 90 * 0.65 * 1.1) },
+      { mes: 6, val: Math.round(base * mult * 180 * 0.7 * 1.25) },
+      { mes: 12, val: Math.round(base * mult * 360 * 0.75 * 1.5) },
+    ];
+
+    let goalMonth: number | null = null;
+    for (const c of com) {
+      if (c.val >= goalVal && !goalMonth) goalMonth = c.mes;
+    }
+
+    return { sem, com, goalMonth };
+  };
+
+  /* ── Dynamic compound interest table for step 15 ── */
+  const getCompoundRows = () => {
+    const base = 25;
+    // Daily compound rate varies by profile
+    const dailyRate = answers.profile === "agressivo" ? 0.025 : answers.profile === "equilibrado" ? 0.02 : 0.015;
+    const days = [1, 2, 3, 10, 30, 60, 90];
+    return days.map(d => {
+      const valor = base * Math.pow(1 + dailyRate, d - 1);
+      const pct = d === 1 ? null : `+${Math.round((valor / base - 1) * 100)}%`;
+      return { dia: d, valor: Math.round(valor * 100) / 100, pct };
+    });
   };
 
   return (
@@ -657,7 +752,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
           {step === 12 && (
             <div className="space-y-6 py-4">
               <h1 className="text-[26px] font-extrabold text-center leading-tight" style={{ color: "#F8FAFC" }}>
-                Você está <span style={{ color: "#22C55E" }}>MUITO PERTO</span> da sua meta.
+                {userName}, você está <span style={{ color: "#22C55E" }}>MUITO PERTO</span> da sua meta.
               </h1>
 
               <div className="p-5 rounded-xl text-center space-y-3" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}>
@@ -746,31 +841,12 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
 
           {/* ═══ STEP 14: Comparação Sem vs Com ═══ */}
           {step === 14 && (() => {
-            const base = 25; // R$/day basic
-            const mult = answers.profile === "agressivo" ? 4 : answers.profile === "equilibrado" ? 3 : 2.5;
-            const sem = [
-              { mes: 1, val: base * 30 },
-              { mes: 3, val: base * 90 },
-              { mes: 6, val: base * 180 },
-              { mes: 12, val: base * 360 },
-            ];
-            const com = [
-              { mes: 1, val: Math.round(base * mult * 30) },
-              { mes: 3, val: Math.round(base * mult * 90 * 1.15) },
-              { mes: 6, val: Math.round(base * mult * 180 * 1.35) },
-              { mes: 12, val: Math.round(base * mult * 360 * 1.7) },
-            ];
-            // Find which month hits goal
-            const goalVal = getGoalAmount();
-            let goalMonth: number | null = null;
-            for (const c of com) {
-              if (c.val >= goalVal && !goalMonth) goalMonth = c.mes;
-            }
+            const { sem, com, goalMonth } = getComparisonData();
 
             return (
               <div className="space-y-5 py-4">
                 <h1 className="text-[24px] font-extrabold text-center" style={{ color: "#F8FAFC" }}>
-                  VEJA A DIFERENÇA:
+                  {userName}, VEJA A DIFERENÇA:
                 </h1>
 
                 {/* Side by side tables */}
@@ -804,7 +880,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
 
                 {goalMonth && (
                   <p className="text-center text-[14px] font-bold" style={{ color: "#22C55E" }}>
-                    ← META ALCANÇADA NO MÊS {goalMonth}!
+                    ← {userName}, META ALCANÇADA NO MÊS {goalMonth}!
                   </p>
                 )}
 
@@ -852,15 +928,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
 
           {/* ═══ STEP 15: Juros Compostos ═══ */}
           {step === 15 && (() => {
-            const rows = [
-              { dia: 1, valor: 25, pct: null },
-              { dia: 2, valor: 25.50, pct: "+2%" },
-              { dia: 3, valor: 26.01, pct: "+4%" },
-              { dia: 10, valor: 29.52, pct: "+18%" },
-              { dia: 30, valor: 44.79, pct: "+79%" },
-              { dia: 60, valor: 80.25, pct: "+221%" },
-              { dia: 90, valor: 143.77, pct: "+475%" },
-            ];
+            const rows = getCompoundRows();
             return (
               <div className="space-y-5 py-4">
                 <h1 className="text-[24px] font-extrabold text-center leading-tight" style={{ color: "#F8FAFC" }}>
