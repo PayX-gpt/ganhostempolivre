@@ -17,11 +17,13 @@ const plans = [
     id: "prata",
     icon: Shield,
     name: "Multiplicação Moderada",
-    subtitle: "3x mais rápido",
+    multLabel: "3x",
+    dailyLimit: "R$ 75/dia",
+    dailyLimitValue: 75,
     subtitleColor: "#94A3B8",
     multFactor: 3,
     dailyBonus: 75,
-    description: "O sistema de juros compostos acelera 3x. Seus ganhos diários são reinvestidos automaticamente com mais frequência, gerando um efeito bola de neve mais rápido.",
+    description: "Seus juros compostos passam a operar 3x mais rápido, desbloqueando um novo limite diário de R$ 75. É como trocar da 1ª marcha pra 3ª — mais velocidade com segurança.",
     price: 47,
     installments: "5x de R$ 9,90",
     border: "1px solid rgba(255,255,255,0.08)",
@@ -36,11 +38,13 @@ const plans = [
     id: "ouro",
     icon: Crown,
     name: "Multiplicação Avançada",
-    subtitle: "10x mais rápido",
+    multLabel: "10x",
+    dailyLimit: "R$ 250/dia",
+    dailyLimitValue: 250,
     subtitleColor: "#FACC15",
     multFactor: 10,
     dailyBonus: 250,
-    description: "O efeito de juros compostos é turbinado: a IA reinveste seus ganhos 10x mais rápido, com monitoramento 24h. Seus lucros se multiplicam enquanto você dorme.",
+    description: "Juros compostos turbinados a 10x: a IA reinveste e multiplica seus ganhos 24h, desbloqueando até R$ 250/dia. Seus lucros crescem enquanto você dorme.",
     price: 67,
     installments: "7x de R$ 9,90",
     border: "2px solid #FACC15",
@@ -55,11 +59,13 @@ const plans = [
     id: "diamante",
     icon: Diamond,
     name: "Multiplicação Máxima",
-    subtitle: "20x mais rápido",
+    multLabel: "20x",
+    dailyLimit: "Sem limite",
+    dailyLimitValue: 500,
     subtitleColor: "#60A5FA",
     multFactor: 20,
     dailyBonus: 500,
-    description: "O nível máximo de juros compostos: a IA opera no potencial total, reinvestindo e multiplicando 24h por dia, sem teto. Você ainda recebe relatório semanal no WhatsApp.",
+    description: "Nível máximo de juros compostos: multiplicação 20x, operando 24h sem teto de ganhos. O sistema reinveste no potencial total + relatório semanal no WhatsApp.",
     price: 97,
     installments: "10x de R$ 9,90",
     border: "1px solid rgba(96,165,250,0.25)",
@@ -1036,19 +1042,19 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
             <div className="space-y-5">
               <div className="text-center">
                 <h2 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
-                  {userName}, escolha sua velocidade de multiplicação:
+                  {userName}, escolha seu nível de multiplicação:
                 </h2>
                 <p className="text-[13px] mt-2 leading-relaxed" style={{ color: "#94A3B8" }}>
-                  Quanto mais rápido seus juros compostos operam, mais rápido seus ganhos se multiplicam.
+                  Quanto maior a velocidade dos juros compostos, maior o seu limite diário de ganhos.
                   <strong style={{ color: "#FACC15" }}> Pagamento único, sem mensalidade.</strong>
                 </p>
               </div>
 
-              {/* Current speed warning */}
+              {/* Current limit warning */}
               <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}>
                 <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
                 <p className="text-[12px] leading-snug" style={{ color: "#FCA5A5" }}>
-                  Velocidade atual: <strong>1x</strong> (modo básico) — apenas <strong>R$ 25/dia</strong>. Seus juros compostos estão operando na velocidade mínima.
+                  Agora: juros compostos em <strong>1x</strong> → limite de apenas <strong>R$ 25/dia</strong>. Seus ganhos estão travados no mínimo.
                 </p>
               </div>
 
@@ -1061,7 +1067,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 })
                 .map((plan, i) => {
                   const isRecommended = plan.id === recommendedPlan;
-                  const timeToGoal = getTimeToGoalForPlan(plan.dailyBonus);
+                  const timeToGoal = getTimeToGoalForPlan(plan.dailyLimitValue);
                   return (
                     <motion.div
                       key={plan.id}
@@ -1108,27 +1114,32 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                         </h3>
                       </div>
 
-                      {/* Main focus: multiplication factor */}
-                      <div className="mt-2 p-3 rounded-xl text-center" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.12)" }}>
-                        <p className="text-[32px] font-extrabold" style={{ color: plan.subtitleColor }}>
-                          {plan.multFactor}x
-                        </p>
-                        <p className="text-[12px] font-semibold" style={{ color: "#94A3B8" }}>
-                          velocidade de multiplicação
-                        </p>
+                      {/* Main focus: multiplication + daily limit */}
+                      <div className="mt-2 p-3 rounded-xl" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.12)" }}>
+                        <div className="flex items-center justify-between">
+                          <div className="text-center flex-1">
+                            <p className="text-[28px] font-extrabold" style={{ color: plan.subtitleColor }}>
+                              {plan.multLabel}
+                            </p>
+                            <p className="text-[10px] font-semibold" style={{ color: "#94A3B8" }}>
+                              juros compostos
+                            </p>
+                          </div>
+                          <div className="w-px h-10" style={{ background: "rgba(255,255,255,0.1)" }} />
+                          <div className="text-center flex-1">
+                            <p className="text-[18px] font-extrabold" style={{ color: "#F8FAFC" }}>
+                              {plan.dailyLimit}
+                            </p>
+                            <p className="text-[10px] font-semibold" style={{ color: "#94A3B8" }}>
+                              novo limite diário
+                            </p>
+                          </div>
+                        </div>
                       </div>
 
                       <p className="text-[13px] mt-3 leading-relaxed" style={{ color: "#94A3B8" }}>
                         {plan.description}
                       </p>
-
-                      {/* Daily profit as EXTRA bonus */}
-                      <div className="mt-3 flex items-center gap-2 p-2.5 rounded-lg" style={{ background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.12)" }}>
-                        <Zap className="w-4 h-4 shrink-0" style={{ color: "#FACC15" }} />
-                        <p className="text-[12px] leading-snug" style={{ color: "#FDE68A" }}>
-                          Bônus: lucro extra de até <strong style={{ color: "#F8FAFC" }}>R$ {plan.dailyBonus}/dia</strong>
-                        </p>
-                      </div>
 
                       {/* Time to goal */}
                       <div className="mt-2 flex items-center gap-2 p-2.5 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)" }}>
