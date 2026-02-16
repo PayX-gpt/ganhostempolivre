@@ -5,7 +5,6 @@ import { Shield, Lock, Zap, ArrowRight, Star, Users, Clock, CheckCircle, Smartph
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import { initBehaviorTracker, trackSectionView, trackSectionLeave, trackCtaView, trackCtaHesitation, trackCheckoutClick, trackFaqOpen, trackVideoStart } from "@/lib/behaviorTracker";
-import { fetchOfferData } from "@/lib/offerDataClient";
 
 import { Separator } from "@/components/ui/separator";
 import { CTAButton, TrustBadge, VideoPlaceholder } from "./QuizUI";
@@ -41,17 +40,16 @@ interface Step13Props {
 }
 
 /* ─── Dynamic Pricing Engine ─── */
-// Fallback pricing (shown while backend loads — no checkout URLs!)
-const PRICING_FALLBACK: Record<string, { price: number; installment: number; installments: number; checkoutUrl: string }> = {
-  "menos100":  { price: 37.00,  installment: 3.88,  installments: 12, checkoutUrl: "" },
-  "100-500":   { price: 47.00,  installment: 4.67,  installments: 12, checkoutUrl: "" },
-  "500-2000":  { price: 66.83,  installment: 6.64,  installments: 12, checkoutUrl: "" },
-  "2000-10000":{ price: 97.00,  installment: 9.64,  installments: 12, checkoutUrl: "" },
-  "10000+":    { price: 147.00, installment: 14.61, installments: 12, checkoutUrl: "" },
+const PRICING_TIERS: Record<string, { price: number; installment: number; installments: number; checkoutUrl: string }> = {
+  "menos100":  { price: 37.00,  installment: 3.88,  installments: 12, checkoutUrl: "https://pay.kirvano.com/4630333d-d5d1-4591-b767-2151f77c6b13" },
+  "100-500":   { price: 47.00,  installment: 4.67,  installments: 12, checkoutUrl: "https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c" },
+  "500-2000":  { price: 66.83,  installment: 6.64,  installments: 12, checkoutUrl: "https://pay.kirvano.com/5e882c8e-e569-4d9b-b895-69cb1d1285f4" },
+  "2000-10000":{ price: 97.00,  installment: 9.64,  installments: 12, checkoutUrl: "https://pay.kirvano.com/b9bbad45-8e94-40c0-b910-73e814b03c8c" },
+  "10000+":    { price: 147.00, installment: 14.61, installments: 12, checkoutUrl: "https://pay.kirvano.com/a007f8f3-4831-4d20-9736-22f196ea6a96" },
 };
 
 const getPricing = (accountBalance?: string) => {
-  return PRICING_FALLBACK[accountBalance || ""] || PRICING_FALLBACK["500-2000"];
+  return PRICING_TIERS[accountBalance || ""] || PRICING_TIERS["500-2000"];
 };
 
 const formatPrice = (price: number) => price.toFixed(2).replace(".", ",");
@@ -1337,17 +1335,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   const [showCTA, setShowCTA] = useState(false);
   const [timeLeft, setTimeLeft] = useState(900);
   const [spotsLeft] = useState(() => Math.floor(Math.random() * 4) + 3);
-  const [remoteCheckoutUrl, setRemoteCheckoutUrl] = useState<string>("");
 
-  // ─── Fetch real checkout URL from backend ───
-  useEffect(() => {
-    const balanceKey = answers?.accountBalance || "500-2000";
-    fetchOfferData(`oferta_${balanceKey}`).then((plans) => {
-      if (plans && plans.length > 0) {
-        setRemoteCheckoutUrl(plans[0].checkoutUrl);
-      }
-    });
-  }, [answers?.accountBalance]);
 
   // ─── Behavior Tracker Init ───
   useEffect(() => {
@@ -1401,9 +1389,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const firstName = userName?.split(" ")[0] || "";
-  const basePricing = getPricing(answers?.accountBalance);
-  // Override checkout URL with backend data
-  const pricing = { ...basePricing, checkoutUrl: remoteCheckoutUrl || basePricing.checkoutUrl };
+  const pricing = getPricing(answers?.accountBalance);
 
   const bonuses = [
     { title: "Guia: Primeiro Resultado em 24h", value: "R$97", description: "Passo a passo simplificado pra você ver dinheiro na conta ainda hoje. Sem enrolação." },

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ShieldCheck, Check, Lock, RefreshCw, AlertTriangle, CheckCircle2,
@@ -9,7 +9,6 @@ import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
-import { fetchOfferData, type OfferPlan } from "@/lib/offerDataClient";
 import mentorPhoto from "@/assets/mentor-new.webp";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarClaudia from "@/assets/avatar-claudia.jpg";
@@ -20,45 +19,45 @@ interface Props {
   onDecline: () => void;
 }
 
-const FALLBACK_PLANS = [
+const plans = [
   {
     id: "extensao" as const,
     label: "Extensão",
     duration: "+12 meses",
     totalAccess: "18 meses no total",
-    price: 0,
-    installments: "...",
+    price: 67,
+    installments: "6x de R$ 12,90",
     features: ["+12 meses de acesso", "Proteção temporária", "Suporte por e-mail"],
     missing: ["Atualizações futuras", "Suporte prioritário", "Recursos antecipados"],
     warning: "Expira de novo após 18 meses",
     color: "#64748B",
-    checkoutUrl: "",
+    checkoutUrl: "https://pay.kirvano.com/5efbb9e7-6033-4281-bd6d-6b5830e7145d",
   },
   {
     id: "vitalicio" as const,
     label: "Vitalício",
     duration: "Para sempre",
     totalAccess: "Acesso permanente",
-    price: 0,
-    installments: "...",
+    price: 127,
+    installments: "12x de R$ 12,42",
     features: ["Acesso vitalício", "Atualizações automáticas", "Proteção permanente", "Novas estratégias incluídas"],
     missing: ["Suporte prioritário", "Recursos antecipados"],
     warning: null,
     color: "#22C55E",
-    checkoutUrl: "",
+    checkoutUrl: "https://pay.kirvano.com/8b821768-dfb9-487d-a6a6-8beb9a9cdb20",
   },
   {
     id: "vip" as const,
     label: "VIP",
     duration: "Para sempre + extras",
     totalAccess: "Acesso premium vitalício",
-    price: 0,
-    installments: "...",
+    price: 197,
+    installments: "12x de R$ 19,25",
     features: ["Acesso vitalício", "Atualizações automáticas", "Proteção permanente", "Novas estratégias incluídas", "Suporte prioritário WhatsApp", "Acesso antecipado a recursos"],
     missing: [],
     warning: null,
     color: "#FACC15",
-    checkoutUrl: "",
+    checkoutUrl: "https://pay.kirvano.com/a7cfdcbf-849f-4060-b660-b850f46a0e52",
   },
 ];
 
@@ -66,21 +65,6 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
   const [selectedPlan, setSelectedPlan] = useState<string>("vitalicio");
   const [loading, setLoading] = useState(false);
-  const [plans, setPlans] = useState(FALLBACK_PLANS);
-
-  // Fetch real prices/URLs from backend
-  useEffect(() => {
-    fetchOfferData("blindagem").then((offerPlans) => {
-      if (offerPlans) {
-        setPlans((prev) =>
-          prev.map((p) => {
-            const remote = offerPlans.find((o) => o.id === p.id);
-            return remote ? { ...p, price: remote.price, installments: remote.installments, checkoutUrl: remote.checkoutUrl } : p;
-          })
-        );
-      }
-    });
-  }, []);
 
   const activePlan = plans.find((p) => p.id === selectedPlan)!;
 

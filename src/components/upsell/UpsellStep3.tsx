@@ -1,15 +1,13 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, Shield, Zap, MessageCircle, BarChart3, Headphones } from "lucide-react";
 import { saveUpsellChoice } from "@/lib/upsellData";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
-import { fetchOfferData, type OfferPlan } from "@/lib/offerDataClient";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
 
 interface Props { name: string; onNext: () => void; onDecline: () => void; }
 
-const PLAN_FEATURES = [
+const plans = [
   {
     id: "basico" as const,
     name: "Acelerador Básico",
@@ -21,10 +19,12 @@ const PLAN_FEATURES = [
       { icon: Shield, text: "Proteção básica contra perdas" },
       { icon: Headphones, text: "Suporte por e-mail" },
     ],
+    price: 19, installments: "2x de R$ 9,90",
     border: "1px solid rgba(255,255,255,0.08)",
     btnBg: "transparent", btnColor: "#22C55E", btnBorder: "1.5px solid #22C55E",
     btnText: "ATIVAR BÁSICO",
     badge: null,
+    checkoutUrl: "https://pay.kirvano.com/863c8fe9-ca48-452f-9fa4-22e14df182cf",
   },
   {
     id: "duplo" as const,
@@ -38,10 +38,12 @@ const PLAN_FEATURES = [
       { icon: BarChart3, text: "Monitoramento 24h por segunda IA" },
       { icon: MessageCircle, text: "Suporte prioritário no WhatsApp" },
     ],
+    price: 27, installments: "3x de R$ 9,90",
     border: "2px solid #22C55E",
     btnBg: "linear-gradient(135deg, #16A34A, #15803D)", btnColor: "#fff", btnBorder: "none",
     btnText: "ATIVAR DUPLO — MAIS ESCOLHIDO",
     badge: "⚡ RECOMENDADO",
+    checkoutUrl: "https://pay.kirvano.com/59a5cba3-f876-46a8-b0e4-6e2c72cf725a",
   },
   {
     id: "maximo" as const,
@@ -56,30 +58,23 @@ const PLAN_FEATURES = [
       { icon: MessageCircle, text: "Especialista pessoal no WhatsApp — 48h" },
       { icon: Headphones, text: "Relatório de ganhos toda manhã" },
     ],
+    price: 37, installments: "4x de R$ 9,90",
     border: "1px solid rgba(250,204,21,0.25)",
     btnBg: "linear-gradient(135deg, #FACC15, #EAB308)", btnColor: "#020617", btnBorder: "none",
     btnText: "ATIVAR MÁXIMO",
     badge: null,
+    checkoutUrl: "https://pay.kirvano.com/e8135deb-de2d-4cac-bbeb-1aed6610921c",
   },
 ];
 
 const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
-  const [offerData, setOfferData] = useState<OfferPlan[]>([]);
 
-  useEffect(() => {
-    fetchOfferData("acelerador").then((plans) => {
-      if (plans) setOfferData(plans);
-    });
-  }, []);
-
-  const handleSelect = (planId: string) => {
-    const remote = offerData.find((o) => o.id === planId);
-    if (!remote) return;
-    saveUpsellChoice({ accelerator: planId as "basico" | "duplo" | "maximo", guide: false, price: remote.price });
+  const handleSelect = (plan: typeof plans[0]) => {
+    saveUpsellChoice({ accelerator: plan.id, guide: false, price: plan.price });
     const utmQs = buildTrackingQueryString();
-    const separator = remote.checkoutUrl.includes("?") ? "&" : "?";
-    const fullUrl = utmQs ? `${remote.checkoutUrl}${separator}${utmQs.slice(1)}` : remote.checkoutUrl;
+    const separator = plan.checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${plan.checkoutUrl}${separator}${utmQs.slice(1)}` : plan.checkoutUrl;
     window.open(fullUrl, "_blank");
   };
 
@@ -94,9 +89,7 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
         </p>
       </div>
 
-      {PLAN_FEATURES.map((plan, i) => {
-        const remote = offerData.find((o) => o.id === plan.id);
-        return (
+      {plans.map((plan, i) => (
         <motion.div
           key={plan.id}
           initial={{ opacity: 0, y: 20 }}
@@ -125,25 +118,19 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
           </ul>
 
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-[28px] font-extrabold" style={{ color: "#F8FAFC" }}>
-              {remote ? `R$ ${remote.price}` : "Carregando..."}
-            </span>
-            <span className="text-[12px]" style={{ color: "#64748B" }}>
-              {remote ? `ou ${remote.installments}` : ""}
-            </span>
+            <span className="text-[28px] font-extrabold" style={{ color: "#F8FAFC" }}>R$ {plan.price}</span>
+            <span className="text-[12px]" style={{ color: "#64748B" }}>ou {plan.installments}</span>
           </div>
 
           <button
-            onClick={() => handleSelect(plan.id)}
-            disabled={!remote}
-            className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+            onClick={() => handleSelect(plan)}
+            className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
             style={{ background: plan.btnBg, color: plan.btnColor, border: plan.btnBorder }}
           >
             {plan.btnText}
           </button>
         </motion.div>
-        );
-      })}
+      ))}
 
       {/* Social proof */}
       <div className="rounded-xl p-4" style={{ background: "rgba(30,41,59,0.6)", border: "1px solid rgba(255,255,255,0.04)" }}>
