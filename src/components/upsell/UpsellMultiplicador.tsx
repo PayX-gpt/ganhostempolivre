@@ -1048,7 +1048,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
               <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}>
                 <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
                 <p className="text-[12px] leading-snug" style={{ color: "#FCA5A5" }}>
-                  Velocidade atual: <strong>1x</strong> (modo básico). Seus juros compostos estão operando na velocidade mínima.
+                  Velocidade atual: <strong>1x</strong> (modo básico) — apenas <strong>R$ 25/dia</strong>. Seus juros compostos estão operando na velocidade mínima.
                 </p>
               </div>
 
