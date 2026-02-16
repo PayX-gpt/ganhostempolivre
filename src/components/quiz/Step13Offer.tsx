@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Shield, Lock, Zap, ArrowRight, Star, Users, Clock, CheckCircle } from "lucide-react";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
@@ -726,16 +727,36 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       </SectionTracker>
 
       <SectionTracker id="hero">
-        <div className="text-center space-y-3">
-          <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground leading-snug">
-            {firstName ? `${firstName}, sua` : "Sua"} chave de acesso está pronta.
-          </h2>
-          <p className="text-base sm:text-lg text-foreground/90 leading-relaxed">
+        <div className="text-center space-y-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/25 rounded-full px-4 py-1.5 mb-3">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-xs font-bold text-primary uppercase tracking-wider">Acesso liberado</span>
+            </div>
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.5 }}
+            className="font-display text-[22px] sm:text-2xl font-bold text-foreground leading-snug"
+          >
+            {firstName ? `${firstName}, sua` : "Sua"} chave de acesso está{" "}
+            <span className="text-gradient-green">pronta</span>.
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="text-base sm:text-lg text-foreground/90 leading-relaxed"
+          >
             Falta <span className="text-primary font-bold">um único passo</span> pra você começar a gerar renda extra todos os dias — direto do seu celular.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Assista o vídeo abaixo e entenda como funciona em 4 minutos:
-          </p>
+          </motion.p>
         </div>
       </SectionTracker>
 
@@ -755,14 +776,66 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             </div>
           </div>
         </div>
+        <p className="text-xs text-muted-foreground text-center mt-2">
+          ▶ Assista e entenda como funciona em 4 minutos
+        </p>
       </SectionTracker>
 
-      {/* ═══ 3c. EXPLICAÇÃO DA TAXA (compacta) ═══ */}
-      <div className="w-full text-center space-y-2">
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          ⚠️ O valor de <span className="text-primary font-bold">R${formatPrice(pricing.price)}</span> é apenas a <span className="font-bold text-foreground">taxa dos tokens do ChatGPT</span> que a plataforma consome. Nós <span className="font-bold text-foreground">não ficamos com nenhum centavo</span> — só cobramos <span className="text-primary font-bold">2% dos seus lucros</span> após 30 dias.
-        </p>
-      </div>
+      {/* ═══ 3c. EXPLICAÇÃO DA TAXA — visual card ═══ */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="w-full rounded-2xl overflow-hidden border border-primary/20"
+        style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--card)))" }}
+      >
+        {/* Header strip */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-primary/10" style={{ background: "hsl(var(--primary) / 0.06)" }}>
+          <img src={chatgptLogo} alt="ChatGPT" className="w-8 h-8 object-contain rounded-lg" />
+          <div>
+            <p className="text-sm font-bold text-foreground">Powered by ChatGPT</p>
+            <p className="text-[11px] text-muted-foreground">Inteligência Artificial OpenAI</p>
+          </div>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {/* Price breakdown visual */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl p-3 text-center border border-primary/15 bg-primary/5">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Você paga</p>
+              <p className="text-xl font-display font-bold text-foreground">
+                R$<span className="text-primary">{formatPrice(pricing.price)}</span>
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Taxa dos tokens de IA</p>
+            </div>
+            <div className="rounded-xl p-3 text-center border border-accent/15 bg-accent/5">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Nós ficamos com</p>
+              <p className="text-xl font-display font-bold text-foreground">R$0</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Zero. Nada. Nenhum centavo.</p>
+            </div>
+          </div>
+
+          {/* Profit share explanation */}
+          <div className="rounded-xl p-3 border border-border bg-card space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                <Zap className="w-3.5 h-3.5 text-primary" />
+              </div>
+              <p className="text-sm font-bold text-foreground">Como ganhamos então?</p>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Só depois de <span className="font-bold text-foreground">30 dias</span>, quando você já estiver lucrando, cobramos apenas{" "}
+              <span className="text-primary font-bold">2% dos seus lucros</span>.
+            </p>
+            <div className="flex items-center gap-2 bg-primary/8 rounded-lg px-3 py-2 border border-primary/15">
+              <CheckCircle className="w-4 h-4 text-primary shrink-0" />
+              <p className="text-xs font-medium text-foreground">
+                Só ganhamos quando <span className="text-primary font-bold">você ganha</span>. Simples assim.
+              </p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* ═══ 5. MENTOR CREDIBILITY ═══ */}
       <SectionTracker id="mentor">
