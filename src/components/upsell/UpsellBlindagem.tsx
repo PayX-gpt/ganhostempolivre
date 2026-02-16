@@ -262,6 +262,9 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
         transition={{ delay: 0.6 }}
         className="mt-6 mx-1"
       >
+        <p className="text-[11px] text-center mb-2 font-medium" style={{ color: "#64748B" }}>
+          Toque para comparar os planos:
+        </p>
         <div
           className="flex rounded-2xl p-1.5 gap-1"
           style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.06)" }}
@@ -269,19 +272,21 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
           {plans.map((plan) => {
             const isActive = selectedPlan === plan.id;
             return (
-              <button
+              <motion.button
                 key={plan.id}
                 onClick={() => setSelectedPlan(plan.id)}
-                className="flex-1 py-3 rounded-xl text-center transition-all relative"
+                whileTap={{ scale: 0.95 }}
+                className="flex-1 py-3 rounded-xl text-center transition-all relative cursor-pointer"
                 style={{
                   background: isActive
                     ? plan.id === "vitalicio"
                       ? "linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05))"
                       : plan.id === "vip"
                         ? "linear-gradient(135deg, rgba(250,204,21,0.15), rgba(250,204,21,0.05))"
-                        : "rgba(255,255,255,0.05)"
-                    : "transparent",
-                  border: isActive ? `1.5px solid ${plan.color}` : "1.5px solid transparent",
+                        : "rgba(255,255,255,0.08)"
+                    : "rgba(255,255,255,0.03)",
+                  border: isActive ? `1.5px solid ${plan.color}` : "1.5px solid rgba(255,255,255,0.08)",
+                  boxShadow: isActive ? `0 0 12px ${plan.color}15` : "none",
                 }}
               >
                 {plan.id === "vitalicio" && (
@@ -292,13 +297,13 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
                     POPULAR
                   </span>
                 )}
-                <p className="text-[13px] font-bold" style={{ color: isActive ? plan.color : "#475569" }}>
+                <p className="text-[13px] font-bold" style={{ color: isActive ? plan.color : "#94A3B8" }}>
                   {plan.label}
                 </p>
-                <p className="text-[10px] mt-0.5" style={{ color: isActive ? "#94A3B8" : "#334155" }}>
-                  {plan.duration}
+                <p className="text-[10px] mt-0.5 font-medium" style={{ color: isActive ? "#CBD5E1" : "#64748B" }}>
+                  R$ {plan.price}
                 </p>
-              </button>
+              </motion.button>
             );
           })}
         </div>
