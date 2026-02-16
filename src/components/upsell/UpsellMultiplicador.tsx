@@ -5,6 +5,10 @@ import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
+import avatarCarlos from "@/assets/avatar-carlos.jpg";
+import avatarMaria from "@/assets/avatar-maria.jpg";
+import avatarJose from "@/assets/avatar-jose.jpg";
+import avatarRegina from "@/assets/avatar-regina.jpg";
 
 interface Props {
   name: string;
@@ -1332,11 +1336,9 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
               {/* Social proof */}
               <div className="flex items-center justify-center gap-2 mt-2">
                 <div className="flex -space-x-2">
-                  {["C", "M", "J", "R"].map((l, i) => (
-                    <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold"
-                      style={{ background: ["#16A34A", "#FACC15", "#3B82F6", "#8B5CF6"][i], color: "#fff", border: "2px solid #0F172A" }}>
-                      {l}
-                    </div>
+                  {[avatarCarlos, avatarMaria, avatarJose, avatarRegina].map((src, i) => (
+                    <img key={i} src={src} alt="Membro" className="w-7 h-7 rounded-full object-cover"
+                      style={{ border: "2px solid #0F172A" }} />
                   ))}
                 </div>
                 <p className="text-[12px]" style={{ color: "#64748B" }}>
