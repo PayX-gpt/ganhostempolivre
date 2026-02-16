@@ -147,22 +147,20 @@ const confirmationData: Record<string, { title: string; getText: (answer: string
 /* ── Step flow:
   1: Welcome/Register
   2: Name
-  3: Q1 (profile type)
-  4: Q1 Confirmation
-  5: Q2 (financial situation)
-  6: Q2 Confirmation
-  7: Q3 (biggest goal)
-  8: Q3 Confirmation
-  9: Q4 (timeline)
-  10: Q4 Confirmation + Analysis
-  11: Plan projection ("Seu plano")
-  12: Problem reveal ("Mas tem um problema")
-  13: Final offer (plans) — decline → step 14 (guarantee)
-  14: Guarantee page — "Ativar" → step 13, "Ainda tenho dúvidas" → step 15
-  15: Urgency page — "Ativar" → step 13, "Não, continuar sem multiplicar" → onDecline (upsell3)
+  3-9: Quiz questions + confirmations
+  10: Analysis
+  11: Plan projection
+  12: Problem reveal
+  13: Multiplicador reveal (what it is)
+  14: Comparison table (sem vs com)
+  15: Compound interest explanation
+  16: Why it costs money
+  17: Final offer (plans) — decline → step 18 (guarantee)
+  18: Guarantee page — "Ativar" → step 17, "Ainda tenho dúvidas" → step 19
+  19: Urgency page — "Ativar" → step 17, decline → onDecline (upsell3)
 ── */
 
-const TOTAL_DOTS = 20;
+const TOTAL_DOTS = 24;
 const TOTAL_QUESTIONS = 4;
 
 const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
@@ -694,8 +692,281 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
             </div>
           )}
 
-          {/* ═══ STEP 13: Oferta final — Planos ═══ */}
+          {/* ═══ STEP 13: Multiplicador Reveal ═══ */}
           {step === 13 && (
+            <div className="space-y-6 py-4">
+              <div className="text-center space-y-3">
+                <p className="text-[15px]" style={{ color: "#94A3B8" }}>
+                  Existe uma segunda IA na Plataforma de Ganhos.
+                </p>
+                <p className="text-[15px]" style={{ color: "#CBD5E1" }}>
+                  Poucos membros sabem que ela existe.
+                </p>
+                <p className="text-[17px] font-bold mt-2" style={{ color: "#F8FAFC" }}>
+                  Ela se chama:
+                </p>
+                <h1 className="text-[28px] font-extrabold" style={{ color: "#22C55E" }}>
+                  MULTIPLICADOR DE IA
+                </h1>
+                <p className="text-[14px]" style={{ color: "#94A3B8" }}>E funciona assim:</p>
+              </div>
+
+              {/* IA Básica card */}
+              <div className="p-5 rounded-xl space-y-2" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="flex items-center gap-2.5 mb-2">
+                  <Landmark className="w-5 h-5" style={{ color: "#94A3B8" }} />
+                  <h3 className="text-[16px] font-extrabold" style={{ color: "#F8FAFC" }}>IA BÁSICA:</h3>
+                </div>
+                <p className="text-[14px]" style={{ color: "#94A3B8" }}>→ Analisa o mercado</p>
+                <p className="text-[14px]" style={{ color: "#94A3B8" }}>→ Gera ganhos diários</p>
+                <p className="text-[14px]" style={{ color: "#94A3B8" }}>→ <strong style={{ color: "#F8FAFC" }}>R$ 25/dia</strong> constante</p>
+              </div>
+
+              {/* Multiplicador card */}
+              <div className="p-5 rounded-xl space-y-2" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                <div className="flex items-center gap-2.5 mb-2">
+                  <Sparkles className="w-5 h-5" style={{ color: "#22C55E" }} />
+                  <h3 className="text-[16px] font-extrabold" style={{ color: "#22C55E" }}>MULTIPLICADOR DE IA:</h3>
+                </div>
+                <p className="text-[14px]" style={{ color: "#CBD5E1" }}>→ Pega esses ganhos</p>
+                <p className="text-[14px]" style={{ color: "#CBD5E1" }}>→ Multiplica exponencialmente</p>
+                <p className="text-[14px]" style={{ color: "#CBD5E1" }}>→ <strong style={{ color: "#22C55E" }}>Crescimento acelerado</strong></p>
+              </div>
+
+              <button
+                onClick={goNext}
+                className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
+                style={{ background: "linear-gradient(135deg, #16A34A, #22D3EE)", color: "#fff" }}
+              >
+                VER A DIFERENÇA
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+
+          {/* ═══ STEP 14: Comparação Sem vs Com ═══ */}
+          {step === 14 && (() => {
+            const base = 25; // R$/day basic
+            const mult = answers.profile === "agressivo" ? 4 : answers.profile === "equilibrado" ? 3 : 2.5;
+            const sem = [
+              { mes: 1, val: base * 30 },
+              { mes: 3, val: base * 90 },
+              { mes: 6, val: base * 180 },
+              { mes: 12, val: base * 360 },
+            ];
+            const com = [
+              { mes: 1, val: Math.round(base * mult * 30) },
+              { mes: 3, val: Math.round(base * mult * 90 * 1.15) },
+              { mes: 6, val: Math.round(base * mult * 180 * 1.35) },
+              { mes: 12, val: Math.round(base * mult * 360 * 1.7) },
+            ];
+            // Find which month hits goal
+            const goalVal = getGoalAmount();
+            let goalMonth: number | null = null;
+            for (const c of com) {
+              if (c.val >= goalVal && !goalMonth) goalMonth = c.mes;
+            }
+
+            return (
+              <div className="space-y-5 py-4">
+                <h1 className="text-[24px] font-extrabold text-center" style={{ color: "#F8FAFC" }}>
+                  VEJA A DIFERENÇA:
+                </h1>
+
+                {/* Side by side tables */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* SEM */}
+                  <div className="p-4 rounded-xl space-y-2" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <h3 className="text-[13px] font-bold text-center" style={{ color: "#94A3B8" }}>SEM Multiplicador</h3>
+                    {sem.map(s => (
+                      <div key={s.mes} className="flex justify-between text-[13px]">
+                        <span style={{ color: "#64748B" }}>Mês {s.mes}:</span>
+                        <span className="font-bold" style={{ color: "#F8FAFC" }}>R$ {s.val.toLocaleString("pt-BR")}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {/* COM */}
+                  <div className="p-4 rounded-xl space-y-2" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                    <h3 className="text-[13px] font-bold text-center" style={{ color: "#22C55E" }}>COM Multiplicador</h3>
+                    {com.map(c => {
+                      const isGoalMonth = goalMonth === c.mes;
+                      return (
+                        <div key={c.mes} className="flex justify-between text-[13px]">
+                          <span style={{ color: "#64748B" }}>Mês {c.mes}:</span>
+                          <span className="font-bold" style={{ color: isGoalMonth ? "#FACC15" : "#22C55E" }}>
+                            R$ {c.val.toLocaleString("pt-BR")} {isGoalMonth ? "✓" : c.mes === 12 ? "🚀" : ""}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {goalMonth && (
+                  <p className="text-center text-[14px] font-bold" style={{ color: "#22C55E" }}>
+                    ← META ALCANÇADA NO MÊS {goalMonth}!
+                  </p>
+                )}
+
+                {/* Side by side charts */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-4 rounded-xl" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <p className="text-[11px] text-center mb-2" style={{ color: "#64748B" }}>Sem Multiplicador</p>
+                    <div className="flex items-end justify-between gap-1 h-20">
+                      {[15, 20, 25, 30, 35, 40].map((h, i) => (
+                        <motion.div key={i} initial={{ height: 0 }} animate={{ height: `${h}%` }}
+                          transition={{ delay: 0.1 * i, duration: 0.4 }}
+                          className="flex-1 rounded-t-sm" style={{ background: "#334155" }} />
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-[9px] mt-1" style={{ color: "#475569" }}>
+                      {["M1","M2","M3","M4","M5","M6"].map(m => <span key={m}>{m}</span>)}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-xl" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                    <p className="text-[11px] text-center mb-2" style={{ color: "#22C55E" }}>Com Multiplicador</p>
+                    <div className="flex items-end justify-between gap-1 h-20">
+                      {[15, 25, 40, 55, 75, 100].map((h, i) => (
+                        <motion.div key={i} initial={{ height: 0 }} animate={{ height: `${h}%` }}
+                          transition={{ delay: 0.1 * i, duration: 0.4 }}
+                          className="flex-1 rounded-t-sm" style={{ background: "linear-gradient(180deg, #16A34A, #22C55E)" }} />
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-[9px] mt-1" style={{ color: "#475569" }}>
+                      {["M1","M2","M3","M4","M5","M6"].map(m => <span key={m}>{m}</span>)}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={goNext}
+                  className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
+                  style={{ background: "linear-gradient(135deg, #16A34A, #22D3EE)", color: "#fff" }}
+                >
+                  COMO ISSO É POSSÍVEL?
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            );
+          })()}
+
+          {/* ═══ STEP 15: Juros Compostos ═══ */}
+          {step === 15 && (() => {
+            const rows = [
+              { dia: 1, valor: 25, pct: null },
+              { dia: 2, valor: 25.50, pct: "+2%" },
+              { dia: 3, valor: 26.01, pct: "+4%" },
+              { dia: 10, valor: 29.52, pct: "+18%" },
+              { dia: 30, valor: 44.79, pct: "+79%" },
+              { dia: 60, valor: 80.25, pct: "+221%" },
+              { dia: 90, valor: 143.77, pct: "+475%" },
+            ];
+            return (
+              <div className="space-y-5 py-4">
+                <h1 className="text-[24px] font-extrabold text-center leading-tight" style={{ color: "#F8FAFC" }}>
+                  O Multiplicador usa{" "}
+                  <span style={{ color: "#22C55E" }}>JUROS COMPOSTOS</span>.
+                </h1>
+
+                <div className="text-center space-y-1">
+                  <p className="text-[14px]" style={{ color: "#94A3B8" }}>O que significa isso?</p>
+                  <p className="text-[16px] font-bold" style={{ color: "#F8FAFC" }}>Simples:</p>
+                </div>
+
+                <div className="space-y-2">
+                  {rows.map((r, i) => (
+                    <motion.div
+                      key={r.dia}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.08 * i }}
+                      className="flex justify-between items-center p-3.5 rounded-xl"
+                      style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.06)" }}
+                    >
+                      <span className="text-[14px]" style={{ color: "#94A3B8" }}>Dia {r.dia}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[16px] font-bold" style={{ color: "#22C55E" }}>
+                          R$ {r.valor.toFixed(2).replace(".", ",")}
+                        </span>
+                        {r.pct && (
+                          <span className="text-[12px]" style={{ color: "#94A3B8" }}>{r.pct}</span>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="p-4 rounded-xl text-center" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                  <p className="text-[16px] font-bold" style={{ color: "#F8FAFC" }}>
+                    Seus ganhos <strong style={{ color: "#22C55E" }}>CRESCEM automaticamente</strong>.
+                  </p>
+                </div>
+
+                <button
+                  onClick={goNext}
+                  className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
+                  style={{ background: "linear-gradient(135deg, #16A34A, #22D3EE)", color: "#fff" }}
+                >
+                  ENTENDI, E AGORA?
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            );
+          })()}
+
+          {/* ═══ STEP 16: Por que custa? ═══ */}
+          {step === 16 && (
+            <div className="space-y-6 py-4">
+              <h1 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
+                "Por que o Multiplicador não vem ativado?"
+              </h1>
+
+              <div className="p-5 rounded-xl space-y-3" style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <p className="text-[14px] leading-relaxed" style={{ color: "#CBD5E1" }}>
+                  Porque o Multiplicador consome <strong style={{ color: "#FACC15" }}>5x mais recursos</strong>:
+                </p>
+                <div className="space-y-2 pl-1">
+                  <div className="flex items-center gap-2">
+                    <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "#64748B" }} />
+                    <span className="text-[14px]" style={{ color: "#94A3B8" }}>Processa operações extras</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "#64748B" }} />
+                    <span className="text-[14px]" style={{ color: "#94A3B8" }}>Calcula multiplicações em tempo real</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "#64748B" }} />
+                    <span className="text-[14px]" style={{ color: "#94A3B8" }}>Monitora o saldo 24/7</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-5 rounded-xl" style={{ background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.12)" }}>
+                <p className="text-[14px] leading-relaxed" style={{ color: "#CBD5E1" }}>
+                  Se ativássemos pra todos...
+                </p>
+                <p className="text-[15px] font-bold mt-1" style={{ color: "#FACC15" }}>
+                  Nossos custos explodiriam.
+                </p>
+              </div>
+
+              <p className="text-[14px] text-center leading-relaxed" style={{ color: "#94A3B8" }}>
+                Por isso mantemos como uma melhoria <strong style={{ color: "#F8FAFC" }}>OPCIONAL</strong>.
+              </p>
+
+              <button
+                onClick={goNext}
+                className="w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
+                style={{ background: "linear-gradient(135deg, #16A34A, #22D3EE)", color: "#fff" }}
+              >
+                QUANTO CUSTA?
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+
+          {/* ═══ STEP 17: Oferta final — Planos ═══ */}
+          {step === 17 && (
             <div className="space-y-5">
               <div className="text-center">
                 <h2 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
@@ -712,17 +983,6 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                 <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
                 <p className="text-[12px] leading-snug" style={{ color: "#FCA5A5" }}>
                   Limite atual: <strong>R$ 25/dia</strong> (modo proteção). Sem upgrade, seus ganhos ficam travados nesse teto.
-                </p>
-              </div>
-
-              {/* Explanation */}
-              <div className="p-3.5 rounded-xl" style={{ background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.12)" }}>
-                <p className="text-[13px] leading-relaxed" style={{ color: "#FACC15" }}>
-                  💡 <strong>Por que existe uma taxa?</strong>
-                </p>
-                <p className="text-[12px] mt-1 leading-relaxed" style={{ color: "#94A3B8" }}>
-                  Operações com limites maiores exigem mais poder de processamento dos nossos servidores. 
-                  Essa taxa cobre o custo de infraestrutura — e é cobrada <strong style={{ color: "#F8FAFC" }}>apenas uma vez</strong>.
                 </p>
               </div>
 
@@ -846,7 +1106,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
               <button
                 onClick={() => {
                   saveFunnelEvent("upsell_guarantee_click", { page: "/upsell2" });
-                  goTo(14);
+                  goTo(18);
                 }}
                 className="text-[13px] underline cursor-pointer bg-transparent border-none mx-auto block py-2"
                 style={{ color: "#64748B" }}
@@ -856,8 +1116,8 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
             </div>
           )}
 
-          {/* ═══ STEP 14: Garantia ═══ */}
-          {step === 14 && (
+          {/* ═══ STEP 18: Garantia ═══ */}
+          {step === 18 && (
             <div className="flex flex-col items-center text-center space-y-6 py-8">
               <motion.div
                 initial={{ scale: 0 }}
@@ -889,7 +1149,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
               </div>
 
               <button
-                onClick={() => goTo(13)}
+                onClick={() => goTo(17)}
                 className="w-full py-4 rounded-2xl font-bold text-[16px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
                 style={{ background: "linear-gradient(135deg, #16A34A, #22D3EE)", color: "#fff" }}
               >
@@ -899,7 +1159,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
               <button
                 onClick={() => {
                   saveFunnelEvent("upsell_still_doubts_click", { page: "/upsell2" });
-                  goTo(15);
+                  goTo(19);
                 }}
                 className="text-[13px] underline cursor-pointer bg-transparent border-none py-2"
                 style={{ color: "#64748B" }}
@@ -909,8 +1169,8 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
             </div>
           )}
 
-          {/* ═══ STEP 15: Urgência / Última Oportunidade ═══ */}
-          {step === 15 && (
+          {/* ═══ STEP 19: Urgência / Última Oportunidade ═══ */}
+          {step === 19 && (
             <div className="flex flex-col items-center text-center space-y-6 py-8">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -941,7 +1201,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
               </motion.div>
 
               <button
-                onClick={() => goTo(13)}
+                onClick={() => goTo(17)}
                 className="w-full py-4 rounded-2xl font-bold text-[16px] flex items-center justify-center gap-2 transition-all hover:brightness-110 active:scale-[0.98]"
                 style={{ background: "linear-gradient(135deg, #16A34A, #22D3EE)", color: "#fff" }}
               >
