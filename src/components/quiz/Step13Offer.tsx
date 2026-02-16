@@ -912,9 +912,16 @@ const VideoTestimonialsSection = () => {
   );
 };
 
-/* ─── Photo Proof Gallery ─── */
+/* ─── Photo Proof Gallery (autoplay carousel) ─── */
 const PhotoProofGallery = ({ title, subtitle, images }: { title: React.ReactNode; subtitle: string; images: string[] }) => {
-  const [selected, setSelected] = useState<number | null>(null);
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % images.length);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [images.length]);
 
   return (
     <div className="w-full space-y-4">
@@ -927,44 +934,50 @@ const PhotoProofGallery = ({ title, subtitle, images }: { title: React.ReactNode
         <p className="text-sm text-muted-foreground leading-relaxed">{subtitle}</p>
       </div>
 
-      {/* Selected image expanded */}
-      {selected !== null && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full rounded-2xl overflow-hidden border border-primary/20 shadow-lg cursor-pointer"
-          onClick={() => setSelected(null)}
-        >
-          <img src={images[selected]} alt={`Depoimento ${selected + 1}`} className="w-full h-auto" />
-        </motion.div>
-      )}
+      {/* Main large image */}
+      <div className="relative rounded-2xl overflow-hidden border border-primary/20 shadow-lg" style={{ background: "hsl(var(--card))" }}>
+        <div className="relative" style={{ minHeight: 350 }}>
+          {images.map((img, i) => (
+            <motion.div
+              key={i}
+              initial={false}
+              animate={{
+                opacity: i === current ? 1 : 0,
+                scale: i === current ? 1 : 0.95,
+                position: i === current ? "relative" : "absolute",
+              }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="w-full top-0 left-0"
+              style={{ pointerEvents: i === current ? "auto" : "none" }}
+            >
+              <img src={img} alt={`Depoimento ${i + 1}`} className="w-full h-auto object-cover" />
+            </motion.div>
+          ))}
+        </div>
+      </div>
 
-      {/* Grid of thumbnails */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* Thumbnails row */}
+      <div className="flex gap-2 justify-center">
         {images.map((img, i) => (
-          <motion.button
+          <button
             key={i}
-            onClick={() => setSelected(selected === i ? null : i)}
-            className="relative rounded-xl overflow-hidden border-2 transition-all duration-300 cursor-pointer p-0 aspect-[3/4]"
+            onClick={() => setCurrent(i)}
+            className="relative rounded-lg overflow-hidden border-2 transition-all duration-300 cursor-pointer p-0"
             style={{
-              borderColor: selected === i ? "hsl(var(--primary))" : "hsl(var(--border))",
+              width: 52,
+              height: 52,
+              borderColor: i === current ? "hsl(var(--primary))" : "hsl(var(--border))",
+              opacity: i === current ? 1 : 0.5,
+              transform: i === current ? "scale(1.1)" : "scale(1)",
             }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
           >
-            <img src={img} alt={`Print ${i + 1}`} className="w-full h-full object-cover" />
-            {selected === i && (
-              <motion.div
-                layoutId="photo-proof-ring"
-                className="absolute inset-0 border-2 border-primary rounded-xl"
-              />
-            )}
-          </motion.button>
+            <img src={img} alt="" className="w-full h-full object-cover" />
+          </button>
         ))}
       </div>
 
       <p className="text-center text-xs text-muted-foreground">
-        Toque em qualquer imagem para ampliar · <span className="text-primary font-bold">{images.length} prints verificados</span>
+        <span className="text-primary font-bold">{current + 1}</span> de {images.length} prints verificados
       </p>
     </div>
   );
