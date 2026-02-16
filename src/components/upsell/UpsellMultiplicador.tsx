@@ -1145,7 +1145,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                       <div className="mt-2 flex items-center gap-2 p-2.5 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)" }}>
                         <Target className="w-4 h-4 shrink-0" style={{ color: "#22C55E" }} />
                         <p className="text-[12px] leading-snug" style={{ color: "#86EFAC" }}>
-                          Alcança <strong style={{ color: "#F8FAFC" }}>{goalLabel(answers.goal)}</strong> em <strong style={{ color: "#22C55E" }}>{timeToGoal}</strong>
+                          Alcança sua meta de <strong style={{ color: "#F8FAFC" }}>{getGoalAmountLabel()}</strong> em <strong style={{ color: "#22C55E" }}>{timeToGoal}</strong>
                         </p>
                       </div>
 
