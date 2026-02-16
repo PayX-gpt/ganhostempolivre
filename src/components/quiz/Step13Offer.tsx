@@ -82,10 +82,16 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
     <div ref={ref} className="w-full space-y-3">
       <div className="text-center space-y-1">
         <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">CHAVE TOKEN CHATGPT</p>
-        <p className="text-3xl sm:text-4xl font-display font-bold text-foreground">
-          R$<span className="text-gradient-green">{formatPrice(pricing.price)}</span>
+        <p className="text-lg sm:text-xl font-display font-bold text-foreground">
+          {pricing.installments}x de
         </p>
-        <p className="text-sm text-muted-foreground">ou {pricing.installments}x de R${formatPrice(pricing.installment)}</p>
+        <p className="text-4xl sm:text-5xl font-display font-bold text-foreground leading-none">
+          R$<span className="text-gradient-green">{formatPrice(pricing.installment)}</span>
+        </p>
+        <p className="text-sm text-muted-foreground mt-1">ou R${formatPrice(pricing.price)} à vista no Pix</p>
+        <p className="text-xs text-muted-foreground mt-2 leading-relaxed max-w-xs mx-auto italic">
+          Menos do que você gasta num café por dia — por algo que pode transformar sua tranquilidade financeira.
+        </p>
       </div>
       <CTAButton onClick={() => {
         trackCheckoutClick();
@@ -115,7 +121,7 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
 };
 
 /* ─── Urgency Strip (sticky) ─── */
-const UrgencyStrip = ({ minutes, seconds, show, priceLabel }: { minutes: number; seconds: number; show: boolean; priceLabel: string }) => {
+const UrgencyStrip = ({ minutes, seconds, show, priceLabel, installmentLabel }: { minutes: number; seconds: number; show: boolean; priceLabel: string; installmentLabel?: string }) => {
   if (!show) return null;
   return (
     <div className="w-full rounded-2xl overflow-hidden border border-destructive/40">
@@ -133,7 +139,7 @@ const UrgencyStrip = ({ minutes, seconds, show, priceLabel }: { minutes: number;
       </div>
       <div className="bg-destructive/5 px-4 py-2">
         <p className="text-xs text-muted-foreground text-center">
-          Sua condição especial de <span className="font-bold text-foreground">R${priceLabel}</span> expira quando o timer zerar. Depois disso, volta para R$297.
+          Sua condição especial de <span className="font-bold text-foreground">12x de R${installmentLabel || priceLabel}</span> expira quando o timer zerar. Depois disso, volta para R$297.
         </p>
       </div>
     </div>
@@ -1178,7 +1184,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       {/* ═══ 1. URGENCY TIMER ═══ */}
       <SectionTracker id="urgency">
-        <UrgencyStrip minutes={minutes} seconds={seconds} show={true} priceLabel={formatPrice(pricing.price)} />
+        <UrgencyStrip minutes={minutes} seconds={seconds} show={true} priceLabel={formatPrice(pricing.price)} installmentLabel={formatPrice(pricing.installment)} />
       </SectionTracker>
 
       {/* ═══ 2. PROFILE ANALYSIS (approved status) ═══ */}
@@ -1538,13 +1544,16 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
           <div className="space-y-2">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">Você paga apenas:</p>
-            <p className="text-5xl sm:text-6xl font-display font-bold text-foreground">
-              R$<span className="text-gradient-green">{formatPrice(pricing.price)}</span>
+            <p className="text-lg sm:text-xl font-display font-bold text-foreground">
+              {pricing.installments}x de
             </p>
-            <p className="text-base text-muted-foreground">ou <span className="font-semibold text-foreground">{pricing.installments}x de R${formatPrice(pricing.installment)}</span></p>
-            <div className="bg-secondary/50 rounded-xl p-3">
-              <p className="text-sm text-foreground font-medium">
-                Isso dá <span className="text-primary font-bold">menos de R${formatPrice(pricing.price / 30)} por dia</span> — o preço de uma bala.
+            <p className="text-5xl sm:text-6xl font-display font-bold text-foreground leading-none">
+              R$<span className="text-gradient-green">{formatPrice(pricing.installment)}</span>
+            </p>
+            <p className="text-base text-muted-foreground mt-1">ou R${formatPrice(pricing.price)} à vista no Pix</p>
+            <div className="bg-secondary/50 rounded-xl p-3 mt-3">
+              <p className="text-sm text-foreground leading-relaxed">
+                Isso é <span className="text-primary font-bold">menos do que um lanche no fim de semana</span> — por algo que pode trazer tranquilidade financeira pra você e sua família.
               </p>
             </div>
           </div>
@@ -1735,7 +1744,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             <p className="text-sm font-bold text-destructive uppercase tracking-wider">Última chance</p>
           </div>
           <p className="text-base font-bold text-foreground leading-snug">
-            {firstName ? `${firstName}, essa` : "Essa"} condição de R${formatPrice(pricing.price)} é exclusiva pra quem completou a análise agora.
+            {firstName ? `${firstName}, essa` : "Essa"} condição de 12x de R${formatPrice(pricing.installment)} é exclusiva pra quem completou a análise agora.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Ao sair desta página, o valor volta para R$297 e os bônus são removidos.
