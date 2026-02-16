@@ -3,7 +3,7 @@ import UpsellLayout from "./UpsellLayout";
 import UpsellCirculoInterno from "./UpsellCirculoInterno";
 import UpsellStep6 from "./UpsellStep6";
 import KirvanoOneClick from "./KirvanoOneClick";
-import { getLeadName } from "@/lib/upsellData";
+import { getLeadName, captureKirvanoToken } from "@/lib/upsellData";
 import { usePagePresence } from "@/hooks/usePagePresence";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { useState } from "react";
@@ -16,6 +16,7 @@ const Upsell4Page = () => {
   usePagePresence(showSuccess ? "/upsell4-sucesso" : "/upsell4");
 
   useEffect(() => {
+    captureKirvanoToken();
     window.history.pushState(null, "", "/upsell4");
     const onPop = () => window.history.pushState(null, "", "/upsell4");
     window.addEventListener("popstate", onPop);

@@ -7,7 +7,7 @@ import UpsellStep3 from "./UpsellStep3";
 import UpsellStep4 from "./UpsellStep4";
 import UpsellStep5 from "./UpsellStep5";
 import UpsellRedirectToNext from "./UpsellRedirectToNext";
-import { getLeadName } from "@/lib/upsellData";
+import { getLeadName, captureKirvanoToken } from "@/lib/upsellData";
 import { usePagePresence } from "@/hooks/usePagePresence";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 
@@ -29,6 +29,7 @@ const UpsellFunnel = () => {
   usePagePresence(UPSELL_PAGE_IDS[step] || "/upsell1");
 
   useEffect(() => {
+    captureKirvanoToken();
     window.history.pushState(null, "", "/upsell1");
     const onPop = () => window.history.pushState(null, "", "/upsell1");
     window.addEventListener("popstate", onPop);
