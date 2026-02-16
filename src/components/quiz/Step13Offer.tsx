@@ -282,6 +282,67 @@ const TestimonialCard = ({ name, age, city, avatar, text, result }: { name: stri
   </div>
 );
 
+/* ─── Testimonials Carousel ─── */
+const TestimonialsCarousel = ({ testimonials }: { testimonials: { name: string; age: string; city: string; avatar: string; text: string; result?: string }[] }) => {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % testimonials.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [testimonials.length]);
+
+  return (
+    <div className="w-full space-y-4">
+      <div className="text-center">
+        <div className="flex items-center justify-center gap-1 mb-2">
+          {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-accent text-accent" />)}
+        </div>
+        <h3 className="font-display text-xl font-bold text-foreground">
+          +36.000 alunos. Resultados reais.
+        </h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Não acredite em mim. Acredite neles:
+        </p>
+      </div>
+
+      <div className="relative overflow-hidden rounded-2xl" style={{ minHeight: 200 }}>
+        {testimonials.map((t, i) => (
+          <motion.div
+            key={i}
+            initial={false}
+            animate={{
+              opacity: i === current ? 1 : 0,
+              x: i === current ? 0 : i < current ? -40 : 40,
+              position: i === current ? "relative" : "absolute",
+            }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="w-full top-0 left-0"
+            style={{ pointerEvents: i === current ? "auto" : "none" }}
+          >
+            <TestimonialCard {...t} />
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-center gap-2">
+        {testimonials.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className="relative w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer border-none p-0"
+            style={{
+              background: i === current ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.3)",
+              transform: i === current ? "scale(1.3)" : "scale(1)",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 /* ─── FAQ Item ─── */
 const FAQItem = ({ question, answer, icon: Icon }: { question: string; answer: string; icon: React.ElementType }) => {
   const [open, setOpen] = useState(false);
@@ -1265,22 +1326,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       <Divider />
 
       {/* ═══ 17. TESTIMONIALS ═══ */}
-      <div className="w-full space-y-4">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1 mb-2">
-            {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-accent text-accent" />)}
-          </div>
-          <h3 className="font-display text-xl font-bold text-foreground">
-            +36.000 alunos. Resultados reais.
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Não acredite em mim. Acredite neles:
-          </p>
-        </div>
-        {testimonials.map((t, i) => (
-          <TestimonialCard key={i} {...t} />
-        ))}
-      </div>
+      <TestimonialsCarousel testimonials={testimonials} />
 
       <Divider />
 
