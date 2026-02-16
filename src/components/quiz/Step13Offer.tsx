@@ -822,22 +822,60 @@ const Divider = () => (
   </div>
 );
 
-/* ─── Section Tracker (IntersectionObserver) ─── */
+/* ─── Scroll Reveal wrapper ─── */
+const ScrollReveal = ({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setInView(true); },
+      { threshold: 0.15 }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.6, delay, ease: "easeOut" }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+/* ─── Section Tracker (IntersectionObserver) with scroll reveal ─── */
 const SectionTracker = ({ id, children }: { id: string; children: React.ReactNode }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const [revealed, setRevealed] = useState(false);
   useEffect(() => {
     if (!ref.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) trackSectionView(id);
+        if (entry.isIntersecting) { trackSectionView(id); setRevealed(true); }
         else trackSectionLeave(id);
       },
-      { threshold: 0.3 }
+      { threshold: 0.15 }
     );
     observer.observe(ref.current);
     return () => observer.disconnect();
   }, [id]);
-  return <div ref={ref}>{children}</div>;
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={revealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      {children}
+    </motion.div>
+  );
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -1034,13 +1072,11 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       </SectionTracker>
 
       {/* ═══ 3c. EXPLICAÇÃO DA TAXA — visual card ═══ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-        className="w-full rounded-2xl overflow-hidden border border-primary/20"
-        style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--card)))" }}
-      >
+      <ScrollReveal>
+        <div
+          className="w-full rounded-2xl overflow-hidden border border-primary/20"
+          style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--card)))" }}
+        >
         {/* Header strip */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-primary/10" style={{ background: "hsl(var(--primary) / 0.06)" }}>
           <img src={chatgptLogo} alt="ChatGPT" className="w-8 h-8 object-contain rounded-lg" />
@@ -1087,7 +1123,8 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             </div>
           </div>
         </div>
-      </motion.div>
+        </div>
+      </ScrollReveal>
 
       {/* ═══ 5. MENTOR CREDIBILITY ═══ */}
       <SectionTracker id="mentor">
@@ -1181,6 +1218,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       <Divider />
 
       {/* ═══ 10. VALUE STACK — What you get ═══ */}
+      <ScrollReveal>
       <div className="w-full space-y-4">
         <div className="text-center">
           <p className="text-xs uppercase tracking-wider text-accent font-bold mb-1">ACESSO COMPLETO</p>
@@ -1205,10 +1243,12 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           <p className="text-lg text-muted-foreground line-through">R$1.632,00</p>
         </div>
       </div>
+      </ScrollReveal>
 
       <Divider />
 
       {/* ═══ VIDEO TESTIMONIALS (após acesso completo) ═══ */}
+      <ScrollReveal>
       <div className="w-full space-y-3">
         <h3 className="font-display text-lg font-bold text-foreground text-center">
           Depoimentos em <span className="text-gradient-green">vídeo</span>
@@ -1218,8 +1258,10 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         </p>
         <VideoTestimonialsSection />
       </div>
+      </ScrollReveal>
 
       <Divider />
+      <ScrollReveal>
       <div className="w-full space-y-4">
         <div className="text-center">
           <img src={giftBox} alt="Presente" className="w-20 h-20 object-contain mx-auto mb-2" />
@@ -1242,6 +1284,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           <p className="text-lg font-bold text-accent flex items-center justify-center gap-2"><Gift className="w-5 h-5" /> Hoje: GRÁTIS com seu acesso</p>
         </div>
       </div>
+      </ScrollReveal>
 
       {/* ═══ 12. CTA 3 ═══ */}
       <CTABlock showCTA={showCTA} pricing={pricing} />
@@ -1249,6 +1292,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       <Divider />
 
       {/* ═══ 13. PRICE ANCHOR (why R$66) ═══ */}
+      <ScrollReveal>
       <div className="w-full space-y-5">
         <div className="text-center space-y-2">
           <h3 className="font-display text-xl font-bold text-foreground">
@@ -1320,6 +1364,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           </div>
         </div>
       </div>
+      </ScrollReveal>
 
       {/* ═══ 14. CTA 4 ═══ */}
       <CTABlock showCTA={showCTA} context="Garantia incondicional de 30 dias" pricing={pricing} />
@@ -1327,6 +1372,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       <Divider />
 
       {/* ═══ 15. GUARANTEE (risk reversal) ═══ */}
+      <ScrollReveal>
       <div className="w-full funnel-card border-accent/30 bg-accent/5 space-y-4">
         <div className="flex items-start gap-4">
           <img src={guaranteeSeal} alt="Garantia" className="w-20 h-20 shrink-0 object-contain" />
@@ -1347,10 +1393,12 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           </p>
         </div>
       </div>
+      </ScrollReveal>
 
       <Divider />
 
       {/* ═══ 16. OBJECTION BREAKING ═══ */}
+      <ScrollReveal>
       <div className="w-full space-y-4">
         <h3 className="font-display text-xl font-bold text-foreground text-center">
           Talvez você ainda esteja pensando...
@@ -1380,15 +1428,19 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           </div>
         ))}
       </div>
+      </ScrollReveal>
 
       <Divider />
 
       {/* ═══ 17. TESTIMONIALS ═══ */}
-      <TestimonialsCarousel testimonials={testimonials} />
+      <ScrollReveal>
+        <TestimonialsCarousel testimonials={testimonials} />
+      </ScrollReveal>
 
       <Divider />
 
       {/* ═══ 19. WHATSAPP FEEDBACK SCREENSHOTS ═══ */}
+      <ScrollReveal>
       <div className="w-full space-y-3">
         <h3 className="font-display text-lg font-bold text-foreground text-center">
           Prints <span className="text-gradient-green">reais</span> do WhatsApp
@@ -1401,6 +1453,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           ))}
         </div>
       </div>
+      </ScrollReveal>
 
       {/* ═══ 20. CTA 5 ═══ */}
       <CTABlock showCTA={showCTA} pricing={pricing} />
@@ -1408,6 +1461,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       <Divider />
 
       {/* ═══ 21. EMOTIONAL FUTURE PACING ═══ */}
+      <ScrollReveal>
       <div className="w-full funnel-card border-primary/20 bg-primary/5 space-y-4">
         <h3 className="font-display text-xl font-bold text-foreground text-center leading-snug">
           {firstName ? `${firstName}, fecha` : "Fecha"} os olhos e imagina...
@@ -1438,15 +1492,19 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           Tudo isso pode começar <span className="text-primary font-bold not-italic">hoje</span>. Por menos de R${formatPrice(pricing.price / 30)} por dia.
         </p>
       </div>
+      </ScrollReveal>
 
       <Divider />
 
       {/* ═══ 22. WHATSAPP WELCOME ═══ */}
-      <WhatsAppWelcome firstName={firstName} />
+      <ScrollReveal>
+        <WhatsAppWelcome firstName={firstName} />
+      </ScrollReveal>
 
       <Divider />
 
       {/* ═══ 23. FAQ ═══ */}
+      <ScrollReveal>
       <div className="w-full space-y-2.5">
         <div className="text-center mb-4">
           <p className="text-[11px] uppercase tracking-widest font-semibold text-primary mb-1.5">
@@ -1468,10 +1526,12 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           </p>
         </div>
       </div>
+      </ScrollReveal>
 
       <Divider />
 
       {/* ═══ 24. FINAL URGENCY + CLOSE ═══ */}
+      <ScrollReveal>
       <div className="w-full space-y-5 text-center">
         <div className="funnel-card border-destructive/30 bg-destructive/5 space-y-3">
           <div className="flex items-center justify-center gap-2">
@@ -1542,6 +1602,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         </div>
 
       </div>
+      </ScrollReveal>
     </div>
   );
 };
