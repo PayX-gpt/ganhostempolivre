@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, Lock, Zap, ArrowRight, Star, Users, Clock, CheckCircle } from "lucide-react";
+import { Shield, Lock, Zap, ArrowRight, Star, Users, Clock, CheckCircle, Smartphone, Bot, TrendingUp, HelpCircle, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Sun, Heart, Eye, Unlock, Gift } from "lucide-react";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import { initBehaviorTracker, trackSectionView, trackSectionLeave, trackCtaView, trackCtaHesitation, trackCheckoutClick, trackFaqOpen, trackVideoStart } from "@/lib/behaviorTracker";
@@ -150,8 +150,8 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
   };
 
   const getDeviceLabel = (d?: string) => {
-    const map: Record<string, string> = { celular: "📱 Celular", computador: "💻 Computador", ambos: "📱💻 Ambos" };
-    return map[d || ""] || "📱 Celular";
+    const map: Record<string, string> = { celular: "Celular", computador: "Computador", ambos: "Ambos" };
+    return map[d || ""] || "Celular";
   };
 
   const getAvailabilityLabel = (a?: string) => {
@@ -186,9 +186,9 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
 
   const getTriedLabel = (t?: string) => {
     const map: Record<string, string> = {
-      sim_falhou: "⚠️ Sim, sem resultado",
-      sim_experiencia: "✅ Sim, com resultado",
-      nunca: "🆕 Primeira vez",
+      sim_falhou: "Sim, sem resultado",
+      sim_experiencia: "Sim, com resultado",
+      nunca: "Primeira vez",
     };
     return map[t || ""] || "—";
   };
@@ -252,8 +252,8 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
 const BonusCard = ({ number, title, value, description }: { number: number; title: string; value: string; description: string }) => (
   <div className="funnel-card border-accent/20 bg-accent/5 space-y-2">
     <div className="flex items-center justify-between">
-      <span className="text-xs font-bold text-accent bg-accent/15 px-2.5 py-1 rounded-full">
-        🎁 BÔNUS #{number}
+      <span className="text-xs font-bold text-accent bg-accent/15 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+        <Gift className="w-3.5 h-3.5" /> BÔNUS #{number}
       </span>
       <span className="text-xs text-muted-foreground line-through">{value}</span>
     </div>
@@ -283,7 +283,7 @@ const TestimonialCard = ({ name, age, city, avatar, text, result }: { name: stri
 );
 
 /* ─── FAQ Item ─── */
-const FAQItem = ({ question, answer, emoji }: { question: string; answer: string; emoji: string }) => {
+const FAQItem = ({ question, answer, icon: Icon }: { question: string; answer: string; icon: React.ElementType }) => {
   const [open, setOpen] = useState(false);
   return (
     <div className="border border-border rounded-xl overflow-hidden transition-all duration-200" style={{ background: open ? "rgba(250,204,21,0.03)" : "transparent" }}>
@@ -296,7 +296,9 @@ const FAQItem = ({ question, answer, emoji }: { question: string; answer: string
         className="w-full flex items-center justify-between px-4 py-4 text-left cursor-pointer hover:bg-secondary/30 transition-colors"
       >
         <div className="flex items-center gap-2.5 pr-3">
-          <span className="text-lg shrink-0">{emoji}</span>
+          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Icon className="w-4 h-4 text-primary" />
+          </div>
           <span className="font-bold text-foreground text-[15px] leading-snug">{question}</span>
         </div>
         <span 
@@ -305,7 +307,7 @@ const FAQItem = ({ question, answer, emoji }: { question: string; answer: string
         >+</span>
       </button>
       {open && (
-        <div className="px-4 pb-4 animate-fade-in ml-[34px]">
+        <div className="px-4 pb-4 animate-fade-in ml-[42px]">
           <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{answer}</p>
         </div>
       )}
@@ -665,42 +667,42 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
   const faqs = [
     { 
-      emoji: "🤔", 
+      icon: HelpCircle, 
       question: "Eu não entendo nada de tecnologia. Vou conseguir?", 
       answer: `Essa é a dúvida mais comum — e a resposta é sim.\n\nO método foi feito pra quem nunca abriu nada além do WhatsApp. São instruções passo a passo, com vídeos curtos e suporte humano real. Dos nossos 36.000 alunos, a maioria tem entre 45 e 65 anos e começou do zero absoluto.\n\nSe você está lendo isso agora, você já tem a habilidade necessária.`
     },
     { 
-      emoji: "📱", 
+      icon: Smartphone, 
       question: "Funciona só pelo celular? Preciso de computador?", 
       answer: `Funciona 100% pelo celular. Na verdade, a maioria dos nossos alunos que mais ganham usa apenas o celular — deitados no sofá, no intervalo do almoço, ou esperando o ônibus.\n\nNão precisa de internet rápida, não precisa de computador, não precisa de nada especial. Só o celular que já está na sua mão.`
     },
     { 
-      emoji: "⏰", 
+      icon: Clock, 
       question: "Quanto tempo por dia eu preciso dedicar?", 
       answer: `15 a 30 minutos. Sério.\n\nIsso não é um segundo emprego. É uma ferramenta que trabalha pra você. Você configura uma vez, acompanha quando quiser, e os ganhos aparecem.\n\nTem aluno que olha de manhã e de noite. Tem aluno que olha uma vez por dia. Cada um no seu ritmo.`
     },
     { 
-      emoji: "💰", 
+      icon: TrendingUp, 
       question: "Mas em quanto tempo eu começo a ganhar?", 
       answer: `Muitos alunos veem o primeiro resultado no mesmo dia que configuram. Outros levam 2-3 dias pra se acostumar com o painel.\n\nO ponto é: não é um curso de 6 meses onde você só vê resultado depois. Aqui, você aplica hoje e vê o resultado hoje. É renda prática, não teoria.`
     },
     { 
-      emoji: "🛡️", 
+      icon: ShieldCheck, 
       question: "E se eu não gostar? Perco meu dinheiro?", 
       answer: `Impossível perder.\n\nVocê tem 30 dias de garantia incondicional. Se não gostar — por qualquer motivo, mesmo que seja "mudei de ideia" — você manda uma mensagem e devolvemos 100% do valor. Sem perguntas, sem formulário, sem espera.\n\nO risco é zero. Literalmente zero. Se não funcionar pra você, quem perde somos nós — não você.`
     },
     { 
-      emoji: "🚨", 
+      icon: AlertTriangle, 
       question: "Já fui enganado antes. Como sei que não é golpe?", 
       answer: `Sua desconfiança é 100% válida. A internet está cheia de promessas vazias.\n\nMas repare: nós oferecemos 30 dias de garantia total, temos suporte humano que responde em minutos, e mais de 36.000 pessoas já passaram por aqui. Você pode testar o método inteiro e, se achar que não vale, recebe tudo de volta.\n\nGolpe não oferece garantia. Golpe não tem suporte. Golpe não deixa você testar antes. Nós fazemos tudo isso porque sabemos que funciona.`
     },
     { 
-      emoji: "💳", 
+      icon: CreditCard, 
       question: `R$${formatPrice(pricing.price)} é tudo? Tem alguma taxa depois?`, 
       answer: `R$${formatPrice(pricing.price)} é o valor total. Ponto final.\n\nNão tem mensalidade, não tem taxa escondida, não tem "desbloqueio premium" por mais dinheiro. Você paga uma única vez e recebe acesso completo — ao método, à plataforma, ao suporte humano e a todos os bônus.\n\nÉ menos que uma pizza. E o retorno pode aparecer no mesmo dia.`
     },
     { 
-      emoji: "🔒", 
+      icon: Lock, 
       question: "Preciso colocar mais dinheiro depois pra funcionar?", 
       answer: `Não. Zero.\n\nO método ensina a gerar ganhos sem investimento adicional. O único valor envolvido é o R$${formatPrice(pricing.price)} de acesso. Tudo que vier depois é lucro líquido pra você.\n\nNão pedimos PIX, não pedimos depósito, não pedimos nada além do acesso. Quem diz o contrário está mentindo.`
     },
@@ -776,8 +778,8 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             </div>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground text-center mt-2">
-          ▶ Assista e entenda como funciona em 4 minutos
+        <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center gap-1.5">
+          <ArrowRight className="w-3 h-3" /> Assista e entenda como funciona em 4 minutos
         </p>
       </SectionTracker>
 
@@ -865,38 +867,49 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             </p>
           </div>
 
-          {[
+          {([
             {
               step: "1",
-              emoji: "📱",
+              icon: Smartphone,
               title: "Acesse pelo celular",
               desc: "Você recebe o acesso por e-mail e WhatsApp. Abre no celular — como abrir qualquer site. Não precisa instalar nada.",
               detail: "Funciona em qualquer celular, mesmo os mais simples.",
             },
             {
               step: "2",
-              emoji: "🤖",
+              icon: Bot,
               title: "Ative a IA com 1 clique",
               desc: "A inteligência artificial do ChatGPT começa a trabalhar por você automaticamente. É como apertar um botão e deixar a máquina fazer o trabalho.",
               detail: "Você não precisa entender como funciona por dentro. Só ativar.",
             },
             {
               step: "3",
-              emoji: "💰",
+              icon: TrendingUp,
               title: "Acompanhe seus ganhos",
               desc: "Os resultados aparecem no seu painel. Você acompanha pelo celular, na hora que quiser. Pode sacar quando quiser.",
               detail: "A maioria dos alunos vê o primeiro resultado no mesmo dia.",
             },
-          ].map((item, i) => (
-            <div key={i} className="relative">
+          ] as const).map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.15 * i, duration: 0.4 }}
+              className="relative"
+            >
               {/* Connector line */}
               {i < 2 && (
                 <div className="absolute left-[22px] top-[56px] w-[2px] h-[calc(100%-16px)] bg-gradient-to-b from-primary/30 to-transparent" />
               )}
               <div className="flex gap-4 items-start">
-                <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border-2 border-primary/30 bg-primary/10">
-                  <span className="text-lg">{item.emoji}</span>
-                </div>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1 + 0.15 * i, type: "spring", stiffness: 200 }}
+                  className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border-2 border-primary/30 bg-primary/10"
+                >
+                  <item.icon className="w-5 h-5 text-primary" />
+                </motion.div>
                 <div className="flex-1 space-y-1.5 pb-4">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
@@ -905,10 +918,12 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
                   </div>
                   <h4 className="font-bold text-foreground text-base">{item.title}</h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                  <p className="text-xs text-primary/80 font-medium mt-1">→ {item.detail}</p>
+                  <p className="text-xs text-primary/80 font-medium mt-1">
+                    <ArrowRight className="w-3 h-3 inline mr-1" />{item.detail}
+                  </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
 
           <div className="funnel-card border-primary/20 bg-primary/5 text-center space-y-2">
@@ -1004,7 +1019,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         <div className="funnel-card border-accent/30 bg-accent/5 text-center space-y-1">
           <p className="text-sm text-muted-foreground">Valor total dos bônus:</p>
           <p className="text-xl text-muted-foreground line-through font-semibold">R$882,00</p>
-          <p className="text-lg font-bold text-accent">🎁 Hoje: GRÁTIS com seu acesso</p>
+          <p className="text-lg font-bold text-accent flex items-center justify-center gap-2"><Gift className="w-5 h-5" /> Hoje: GRÁTIS com seu acesso</p>
         </div>
       </div>
 
@@ -1107,8 +1122,8 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           Sem perguntas. Sem burocracia. Sem letra miúda.
         </p>
         <div className="bg-card rounded-xl p-3 border border-border">
-          <p className="text-sm text-primary font-bold text-center">
-            ✅ Ou você lucra, ou recebe seu dinheiro de volta. Simples assim.
+          <p className="text-sm text-primary font-bold text-center flex items-center justify-center gap-2">
+            <CheckCircle className="w-4 h-4" /> Ou você lucra, ou recebe seu dinheiro de volta. Simples assim.
           </p>
         </div>
       </div>
@@ -1193,17 +1208,25 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           {firstName ? `${firstName}, fecha` : "Fecha"} os olhos e imagina...
         </h3>
         <div className="space-y-3">
-          {[
-            { emoji: "☀️", text: "Acordar e ver que já ganhou dinheiro — antes mesmo de tomar café" },
-            { emoji: "💳", text: "Pagar todas as contas em dia, sem aquele aperto no peito" },
-            { emoji: "👨‍👩‍👧‍👦", text: "Dar algo bom pra sua família sem precisar pensar duas vezes" },
-            { emoji: "📱", text: "Olhar pro extrato do banco e sentir orgulho do que construiu" },
-            { emoji: "🔓", text: "Não depender de ninguém. Ninguém. Nunca mais." },
-          ].map((item, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <span className="text-base shrink-0 mt-0.5">{item.emoji}</span>
+          {([
+            { icon: Sun, text: "Acordar e ver que já ganhou dinheiro — antes mesmo de tomar café" },
+            { icon: CreditCard, text: "Pagar todas as contas em dia, sem aquele aperto no peito" },
+            { icon: Heart, text: "Dar algo bom pra sua família sem precisar pensar duas vezes" },
+            { icon: Eye, text: "Olhar pro extrato do banco e sentir orgulho do que construiu" },
+            { icon: Unlock, text: "Não depender de ninguém. Ninguém. Nunca mais." },
+          ] as const).map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 * i, duration: 0.35 }}
+              className="flex items-start gap-3"
+            >
+              <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                <item.icon className="w-4 h-4 text-primary" />
+              </div>
               <p className="text-sm text-foreground leading-relaxed">{item.text}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
         <p className="text-sm text-muted-foreground text-center italic pt-2">
