@@ -168,6 +168,69 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
         </div>
       </motion.div>
 
+      {/* ── Why it happens + Negotiation ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mt-6 mx-1 rounded-2xl p-5"
+        style={{ background: "rgba(15,23,42,0.9)", border: "1px solid rgba(255,255,255,0.08)" }}
+      >
+        <p className="text-[15px] font-bold mb-3" style={{ color: "#F59E0B" }}>
+          Por que isso acontece?
+        </p>
+        <p className="text-[13px] leading-relaxed" style={{ color: "#94A3B8" }}>
+          A Plataforma de Ganhos com Tempo Livre opera através de{" "}
+          <strong style={{ color: "#F8FAFC" }}>parcerias estratégicas com instituições financeiras e provedores de dados de mercado</strong>.
+        </p>
+        <p className="text-[13px] leading-relaxed mt-3" style={{ color: "#94A3B8" }}>
+          Esses acordos são renovados a cada seis meses e, por razões contratuais,{" "}
+          <strong style={{ color: "#EF4444" }}>não podemos garantir o acesso além de 6 meses</strong> para contas com plano padrão.
+        </p>
+        <p className="text-[13px] leading-relaxed mt-3" style={{ color: "#94A3B8" }}>
+          Imagine: você passou 6 meses construindo resultados consistentes, seu sistema operando perfeitamente...{" "}
+          <strong style={{ color: "#EF4444" }}>e de repente: acesso encerrado.</strong>
+        </p>
+      </motion.div>
+
+      {/* ── Special negotiation ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="mt-4 mx-1 rounded-2xl p-5"
+        style={{
+          background: "linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02))",
+          border: "1px solid rgba(59,130,246,0.15)",
+        }}
+      >
+        <div className="flex items-start gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: "rgba(59,130,246,0.15)" }}
+          >
+            <Crown className="w-5 h-5" style={{ color: "#3B82F6" }} />
+          </div>
+          <div>
+            <p className="text-[14px] font-bold" style={{ color: "#F8FAFC" }}>
+              Negociação exclusiva para membros fundadores
+            </p>
+            <p className="text-[13px] leading-relaxed mt-2" style={{ color: "#94A3B8" }}>
+              Ricardo Almeida negociou pessoalmente um acordo especial com os parceiros para permitir que{" "}
+              <strong style={{ color: "#60A5FA" }}>membros fundadores</strong> — como você, que está entrando agora — possam ativar uma{" "}
+              <strong style={{ color: "#F8FAFC" }}>blindagem permanente no acesso</strong>.
+            </p>
+            <p className="text-[13px] leading-relaxed mt-2" style={{ color: "#94A3B8" }}>
+              Com essa blindagem, seu sistema{" "}
+              <strong style={{ color: "#F8FAFC" }}>nunca será desativado</strong>. Todas as atualizações, melhorias e novas estratégias chegam na sua conta automaticamente.
+            </p>
+            <p className="text-[12px] font-semibold mt-3" style={{ color: "#F59E0B" }}>
+              Essa condição só está disponível agora, nesta página.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
       {/* ── Solution section ── */}
       <motion.div
         initial={{ opacity: 0 }}
