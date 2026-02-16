@@ -12,7 +12,7 @@ import {
   ShoppingCart, CreditCard, ArrowUpRight, CheckCircle2,
   XCircle, Database, Radio, Filter, Search,
   Bell, BellOff, Volume2, VolumeX,
-  Globe, TrendingDown
+  Globe, TrendingDown, ShieldAlert,
 } from "lucide-react";
 import LiveRevenueChart from "@/components/LiveRevenueChart";
 import LiveUserPresence from "@/components/LiveUserPresence";
@@ -20,6 +20,7 @@ import LiveIntelligence from "@/components/LiveIntelligence";
 import LiveFunnelAnalytics from "@/components/LiveFunnelAnalytics";
 import LiveLeadsTable from "@/components/LiveLeadsTable";
 import LiveUpsellMonitor from "@/components/LiveUpsellMonitor";
+import LiveCloneMonitor from "@/components/LiveCloneMonitor";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import SessionLogsDialog from "@/components/SessionLogsDialog";
@@ -509,6 +510,9 @@ export default function AdminFunnelAudit() {
               <TabsTrigger value="logs" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 sm:px-4 whitespace-nowrap">
                 <Database className="w-4 h-4 mr-1.5" /><span className="text-sm">Logs</span>
               </TabsTrigger>
+              <TabsTrigger value="anticlone" className="data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400 rounded-lg text-[#888] px-3 sm:px-4 whitespace-nowrap">
+                <ShieldAlert className="w-4 h-4 mr-1.5" /><span className="text-sm">Anti-Clone</span>
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -581,6 +585,10 @@ export default function AdminFunnelAudit() {
                 </div>
               </ScrollArea>
             </div>
+          </TabsContent>
+
+          <TabsContent value="anticlone" className="mt-4">
+            <LiveCloneMonitor />
           </TabsContent>
         </Tabs>
       </div>

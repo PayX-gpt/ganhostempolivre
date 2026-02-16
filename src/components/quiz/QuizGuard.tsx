@@ -1,5 +1,5 @@
-import { ReactNode, useMemo } from "react";
-
+import { ReactNode, useMemo, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { initializeTrackingDataLayer } from "@/lib/trackingDataLayer";
 
 interface Props {
@@ -8,25 +8,13 @@ interface Props {
 
 /**
  * Anti-clone guard for the quiz.
- * Allows access if ANY of these conditions is true:
- * 1. URL has utm_source, fbclid, gclid, src, or sck (ad traffic)
- * 2. Stored tracking data has utm_source, fbclid, or gclid (previously entered via ad)
- * 3. Quiz already in progress (user navigating between steps)
- * 4. Referrer is from known ad platforms (Facebook in-app browser sometimes strips params)
- *
- * This ensures ZERO false positives for legitimate buyers.
+ * Logs blocked attempts to funnel_events for monitoring.
  */
 const QuizGuard = ({ children }: Props) => {
   const isAuthorized = useMemo(() => {
-    // Ensure tracking data is initialized BEFORE we check
-    // This captures UTMs from URL into localStorage immediately
-    try {
-      initializeTrackingDataLayer();
-    } catch {}
+    try { initializeTrackingDataLayer(); } catch {}
 
     // Check 1: Ad-related params in current URL
-    // Facebook Ads may strip utm_source but keep fbclid
-    // Google Ads may strip utm_source but keep gclid
     try {
       const params = new URLSearchParams(window.location.search);
       if (params.get("utm_source")) return true;
@@ -37,7 +25,7 @@ const QuizGuard = ({ children }: Props) => {
       if (params.get("xcod")) return true;
     } catch {}
 
-    // Check 2: Previously stored tracking data (user already entered via ad)
+    // Check 2: Previously stored tracking data
     try {
       const stored = localStorage.getItem("tracking_data_layer");
       if (stored) {
@@ -55,7 +43,7 @@ const QuizGuard = ({ children }: Props) => {
       }
     } catch {}
 
-    // Check 4: Quiz already in progress (navigating between steps)
+    // Check 4: Quiz already in progress
     try {
       const quizAnswers = sessionStorage.getItem("quiz_answers");
       if (quizAnswers) {
@@ -65,7 +53,6 @@ const QuizGuard = ({ children }: Props) => {
     } catch {}
 
     // Check 5: Referrer from known ad platforms
-    // Facebook in-app browser sometimes strips ALL params
     try {
       const ref = document.referrer.toLowerCase();
       if (ref.includes("facebook.com") || ref.includes("fb.com") ||
@@ -77,7 +64,7 @@ const QuizGuard = ({ children }: Props) => {
       }
     } catch {}
 
-    // Check 6: Facebook cookie exists (user came from FB ad previously)
+    // Check 6: Facebook cookie exists
     try {
       if (document.cookie.includes("_fbp=") || document.cookie.includes("_fbc=")) {
         return true;
@@ -87,8 +74,36 @@ const QuizGuard = ({ children }: Props) => {
     return false;
   }, []);
 
+  // Log blocked attempt to DB for monitoring
+  useEffect(() => {
+    if (isAuthorized) return;
+    try {
+      const sessionId = (() => {
+        try {
+          const td = localStorage.getItem("tracking_data_layer");
+          if (td) return JSON.parse(td).session_id;
+        } catch {}
+        return `blocked-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      })();
+
+      supabase.from("funnel_events").insert([{
+        session_id: sessionId,
+        event_name: "clone_attempt_blocked",
+        event_data: {
+          url: window.location.href,
+          referrer: document.referrer || "direct",
+          user_agent: navigator.userAgent,
+          screen: `${screen.width}x${screen.height}`,
+          language: navigator.language,
+          timestamp: new Date().toISOString(),
+        },
+        page_url: window.location.href,
+        user_agent: navigator.userAgent,
+      }]).then(() => {});
+    } catch {}
+  }, [isAuthorized]);
+
   if (!isAuthorized) {
-    // Redirect to external page (looks like a normal redirect, not a block)
     window.location.replace("https://inlead.digital/quiz-f-plataforma");
     return null;
   }
