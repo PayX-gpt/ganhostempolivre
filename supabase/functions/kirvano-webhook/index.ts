@@ -12,12 +12,6 @@ const OFFER_ID_MAP: Record<string, string> = {
   "863c8fe9-ca48-452f-9fa4-22e14df182cf": "acelerador_basico",
 };
 
-// Front-end offer IDs (only these trigger InitiateCheckout)
-const FRONT_END_OFFER_IDS = new Set([
-  "4630333d-d5d1-4591-b767-2151f77c6b13",
-  "a404a378-2a59-4efd-86a8-dc57363c054c",
-]);
-
 function classifyByPrice(amount: number | null, offerName: string | null, productName: string | null): string {
   const name = (productName || "").toLowerCase();
   const offer = (offerName || "").toLowerCase();
@@ -331,11 +325,10 @@ Deno.serve(async (req) => {
       console.log(`✅ [Kirvano] New record: ${data.id} → ${funnelStep} R$${amount}`);
     }
 
-    // ====== FACEBOOK CAPI — STRICT DEDUPLICATION ======
-    const isFrontEndProduct = offerId ? FRONT_END_OFFER_IDS.has(offerId) : (funnelStep === "front_37" || funnelStep === "front_47");
+    // ====== FACEBOOK CAPI — PURCHASE ONLY (IC is handled client-side) ======
     let capiSent = false;
 
-    // 1. PURCHASE — only on approved, only once per transaction_id
+    // PURCHASE — only on approved, only once per transaction_id
     if (normalizedStatus === "approved" && !alreadySentCAPI && transactionId) {
       const eventId = `purchase_${transactionId}`;
       capiSent = await sendFacebookCAPI({
@@ -352,38 +345,6 @@ Deno.serve(async (req) => {
           .update({ conversion_api_sent: true })
           .eq("id", recordId);
         console.log(`📡 [CAPI] Purchase marked as sent for ${transactionId}`);
-      }
-    }
-
-    // 2. INITIATE CHECKOUT — only for front-end product, only once per email
-    if (normalizedStatus === "pending" && isFrontEndProduct && email && !alreadySentCAPI) {
-      // Check if this email already has an IC sent (any previous front-end purchase_tracking with conversion_api_sent)
-      const { data: existingIC } = await supabase
-        .from("purchase_tracking")
-        .select("id")
-        .eq("email", email)
-        .eq("conversion_api_sent", true)
-        .limit(1);
-
-      if (!existingIC || existingIC.length === 0) {
-        // No previous IC for this email — send it
-        const icEventId = `ic_${transactionId || Date.now()}`;
-        const icSent = await sendFacebookCAPI({
-          eventName: "InitiateCheckout",
-          eventId: icEventId,
-          email, phone, fbclid, fbp, fbc,
-          amount,
-          ip: clientIp,
-          userAgent: req.headers.get("user-agent"),
-        });
-        if (icSent && recordId) {
-          // Mark conversion_api_sent so this email won't get another IC
-          // But DON'T mark it if we'll later send Purchase (approved will set it)
-          // Use a separate approach: only mark IC if status stays pending
-          console.log(`📡 [CAPI] InitiateCheckout sent for ${email} (event_id: ${icEventId})`);
-        }
-      } else {
-        console.log(`⏭️ [CAPI] IC skipped — email ${email} already has CAPI event`);
       }
     }
 
