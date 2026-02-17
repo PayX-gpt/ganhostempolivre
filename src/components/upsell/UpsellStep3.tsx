@@ -23,7 +23,7 @@ const plans = [
   {
     id: "basico" as const,
     name: "Acelerador Básico",
-    subtitle: "Primeiro saque em 7 dias",
+    subtitle: "Primeiro saque em 72 horas",
     subtitleColor: "#22C55E",
     description: "Sua conta sai da fila comum e entra nos servidores dedicados. O sistema começa a operar com mais frequência desde o primeiro dia.",
     features: [
