@@ -194,7 +194,7 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
           )}
 
           {/* Plan header */}
-          <div className="px-5 pt-5 pb-3" style={{ background: plan.id === "duplo" ? "rgba(34,197,94,0.06)" : plan.id === "maximo" ? "rgba(250,204,21,0.06)" : "rgba(255,255,255,0.02)" }}>
+          <div className={`px-5 pb-3 ${plan.badge ? "pt-9" : "pt-5"}`} style={{ background: plan.id === "duplo" ? "rgba(34,197,94,0.06)" : plan.id === "maximo" ? "rgba(250,204,21,0.06)" : "rgba(255,255,255,0.02)" }}>
             <h3 className="text-[17px] font-bold" style={{ color: "#F8FAFC" }}>{plan.name}</h3>
             <p className="text-[14px] font-semibold mt-1" style={{ color: plan.subtitleColor }}>{plan.subtitle}</p>
           </div>
