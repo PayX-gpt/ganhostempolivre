@@ -11,8 +11,8 @@ const OFFER_ID_MAP: Record<string, string> = {
   // Front-end offers
   "4630333d-d5d1-4591-b767-2151f77c6b13": "front_37",
   "a404a378-2a59-4efd-86a8-dc57363c054c": "front_47",
-  // Upsell offers — add offer_ids here as you configure them in Kirvano
-  // "offer-id-acelerador-basico": "acelerador_basico",
+  // Upsell offers
+  "863c8fe9-ca48-452f-9fa4-22e14df182cf": "acelerador_basico",
   // "offer-id-acelerador-duplo": "acelerador_duplo",
   // "offer-id-acelerador-maximo": "acelerador_maximo",
   // "offer-id-multiplicador-prata": "multiplicador_prata",
