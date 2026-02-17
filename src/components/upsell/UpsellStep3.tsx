@@ -183,64 +183,88 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
           key={plan.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.12 }}
-          className="relative rounded-2xl p-5"
-          style={{ background: "#0F172A", border: plan.border }}
+          transition={{ delay: 0.35 + i * 0.12 }}
+          className="relative rounded-2xl overflow-hidden"
+          style={{ border: plan.border }}
         >
           {plan.badge && (
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[11px] font-bold px-4 py-1 rounded-full text-white whitespace-nowrap" style={{ background: "linear-gradient(135deg, #16A34A, #15803D)", boxShadow: "0 2px 8px rgba(22,163,74,0.3)" }}>
+            <span className="absolute -top-0 left-1/2 -translate-x-1/2 text-[11px] font-bold px-4 py-1.5 rounded-b-lg text-white whitespace-nowrap z-10" style={{ background: "linear-gradient(135deg, #16A34A, #15803D)", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}>
               {plan.badge}
             </span>
           )}
 
-          <h3 className="text-[17px] font-bold" style={{ color: "#F8FAFC" }}>{plan.name}</h3>
-          <p className="text-[13px] font-medium mt-1" style={{ color: plan.subtitleColor }}>{plan.subtitle}</p>
-          <p className="text-[13px] mt-3 leading-relaxed" style={{ color: "#94A3B8" }}>{plan.description}</p>
-
-          <ul className="mt-3 flex flex-col gap-2">
-            {plan.features.map((f) => (
-              <li key={f.text} className="flex items-center gap-2.5">
-                <f.icon className="w-4 h-4 shrink-0" style={{ color: "#22C55E" }} />
-                <span className="text-[13px]" style={{ color: "#E2E8F0" }}>{f.text}</span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-[28px] font-extrabold" style={{ color: "#F8FAFC" }}>R$ {plan.price}</span>
-            <span className="text-[12px]" style={{ color: "#64748B" }}>ou {plan.installments}</span>
+          {/* Plan header */}
+          <div className="px-5 pt-5 pb-3" style={{ background: plan.id === "duplo" ? "rgba(34,197,94,0.06)" : plan.id === "maximo" ? "rgba(250,204,21,0.06)" : "rgba(255,255,255,0.02)" }}>
+            <h3 className="text-[17px] font-bold" style={{ color: "#F8FAFC" }}>{plan.name}</h3>
+            <p className="text-[14px] font-semibold mt-1" style={{ color: plan.subtitleColor }}>{plan.subtitle}</p>
           </div>
 
-          <button
-            onClick={() => handleSelect(plan)}
-            className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
-            style={{ background: plan.btnBg, color: plan.btnColor, border: plan.btnBorder }}
-          >
-            {plan.btnText}
-          </button>
+          {/* Plan body */}
+          <div className="px-5 pb-5 pt-3" style={{ background: "#0F172A" }}>
+            <p className="text-[13px] leading-relaxed mb-3" style={{ color: "#94A3B8" }}>{plan.description}</p>
+
+            <ul className="flex flex-col gap-2.5">
+              {plan.features.map((f) => (
+                <li key={f.text} className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(34,197,94,0.1)" }}>
+                    <f.icon className="w-3.5 h-3.5" style={{ color: "#22C55E" }} />
+                  </div>
+                  <span className="text-[13px]" style={{ color: "#E2E8F0" }}>{f.text}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-4 pt-4 flex items-baseline gap-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <span className="text-[28px] font-extrabold" style={{ color: "#F8FAFC" }}>R$ {plan.price}</span>
+              <span className="text-[12px]" style={{ color: "#64748B" }}>ou {plan.installments}</span>
+            </div>
+
+            <button
+              onClick={() => handleSelect(plan)}
+              className="w-full mt-3 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
+              style={{
+                background: plan.btnBg,
+                color: plan.btnColor,
+                border: plan.btnBorder,
+                boxShadow: plan.id === "duplo" ? "0 0 20px rgba(22,163,74,0.2), 0 4px 12px rgba(0,0,0,0.3)" : plan.id === "maximo" ? "0 0 20px rgba(250,204,21,0.15), 0 4px 12px rgba(0,0,0,0.3)" : "none",
+              }}
+            >
+              {plan.btnText}
+            </button>
+          </div>
         </motion.div>
       ))}
 
       {/* Social proof */}
-      <div className="rounded-xl p-4" style={{ background: "rgba(30,41,59,0.6)", border: "1px solid rgba(255,255,255,0.04)" }}>
-        <p className="text-[14px] font-bold mb-3" style={{ color: "#E2E8F0" }}>
-          Quem ativou o acelerador:
-        </p>
-        {[
-          { img: avatarAntonio, name: "Antônio, 57", text: "Tava quase desistindo porque não via resultado. Ativei o Duplo e no segundo dia já tinha R$43 na conta. Era só a fila." },
-          { img: avatarMaria, name: "Dona Márcia, 52", text: "O especialista me explicou da fila e ativou tudo pra mim. Em 3 dias eu já tava sacando. Se não tivesse acelerado, sei que ia desistir." },
-        ].map((t) => (
-          <div key={t.name} className="flex items-start gap-3 mt-3">
-            <img src={t.img} alt={t.name} className="w-10 h-10 rounded-full object-cover shrink-0" style={{ border: "2px solid rgba(22,163,74,0.3)" }} />
-            <div>
-              <p className="text-[13px] font-semibold" style={{ color: "#E2E8F0" }}>{t.name}</p>
-              <p className="text-[12px] italic leading-relaxed mt-0.5" style={{ color: "#94A3B8" }}>"{t.text}"</p>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+        className="rounded-2xl overflow-hidden"
+        style={{ border: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <div className="px-5 py-3" style={{ background: "rgba(34,197,94,0.06)" }}>
+          <p className="text-[14px] font-bold" style={{ color: "#E2E8F0" }}>
+            Quem furou a fila e já está sacando:
+          </p>
+        </div>
+        <div className="px-5 py-4 flex flex-col gap-4" style={{ background: "#0F172A" }}>
+          {[
+            { img: avatarAntonio, name: "Antônio, 57", text: "Tava quase desistindo porque não via resultado. Ativei o Duplo e no segundo dia já tinha R$43 na conta. Era só a fila." },
+            { img: avatarMaria, name: "Dona Márcia, 52", text: "O especialista me explicou da fila e ativou tudo pra mim. Em 3 dias eu já tava sacando. Se não tivesse acelerado, sei que ia desistir." },
+          ].map((t) => (
+            <div key={t.name} className="flex items-start gap-3">
+              <img src={t.img} alt={t.name} className="w-10 h-10 rounded-full object-cover shrink-0" style={{ border: "2px solid rgba(22,163,74,0.3)" }} />
+              <div>
+                <p className="text-[13px] font-semibold" style={{ color: "#E2E8F0" }}>{t.name}</p>
+                <p className="text-[12px] italic leading-relaxed mt-0.5" style={{ color: "#94A3B8" }}>"{t.text}"</p>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </motion.div>
 
-      <button onClick={onDecline} className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2" style={{ color: "#475569" }}>
+      <button onClick={onDecline} className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2 pb-6" style={{ color: "#475569" }}>
         Não, prefiro esperar os 15 dias na fila padrão.
       </button>
     </div>
