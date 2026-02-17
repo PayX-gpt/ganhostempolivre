@@ -120,9 +120,11 @@ export default function AdminFunnelAudit() {
   const [hotmartSalesToday, setHotmartSalesToday] = useState(0);
   const [icToSalesRate, setIcToSalesRate] = useState(0);
   const [icToSalesRatio, setIcToSalesRatio] = useState("0:0");
-  const [hotmartApproved, setHotmartApproved] = useState(0);
-  const [hotmartRefunded, setHotmartRefunded] = useState(0);
-  const [hotmartApprovalRate, setHotmartApprovalRate] = useState(0);
+   const [hotmartApproved, setHotmartApproved] = useState(0);
+   const [hotmartRefunded, setHotmartRefunded] = useState(0);
+   const [hotmartPending, setHotmartPending] = useState(0);
+   const [hotmartRefused, setHotmartRefused] = useState(0);
+   const [hotmartApprovalRate, setHotmartApprovalRate] = useState(0);
   
   const USD_TO_BRL = 5.80;
   const [totalRevenueToday, setTotalRevenueToday] = useState(0);
@@ -201,6 +203,8 @@ export default function AdminFunnelAudit() {
     const approvedPurchases = purchaseData?.filter(r => 
       r.status === "completed" || r.status === "purchased" || r.status === "approved" || r.status === "redirected"
     ) || [];
+    const pendingPurchases = purchaseData?.filter(r => r.status === "pending") || [];
+    const refusedPurchases = purchaseData?.filter(r => r.status === "refused") || [];
     const refundedPurchases = purchaseData?.filter(r => r.status === "refunded" || r.status === "canceled") || [];
     
     const totalRevenueBRL = approvedPurchases.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
@@ -209,9 +213,12 @@ export default function AdminFunnelAudit() {
     setHotmartSalesToday(approvedPurchases.length);
     setTotalRevenueToday(totalRevenueBRL);
     setHotmartApproved(approvedPurchases.length);
+    setHotmartPending(pendingPurchases.length);
+    setHotmartRefused(refusedPurchases.length);
     setHotmartRefunded(refundedPurchases.length);
     
-    const totalAttempts = approvedPurchases.length + refundedPurchases.length;
+    // Taxa de aprovação = pagos / (pagos + pendentes PIX + recusados cartão)
+    const totalAttempts = approvedPurchases.length + pendingPurchases.length + refusedPurchases.length;
     setHotmartApprovalRate(totalAttempts > 0 ? (approvedPurchases.length / totalAttempts) * 100 : 0);
 
     const rate = icSessions.size > 0 ? (uniqueBuyers / icSessions.size) * 100 : 0;
@@ -411,7 +418,7 @@ export default function AdminFunnelAudit() {
             icon={DollarSign} trend="up" trendLabel={`${hotmartSalesToday} vendas`} />
           <MetricCard title="Vendas Hoje" value={hotmartSalesToday} subtitle={`${hotmartRefunded} reembolsos`} icon={ShoppingCart} />
           <MetricCard title="Taxa de Aprovação" value={`${hotmartApprovalRate.toFixed(1)}%`}
-            subtitle={`${hotmartApproved} aprov. · ${hotmartRefunded} reemb.`} icon={CreditCard} />
+            subtitle={`${hotmartApproved} pagos · ${hotmartPending} pend. · ${hotmartRefused} recus.`} icon={CreditCard} />
           <MetricCard title="IC → Vendas" value={`${icToSalesRate.toFixed(1)}%`}
             subtitle={`${frontendICs} ICs · ${icToSalesRatio}`} icon={Target} />
         </div>
@@ -438,9 +445,10 @@ export default function AdminFunnelAudit() {
               <div className="flex items-center justify-around gap-2">
                 <ProgressRing value={hotmartApprovalRate} label="Aprovação" color="emerald" />
                 <div className="flex flex-col gap-2 min-w-0">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved} Aprov.</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartRefunded} Reemb.</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#666] flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved + hotmartRefunded} Total</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved} Pagos</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-yellow-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartPending} Pendentes</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartRefused} Recusados</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#666] flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved + hotmartPending + hotmartRefused} Total</span></div>
                 </div>
               </div>
             </div>
