@@ -5,6 +5,7 @@ import { Shield, Lock, Zap, ArrowRight, Star, Users, Clock, CheckCircle, Smartph
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import { initBehaviorTracker, trackSectionView, trackSectionLeave, trackCtaView, trackCtaHesitation, trackCheckoutClick, trackFaqOpen, trackVideoStart } from "@/lib/behaviorTracker";
+import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 
 import { Separator } from "@/components/ui/separator";
 import { CTAButton, TrustBadge, VideoPlaceholder } from "./QuizUI";
@@ -126,6 +127,7 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
       {/* CTA */}
       <CTAButton onClick={() => {
         trackCheckoutClick();
+        sendCAPIInitiateCheckout({ amount: pricing.price });
         saveFunnelEvent("checkout_click", { context: context || "default", product: "chave_token_chatgpt", amount: pricing.price });
         const utmQs = buildTrackingQueryString();
         const separator = pricing.checkoutUrl.includes("?") ? "&" : "?";
