@@ -52,13 +52,35 @@ export default function LiveUpsellMonitor() {
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
+  // Map funnel_step values from webhook to upsell keys
+  const STEP_TO_UPSELL: Record<string, string> = {
+    acelerador_basico: "upsell1",
+    acelerador_duplo: "upsell1",
+    acelerador_maximo: "upsell1",
+    multiplicador_prata: "upsell2",
+    multiplicador_ouro: "upsell2",
+    multiplicador_diamante: "upsell2",
+    blindagem: "upsell3",
+    circulo_interno: "upsell4",
+    downsell_guia: "upsell1",
+  };
+
   const fetchUpsellData = useCallback(async () => {
     setIsLoading(true);
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const todayISO = todayStart.toISOString();
 
-    // Fetch upsell page views from audit logs
+    // 1. Fetch CONFIRMED purchases from webhook (source of truth for revenue)
+    const { data: purchases } = await supabase
+      .from("purchase_tracking")
+      .select("id, session_id, funnel_step, amount, status, email, created_at, product_name")
+      .in("funnel_step", Object.keys(STEP_TO_UPSELL))
+      .gte("created_at", todayISO)
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    // 2. Fetch upsell page views from audit logs (for view counts)
     const { data: viewLogs } = await supabase
       .from("funnel_audit_logs")
       .select("session_id, page_id, created_at")
@@ -68,16 +90,15 @@ export default function LiveUpsellMonitor() {
       .order("created_at", { ascending: false })
       .limit(500);
 
-    // Fetch upsell events (buy/decline) from funnel_events
+    // 3. Fetch upsell events (for views + decline tracking)
     const { data: upsellEvents } = await supabase
       .from("funnel_events")
       .select("id, session_id, event_name, event_data, created_at")
-      .in("event_name", ["upsell_step_view", "upsell_oneclick_buy", "upsell_oneclick_decline"])
+      .in("event_name", ["upsell_step_view", "upsell_oneclick_decline"])
       .gte("created_at", todayISO)
       .order("created_at", { ascending: false })
       .limit(500);
 
-    // Calculate per-upsell stats
     const newStats: Record<string, UpsellStats> = {
       upsell1: { views: 0, buys: 0, declines: 0, revenue: 0 },
       upsell2: { views: 0, buys: 0, declines: 0, revenue: 0 },
@@ -85,7 +106,7 @@ export default function LiveUpsellMonitor() {
       upsell4: { views: 0, buys: 0, declines: 0, revenue: 0 },
     };
 
-    // Count unique sessions per upsell view
+    // Count unique view sessions
     const viewSessions: Record<string, Set<string>> = {
       upsell1: new Set(), upsell2: new Set(), upsell3: new Set(), upsell4: new Set(),
     };
@@ -97,44 +118,6 @@ export default function LiveUpsellMonitor() {
       }
     });
 
-    Object.keys(viewSessions).forEach((key) => {
-      newStats[key].views = viewSessions[key].size;
-    });
-
-    // Process buy/decline events
-    const activity: UpsellActivity[] = [];
-
-    upsellEvents?.forEach((evt) => {
-      const data = evt.event_data as Record<string, unknown> | null;
-      const pageId = (data?.page_id || data?.page || "") as string;
-      const upsell = classifyUpsellPage(pageId);
-
-      if (evt.event_name === "upsell_oneclick_buy" && upsell) {
-        newStats[upsell].buys++;
-        const price = Number(data?.price) || 0;
-        newStats[upsell].revenue += price;
-        activity.push({
-          id: evt.id,
-          session_id: evt.session_id,
-          event_type: "buy",
-          page_id: upsell,
-          created_at: evt.created_at,
-          metadata: data,
-        });
-      } else if (evt.event_name === "upsell_oneclick_decline" && upsell) {
-        newStats[upsell].declines++;
-        activity.push({
-          id: evt.id,
-          session_id: evt.session_id,
-          event_type: "decline",
-          page_id: upsell,
-          created_at: evt.created_at,
-          metadata: data,
-        });
-      }
-    });
-
-    // Also count step views that are unique entries to upsell1 flow
     upsellEvents?.forEach((evt) => {
       const data = evt.event_data as Record<string, unknown> | null;
       if (evt.event_name === "upsell_step_view") {
@@ -142,10 +125,57 @@ export default function LiveUpsellMonitor() {
         const upsell = classifyUpsellPage(pageId);
         if (upsell && !viewSessions[upsell].has(evt.session_id)) {
           viewSessions[upsell].add(evt.session_id);
-          newStats[upsell].views++;
         }
       }
     });
+
+    Object.keys(viewSessions).forEach((key) => {
+      newStats[key].views = viewSessions[key].size;
+    });
+
+    // Process CONFIRMED purchases from webhook (buys + revenue)
+    const activity: UpsellActivity[] = [];
+
+    purchases?.forEach((p) => {
+      const upsell = STEP_TO_UPSELL[p.funnel_step || ""];
+      if (!upsell) return;
+
+      if (p.status === "approved") {
+        newStats[upsell].buys++;
+        newStats[upsell].revenue += Number(p.amount) || 0;
+        activity.push({
+          id: p.id,
+          session_id: p.session_id || "",
+          event_type: "buy",
+          page_id: upsell,
+          created_at: p.created_at,
+          metadata: { price: p.amount, email: p.email, product: p.product_name, step: p.funnel_step },
+        });
+      }
+    });
+
+    // Process decline events from frontend
+    upsellEvents?.forEach((evt) => {
+      if (evt.event_name === "upsell_oneclick_decline") {
+        const data = evt.event_data as Record<string, unknown> | null;
+        const pageId = (data?.page_id || data?.page || "") as string;
+        const upsell = classifyUpsellPage(pageId);
+        if (upsell) {
+          newStats[upsell].declines++;
+          activity.push({
+            id: evt.id,
+            session_id: evt.session_id,
+            event_type: "decline",
+            page_id: upsell,
+            created_at: evt.created_at,
+            metadata: data,
+          });
+        }
+      }
+    });
+
+    // Sort activity by time
+    activity.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     setStats(newStats);
     setRecentActivity(activity.slice(0, 20));
@@ -166,6 +196,12 @@ export default function LiveUpsellMonitor() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "funnel_events" }, (payload) => {
         const evt = payload.new as { event_name: string };
         if (evt.event_name?.includes("upsell")) {
+          fetchUpsellData();
+        }
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "purchase_tracking" }, (payload) => {
+        const row = payload.new as { funnel_step?: string };
+        if (row.funnel_step && STEP_TO_UPSELL[row.funnel_step]) {
           fetchUpsellData();
         }
       })
