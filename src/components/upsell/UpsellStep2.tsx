@@ -111,7 +111,7 @@ const UpsellStep2 = ({ onNext }: Props) => {
             </div>
 
             <p className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>
-              Sua conta está na <strong style={{ color: "#E2E8F0" }}>fila comum de processamento</strong>. No ritmo atual, o sistema só vai começar a operar pra você daqui a <strong style={{ color: "#EF4444" }}>15 dias</strong>. Mas existe uma forma de resolver isso agora.
+              Sua conta está na <strong style={{ color: "#E2E8F0" }}>fila comum de processamento</strong>. No ritmo atual, o sistema só vai começar a operar pra você daqui a <strong style={{ color: "#EF4444" }}>15 dias</strong> — e seu primeiro saque só acontece <strong style={{ color: "#EF4444" }}>depois disso</strong>. Mas existe uma forma de resolver isso agora.
             </p>
           </div>
         </motion.div>
