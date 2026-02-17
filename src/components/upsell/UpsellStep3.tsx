@@ -91,6 +91,26 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
         </h1>
       </div>
 
+      {/* Problem recap — stats from analysis */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="grid grid-cols-3 gap-2"
+      >
+        {[
+          { icon: Users, value: "2.847", label: "contas na fila", color: "#EF4444" },
+          { icon: Clock, value: "~15 dias", label: "sua espera atual", color: "#FACC15" },
+          { icon: TrendingDown, value: "73%", label: "desistem antes", color: "#EF4444" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-xl px-3 py-3 flex flex-col items-center text-center gap-1" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <s.icon className="w-4 h-4" style={{ color: s.color }} />
+            <span className="text-[16px] font-extrabold" style={{ color: s.color }}>{s.value}</span>
+            <span className="text-[10px] leading-tight" style={{ color: "#64748B" }}>{s.label}</span>
+          </div>
+        ))}
+      </motion.div>
+
       {/* WHY it happens — the explanation they've been waiting for */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
