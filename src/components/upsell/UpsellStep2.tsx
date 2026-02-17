@@ -97,19 +97,17 @@ const UpsellStep2 = ({ onNext }: Props) => {
           </div>
           <div className="px-5 py-4 flex flex-col gap-3" style={{ background: "#0F172A" }}>
             {/* Mini stats that tease the problem */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-lg p-2.5 text-center" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.1)" }}>
-                <p className="text-[18px] font-extrabold" style={{ color: "#EF4444" }}>2.847</p>
-                <p className="text-[10px]" style={{ color: "#94A3B8" }}>contas na fila</p>
-              </div>
-              <div className="rounded-lg p-2.5 text-center" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.1)" }}>
-                <p className="text-[18px] font-extrabold" style={{ color: "#EF4444" }}>~15 dias</p>
-                <p className="text-[10px]" style={{ color: "#94A3B8" }}>sua espera</p>
-              </div>
-              <div className="rounded-lg p-2.5 text-center" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.1)" }}>
-                <p className="text-[18px] font-extrabold" style={{ color: "#EF4444" }}>73%</p>
-                <p className="text-[10px]" style={{ color: "#94A3B8" }}>desistem</p>
-              </div>
+            <div className="flex flex-col gap-2">
+              {[
+                { value: "2.847", label: "contas na sua frente na fila" },
+                { value: "~15 dias", label: "tempo estimado de espera" },
+                { value: "73%", label: "desistem antes de operar" },
+              ].map((s) => (
+                <div key={s.label} className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.1)" }}>
+                  <span className="text-[18px] font-extrabold min-w-[70px]" style={{ color: "#EF4444" }}>{s.value}</span>
+                  <span className="text-[12px]" style={{ color: "#94A3B8" }}>{s.label}</span>
+                </div>
+              ))}
             </div>
 
             <p className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>
