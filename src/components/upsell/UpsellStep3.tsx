@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Check, Shield, Zap, MessageCircle, BarChart3, Headphones } from "lucide-react";
+import { Check, Shield, Zap, MessageCircle, BarChart3, Headphones, AlertTriangle, Clock, Users, TrendingDown, Rocket } from "lucide-react";
 import { saveUpsellChoice } from "@/lib/upsellData";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
@@ -79,41 +79,103 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
   };
 
   return (
-    <div className="flex flex-col gap-5 pt-4">
+    <div className="flex flex-col gap-6 pt-4">
+      {/* Header */}
       <div className="text-center">
+        <p className="text-[11px] uppercase tracking-widest font-semibold mb-3" style={{ color: "#EF4444" }}>
+          Atenção — leia antes de fechar esta página
+        </p>
         <h1 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
-          {firstName ? `${firstName}, preciso` : "Preciso"} te explicar uma coisa antes de continuar.
+          {firstName ? `${firstName}, seu` : "Seu"} sistema está ativo.<br />
+          <span style={{ color: "#EF4444" }}>Mas ele ainda não vai funcionar.</span>
         </h1>
-        <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "#94A3B8" }}>
-          O sistema que você acabou de ativar <strong style={{ color: "#E2E8F0" }}>funciona</strong>. Mas existe um detalhe que pouca gente conta:
-        </p>
       </div>
 
-      {/* The "why" explanation */}
-      <div className="rounded-xl p-4" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)" }}>
-        <p className="text-[14px] font-bold mb-2" style={{ color: "#EF4444" }}>
-          ⚠️ Por que a maioria demora pra ver resultado?
-        </p>
-        <p className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>
-          Toda conta nova entra numa <strong style={{ color: "#E2E8F0" }}>fila de processamento</strong>. São milhares de pessoas ativando ao mesmo tempo, e o servidor processa por ordem de chegada. Na configuração padrão, o sistema leva cerca de <strong style={{ color: "#E2E8F0" }}>15 dias pra começar a operar de verdade</strong>, e o primeiro saque só acontece com <strong style={{ color: "#E2E8F0" }}>30 dias</strong>.
-        </p>
-        <p className="text-[13px] leading-relaxed mt-2" style={{ color: "#CBD5E1" }}>
-          É nesse período que <strong style={{ color: "#EF4444" }}>a maioria desiste</strong>. Não porque o sistema não funciona — mas porque não teve paciência de esperar a fila andar.
-        </p>
-      </div>
+      {/* Problem visualization */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="rounded-2xl overflow-hidden"
+        style={{ border: "1px solid rgba(239,68,68,0.25)" }}
+      >
+        {/* Problem header */}
+        <div className="px-5 py-4 flex items-center gap-3" style={{ background: "rgba(239,68,68,0.08)" }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(239,68,68,0.15)" }}>
+            <AlertTriangle className="w-5 h-5" style={{ color: "#EF4444" }} />
+          </div>
+          <div>
+            <p className="text-[15px] font-bold" style={{ color: "#F8FAFC" }}>O problema que ninguém te conta</p>
+            <p className="text-[12px]" style={{ color: "#94A3B8" }}>E que faz 73% das pessoas desistirem</p>
+          </div>
+        </div>
 
-      {/* The solution */}
-      <div className="rounded-xl p-4" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}>
-        <p className="text-[14px] font-bold mb-2" style={{ color: "#22C55E" }}>
-          ✅ A solução: furar a fila.
-        </p>
-        <p className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>
-          O Acelerador move sua conta pra <strong style={{ color: "#E2E8F0" }}>frente da fila</strong>. Em vez de esperar 15 dias com todo mundo, o sistema começa a operar pra você em horas. Quanto mais forte o acelerador, mais rápido você saca.
-        </p>
-      </div>
+        <div className="px-5 py-4 flex flex-col gap-4" style={{ background: "#0F172A" }}>
+          <p className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>
+            Quando você ativou seu sistema agora, sua conta entrou numa <strong style={{ color: "#E2E8F0" }}>fila de processamento</strong> junto com milhares de outras pessoas que também acabaram de se cadastrar.
+          </p>
 
-      <p className="text-[13px] text-center" style={{ color: "#94A3B8" }}>
-        Escolha o nível que faz sentido pra sua realidade:
+          {/* Visual timeline */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.1)" }}>
+              <Clock className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
+              <div>
+                <p className="text-[13px] font-semibold" style={{ color: "#E2E8F0" }}>Primeiros 15 dias</p>
+                <p className="text-[12px]" style={{ color: "#94A3B8" }}>O sistema fica na fila. Não opera. Você não vê nada acontecendo.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.1)" }}>
+              <TrendingDown className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
+              <div>
+                <p className="text-[13px] font-semibold" style={{ color: "#E2E8F0" }}>Dia 15 ao dia 30</p>
+                <p className="text-[12px]" style={{ color: "#94A3B8" }}>Começa a operar devagar. Ganhos pequenos. Ainda sem possibilidade de saque.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.1)" }}>
+              <Users className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
+              <div>
+                <p className="text-[13px] font-semibold" style={{ color: "#E2E8F0" }}>Resultado?</p>
+                <p className="text-[12px]" style={{ color: "#94A3B8" }}>A maioria desiste antes de chegar aqui. Acha que não funciona — mas era só a fila.</p>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-[12px] text-center italic" style={{ color: "#64748B" }}>
+            Isso acontece porque os servidores processam por ordem de chegada. Não é culpa sua.
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Solution */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="rounded-2xl overflow-hidden"
+        style={{ border: "1px solid rgba(34,197,94,0.25)" }}
+      >
+        <div className="px-5 py-4 flex items-center gap-3" style={{ background: "rgba(34,197,94,0.08)" }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(34,197,94,0.15)" }}>
+            <Rocket className="w-5 h-5" style={{ color: "#22C55E" }} />
+          </div>
+          <div>
+            <p className="text-[15px] font-bold" style={{ color: "#F8FAFC" }}>A solução existe — e está só nesta página.</p>
+            <p className="text-[12px]" style={{ color: "#22C55E" }}>Disponível apenas agora, neste momento.</p>
+          </div>
+        </div>
+
+        <div className="px-5 py-4" style={{ background: "#0F172A" }}>
+          <p className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>
+            O <strong style={{ color: "#22C55E" }}>Acelerador</strong> move sua conta direto pra <strong style={{ color: "#E2E8F0" }}>frente da fila</strong>. O sistema sai do modo de espera e começa a operar imediatamente. Quanto mais forte o acelerador, mais rápido você faz seu primeiro saque.
+          </p>
+          <p className="text-[13px] leading-relaxed mt-2" style={{ color: "#CBD5E1" }}>
+            <strong style={{ color: "#FACC15" }}>Se você fechar esta página, volta pra fila comum.</strong> Não tem como ativar isso depois.
+          </p>
+        </div>
+      </motion.div>
+
+      <p className="text-[14px] font-bold text-center" style={{ color: "#E2E8F0" }}>
+        Escolha como você quer começar:
       </p>
 
       {plans.map((plan, i) => (
