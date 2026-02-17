@@ -2,18 +2,15 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, Shield, Zap, MessageCircle, BarChart3, Headphones, AlertTriangle, Clock, Users, TrendingDown, Rocket } from "lucide-react";
 
-const WaitDaysCounter = () => {
-  const [days, setDays] = useState(15);
+const QueueCounter = () => {
+  const [count, setCount] = useState(2847);
   useEffect(() => {
     const interval = setInterval(() => {
-      setDays((d) => {
-        const next = d + 1;
-        return next > 30 ? 15 : next;
-      });
-    }, 3000);
+      setCount((c) => c + Math.floor(Math.random() * 3) + 1);
+    }, 2500);
     return () => clearInterval(interval);
   }, []);
-  return <>{days}</>;
+  return <>{count.toLocaleString("pt-BR")}</>;
 };
 import { saveUpsellChoice } from "@/lib/upsellData";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
@@ -110,11 +107,11 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.15 }}
           className="mx-auto my-4 rounded-xl px-5 py-3 flex items-center justify-center gap-2.5"
-          style={{ background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.2)" }}
+          style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)" }}
         >
-          <Clock className="w-5 h-5" style={{ color: "#FACC15" }} />
-          <span className="text-[13px]" style={{ color: "#CBD5E1" }}>Sua espera atual:</span>
-          <span className="text-[20px] font-extrabold" style={{ color: "#FACC15" }}>~<WaitDaysCounter /> dias</span>
+          <Users className="w-5 h-5" style={{ color: "#EF4444" }} />
+          <span className="text-[13px]" style={{ color: "#CBD5E1" }}>Pessoas na fila agora:</span>
+          <span className="text-[20px] font-extrabold" style={{ color: "#EF4444" }}><QueueCounter /></span>
         </motion.div>
 
         <h1 className="text-[22px] font-extrabold leading-tight" style={{ color: "#22C55E" }}>
