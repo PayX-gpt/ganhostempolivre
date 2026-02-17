@@ -1,5 +1,20 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, Shield, Zap, MessageCircle, BarChart3, Headphones, AlertTriangle, Clock, Users, TrendingDown, Rocket } from "lucide-react";
+
+const WaitDaysCounter = () => {
+  const [days, setDays] = useState(15);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDays((d) => {
+        const next = d + 1;
+        return next > 30 ? 15 : next;
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+  return <>{days}</>;
+};
 import { saveUpsellChoice } from "@/lib/upsellData";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
@@ -86,30 +101,26 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
           Atenção — leia antes de fechar esta página
         </p>
         <h1 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
-          {firstName ? `${firstName}, agora` : "Agora"} você sabe do problema.<br />
-          <span style={{ color: "#22C55E" }}>Aqui está a solução.</span>
+          {firstName ? `${firstName}, agora` : "Agora"} você sabe do problema.
+        </h1>
+
+        {/* Wait time counter between the two headline parts */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.15 }}
+          className="mx-auto my-4 rounded-xl px-5 py-3 flex items-center justify-center gap-2.5"
+          style={{ background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.2)" }}
+        >
+          <Clock className="w-5 h-5" style={{ color: "#FACC15" }} />
+          <span className="text-[13px]" style={{ color: "#CBD5E1" }}>Sua espera atual:</span>
+          <span className="text-[20px] font-extrabold" style={{ color: "#FACC15" }}>~<WaitDaysCounter /> dias</span>
+        </motion.div>
+
+        <h1 className="text-[22px] font-extrabold leading-tight" style={{ color: "#22C55E" }}>
+          Aqui está a solução.
         </h1>
       </div>
-
-      {/* Problem recap — stats from analysis */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        className="grid grid-cols-3 gap-2"
-      >
-        {[
-          { icon: Users, value: "2.847", label: "contas na fila", color: "#EF4444" },
-          { icon: Clock, value: "~15 dias", label: "sua espera atual", color: "#FACC15" },
-          { icon: TrendingDown, value: "73%", label: "desistem antes", color: "#EF4444" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-xl px-3 py-3 flex flex-col items-center text-center gap-1" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <s.icon className="w-4 h-4" style={{ color: s.color }} />
-            <span className="text-[16px] font-extrabold" style={{ color: s.color }}>{s.value}</span>
-            <span className="text-[10px] leading-tight" style={{ color: "#64748B" }}>{s.label}</span>
-          </div>
-        ))}
-      </motion.div>
 
       {/* WHY it happens — the explanation they've been waiting for */}
       <motion.div
