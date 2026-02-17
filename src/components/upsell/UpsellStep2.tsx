@@ -20,9 +20,7 @@ const UpsellStep2 = ({ onNext }: Props) => {
       setTimeout(() => setCompleted((prev) => [...prev, i]), (i + 1) * 1300);
     });
     setTimeout(() => setShowResult(true), 6000);
-    const auto = setTimeout(onNext, 8500);
-    return () => clearTimeout(auto);
-  }, [onNext]);
+  }, []);
 
   return (
     <div className="flex flex-col items-center gap-6 pt-8">
