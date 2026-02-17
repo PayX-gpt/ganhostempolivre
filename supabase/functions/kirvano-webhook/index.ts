@@ -6,29 +6,21 @@ const corsHeaders = {
 };
 
 // ====== PRODUCT IDENTIFICATION ======
-// Map Kirvano offer_ids to funnel steps. Update these when you add new offers.
 const OFFER_ID_MAP: Record<string, string> = {
-  // Front-end offers
   "4630333d-d5d1-4591-b767-2151f77c6b13": "front_37",
   "a404a378-2a59-4efd-86a8-dc57363c054c": "front_47",
-  // Upsell offers
   "863c8fe9-ca48-452f-9fa4-22e14df182cf": "acelerador_basico",
-  // "offer-id-acelerador-duplo": "acelerador_duplo",
-  // "offer-id-acelerador-maximo": "acelerador_maximo",
-  // "offer-id-multiplicador-prata": "multiplicador_prata",
-  // "offer-id-multiplicador-ouro": "multiplicador_ouro",
-  // "offer-id-multiplicador-diamante": "multiplicador_diamante",
-  // "offer-id-blindagem": "blindagem",
-  // "offer-id-circulo": "circulo_interno",
-  // "offer-id-downsell-guia": "downsell_guia",
 };
 
-// Fallback: classify by price + product name when offer_id is unknown
+// Front-end offer IDs (only these trigger InitiateCheckout)
+const FRONT_END_OFFER_IDS = new Set([
+  "4630333d-d5d1-4591-b767-2151f77c6b13",
+  "a404a378-2a59-4efd-86a8-dc57363c054c",
+]);
+
 function classifyByPrice(amount: number | null, offerName: string | null, productName: string | null): string {
   const name = (productName || "").toLowerCase();
   const offer = (offerName || "").toLowerCase();
-
-  // Check if product name contains upsell identifiers
   if (name.includes("acelerador") || offer.includes("acelerador")) {
     if (amount && amount <= 25) return "acelerador_basico";
     if (amount && amount <= 35) return "acelerador_duplo";
@@ -42,59 +34,44 @@ function classifyByPrice(amount: number | null, offerName: string | null, produc
   if (name.includes("blindagem") || offer.includes("blindagem")) return "blindagem";
   if (name.includes("circulo") || name.includes("círculo") || offer.includes("circulo")) return "circulo_interno";
   if (name.includes("guia") || offer.includes("guia") || (amount && amount < 35 && amount > 25)) return "downsell_guia";
-
-  // Pure price-based fallback for front-end (same product name)
   if (amount === 37) return "front_37";
   if (amount === 47) return "front_47";
   if (amount && amount <= 40) return "front_37";
   if (amount && amount <= 50) return "front_47";
-
-  return "purchase"; // generic fallback
+  return "purchase";
 }
 
 function identifyFunnelStep(body: any, amount: number | null): string {
   const offerId = body.products?.[0]?.offer_id || null;
   const offerName = body.products?.[0]?.offer_name || null;
   const productName = body.products?.[0]?.name || body.product_name || null;
-
-  // 1. Exact match by offer_id (most reliable)
-  if (offerId && OFFER_ID_MAP[offerId]) {
-    return OFFER_ID_MAP[offerId];
-  }
-
-  // 2. Fallback by price + product name
+  if (offerId && OFFER_ID_MAP[offerId]) return OFFER_ID_MAP[offerId];
   return classifyByPrice(amount, offerName, productName);
 }
 
 function extractAmount(body: any): number | null {
-  // 1. Try total_price "R$ 37,00" → 37.00
   if (body.total_price && typeof body.total_price === "string") {
     const cleaned = body.total_price.replace(/[^\d,.-]/g, "").replace(",", ".");
     const val = parseFloat(cleaned);
     if (!isNaN(val) && val > 0) return val;
   }
-  // 2. Try fiscal.total_value (numeric)
   if (body.fiscal?.total_value) {
     const val = parseFloat(body.fiscal.total_value);
     if (!isNaN(val) && val > 0) return val;
   }
-  // 3. Try fiscal.original_value
   if (body.fiscal?.original_value) {
     const val = parseFloat(body.fiscal.original_value);
     if (!isNaN(val) && val > 0) return val;
   }
-  // 4. Try products[0].price "R$ 37,00"
   if (body.products?.[0]?.price && typeof body.products[0].price === "string") {
     const cleaned = body.products[0].price.replace(/[^\d,.-]/g, "").replace(",", ".");
     const val = parseFloat(cleaned);
     if (!isNaN(val) && val > 0) return val;
   }
-  // 5. Try products[0].offer_name
   if (body.products?.[0]?.offer_name) {
     const val = parseFloat(body.products[0].offer_name);
     if (!isNaN(val) && val > 0) return val;
   }
-  // 6. Try direct numeric fields
   const directFields = ["amount", "valor", "price", "preco", "value"];
   for (const field of directFields) {
     if (body[field]) {
@@ -102,23 +79,110 @@ function extractAmount(body: any): number | null {
       if (!isNaN(val) && val > 0) return val;
     }
   }
-  // 7. Try fiscal.commission
   if (body.fiscal?.commission) {
     const val = parseFloat(body.fiscal.commission);
     if (!isNaN(val) && val > 0) return val;
   }
-  // 8. Fallback
   if (body.products?.[0]?.name?.includes("CHATGPT") || body.products?.[0]?.name?.includes("TOKEN")) {
     return 37;
   }
   return null;
 }
 
+// ====== FACEBOOK CONVERSION API ======
+async function sendFacebookCAPI(params: {
+  eventName: string;
+  eventId: string;
+  email: string | null;
+  phone: string | null;
+  fbclid: string | null;
+  fbp: string | null;
+  fbc: string | null;
+  amount: number | null;
+  currency?: string;
+  ip: string | null;
+  userAgent: string | null;
+  sourceUrl?: string;
+}): Promise<boolean> {
+  const pixelId = Deno.env.get("FB_PIXEL_ID");
+  const accessToken = Deno.env.get("FB_ACCESS_TOKEN");
+  if (!pixelId || !accessToken) {
+    console.warn("⚠️ [CAPI] Missing FB_PIXEL_ID or FB_ACCESS_TOKEN");
+    return false;
+  }
+
+  const userData: Record<string, string> = {};
+  // Hash user data per Facebook requirements
+  if (params.email) {
+    const emailNorm = params.email.trim().toLowerCase();
+    const emailHash = await hashSHA256(emailNorm);
+    userData.em = emailHash;
+  }
+  if (params.phone) {
+    // Normalize phone: digits only
+    const phoneNorm = params.phone.replace(/\D/g, "");
+    const phoneHash = await hashSHA256(phoneNorm);
+    userData.ph = phoneHash;
+  }
+  if (params.fbclid) userData.fbc = params.fbc || `fb.1.${Date.now()}.${params.fbclid}`;
+  if (params.fbc) userData.fbc = params.fbc;
+  if (params.fbp) userData.fbp = params.fbp;
+  if (params.ip) userData.client_ip_address = params.ip;
+  if (params.userAgent) userData.client_user_agent = params.userAgent;
+
+  const eventData: Record<string, unknown> = {
+    event_name: params.eventName,
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: params.eventId, // Critical for deduplication with pixel
+    action_source: "website",
+    user_data: userData,
+  };
+
+  if (params.sourceUrl) {
+    eventData.event_source_url = params.sourceUrl;
+  }
+
+  if (params.eventName === "Purchase" && params.amount) {
+    eventData.custom_data = {
+      currency: params.currency || "BRL",
+      value: params.amount,
+    };
+  }
+
+  try {
+    const url = `https://graph.facebook.com/v21.0/${pixelId}/events?access_token=${accessToken}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: [eventData] }),
+    });
+    const result = await response.json();
+    if (response.ok) {
+      console.log(`✅ [CAPI] ${params.eventName} sent (event_id: ${params.eventId})`);
+      return true;
+    } else {
+      console.error(`❌ [CAPI] ${params.eventName} failed:`, JSON.stringify(result));
+      return false;
+    }
+  } catch (err) {
+    console.error(`❌ [CAPI] ${params.eventName} error:`, err);
+    return false;
+  }
+}
+
+async function hashSHA256(value: string): Promise<string> {
+  const data = new TextEncoder().encode(value);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+// ====== MAIN HANDLER ======
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
@@ -132,7 +196,6 @@ Deno.serve(async (req) => {
 
     const event = body.event || body.tipo_evento || body.type || "purchase";
     const status = body.status || body.purchase_status || body.payment_status || "approved";
-
     const transactionId = body.sale_id || body.transaction_id || body.transaction || body.id || body.codigo || null;
     const checkoutId = body.checkout_id || null;
     const planId = body.plan_id || body.plan || body.produto_id || body.product_id || body.products?.[0]?.id || null;
@@ -140,14 +203,11 @@ Deno.serve(async (req) => {
     const offerName = body.products?.[0]?.offer_name || null;
     const offerId = body.products?.[0]?.offer_id || null;
     const amount = extractAmount(body);
-
-    // ====== IDENTIFY FUNNEL STEP ======
     const funnelStep = identifyFunnelStep(body, amount);
 
     const email = body.customer?.email || body.email || body.buyer_email || body.cliente_email || null;
     const buyerName = body.customer?.name || body.buyer_name || body.nome || body.cliente_nome || null;
     const phone = body.customer?.phone_number || body.phone || body.telefone || body.buyer_phone || null;
-
     const paymentMethod = body.payment?.method || body.payment_method || body.forma_pagamento || null;
     const paymentId = body.payment_id || body.pagamento_id || null;
 
@@ -162,13 +222,14 @@ Deno.serve(async (req) => {
     const fbclid = body.cookies?.fbclid || body.fbclid || null;
     const gclid = body.cookies?.gclid || body.gclid || null;
     const fbp = body.cookies?.fbp || null;
+    const fbc = body.cookies?.fbc || null;
+    const clientIp = body.ip || null;
 
     const sessionId = (src && src.startsWith("sess_")) ? src : null;
 
     const statusMap: Record<string, string> = {
       approved: "approved", aprovado: "approved", paid: "approved", pago: "approved",
-      completed: "approved", completo: "approved",
-      sale_approved: "approved",
+      completed: "approved", completo: "approved", sale_approved: "approved",
       refused: "refused", recusado: "refused",
       refunded: "refunded", reembolsado: "refunded",
       chargeback: "chargeback",
@@ -177,7 +238,6 @@ Deno.serve(async (req) => {
       canceled: "canceled", cancelado: "canceled",
       abandoned_cart: "ABANDONED_CART",
     };
-
     const normalizedStatus = statusMap[status.toLowerCase()] || status;
 
     console.log(`💰 [Kirvano] Amount: ${amount}, Status: ${normalizedStatus}, Step: ${funnelStep}, Email: ${email}, Product: ${productName}, OfferId: ${offerId}, OfferName: ${offerName}`);
@@ -188,36 +248,32 @@ Deno.serve(async (req) => {
     );
 
     let matched = false;
+    let recordId: string | null = null;
+    let alreadySentCAPI = false;
 
-    // ====== DEDUPLICATION: check if this exact transaction+status already exists ======
+    // ====== DEDUPLICATION: check if this exact transaction already exists ======
     if (transactionId) {
       const { data: existing } = await supabase
         .from("purchase_tracking")
-        .select("id, status")
+        .select("id, status, conversion_api_sent")
         .eq("transaction_id", transactionId)
         .maybeSingle();
 
       if (existing) {
-        // Record exists — update it with latest data
+        alreadySentCAPI = existing.conversion_api_sent === true;
         const { data, error } = await supabase
           .from("purchase_tracking")
           .update({
             status: normalizedStatus,
-            amount,
-            email,
+            amount, email,
             product_name: productName,
             plan_id: planId,
             funnel_step: funnelStep,
             whop_payment_id: paymentId,
             session_id: sessionId,
-            utm_source: utmSource,
-            utm_medium: utmMedium,
-            utm_campaign: utmCampaign,
-            utm_content: utmContent,
-            utm_term: utmTerm,
-            fbclid,
-            gclid,
-            fbp,
+            utm_source: utmSource, utm_medium: utmMedium,
+            utm_campaign: utmCampaign, utm_content: utmContent, utm_term: utmTerm,
+            fbclid, gclid, fbp,
           })
           .eq("transaction_id", transactionId)
           .select()
@@ -225,6 +281,7 @@ Deno.serve(async (req) => {
 
         if (!error && data) {
           matched = true;
+          recordId = data.id;
           console.log(`✅ [Kirvano] Updated existing record ${transactionId} (${existing.status} → ${normalizedStatus}) → ${funnelStep}`);
         }
       }
@@ -235,34 +292,22 @@ Deno.serve(async (req) => {
         transaction_id: transactionId,
         plan_id: planId,
         product_name: productName,
-        amount,
-        email,
+        amount, email,
         status: normalizedStatus,
         funnel_step: funnelStep,
         session_id: sessionId,
-        utm_source: utmSource,
-        utm_medium: utmMedium,
-        utm_campaign: utmCampaign,
-        utm_content: utmContent,
-        utm_term: utmTerm,
-        fbclid,
-        gclid,
-        fbp,
+        utm_source: utmSource, utm_medium: utmMedium,
+        utm_campaign: utmCampaign, utm_content: utmContent, utm_term: utmTerm,
+        fbclid, gclid, fbp,
         redirect_source: "kirvano_webhook",
         user_agent: req.headers.get("user-agent") || "kirvano-webhook",
       };
 
       const extraMeta = {
-        event,
-        buyer_name: buyerName,
-        phone,
-        payment_method: paymentMethod,
-        checkout_id: checkoutId,
-        offer_id: offerId,
-        offer_name: offerName,
-        sck,
-        src,
-        raw_status: status,
+        event, buyer_name: buyerName, phone,
+        payment_method: paymentMethod, checkout_id: checkoutId,
+        offer_id: offerId, offer_name: offerName,
+        sck, src, raw_status: status,
         fiscal: body.fiscal || null,
         received_at: new Date().toISOString(),
       };
@@ -282,9 +327,67 @@ Deno.serve(async (req) => {
         });
       }
 
+      recordId = data.id;
       console.log(`✅ [Kirvano] New record: ${data.id} → ${funnelStep} R$${amount}`);
     }
 
+    // ====== FACEBOOK CAPI — STRICT DEDUPLICATION ======
+    const isFrontEndProduct = offerId ? FRONT_END_OFFER_IDS.has(offerId) : (funnelStep === "front_37" || funnelStep === "front_47");
+    let capiSent = false;
+
+    // 1. PURCHASE — only on approved, only once per transaction_id
+    if (normalizedStatus === "approved" && !alreadySentCAPI && transactionId) {
+      const eventId = `purchase_${transactionId}`;
+      capiSent = await sendFacebookCAPI({
+        eventName: "Purchase",
+        eventId,
+        email, phone, fbclid, fbp, fbc,
+        amount,
+        ip: clientIp,
+        userAgent: req.headers.get("user-agent"),
+      });
+      if (capiSent && recordId) {
+        await supabase
+          .from("purchase_tracking")
+          .update({ conversion_api_sent: true })
+          .eq("id", recordId);
+        console.log(`📡 [CAPI] Purchase marked as sent for ${transactionId}`);
+      }
+    }
+
+    // 2. INITIATE CHECKOUT — only for front-end product, only once per email
+    if (normalizedStatus === "pending" && isFrontEndProduct && email && !alreadySentCAPI) {
+      // Check if this email already has an IC sent (any previous front-end purchase_tracking with conversion_api_sent)
+      const { data: existingIC } = await supabase
+        .from("purchase_tracking")
+        .select("id")
+        .eq("email", email)
+        .eq("conversion_api_sent", true)
+        .limit(1);
+
+      if (!existingIC || existingIC.length === 0) {
+        // No previous IC for this email — send it
+        const icEventId = `ic_${transactionId || Date.now()}`;
+        const icSent = await sendFacebookCAPI({
+          eventName: "InitiateCheckout",
+          eventId: icEventId,
+          email, phone, fbclid, fbp, fbc,
+          amount,
+          ip: clientIp,
+          userAgent: req.headers.get("user-agent"),
+        });
+        if (icSent && recordId) {
+          // Mark conversion_api_sent so this email won't get another IC
+          // But DON'T mark it if we'll later send Purchase (approved will set it)
+          // Use a separate approach: only mark IC if status stays pending
+          console.log(`📡 [CAPI] InitiateCheckout sent for ${email} (event_id: ${icEventId})`);
+        }
+      } else {
+        console.log(`⏭️ [CAPI] IC skipped — email ${email} already has CAPI event`);
+      }
+    }
+
+    // ====== AUDIT LOG ======
     await supabase.from("funnel_audit_logs").insert({
       event_type: `kirvano_${normalizedStatus}`,
       page_id: funnelStep,
@@ -292,20 +395,17 @@ Deno.serve(async (req) => {
       status: normalizedStatus === "approved" ? "success" : "pending",
       metadata: {
         transaction_id: transactionId,
-        email,
-        amount,
+        email, amount,
         product_name: productName,
-        offer_id: offerId,
-        offer_name: offerName,
+        offer_id: offerId, offer_name: offerName,
         funnel_step: funnelStep,
-        payment_method: paymentMethod,
-        buyer_name: buyerName,
-        event,
-        raw_status: status,
+        payment_method: paymentMethod, buyer_name: buyerName,
+        event, raw_status: status,
+        capi_sent: capiSent,
       },
     });
 
-    return new Response(JSON.stringify({ success: true, status: normalizedStatus, amount, funnel_step: funnelStep }), {
+    return new Response(JSON.stringify({ success: true, status: normalizedStatus, amount, funnel_step: funnelStep, capi_sent: capiSent }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
