@@ -189,34 +189,44 @@ Deno.serve(async (req) => {
 
     let matched = false;
 
+    // ====== DEDUPLICATION: check if this exact transaction+status already exists ======
     if (transactionId) {
-      const { data, error } = await supabase
+      const { data: existing } = await supabase
         .from("purchase_tracking")
-        .update({
-          status: normalizedStatus,
-          amount,
-          email,
-          product_name: productName,
-          plan_id: planId,
-          funnel_step: funnelStep,
-          whop_payment_id: paymentId,
-          session_id: sessionId,
-          utm_source: utmSource,
-          utm_medium: utmMedium,
-          utm_campaign: utmCampaign,
-          utm_content: utmContent,
-          utm_term: utmTerm,
-          fbclid,
-          gclid,
-          fbp,
-        })
+        .select("id, status")
         .eq("transaction_id", transactionId)
-        .select()
-        .single();
+        .maybeSingle();
 
-      if (!error && data) {
-        matched = true;
-        console.log(`✅ [Kirvano] Updated record ${transactionId} → ${funnelStep}`);
+      if (existing) {
+        // Record exists — update it with latest data
+        const { data, error } = await supabase
+          .from("purchase_tracking")
+          .update({
+            status: normalizedStatus,
+            amount,
+            email,
+            product_name: productName,
+            plan_id: planId,
+            funnel_step: funnelStep,
+            whop_payment_id: paymentId,
+            session_id: sessionId,
+            utm_source: utmSource,
+            utm_medium: utmMedium,
+            utm_campaign: utmCampaign,
+            utm_content: utmContent,
+            utm_term: utmTerm,
+            fbclid,
+            gclid,
+            fbp,
+          })
+          .eq("transaction_id", transactionId)
+          .select()
+          .single();
+
+        if (!error && data) {
+          matched = true;
+          console.log(`✅ [Kirvano] Updated existing record ${transactionId} (${existing.status} → ${normalizedStatus}) → ${funnelStep}`);
+        }
       }
     }
 
