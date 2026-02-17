@@ -11,7 +11,7 @@ const plans = [
   {
     id: "basico" as const,
     name: "Acelerador Básico",
-    subtitle: "Primeiro saque em até 10 dias",
+    subtitle: "Primeiro saque em 7 dias",
     subtitleColor: "#22C55E",
     description: "Sua conta sai da fila comum e entra nos servidores dedicados. O sistema começa a operar com mais frequência desde o primeiro dia.",
     features: [
@@ -29,7 +29,7 @@ const plans = [
   {
     id: "duplo" as const,
     name: "Acelerador Duplo",
-    subtitle: "Primeiro saque em até 5 dias",
+    subtitle: "Primeiro saque em 24 horas",
     subtitleColor: "#22C55E",
     description: "Tudo do Básico + uma segunda IA verifica cada operação antes de executar. É o que 9 em cada 10 novos membros escolhem.",
     features: [
@@ -48,7 +48,7 @@ const plans = [
   {
     id: "maximo" as const,
     name: "Acelerador Máximo",
-    subtitle: "Primeiro saque em até 48 horas",
+    subtitle: "Saque imediato",
     subtitleColor: "#FACC15",
     description: "O nível mais alto. Tudo do Duplo + um especialista humano configura sua conta pessoalmente e te acompanha nos primeiros dias.",
     features: [
@@ -58,7 +58,7 @@ const plans = [
       { icon: MessageCircle, text: "Especialista pessoal no WhatsApp — 48h" },
       { icon: Headphones, text: "Relatório de ganhos toda manhã" },
     ],
-    price: 47, installments: "5x de R$ 9,90",
+    price: 57, installments: "6x de R$ 9,90",
     border: "1px solid rgba(250,204,21,0.25)",
     btnBg: "linear-gradient(135deg, #FACC15, #EAB308)", btnColor: "#020617", btnBorder: "none",
     btnText: "ATIVAR MÁXIMO",
