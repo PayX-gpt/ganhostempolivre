@@ -77,6 +77,7 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
     const separator = activePlan.checkoutUrl.includes("?") ? "&" : "?";
     const fullUrl = utmQs ? `${activePlan.checkoutUrl}${separator}${utmQs.slice(1)}` : activePlan.checkoutUrl;
     window.open(fullUrl, "_blank");
+    setTimeout(() => setLoading(false), 3000);
   };
 
   return (
