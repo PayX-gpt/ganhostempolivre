@@ -203,11 +203,11 @@ export default function AdminFunnelAudit() {
     ) || [];
     const refundedPurchases = purchaseData?.filter(r => r.status === "refunded" || r.status === "canceled") || [];
     
-    const totalRevenueUSD = approvedPurchases.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+    const totalRevenueBRL = approvedPurchases.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
     const uniqueBuyers = new Set(approvedPurchases.filter(r => r.email).map(r => r.email!.toLowerCase())).size;
     
     setHotmartSalesToday(approvedPurchases.length);
-    setTotalRevenueToday(totalRevenueUSD * USD_TO_BRL);
+    setTotalRevenueToday(totalRevenueBRL);
     setHotmartApproved(approvedPurchases.length);
     setHotmartRefunded(refundedPurchases.length);
     
@@ -498,7 +498,7 @@ export default function AdminFunnelAudit() {
         <LiveUserPresence onTotalChange={handlePresenceTotalChange} />
         <LiveUpsellMonitor />
         <LiveFunnelAnalytics />
-        <LiveRevenueChart usdToBrl={USD_TO_BRL} />
+        <LiveRevenueChart usdToBrl={1} />
         <LiveIntelligence />
         <LiveLeadsTable />
 
