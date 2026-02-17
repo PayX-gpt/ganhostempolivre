@@ -59,6 +59,7 @@ const LiveFunnelAnalytics = () => {
   const [totalCompleted, setTotalCompleted] = useState(0);
   const [offerViews, setOfferViews] = useState(0);
   const [checkoutClicks, setCheckoutClicks] = useState(0);
+  const [ctaRevealed, setCtaRevealed] = useState(0);
 
   const fetchFunnelData = useCallback(async () => {
     setLoading(true);
@@ -66,11 +67,18 @@ const LiveFunnelAnalytics = () => {
     todayStart.setHours(0, 0, 0, 0);
     const todayISO = todayStart.toISOString();
 
-    const { data: pageLoads } = await supabase
-      .from("funnel_audit_logs")
-      .select("page_id, session_id, created_at")
-      .eq("event_type", "page_loaded")
-      .gte("created_at", todayISO);
+    const [{ data: pageLoads }, { data: clickEvents }] = await Promise.all([
+      supabase
+        .from("funnel_audit_logs")
+        .select("page_id, session_id, created_at")
+        .eq("event_type", "page_loaded")
+        .gte("created_at", todayISO),
+      supabase
+        .from("funnel_events")
+        .select("event_name, session_id")
+        .in("event_name", ["checkout_click", "offer_cta_revealed"])
+        .gte("created_at", todayISO),
+    ]);
 
     if (!pageLoads) { setLoading(false); return; }
 
@@ -85,9 +93,7 @@ const LiveFunnelAnalytics = () => {
 
     pageLoads.forEach(log => {
       let pid = log.page_id || "";
-      // Map upsell sub-pages to their parent route
       if (pid.startsWith("/upsell") && !stepCounts[pid]) {
-        // Map sub-pages like /upsell-confirmacao, /upsell-analise etc to /upsell1
         if (pid.startsWith("/upsell-") || pid === "/upsell1") pid = "/upsell1";
       }
       if (stepCounts[pid]) {
@@ -96,6 +102,14 @@ const LiveFunnelAnalytics = () => {
       const hour = new Date(log.created_at).getHours();
       const key = `${hour.toString().padStart(2, "0")}h`;
       hourCounts[key] = (hourCounts[key] || 0) + 1;
+    });
+
+    // Count real checkout clicks and CTA revealed from funnel_events
+    const checkoutClickSessions = new Set<string>();
+    const ctaRevealedSessions = new Set<string>();
+    clickEvents?.forEach(evt => {
+      if (evt.event_name === "checkout_click") checkoutClickSessions.add(evt.session_id);
+      if (evt.event_name === "offer_cta_revealed") ctaRevealedSessions.add(evt.session_id);
     });
 
     // Build funnel data with drop-off
@@ -113,7 +127,8 @@ const LiveFunnelAnalytics = () => {
     setTotalViews(steps[0]?.views || 0);
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
     setOfferViews(stepCounts["/step-19"]?.size || 0);
-    setCheckoutClicks(stepCounts["/step-19"]?.size || 0);
+    setCheckoutClicks(checkoutClickSessions.size);
+    setCtaRevealed(ctaRevealedSessions.size);
     setLoading(false);
   }, []);
 
@@ -164,7 +179,7 @@ const LiveFunnelAnalytics = () => {
             { label: "Viram Oferta", value: offerViews, color: "text-violet-400" },
             { label: "Checkout", value: checkoutClicks, color: "text-amber-400" },
             { label: "Completaram", value: totalCompleted, color: "text-emerald-400" },
-            { label: "CTA Revelado", value: offerViews, color: "text-orange-400" },
+            { label: "CTA Revelado", value: ctaRevealed, color: "text-orange-400" },
           ].map((kpi, i) => (
             <div key={i} className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-2.5 min-w-[100px] w-[100px] flex-shrink-0">
               <p className="text-[9px] text-[#666] uppercase tracking-wider mb-1">{kpi.label}</p>
