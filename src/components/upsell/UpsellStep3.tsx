@@ -11,11 +11,11 @@ const plans = [
   {
     id: "basico" as const,
     name: "Acelerador Básico",
-    subtitle: "Resultados em até 72 horas",
+    subtitle: "Primeiro saque em até 10 dias",
     subtitleColor: "#22C55E",
-    description: "A plataforma opera com prioridade nos servidores dedicados, reduzindo de 7 dias para 72 horas. Proteção básica ativada.",
+    description: "Sua conta sai da fila comum e entra nos servidores dedicados. O sistema começa a operar com mais frequência desde o primeiro dia.",
     features: [
-      { icon: Zap, text: "Servidores prioritários" },
+      { icon: Zap, text: "Sai da fila de espera dos servidores" },
       { icon: Shield, text: "Proteção básica contra perdas" },
       { icon: Headphones, text: "Suporte por e-mail" },
     ],
@@ -29,12 +29,12 @@ const plans = [
   {
     id: "duplo" as const,
     name: "Acelerador Duplo",
-    subtitle: "Resultados em até 24 horas",
+    subtitle: "Primeiro saque em até 5 dias",
     subtitleColor: "#22C55E",
-    description: "Tudo do Básico + uma segunda IA monitora cada operação em tempo real. É o que 9 em cada 10 novos membros escolhem.",
+    description: "Tudo do Básico + uma segunda IA verifica cada operação antes de executar. É o que 9 em cada 10 novos membros escolhem.",
     features: [
-      { icon: Zap, text: "Servidores prioritários" },
-      { icon: Shield, text: "Proteção dupla contra perdas" },
+      { icon: Zap, text: "Prioridade máxima nos servidores" },
+      { icon: Shield, text: "Dupla verificação antes de cada operação" },
       { icon: BarChart3, text: "Monitoramento 24h por segunda IA" },
       { icon: MessageCircle, text: "Suporte prioritário no WhatsApp" },
     ],
@@ -48,12 +48,12 @@ const plans = [
   {
     id: "maximo" as const,
     name: "Acelerador Máximo",
-    subtitle: "Resultados em até 12 horas",
+    subtitle: "Primeiro saque em até 48 horas",
     subtitleColor: "#FACC15",
-    description: "O nível máximo. Tudo do Duplo + um especialista humano te guia clique por clique no WhatsApp por 48h.",
+    description: "O nível mais alto. Tudo do Duplo + um especialista humano configura sua conta pessoalmente e te acompanha nos primeiros dias.",
     features: [
-      { icon: Zap, text: "Servidores prioritários" },
-      { icon: Shield, text: "Proteção tripla contra perdas" },
+      { icon: Zap, text: "Servidor exclusivo — sem fila" },
+      { icon: Shield, text: "Tripla verificação de segurança" },
       { icon: BarChart3, text: "Monitoramento 24h por segunda IA" },
       { icon: MessageCircle, text: "Especialista pessoal no WhatsApp — 48h" },
       { icon: Headphones, text: "Relatório de ganhos toda manhã" },
@@ -82,12 +82,39 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
     <div className="flex flex-col gap-5 pt-4">
       <div className="text-center">
         <h1 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
-          {firstName ? `${firstName}, como` : "Como"} você quer começar?
+          {firstName ? `${firstName}, preciso` : "Preciso"} te explicar uma coisa antes de continuar.
         </h1>
-        <p className="text-[14px] mt-2 leading-relaxed" style={{ color: "#94A3B8" }}>
-          Cada plano acelera seus primeiros resultados e protege seu capital. Escolha o que faz sentido pra sua realidade agora.
+        <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "#94A3B8" }}>
+          O sistema que você acabou de ativar <strong style={{ color: "#E2E8F0" }}>funciona</strong>. Mas existe um detalhe que pouca gente conta:
         </p>
       </div>
+
+      {/* The "why" explanation */}
+      <div className="rounded-xl p-4" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)" }}>
+        <p className="text-[14px] font-bold mb-2" style={{ color: "#EF4444" }}>
+          ⚠️ Por que a maioria demora pra ver resultado?
+        </p>
+        <p className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>
+          Toda conta nova entra numa <strong style={{ color: "#E2E8F0" }}>fila de processamento</strong>. São milhares de pessoas ativando ao mesmo tempo, e o servidor processa por ordem de chegada. Na configuração padrão, o sistema leva cerca de <strong style={{ color: "#E2E8F0" }}>15 dias pra começar a operar de verdade</strong>, e o primeiro saque só acontece com <strong style={{ color: "#E2E8F0" }}>30 dias</strong>.
+        </p>
+        <p className="text-[13px] leading-relaxed mt-2" style={{ color: "#CBD5E1" }}>
+          É nesse período que <strong style={{ color: "#EF4444" }}>a maioria desiste</strong>. Não porque o sistema não funciona — mas porque não teve paciência de esperar a fila andar.
+        </p>
+      </div>
+
+      {/* The solution */}
+      <div className="rounded-xl p-4" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}>
+        <p className="text-[14px] font-bold mb-2" style={{ color: "#22C55E" }}>
+          ✅ A solução: furar a fila.
+        </p>
+        <p className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>
+          O Acelerador move sua conta pra <strong style={{ color: "#E2E8F0" }}>frente da fila</strong>. Em vez de esperar 15 dias com todo mundo, o sistema começa a operar pra você em horas. Quanto mais forte o acelerador, mais rápido você saca.
+        </p>
+      </div>
+
+      <p className="text-[13px] text-center" style={{ color: "#94A3B8" }}>
+        Escolha o nível que faz sentido pra sua realidade:
+      </p>
 
       {plans.map((plan, i) => (
         <motion.div
@@ -138,8 +165,8 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
           Quem ativou o acelerador:
         </p>
         {[
-          { img: avatarAntonio, name: "Antônio, 57", text: "Ativei o Duplo e no dia seguinte caiu R$43 na conta. Se tivesse esperado os 7 dias, já tinha desistido." },
-          { img: avatarMaria, name: "Dona Márcia, 52", text: "O especialista me ajudou a configurar tudo em 10 minutos. Primeira vez que me senti segura com algo na internet." },
+          { img: avatarAntonio, name: "Antônio, 57", text: "Tava quase desistindo porque não via resultado. Ativei o Duplo e no segundo dia já tinha R$43 na conta. Era só a fila." },
+          { img: avatarMaria, name: "Dona Márcia, 52", text: "O especialista me explicou da fila e ativou tudo pra mim. Em 3 dias eu já tava sacando. Se não tivesse acelerado, sei que ia desistir." },
         ].map((t) => (
           <div key={t.name} className="flex items-start gap-3 mt-3">
             <img src={t.img} alt={t.name} className="w-10 h-10 rounded-full object-cover shrink-0" style={{ border: "2px solid rgba(22,163,74,0.3)" }} />
@@ -152,7 +179,7 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
       </div>
 
       <button onClick={onDecline} className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2" style={{ color: "#475569" }}>
-        Não, prefiro esperar os 7 dias com a configuração padrão.
+        Não, prefiro esperar os 15 dias na fila padrão.
       </button>
     </div>
   );
