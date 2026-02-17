@@ -70,7 +70,7 @@ const plans = [
       { icon: MessageCircle, text: "Especialista pessoal no WhatsApp — 48h" },
       { icon: Headphones, text: "Relatório de ganhos toda manhã" },
     ],
-    price: 57, installments: "6x de R$ 9,90",
+    price: 67, installments: "6x de R$ 11,90",
     border: "1px solid rgba(250,204,21,0.25)",
     btnBg: "linear-gradient(135deg, #FACC15, #EAB308)", btnColor: "#020617", btnBorder: "none",
     btnText: "ATIVAR MÁXIMO",
