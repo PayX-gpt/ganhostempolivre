@@ -89,6 +89,20 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
         </p>
       )}
 
+      {/* Price + token explanation */}
+      <div className="text-center space-y-1.5">
+        <div className="flex items-center justify-center gap-2">
+          <img src={chatgptLogo} alt="ChatGPT" className="w-5 h-5 object-contain rounded" />
+          <p className="text-xs text-muted-foreground">Taxa única do <span className="font-bold text-foreground">Token ChatGPT</span></p>
+        </div>
+        <p className="text-2xl font-display font-black text-foreground">
+          {pricing.installments}x de R$<span className="text-gradient-green">{formatPrice(pricing.installment)}</span>
+        </p>
+        <p className="text-xs text-muted-foreground">
+          ou <span className="font-semibold text-foreground">R${formatPrice(pricing.price)}</span> à vista no Pix
+        </p>
+      </div>
+
       {/* CTA */}
       <CTAButton onClick={() => {
         trackCheckoutClick();
