@@ -1461,10 +1461,14 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       {/* ═══ VIDEO DEPOIMENTO (primeiro vídeo, antes do CTA) ═══ */}
       <ScrollReveal>
-        <div className="w-full space-y-2">
-          <h3 className="font-display text-lg font-bold text-foreground text-center">
-            Veja quem já <span className="text-gradient-green">mudou de vida</span>
+        <div className="w-full space-y-3">
+          <h3 className="font-display text-xl font-bold text-foreground text-center leading-snug">
+            A forma mais <span className="text-gradient-green">justa</span> de trabalhar é{" "}
+            <span className="text-primary font-black">primeiro fazendo você lucrar.</span>
           </h3>
+          <p className="text-sm text-muted-foreground text-center leading-relaxed">
+            Assista o depoimento de quem já vive isso na prática:
+          </p>
           <div className="w-full rounded-2xl overflow-hidden border border-border">
             <div id={`ifr_${VIDEO_TESTIMONIALS[0].id}_wrapper`} style={{ margin: "0 auto", width: "100%" }}>
               <div style={{ padding: `${VIDEO_TESTIMONIALS[0].padding} 0 0 0`, position: "relative" }} id={`ifr_${VIDEO_TESTIMONIALS[0].id}_aspect`}>
