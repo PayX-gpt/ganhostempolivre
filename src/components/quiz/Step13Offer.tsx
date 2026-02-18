@@ -1153,6 +1153,11 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       iframe.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/687c23666137406f142acebc/v4/embed.html" +
         (window.location.search || "?") + "&vl=" + encodeURIComponent(window.location.href);
     }
+    const iframe2 = document.getElementById("ifr_687c29a523605749de8033d9") as HTMLIFrameElement;
+    if (iframe2 && iframe2.src === "about:blank") {
+      iframe2.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/687c29a523605749de8033d9/v4/embed.html" +
+        (window.location.search || "?") + "&vl=" + encodeURIComponent(window.location.href);
+    }
     return () => { s.remove(); };
   }, []);
 
@@ -1269,6 +1274,35 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           <ArrowRight className="w-3 h-3" /> Assista e entenda como funciona em 4 minutos
         </p>
       </SectionTracker>
+
+      {/* ═══ 2a. ENTREVISTA VALDEMAR (ConverteAI) ═══ */}
+      <ScrollReveal>
+        <div className="w-full space-y-2">
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 rounded-full px-3 py-1 mb-2">
+              <Star className="w-3 h-3 text-accent" />
+              <span className="text-[10px] font-bold text-accent uppercase tracking-wider">Na mídia</span>
+            </div>
+            <p className="text-sm font-bold text-foreground leading-snug">
+              Entrevista do Seu Valdemar ao jornal sobre a plataforma
+            </p>
+          </div>
+          <div className="w-full rounded-2xl overflow-hidden border border-accent/20">
+            <div id="ifr_687c29a523605749de8033d9_wrapper" style={{ margin: "0 auto", width: "100%" }}>
+              <div style={{ position: "relative", padding: "56.25% 0 0 0" }} id="ifr_687c29a523605749de8033d9_aspect">
+                <iframe
+                  frameBorder="0"
+                  allowFullScreen
+                  src="about:blank"
+                  id="ifr_687c29a523605749de8033d9"
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+                  referrerPolicy="origin"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </ScrollReveal>
 
       {/* ═══ 2b. PROVA SOCIAL IMEDIATA (prints) ═══ */}
       <ScrollReveal>
