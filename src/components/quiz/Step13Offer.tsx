@@ -1228,53 +1228,28 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   ];
 
   return (
-    <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-4 sm:px-5 py-5 sm:py-6 gap-5 sm:gap-6">
+    <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-4 sm:px-5 py-5 sm:py-6 pb-24 gap-5 sm:gap-6">
 
-      {/* ═══ 1. URGENCY TIMER ═══ */}
+      {/* ═══ 1. URGENCY + HERO (compact) ═══ */}
       <SectionTracker id="urgency">
-        <UrgencyStrip minutes={minutes} seconds={seconds} show={true} priceLabel={formatPrice(pricing.price)} installmentLabel={formatPrice(pricing.installment)} />
-      </SectionTracker>
+        <div className="w-full space-y-4">
+          <UrgencyStrip minutes={minutes} seconds={seconds} show={true} priceLabel={formatPrice(pricing.price)} installmentLabel={formatPrice(pricing.installment)} />
+          
+          <div className="text-center space-y-2">
+            <h2 className="font-display text-[22px] sm:text-2xl font-bold text-foreground leading-snug">
+              {firstName ? `${firstName}, sua` : "Sua"} chave de acesso está{" "}
+              <span className="text-gradient-green">pronta</span>.
+            </h2>
+            <p className="text-sm text-foreground/90 leading-relaxed">
+              Falta <span className="text-primary font-bold">um único passo</span> pra começar a gerar renda extra todos os dias.
+            </p>
+          </div>
 
-      {/* ═══ 2. PROFILE ANALYSIS (approved status) ═══ */}
-      <SectionTracker id="profile_analysis">
-        <ProfileAnalysis answers={answers} firstName={firstName} />
-      </SectionTracker>
-
-      <SectionTracker id="hero">
-        <div className="text-center space-y-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/25 rounded-full px-4 py-1.5 mb-3">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs font-bold text-primary uppercase tracking-wider">Acesso liberado</span>
-            </div>
-          </motion.div>
-
-          <motion.h2
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.5 }}
-            className="font-display text-[22px] sm:text-2xl font-bold text-foreground leading-snug"
-          >
-            {firstName ? `${firstName}, sua` : "Sua"} chave de acesso está{" "}
-            <span className="text-gradient-green">pronta</span>.
-          </motion.h2>
-
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="text-base sm:text-lg text-foreground/90 leading-relaxed"
-          >
-            Falta <span className="text-primary font-bold">um único passo</span> pra você começar a gerar renda extra todos os dias — direto do seu celular.
-          </motion.p>
+          <ProfileAnalysis answers={answers} firstName={firstName} />
         </div>
       </SectionTracker>
 
-      {/* ═══ 3b. VSL VIDEO (ConverteAI) ═══ */}
+      {/* ═══ 2. VSL VIDEO (ConverteAI) ═══ */}
       <SectionTracker id="vsl_video">
         <div className="w-full rounded-2xl overflow-hidden border border-border">
           <div id="ifr_687c23666137406f142acebc_wrapper" style={{ margin: "0 auto", width: "100%" }}>
@@ -1294,6 +1269,15 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           <ArrowRight className="w-3 h-3" /> Assista e entenda como funciona em 4 minutos
         </p>
       </SectionTracker>
+
+      {/* ═══ 2b. PROVA SOCIAL IMEDIATA (prints) ═══ */}
+      <ScrollReveal>
+        <PhotoProofGallery
+          title={<>Alunos lucrando <span className="text-gradient-green">todos os dias</span></>}
+          subtitle="Prints reais enviados pelos alunos no grupo. Sem edição."
+          images={[depo1, depo2, depo3, depo4, depo5]}
+        />
+      </ScrollReveal>
 
       {/* ═══ 3c. EXPLICAÇÃO DA TAXA — visual card ═══ */}
       <ScrollReveal>
@@ -1363,14 +1347,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         </div>
       </SectionTracker>
 
-      {/* ═══ PRINTS REAIS — antes de Como Funciona ═══ */}
-      <ScrollReveal>
-        <PhotoProofGallery
-          title={<>Alunos lucrando <span className="text-gradient-green">todos os dias</span></>}
-          subtitle="Prints reais enviados pelos alunos no grupo. Sem edição."
-          images={[depo1, depo2, depo3, depo4, depo5]}
-        />
-      </ScrollReveal>
+      {/* prints moved to top, after VSL */}
 
       <Divider />
 
@@ -1446,6 +1423,45 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       <SectionTracker id="earnings_projection">
         <EarningsProjection answers={answers} firstName={firstName} />
       </SectionTracker>
+
+      {/* ═══ 8b. MINI GUARANTEE + STRONG TESTIMONIAL (zona de decisão) ═══ */}
+      <ScrollReveal>
+        <div className="w-full space-y-3">
+          {/* Mini-garantia visual */}
+          <div className="flex items-center gap-3 rounded-xl p-3 border border-primary/20 bg-primary/5">
+            <ShieldCheck className="w-8 h-8 text-primary shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-foreground">Garantia de 30 dias</p>
+              <p className="text-xs text-muted-foreground">Não gostou? Devolvemos 100%. Sem perguntas.</p>
+            </div>
+          </div>
+
+          {/* Depoimento forte com resultado numérico */}
+          <div className="funnel-card border-primary/20 space-y-2">
+            <div className="flex items-center gap-3">
+              <img src={avatarCarlos} alt="Carlos" className="w-11 h-11 rounded-full object-cover border-2 border-primary/30" />
+              <div className="flex-1">
+                <p className="font-bold text-sm text-foreground">Carlos Mendonça, 52 anos</p>
+                <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">R$200/dia</span>
+              </div>
+            </div>
+            <p className="text-sm text-foreground/85 italic leading-relaxed">
+              "Já perdi dinheiro 2 vezes na internet. Aqui o suporte me acompanhou em cada passo. Hoje faço R$200 por dia só no celular. Minha esposa viu e também começou."
+            </p>
+          </div>
+
+          {/* Copy segmentada para objeção "dinheiro" */}
+          {answers?.obstacle === "dinheiro" && (
+            <div className="rounded-xl p-3 border border-accent/20 bg-accent/5 text-center">
+              <p className="text-sm text-foreground leading-relaxed">
+                <CircleDollarSign className="w-4 h-4 text-accent inline mr-1" />
+                Custa <span className="text-accent font-bold">menos que um almoço por semana</span>. 
+                E muitos alunos recuperam o valor <span className="font-bold">no primeiro dia</span>.
+              </p>
+            </div>
+          )}
+        </div>
+      </ScrollReveal>
 
       {/* ═══ 9. CTA 2 ═══ */}
       <CTABlock showCTA={showCTA} pricing={pricing} />
@@ -1868,6 +1884,40 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       </div>
       </ScrollReveal>
+
+      {/* ═══ STICKY CTA (floating bottom bar) ═══ */}
+      {showCTA && (
+        <motion.div
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+          className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-3"
+          style={{ background: "linear-gradient(to top, hsl(var(--background)), hsl(var(--background) / 0.95) 70%, transparent)" }}
+        >
+          <div className="max-w-lg mx-auto">
+            <CTAButton onClick={() => {
+              trackCheckoutClick();
+              sendCAPIInitiateCheckout({ amount: pricing.price });
+              saveFunnelEvent("checkout_click", { context: "sticky_footer", product: "chave_token_chatgpt", amount: pricing.price });
+              const utmQs = buildTrackingQueryString();
+              const separator = pricing.checkoutUrl.includes("?") ? "&" : "?";
+              const fullUrl = utmQs ? `${pricing.checkoutUrl}${separator}${utmQs.slice(1)}` : pricing.checkoutUrl;
+              window.open(fullUrl, "_blank");
+            }} variant="accent" className="text-base sm:text-lg tracking-wider w-full funnel-glow-button">
+              ATIVAR MINHA CHAVE AGORA
+            </CTAButton>
+            <div className="flex items-center justify-center gap-3 mt-1.5">
+              <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                <Lock className="w-3 h-3" /> Compra segura
+              </p>
+              <span className="text-[10px] text-muted-foreground">•</span>
+              <p className="text-[10px] text-muted-foreground">
+                {spotsLeft} vagas restantes hoje
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };
