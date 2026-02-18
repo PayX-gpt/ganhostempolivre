@@ -960,7 +960,7 @@ const VideoTestimonialsSection = () => {
 
   return (
     <div className="w-full space-y-4">
-      {VIDEO_TESTIMONIALS.map((v) => (
+      {VIDEO_TESTIMONIALS.slice(1).map((v) => (
         <div key={v.id} className="w-full rounded-2xl overflow-hidden border border-border">
           <div id={`ifr_${v.id}_wrapper`} style={{ margin: "0 auto", width: "100%" }}>
             <div style={{ padding: `${v.padding} 0 0 0`, position: "relative" }} id={`ifr_${v.id}_aspect`}>
@@ -1458,6 +1458,29 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           </div>
         </div>
       </SectionTracker>
+
+      {/* ═══ VIDEO DEPOIMENTO (primeiro vídeo, antes do CTA) ═══ */}
+      <ScrollReveal>
+        <div className="w-full space-y-2">
+          <h3 className="font-display text-lg font-bold text-foreground text-center">
+            Veja quem já <span className="text-gradient-green">mudou de vida</span>
+          </h3>
+          <div className="w-full rounded-2xl overflow-hidden border border-border">
+            <div id={`ifr_${VIDEO_TESTIMONIALS[0].id}_wrapper`} style={{ margin: "0 auto", width: "100%" }}>
+              <div style={{ padding: `${VIDEO_TESTIMONIALS[0].padding} 0 0 0`, position: "relative" }} id={`ifr_${VIDEO_TESTIMONIALS[0].id}_aspect`}>
+                <iframe
+                  frameBorder="0"
+                  allowFullScreen
+                  src="about:blank"
+                  id={`ifr_${VIDEO_TESTIMONIALS[0].id}`}
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+                  referrerPolicy="origin"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </ScrollReveal>
 
       <Divider />
 
