@@ -308,18 +308,32 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
   );
 };
 
-/* ─── Bonus Card ─── */
-const BonusCard = ({ number, title, value, description }: { number: number; title: string; value: string; description: string }) => (
-  <div className="funnel-card border-accent/20 bg-accent/5 space-y-2">
-    <div className="flex items-center justify-between">
-      <span className="text-xs font-bold text-accent bg-accent/15 px-2.5 py-1 rounded-full flex items-center gap-1.5">
-        <Gift className="w-3.5 h-3.5" /> BÔNUS #{number}
-      </span>
-      <span className="text-xs text-muted-foreground line-through">{value}</span>
+/* ─── Bonus Card (Premium) ─── */
+const BonusCard = ({ number, title, value, description, icon: Icon }: { number: number; title: string; value: string; description: string; icon?: any }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 12 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ delay: number * 0.06 }}
+    className="relative overflow-hidden rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/5 via-background to-accent/10 p-4 space-y-2.5"
+  >
+    {/* Number badge */}
+    <div className="flex items-start justify-between gap-2">
+      <div className="flex items-center gap-2.5">
+        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-accent/15 text-accent font-bold text-sm shrink-0">
+          {number}
+        </span>
+        <p className="font-bold text-foreground text-[15px] leading-snug">{title}</p>
+      </div>
+      <span className="text-xs text-red-400/80 line-through whitespace-nowrap mt-1 shrink-0">{value}</span>
     </div>
-    <p className="font-bold text-foreground text-base">{title}</p>
-    <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
-  </div>
+    <p className="text-sm text-muted-foreground leading-relaxed pl-[42px]">{description}</p>
+    <div className="pl-[42px]">
+      <span className="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+        <CheckCircle className="w-3 h-3" /> GRÁTIS HOJE
+      </span>
+    </div>
+  </motion.div>
 );
 
 /* ─── Testimonial Card ─── */
@@ -1520,25 +1534,36 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       {/* ═══ 10. VALUE STACK — What you get ═══ */}
       <ScrollReveal>
       <div className="w-full space-y-4">
-        <div className="text-center">
-          <p className="text-xs uppercase tracking-wider text-accent font-bold mb-1">ACESSO COMPLETO</p>
-          <h3 className="font-display text-xl font-bold text-foreground">Tudo que você recebe hoje:</h3>
+        <div className="text-center space-y-2">
+          <p className="text-xs uppercase tracking-wider text-accent font-bold">ACESSO COMPLETO</p>
+          <h3 className="font-display text-xl font-bold text-foreground">
+            Tudo que você recebe ao ativar a <span className="text-gradient-green">Plataforma de Ganhos com Tempo Livre</span>:
+          </h3>
         </div>
         {[
-          { text: "Acesso vitalício à plataforma Alfa Híbrida", value: "R$497" },
+          { text: "Acesso vitalício à Plataforma de Ganhos com Tempo Livre", value: "R$497" },
           { text: "Método passo a passo — do zero ao resultado", value: "R$297" },
           { text: "Vídeo-aulas em linguagem simples e direta", value: "R$197" },
           { text: "Suporte humano em tempo real via WhatsApp", value: "R$197" },
           { text: "Comunidade exclusiva com +36.000 alunos", value: "R$147" },
           { text: "Plano personalizado pro seu perfil", value: "R$297" },
         ].map((item, i) => (
-          <div key={i} className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0">
-            <CheckCircle className="w-5 h-5 text-primary shrink-0" />
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: -10 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.05 }}
+            className="flex items-center gap-3 py-3 border-b border-border/50 last:border-0"
+          >
+            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/15 shrink-0">
+              <CheckCircle className="w-4 h-4 text-primary" />
+            </div>
             <p className="text-sm text-foreground leading-snug flex-1">{item.text}</p>
-            <span className="text-xs text-muted-foreground line-through shrink-0">{item.value}</span>
-          </div>
+            <span className="text-xs text-red-400/70 line-through shrink-0">{item.value}</span>
+          </motion.div>
         ))}
-        <div className="text-center pt-2">
+        <div className="text-center pt-2 space-y-0.5">
           <p className="text-sm text-muted-foreground">Valor total da plataforma:</p>
           <p className="text-lg text-muted-foreground line-through">R$1.632,00</p>
         </div>
@@ -1562,33 +1587,48 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       <Divider />
       <ScrollReveal>
-      <div className="w-full space-y-4">
-        <div className="text-center">
-          <img src={giftBox} alt="Presente" className="w-20 h-20 object-contain mx-auto mb-2" />
-          <p className="text-xs uppercase tracking-wider text-accent font-bold mb-1">BÔNUS EXCLUSIVOS</p>
-          <h3 className="font-display text-xl font-bold text-foreground">
-            <span className="text-accent">10 ferramentas</span> que você recebe de graça
+      <div className="w-full space-y-5">
+        {/* Premium header */}
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 rounded-full px-4 py-1.5 mx-auto">
+            <Gift className="w-4 h-4 text-accent" />
+            <span className="text-xs uppercase tracking-wider text-accent font-bold">BÔNUS EXCLUSIVOS</span>
+          </div>
+          <h3 className="font-display text-xl font-bold text-foreground leading-snug">
+            Receba <span className="text-accent">10 ferramentas extras</span> ao ativar sua 
+            <span className="text-gradient-green"> Plataforma de Ganhos com Tempo Livre</span> hoje
           </h3>
-          <p className="text-sm text-muted-foreground mt-1">Tudo incluso ao ativar hoje. Sem pagar nada a mais.</p>
+          <p className="text-sm text-muted-foreground">Tudo incluso. Sem pagar nada a mais.</p>
         </div>
 
-        
-
-        {bonuses.map((b, i) => (
-          <BonusCard key={i} number={i + 1} {...b} />
-        ))}
-
-        <div className="funnel-card border-accent/30 bg-accent/5 text-center space-y-1">
-          <p className="text-sm text-muted-foreground">Valor total dos bônus:</p>
-          <p className="text-xl text-muted-foreground line-through font-semibold">R$3.870,00</p>
-          <p className="text-lg font-bold text-accent flex items-center justify-center gap-2"><Gift className="w-5 h-5" /> Hoje: GRÁTIS com seu acesso</p>
+        {/* Bonus cards */}
+        <div className="space-y-3">
+          {bonuses.map((b, i) => (
+            <BonusCard key={i} number={i + 1} {...b} />
+          ))}
         </div>
+
+        {/* Value anchoring */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/10 via-accent/5 to-background text-center p-5 space-y-2"
+        >
+          <p className="text-sm text-muted-foreground">Valor total dos 10 bônus:</p>
+          <p className="text-2xl text-muted-foreground line-through font-semibold">R$3.870,00</p>
+          <div className="flex items-center justify-center gap-2">
+            <Gift className="w-5 h-5 text-accent" />
+            <p className="text-lg font-bold text-accent">Hoje: GRÁTIS com seu acesso</p>
+          </div>
+        </motion.div>
 
         {/* Why free — alignment of interests */}
-        <div className="rounded-xl p-4 border border-primary/15 bg-primary/5 space-y-2">
-          <p className="text-sm font-bold text-foreground text-center">
-            Por que estou dando tudo isso de graça?
-          </p>
+        <div className="rounded-2xl p-5 border border-primary/15 bg-primary/5 space-y-3">
+          <div className="flex items-center justify-center gap-2">
+            <Heart className="w-5 h-5 text-primary" />
+            <p className="text-base font-bold text-foreground">Por que estou dando tudo isso de graça?</p>
+          </div>
           <p className="text-sm text-muted-foreground leading-relaxed text-center">
             Simples: eu <span className="font-bold text-foreground">quero que você ganhe</span>. Quanto mais você lucra nos primeiros 30 dias, 
             maior é a minha parte de <span className="text-primary font-bold">2%</span> depois. 

@@ -242,7 +242,7 @@ const QuizFunnel = () => {
 
       <footer className="w-full py-3 border-t border-border">
         <p className="text-xs sm:text-sm text-muted-foreground text-center">
-          © 2026 — Alfa Híbrida • Todos os direitos reservados
+          © 2026 — Plataforma de Ganhos com Tempo Livre • Todos os direitos reservados
         </p>
       </footer>
     </div>
