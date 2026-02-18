@@ -104,17 +104,35 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
       </div>
 
       {/* CTA */}
-      <CTAButton onClick={() => {
-        trackCheckoutClick();
-        sendCAPIInitiateCheckout({ amount: pricing.price });
-        saveFunnelEvent("checkout_click", { context: context || "default", product: "chave_token_chatgpt", amount: pricing.price });
-        const utmQs = buildTrackingQueryString();
-        const separator = pricing.checkoutUrl.includes("?") ? "&" : "?";
-        const fullUrl = utmQs ? `${pricing.checkoutUrl}${separator}${utmQs.slice(1)}` : pricing.checkoutUrl;
-        window.open(fullUrl, "_blank");
-      }} variant="accent" className="animate-bounce-subtle text-lg sm:text-xl tracking-wider">
-        🔑 ATIVAR MINHA CHAVE TOKEN AGORA
-      </CTAButton>
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="w-full"
+      >
+        <button
+          onClick={() => {
+            trackCheckoutClick();
+            sendCAPIInitiateCheckout({ amount: pricing.price });
+            saveFunnelEvent("checkout_click", { context: context || "default", product: "chave_token_chatgpt", amount: pricing.price });
+            const utmQs = buildTrackingQueryString();
+            const separator = pricing.checkoutUrl.includes("?") ? "&" : "?";
+            const fullUrl = utmQs ? `${pricing.checkoutUrl}${separator}${utmQs.slice(1)}` : pricing.checkoutUrl;
+            window.open(fullUrl, "_blank");
+          }}
+          className="w-full group relative overflow-hidden rounded-2xl py-5 sm:py-6 px-6 sm:px-8 font-extrabold text-lg sm:text-xl tracking-wide cursor-pointer transition-all duration-300 active:scale-[0.97] bg-gradient-to-r from-accent via-amber-400 to-accent text-accent-foreground animate-bounce-subtle"
+          style={{
+            boxShadow: "0 0 30px hsl(42 100% 55% / 0.35), 0 0 60px hsl(42 100% 55% / 0.15), 0 8px 25px rgba(0,0,0,0.3)",
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
+          <div className="relative flex items-center justify-center gap-3">
+            <Unlock className="w-6 h-6 shrink-0" />
+            <span>ATIVAR MINHA CHAVE TOKEN</span>
+            <ArrowRight className="w-5 h-5 shrink-0 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </button>
+      </motion.div>
 
       {/* Trust badges */}
       <div className="flex items-center justify-center gap-4 flex-wrap">
