@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
 import { StepContainer, CTAButton } from "./QuizUI";
-import { AlertTriangle, Lock, Globe, CheckCircle } from "lucide-react";
+import { AlertTriangle, Lock, Globe } from "lucide-react";
 import mentorPhoto from "@/assets/mentor-new.webp";
 
 interface Step1Props {
@@ -8,25 +7,9 @@ interface Step1Props {
 }
 
 const Step1Intro = ({ onNext }: Step1Props) => {
-  const [count, setCount] = useState(2847);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCount((prev) => prev + Math.floor(Math.random() * 3) + 1);
-    }, 4000 + Math.random() * 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <StepContainer>
-      {/* Social proof numérico */}
-      <div className="w-full flex items-center justify-center gap-2 py-2">
-        <CheckCircle className="w-4 h-4 text-primary shrink-0" />
-        <p className="text-sm font-semibold text-foreground">
-          {count.toLocaleString("pt-BR")} pessoas fizeram este teste hoje
-        </p>
-      </div>
-
       {/* Alert bar */}
       <div className="w-full funnel-card border-funnel-warning/30 bg-funnel-warning/5">
         <div className="flex items-start gap-3">
@@ -54,14 +37,24 @@ const Step1Intro = ({ onNext }: Step1Props) => {
         </div>
       </div>
 
-      {/* Copy de apoio — acima do CTA */}
-      <div className="text-center space-y-2">
+
+      {/* Main copy */}
+      <div className="text-center space-y-4 mt-1">
         <h3 className="font-display text-lg sm:text-xl font-bold text-foreground leading-snug">
-          Descubra em 30 segundos se você pode{" "}
-          <span className="funnel-highlight">gerar renda extra com IA</span>
+          TEM <span className="funnel-highlight">10 MINUTOS LIVRE</span> POR DIA?
         </h3>
-        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-          Responda algumas perguntas e veja se este método <span className="font-bold">simples e já validado</span> funciona pra você.
+
+        <p className="text-base sm:text-lg font-semibold text-foreground leading-relaxed">
+          As próximas perguntas vão mostrar,{" "}
+          <span className="funnel-highlight">em menos de 2 minutos</span>, o caminho para você gerar uma{" "}
+          <span className="text-gradient-green font-extrabold">renda extra segura de R$50 a R$300 por dia</span>{" "}
+          para <span className="font-extrabold">pagar suas contas com tranquilidade</span>,{" "}
+          usando apenas alguns minutos do seu tempo livre.
+        </p>
+
+        <p className="text-sm text-muted-foreground font-medium">
+          <span className="funnel-highlight text-sm">10 minutos por dia.</span>{" "}
+          Método simples. Já validado. Resultados reais.
         </p>
       </div>
 
@@ -73,7 +66,7 @@ const Step1Intro = ({ onNext }: Step1Props) => {
         <div className="flex items-center gap-2 justify-center">
           <Lock className="w-3.5 h-3.5 text-primary shrink-0" />
           <p className="text-sm text-muted-foreground text-center">
-            100% gratuito • Sem compromisso • Leva 30 segundos
+            Teste 100% gratuito • Sem compromisso • Leva menos de 2 minutos
           </p>
         </div>
       </div>
