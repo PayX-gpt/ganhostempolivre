@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { StepContainer, CTAButton } from "./QuizUI";
-import { AlertTriangle, Lock, Globe } from "lucide-react";
+import { AlertTriangle, Lock, Globe, CheckCircle } from "lucide-react";
 import mentorPhoto from "@/assets/mentor-new.webp";
 
 interface Step1Props {
@@ -7,14 +8,22 @@ interface Step1Props {
 }
 
 const Step1Intro = ({ onNext }: Step1Props) => {
+  const [count, setCount] = useState(2847);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCount((prev) => prev + Math.floor(Math.random() * 3) + 1);
+    }, 4000 + Math.random() * 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <StepContainer>
       {/* Social proof numérico */}
       <div className="w-full flex items-center justify-center gap-2 py-2">
-        <span className="text-primary font-bold">✅</span>
+        <CheckCircle className="w-4 h-4 text-primary shrink-0" />
         <p className="text-sm font-semibold text-foreground">
-          2.847 pessoas fizeram este teste hoje
+          {count.toLocaleString("pt-BR")} pessoas fizeram este teste hoje
         </p>
       </div>
 
