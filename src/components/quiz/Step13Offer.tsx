@@ -183,28 +183,29 @@ const UrgencyStrip = ({ minutes, seconds, show, priceLabel, installmentLabel }: 
   );
 };
 
-/* ─── Profile Analysis Card (Compact) ─── */
+/* ─── Profile Analysis Card (Personalized) ─── */
 const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstName: string }) => {
   const [compatPercent, setCompatPercent] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  const [rejectedCount] = useState(() => Math.floor(Math.random() * 60) + 140);
 
   const getLabel = (key: string, val?: string) => {
     const maps: Record<string, Record<string, string>> = {
-      age: { "18-25": "18–25", "26-35": "26–35", "36-45": "36–45", "46-55": "46–55", "56+": "56+", "18 a 25 anos": "18–25", "26 a 35 anos": "26–35", "36 a 45 anos": "36–45", "46 a 55 anos": "46–55", "56 anos ou mais": "56+" },
-      incomeGoal: { "50-100": "R$50–100/dia", "100-300": "R$100–300/dia", "300-500": "R$300–500/dia", "500+": "+R$500/dia" },
-      obstacle: { medo: "Medo de errar", tempo: "Falta de tempo", inicio: "Não sabe começar", dinheiro: "Pouco capital" },
-      device: { celular: "Celular", computador: "PC", ambos: "Ambos" },
-      availability: { menos30: "<30min", "30-60": "30–60min", "1-2h": "1–2h", "2h+": "+2h" },
+      age: { "18-25": "18–25 anos", "26-35": "26–35 anos", "36-45": "36–45 anos", "46-55": "46–55 anos", "56+": "56+ anos", "18 a 25 anos": "18–25 anos", "26 a 35 anos": "26–35 anos", "36 a 45 anos": "36–45 anos", "46 a 55 anos": "46–55 anos", "56 anos ou mais": "56+ anos" },
+      incomeGoal: { "50-100": "R$50 a R$100 por dia", "100-300": "R$100 a R$300 por dia", "300-500": "R$300 a R$500 por dia", "500+": "Mais de R$500 por dia" },
+      obstacle: { medo: "Superar o medo de errar", tempo: "Otimizar o pouco tempo disponível", inicio: "Dar o primeiro passo com segurança", dinheiro: "Começar com pouco investimento" },
+      device: { celular: "Celular", computador: "Computador", ambos: "Celular e Computador" },
+      availability: { menos30: "Menos de 30 minutos", "30-60": "30 a 60 minutos", "1-2h": "1 a 2 horas", "2h+": "Mais de 2 horas" },
     };
     return maps[key]?.[val || ""] || val || "—";
   };
 
-  const items = [
-    { icon: <Users className="w-3.5 h-3.5" />, label: "Idade", value: getLabel("age", answers?.age) },
-    { icon: <TrendingUp className="w-3.5 h-3.5" />, label: "Meta", value: getLabel("incomeGoal", answers?.incomeGoal), highlight: true },
-    { icon: <AlertTriangle className="w-3.5 h-3.5" />, label: "Desafio", value: getLabel("obstacle", answers?.obstacle) },
-    { icon: <Smartphone className="w-3.5 h-3.5" />, label: "Dispositivo", value: getLabel("device", answers?.device) },
-    { icon: <Clock className="w-3.5 h-3.5" />, label: "Tempo/dia", value: getLabel("availability", answers?.availability) },
+  const profileRows = [
+    { icon: <Users className="w-4 h-4" />, label: "Faixa etária", value: getLabel("age", answers?.age) },
+    { icon: <TrendingUp className="w-4 h-4" />, label: "Meta de ganhos", value: getLabel("incomeGoal", answers?.incomeGoal), highlight: true },
+    { icon: <AlertTriangle className="w-4 h-4" />, label: "Estratégia foco", value: getLabel("obstacle", answers?.obstacle) },
+    { icon: <Smartphone className="w-4 h-4" />, label: "Dispositivo", value: getLabel("device", answers?.device) },
+    { icon: <Clock className="w-4 h-4" />, label: "Disponibilidade", value: getLabel("availability", answers?.availability) },
   ];
 
   useEffect(() => {
@@ -222,82 +223,111 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
   }, [revealed]);
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-4">
+      {/* Header: Personalized greeting */}
+      <div className="text-center space-y-1">
+        <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 rounded-full px-3 py-1">
+          <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[11px] font-bold text-primary uppercase tracking-wider">Análise Concluída</span>
+        </div>
+      </div>
+
       <div
-        className="rounded-2xl overflow-hidden border border-primary/20"
-        style={{ background: "linear-gradient(180deg, hsl(var(--card)), hsl(var(--primary) / 0.03))" }}
+        className="rounded-2xl overflow-hidden border border-primary/30"
+        style={{ background: "linear-gradient(180deg, hsl(var(--card)), hsl(var(--primary) / 0.05))" }}
       >
-        {/* Title bar */}
-        <div className="px-4 py-2.5 border-b border-primary/10 flex items-center gap-2.5" style={{ background: "hsl(var(--primary) / 0.06)" }}>
-          <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center">
-            <Bot className="w-3.5 h-3.5 text-primary" />
+        {/* Title bar with name */}
+        <div className="px-4 py-3 border-b border-primary/15 flex items-center gap-3" style={{ background: "hsl(var(--primary) / 0.08)" }}>
+          <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+            <Bot className="w-4.5 h-4.5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-foreground truncate">
-              {firstName ? `Perfil de ${firstName}` : "Seu perfil"}
+            <p className="text-sm font-bold text-foreground">
+              {firstName ? `Relatório de ${firstName}` : "Seu relatório"}
             </p>
+            <p className="text-[10px] text-muted-foreground">Gerado pela IA com base nas suas respostas</p>
           </div>
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: revealed ? 1 : 0 }}
-            className="flex items-center gap-1 bg-primary/10 rounded-full px-2 py-0.5"
+            className="flex items-center gap-1 bg-primary/15 border border-primary/30 rounded-full px-2.5 py-1"
           >
-            <CheckCircle className="w-3 h-3 text-primary" />
+            <CheckCircle className="w-3.5 h-3.5 text-primary" />
             <span className="text-[10px] font-bold text-primary">Aprovado</span>
           </motion.div>
         </div>
 
-        {/* Compact items grid */}
-        <div className="px-3 py-3">
-          <div className="flex flex-wrap gap-1.5">
-            {items.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={revealed ? { opacity: 1, scale: 1 } : {}}
-                transition={{ delay: i * 0.08, duration: 0.25 }}
-                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs ${
-                  item.highlight
-                    ? "bg-primary/10 border border-primary/20 text-primary font-bold"
-                    : "bg-secondary/60 text-foreground"
-                }`}
-              >
-                <span className={item.highlight ? "text-primary" : "text-muted-foreground"}>{item.icon}</span>
-                <span className="font-medium">{item.value}</span>
-              </motion.div>
-            ))}
-          </div>
+        {/* Personalized profile rows */}
+        <div className="px-3 py-3 space-y-1.5">
+          {profileRows.map((row, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={revealed ? { opacity: 1, x: 0 } : {}}
+              transition={{ delay: i * 0.1, duration: 0.3 }}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${
+                row.highlight
+                  ? "bg-primary/10 border border-primary/20"
+                  : "bg-secondary/40"
+              }`}
+            >
+              <span className={row.highlight ? "text-primary" : "text-muted-foreground"}>{row.icon}</span>
+              <span className="text-xs text-muted-foreground flex-shrink-0">{row.label}:</span>
+              <span className={`text-xs font-bold ml-auto text-right ${row.highlight ? "text-primary" : "text-foreground"}`}>{row.value}</span>
+            </motion.div>
+          ))}
         </div>
 
-        {/* Compact compat bar + verdict */}
+        {/* Strategy verdict */}
         {revealed && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="px-4 py-3 border-t border-primary/10"
-            style={{ background: "hsl(var(--primary) / 0.04)" }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="px-4 py-3 border-t border-primary/15 space-y-3"
+            style={{ background: "hsl(var(--primary) / 0.05)" }}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Compatibilidade</span>
-                  <span className="text-lg font-display font-black text-primary">{compatPercent}%</span>
-                </div>
-                <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full progress-bar-fill"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${compatPercent}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                  />
-                </div>
+            {/* Compat bar */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Compatibilidade com a plataforma</span>
+                <span className="text-xl font-display font-black text-primary">{compatPercent}%</span>
               </div>
-              <Zap className="w-5 h-5 text-accent shrink-0" />
+              <div className="w-full h-2.5 rounded-full bg-secondary overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full progress-bar-fill"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${compatPercent}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                />
+              </div>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-1.5 text-center">
-              Top <span className="text-primary font-bold">3%</span> dos perfis com maior chance de resultado rápido
-            </p>
+
+            {/* Personalized verdict */}
+            <div className="bg-card border border-border rounded-xl p-3 space-y-2">
+              <div className="flex items-start gap-2">
+                <Zap className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                <p className="text-xs text-foreground leading-relaxed">
+                  {firstName ? <><span className="font-bold">{firstName}</span>, </> : ""}
+                  com base no seu perfil, a IA traçou uma <span className="text-primary font-bold">estratégia personalizada</span> para você alcançar sua meta de <span className="text-accent font-bold">{getLabel("incomeGoal", answers?.incomeGoal)}</span> usando apenas seu <span className="font-bold">{getLabel("device", answers?.device).toLowerCase()}</span> com <span className="font-bold">{getLabel("availability", answers?.availability).toLowerCase()}</span> por dia.
+                </p>
+              </div>
+            </div>
+
+            {/* Exclusivity / rejection stats */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              className="bg-destructive/5 border border-destructive/15 rounded-xl p-3"
+            >
+              <div className="flex items-start gap-2">
+                <Eye className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Nos últimos 30 minutos, <span className="font-bold text-destructive">{rejectedCount} pessoas não foram aprovadas</span> pela IA por incompatibilidade de perfil. Sua vaga foi liberada porque você se enquadra no <span className="text-primary font-bold">top 3%</span> dos perfis com maior chance de resultado rápido.
+                </p>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </div>
