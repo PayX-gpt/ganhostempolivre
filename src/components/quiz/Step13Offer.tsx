@@ -81,48 +81,13 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
 
   return showCTA ? (
     <div ref={ref} className="w-full space-y-5">
-      {/* Price card */}
-      <div
-        className="w-full rounded-2xl overflow-hidden border border-primary/25"
-        style={{ background: "linear-gradient(180deg, hsl(var(--card)), hsl(var(--primary) / 0.04))" }}
-      >
-        {/* Top label */}
-        <div className="px-4 py-2.5 text-center border-b border-primary/10" style={{ background: "hsl(var(--primary) / 0.06)" }}>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold">Chave Token ChatGPT</p>
-        </div>
-
-        {/* Price area */}
-        <div className="px-5 py-6 sm:py-8 text-center space-y-4">
-          {/* Installment — hero */}
-          <div className="space-y-1">
-            <p className="text-sm sm:text-base text-muted-foreground font-medium">{pricing.installments}x de</p>
-            <p className="text-[3.2rem] sm:text-[4rem] font-display font-black text-foreground leading-none tracking-tight">
-              R$<span className="text-gradient-green">{formatPrice(pricing.installment)}</span>
-            </p>
-          </div>
-
-          {/* Divider line */}
-          <div className="flex items-center gap-3 px-6">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">ou</span>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-
-          {/* Lump sum */}
-          <p className="text-base sm:text-lg text-foreground font-semibold">
-            R${formatPrice(pricing.price)} <span className="text-muted-foreground font-normal text-sm">à vista no Pix</span>
-          </p>
-        </div>
-
-        {/* Emotional anchor */}
-        <div className="px-5 pb-5">
-          <div className="rounded-xl p-3 border border-accent/15 bg-accent/5 text-center">
-            <p className="text-sm text-foreground leading-relaxed">
-              Isso é <span className="text-primary font-bold">menos que um lanche no fim de semana</span> — por algo que pode trazer tranquilidade financeira pra você e sua família.
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Context text if provided */}
+      {context && (
+        <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+          {context}
+        </p>
+      )}
 
       {/* CTA */}
       <CTAButton onClick={() => {
