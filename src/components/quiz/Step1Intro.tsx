@@ -54,7 +54,18 @@ const Step1Intro = ({ onNext }: Step1Props) => {
         </div>
       </div>
 
-      {/* CTA — logo após o mentor */}
+      {/* Copy de apoio — acima do CTA */}
+      <div className="text-center space-y-2">
+        <h3 className="font-display text-lg sm:text-xl font-bold text-foreground leading-snug">
+          Descubra em 30 segundos se você pode{" "}
+          <span className="funnel-highlight">gerar renda extra com IA</span>
+        </h3>
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+          Responda algumas perguntas e veja se este método <span className="font-bold">simples e já validado</span> funciona pra você.
+        </p>
+      </div>
+
+      {/* CTA */}
       <div className="w-full space-y-3">
         <CTAButton onClick={onNext} className="animate-bounce-subtle text-lg sm:text-xl">
           INICIAR TESTE →
@@ -65,17 +76,6 @@ const Step1Intro = ({ onNext }: Step1Props) => {
             100% gratuito • Sem compromisso • Leva 30 segundos
           </p>
         </div>
-      </div>
-
-      {/* Copy de apoio — abaixo do CTA */}
-      <div className="text-center space-y-2 mt-1">
-        <h3 className="font-display text-lg sm:text-xl font-bold text-foreground leading-snug">
-          Descubra em 30 segundos se você pode{" "}
-          <span className="funnel-highlight">gerar renda extra com IA</span>
-        </h3>
-        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-          Responda algumas perguntas e veja se este método <span className="font-bold">simples e já validado</span> funciona pra você.
-        </p>
       </div>
 
       {/* Global trust */}
