@@ -1638,12 +1638,75 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       </div>
       </ScrollReveal>
 
-      {/* ═══ 12. CTA 3 ═══ */}
+      {/* ═══ OBJECTION BREAKING (moved before pricing) ═══ */}
+      <ScrollReveal>
+      <div className="w-full space-y-4">
+        <h3 className="font-display text-xl font-bold text-foreground text-center">
+          Talvez você ainda esteja pensando...
+        </h3>
+
+        {(() => {
+          const ageLabel = answers?.age === "18-25" ? "jovem" : answers?.age === "26-35" ? "na casa dos 30" : answers?.age === "36-45" ? "na casa dos 30 e 40" : answers?.age === "56+" ? "com mais de 50 anos" : "com mais de 40 anos";
+          const ageObjText = answers?.age === "18-25" ? '"Sou muito novo pra isso..."' : answers?.age === "26-35" ? '"Será que funciona pra quem tem menos de 35?"' : answers?.age === "56+" ? '"Já tenho mais de 55 anos... será que funciona pra mim?"' : '"Já tenho mais de 40, 50 anos... será que funciona pra mim?"';
+          const ageObjResp = answers?.age === "18-25"
+            ? "Muitos dos nossos alunos mais jovens estão construindo sua independência financeira desde cedo. A vantagem é ter mais tempo e energia. Se você usa o celular, já tem tudo que precisa."
+            : answers?.age === "26-35"
+            ? "Temos milhares de alunos na faixa dos 26 a 35 anos. O método é simples e direto — ideal pra quem quer uma renda extra sem complicação."
+            : `A maioria dos nossos alunos tem perfil ${ageLabel}. O método foi desenhado pra quem não tem experiência com tecnologia. Se você usa WhatsApp, você já tem tudo que precisa.`;
+          return [
+            { objection: ageObjText, response: ageObjResp },
+            { objection: '"Já perdi dinheiro na internet antes..."', response: "Exatamente por isso existe a garantia de 30 dias. Você testa sem risco. Se não gostar, devolvo cada centavo. Diferente de golpe, aqui você tem proteção total." },
+            { objection: '"Não tenho dinheiro sobrando..."', response: `São R$${formatPrice(pricing.price)} uma única vez. Muitos alunos recuperam esse valor no primeiro dia. E se não recuperar em 30 dias, você recebe tudo de volta. Risco zero.` },
+            { objection: '"Tenho medo de tecnologia..."', response: "Nosso suporte te acompanha em cada clique. Literalmente. Manda mensagem no WhatsApp e alguém responde em minutos. Você nunca vai ficar perdido." },
+          ];
+        })().map((item, i) => (
+          <div key={i} className="funnel-card border-border space-y-2">
+            <p className="text-sm text-foreground/60 italic">{item.objection}</p>
+            <div className="flex gap-2">
+              <ArrowRight className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <p className="text-sm text-foreground font-medium leading-relaxed">{item.response}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      </ScrollReveal>
+
+      <Divider />
+
+      {/* ═══ TESTIMONIALS CAROUSEL ═══ */}
+      <ScrollReveal>
+        <TestimonialsCarousel testimonials={testimonials} />
+      </ScrollReveal>
+
+      <Divider />
+
+      {/* ═══ WHATSAPP FEEDBACK ═══ */}
+      <ScrollReveal>
+      <div className="w-full space-y-4">
+        <div className="text-center space-y-1.5">
+          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 mx-auto">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Conversas reais</span>
+          </div>
+          <h3 className="font-display text-xl font-bold text-foreground">
+            Olha o que estão mandando <span className="text-gradient-green">agora mesmo</span>
+          </h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Prints diretos do grupo de alunos. Sem edição, sem filtro.
+          </p>
+        </div>
+        <WhatsAppPrintsCarousel />
+      </div>
+      </ScrollReveal>
+
+      <Divider />
+
+      {/* ═══ CTA (after all objection-breaking content) ═══ */}
       <CTABlock showCTA={showCTA} pricing={pricing} />
 
       <Divider />
 
-      {/* ═══ 13. PRICE ANCHOR (why R$66) ═══ */}
+      {/* ═══ PRICE ANCHOR (single pricing section) ═══ */}
       <ScrollReveal>
       <div className="w-full space-y-5">
         <div className="text-center space-y-2">
@@ -1733,12 +1796,12 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       </div>
       </ScrollReveal>
 
-      {/* ═══ 14. CTA 4 ═══ */}
+      {/* ═══ CTA (after pricing) ═══ */}
       <CTABlock showCTA={showCTA} context="Garantia incondicional de 30 dias" pricing={pricing} />
 
       <Divider />
 
-      {/* ═══ 15. GUARANTEE (risk reversal) ═══ */}
+      {/* ═══ GUARANTEE (risk reversal) ═══ */}
       <ScrollReveal>
       <div className="w-full funnel-card border-accent/30 bg-accent/5 space-y-4">
         <div className="flex items-start gap-4">
@@ -1764,74 +1827,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       <Divider />
 
-      {/* ═══ 16. OBJECTION BREAKING ═══ */}
-      <ScrollReveal>
-      <div className="w-full space-y-4">
-        <h3 className="font-display text-xl font-bold text-foreground text-center">
-          Talvez você ainda esteja pensando...
-        </h3>
-
-        {(() => {
-          const ageLabel = answers?.age === "18-25" ? "jovem" : answers?.age === "26-35" ? "na casa dos 30" : answers?.age === "36-45" ? "na casa dos 30 e 40" : answers?.age === "56+" ? "com mais de 50 anos" : "com mais de 40 anos";
-          const ageObjText = answers?.age === "18-25" ? '"Sou muito novo pra isso..."' : answers?.age === "26-35" ? '"Será que funciona pra quem tem menos de 35?"' : answers?.age === "56+" ? '"Já tenho mais de 55 anos... será que funciona pra mim?"' : '"Já tenho mais de 40, 50 anos... será que funciona pra mim?"';
-          const ageObjResp = answers?.age === "18-25"
-            ? "Muitos dos nossos alunos mais jovens estão construindo sua independência financeira desde cedo. A vantagem é ter mais tempo e energia. Se você usa o celular, já tem tudo que precisa."
-            : answers?.age === "26-35"
-            ? "Temos milhares de alunos na faixa dos 26 a 35 anos. O método é simples e direto — ideal pra quem quer uma renda extra sem complicação."
-            : `A maioria dos nossos alunos tem perfil ${ageLabel}. O método foi desenhado pra quem não tem experiência com tecnologia. Se você usa WhatsApp, você já tem tudo que precisa.`;
-          return [
-            { objection: ageObjText, response: ageObjResp },
-            { objection: '"Já perdi dinheiro na internet antes..."', response: "Exatamente por isso existe a garantia de 30 dias. Você testa sem risco. Se não gostar, devolvo cada centavo. Diferente de golpe, aqui você tem proteção total." },
-            { objection: '"Não tenho dinheiro sobrando..."', response: `São R$${formatPrice(pricing.price)} uma única vez. Muitos alunos recuperam esse valor no primeiro dia. E se não recuperar em 30 dias, você recebe tudo de volta. Risco zero.` },
-            { objection: '"Tenho medo de tecnologia..."', response: "Nosso suporte te acompanha em cada clique. Literalmente. Manda mensagem no WhatsApp e alguém responde em minutos. Você nunca vai ficar perdido." },
-          ];
-        })().map((item, i) => (
-          <div key={i} className="funnel-card border-border space-y-2">
-            <p className="text-sm text-foreground/60 italic">{item.objection}</p>
-            <div className="flex gap-2">
-              <ArrowRight className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-              <p className="text-sm text-foreground font-medium leading-relaxed">{item.response}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-      </ScrollReveal>
-
-      <Divider />
-
-      {/* ═══ 17. TESTIMONIALS ═══ */}
-      <ScrollReveal>
-        <TestimonialsCarousel testimonials={testimonials} />
-      </ScrollReveal>
-
-      <Divider />
-
-      {/* ═══ 19. WHATSAPP FEEDBACK SCREENSHOTS ═══ */}
-      <ScrollReveal>
-      <div className="w-full space-y-4">
-        <div className="text-center space-y-1.5">
-          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 mx-auto">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Conversas reais</span>
-          </div>
-          <h3 className="font-display text-xl font-bold text-foreground">
-            Olha o que estão mandando <span className="text-gradient-green">agora mesmo</span>
-          </h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Prints diretos do grupo de alunos. Sem edição, sem filtro.
-          </p>
-        </div>
-
-        <WhatsAppPrintsCarousel />
-      </div>
-      </ScrollReveal>
-
-      {/* ═══ 20. CTA 5 ═══ */}
-      <CTABlock showCTA={showCTA} pricing={pricing} />
-
-      <Divider />
-
-      {/* ═══ 21. EMOTIONAL FUTURE PACING ═══ */}
+      {/* ═══ EMOTIONAL FUTURE PACING ═══ */}
       <ScrollReveal>
       <div className="w-full funnel-card border-primary/20 bg-primary/5 space-y-4">
         <h3 className="font-display text-xl font-bold text-foreground text-center leading-snug">
