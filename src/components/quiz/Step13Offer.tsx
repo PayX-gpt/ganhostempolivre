@@ -1274,13 +1274,12 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         <div className="w-full space-y-4">
           <UrgencyStrip minutes={minutes} seconds={seconds} show={true} priceLabel={formatPrice(pricing.price)} installmentLabel={formatPrice(pricing.installment)} />
           
-          <div className="text-center space-y-2">
-            <h2 className="font-display text-[22px] sm:text-2xl font-bold text-foreground leading-snug">
-              {firstName ? `${firstName}, sua` : "Sua"} chave de acesso está{" "}
-              <span className="text-gradient-green">pronta</span>.
+          <div className="text-center space-y-1">
+            <h2 className="font-display text-lg sm:text-2xl font-bold text-foreground leading-tight">
+              {firstName ? `${firstName}, sua` : "Sua"} chave está <span className="text-gradient-green">pronta</span>.
             </h2>
-            <p className="text-sm text-foreground/90 leading-relaxed">
-              Falta <span className="text-primary font-bold">um único passo</span> pra começar a gerar renda extra todos os dias.
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Falta <span className="text-primary font-bold">1 passo</span> pra gerar renda extra todo dia.
             </p>
           </div>
 
