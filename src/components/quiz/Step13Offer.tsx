@@ -1174,12 +1174,16 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   const pricing = getPricing(answers?.accountBalance);
 
   const bonuses = [
-    { title: "Guia: Primeiro Resultado em 24h", value: "R$97", description: "Passo a passo simplificado pra você ver dinheiro na conta ainda hoje. Sem enrolação." },
+    { title: "Modo Auto-Lucro Inteligente", value: "R$997", description: "Ative e o sistema escolhe o melhor ativo, horário e valor por operação baseado no seu saldo. Você só clica em 'ativar'." },
+    { title: "Suporte VIP — Resposta em 2 Minutos", value: "R$397", description: "Dúvida? Travou? Só chamar. Canal direto com especialistas que respondem em tempo real. Você nunca fica sozinho." },
+    { title: "Turbo de Lucro — Versão Estratégica", value: "R$297", description: "Rotina inteligente que multiplica saldos pequenos com entradas automáticas em sequência controlada." },
+    { title: "Auto-Config de Bancas (100% Automático)", value: "R$297", description: "O sistema identifica o valor da sua banca e ajusta risco, valor por entrada e metas. Até uma criança opera com isso ativado." },
+    { title: "Relatório Diário: Melhor Horário pra Ativar", value: "R$197", description: "Você recebe uma notificação todo dia: 'ATIVE AGORA' — na melhor hora estatística de lucro." },
+    { title: "Bot de Lucros em Dólar — Versão Silenciosa", value: "R$497", description: "Roda em segundo plano e envia alertas de ganhos e oportunidades no Telegram. Nem precisa abrir o sistema." },
+    { title: "Bloqueador de Ganância e Pânico", value: "R$497", description: "Sistema interno que trava operações fora da lógica. Protege seu lucro e controla a ansiedade do operador." },
+    { title: "Dashboard Comparativo Real x Dólar", value: "R$147", description: "Mostra em tempo real quanto você ganharia operando no Brasil vs em dólar. Clareza total do seu poder de escala." },
+    { title: "Acesso Prioritário a Todas as Atualizações", value: "R$397", description: "Você será um dos primeiros a testar cada melhoria antes de todo mundo. Vantagem competitiva total." },
     { title: "Comunidade VIP no WhatsApp", value: "R$147", description: "Grupo exclusivo com +36.000 alunos que se ajudam todos os dias. Nunca mais fique sozinho." },
-    { title: "Planilha de Controle Financeiro", value: "R$47", description: "Acompanhe seus ganhos diários de forma simples. Feita pra quem nunca mexeu com planilha." },
-    { title: "Aulas: Segurança Digital", value: "R$97", description: "Aprenda a se proteger de golpes online e usar o celular com confiança total." },
-    { title: "Suporte Humano por 90 Dias", value: "R$197", description: "Gente de verdade te ajudando. Sem robô, sem espera. Resposta em minutos." },
-    { title: "Plano Personalizado pro Seu Perfil", value: "R$297", description: "Com base nas suas respostas, criamos um plano sob medida pra sua rotina e meta." },
   ];
 
   const faqs = [
@@ -1563,9 +1567,9 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           <img src={giftBox} alt="Presente" className="w-20 h-20 object-contain mx-auto mb-2" />
           <p className="text-xs uppercase tracking-wider text-accent font-bold mb-1">BÔNUS EXCLUSIVOS</p>
           <h3 className="font-display text-xl font-bold text-foreground">
-            E mais: <span className="text-accent">6 bônus</span> pra você sair na frente
+            <span className="text-accent">10 ferramentas</span> que você recebe de graça
           </h3>
-          <p className="text-sm text-muted-foreground mt-1">Inclusos no seu acesso. Sem pagar nada a mais.</p>
+          <p className="text-sm text-muted-foreground mt-1">Tudo incluso ao ativar hoje. Sem pagar nada a mais.</p>
         </div>
 
         
@@ -1576,8 +1580,20 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
         <div className="funnel-card border-accent/30 bg-accent/5 text-center space-y-1">
           <p className="text-sm text-muted-foreground">Valor total dos bônus:</p>
-          <p className="text-xl text-muted-foreground line-through font-semibold">R$882,00</p>
+          <p className="text-xl text-muted-foreground line-through font-semibold">R$3.870,00</p>
           <p className="text-lg font-bold text-accent flex items-center justify-center gap-2"><Gift className="w-5 h-5" /> Hoje: GRÁTIS com seu acesso</p>
+        </div>
+
+        {/* Why free — alignment of interests */}
+        <div className="rounded-xl p-4 border border-primary/15 bg-primary/5 space-y-2">
+          <p className="text-sm font-bold text-foreground text-center">
+            Por que estou dando tudo isso de graça?
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed text-center">
+            Simples: eu <span className="font-bold text-foreground">quero que você ganhe</span>. Quanto mais você lucra nos primeiros 30 dias, 
+            maior é a minha parte de <span className="text-primary font-bold">2%</span> depois. 
+            Eu só ganho quando <span className="text-primary font-bold">você ganha</span>. Por isso faço questão de te dar todas as ferramentas possíveis.
+          </p>
         </div>
       </div>
       </ScrollReveal>
@@ -1606,16 +1622,16 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             <span className="text-sm text-muted-foreground line-through">R$1.632</span>
           </div>
           <div className="flex justify-between items-center py-1.5 border-b border-border/50">
-            <span className="text-sm text-muted-foreground">6 bônus exclusivos</span>
-            <span className="text-sm text-muted-foreground line-through">R$882</span>
+            <span className="text-sm text-muted-foreground">10 bônus exclusivos</span>
+            <span className="text-sm text-muted-foreground line-through">R$3.870</span>
           </div>
           <div className="flex justify-between items-center py-1.5 border-b border-border/50">
-            <span className="text-sm text-muted-foreground">Suporte humano 90 dias</span>
-            <span className="text-sm text-muted-foreground line-through">R$197</span>
+            <span className="text-sm text-muted-foreground">Suporte VIP em tempo real</span>
+            <span className="text-sm text-muted-foreground line-through">R$397</span>
           </div>
           <div className="flex justify-between items-center py-1.5">
             <span className="text-sm font-bold text-foreground">Valor total real</span>
-            <span className="text-sm font-bold text-muted-foreground line-through">R$2.711</span>
+            <span className="text-sm font-bold text-muted-foreground line-through">R$5.899</span>
           </div>
         </div>
 
