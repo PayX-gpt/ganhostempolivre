@@ -325,28 +325,11 @@ Deno.serve(async (req) => {
       console.log(`✅ [Kirvano] New record: ${data.id} → ${funnelStep} R$${amount}`);
     }
 
-    // ====== FACEBOOK CAPI — PURCHASE ONLY (IC is handled client-side) ======
-    let capiSent = false;
-
-    // PURCHASE — only on approved, only once per transaction_id
-    if (normalizedStatus === "approved" && !alreadySentCAPI && transactionId) {
-      const eventId = `purchase_${transactionId}`;
-      capiSent = await sendFacebookCAPI({
-        eventName: "Purchase",
-        eventId,
-        email, phone, fbclid, fbp, fbc,
-        amount,
-        ip: clientIp,
-        userAgent: req.headers.get("user-agent"),
-      });
-      if (capiSent && recordId) {
-        await supabase
-          .from("purchase_tracking")
-          .update({ conversion_api_sent: true })
-          .eq("id", recordId);
-        console.log(`📡 [CAPI] Purchase marked as sent for ${transactionId}`);
-      }
-    }
+    // ====== FACEBOOK CAPI — DISABLED (UTMify handles Purchase events) ======
+    // Purchase events are sent to Facebook exclusively via UTMify pixel
+    // to avoid duplication (different event_ids cause Facebook to count twice).
+    // IC (InitiateCheckout) is still handled by the dedicated edge function.
+    const capiSent = false;
 
     // ====== AUDIT LOG ======
     await supabase.from("funnel_audit_logs").insert({
