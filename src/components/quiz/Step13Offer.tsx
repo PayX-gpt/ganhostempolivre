@@ -957,12 +957,15 @@ const EarningsProjection = ({ answers, firstName }: { answers?: QuizAnswers; fir
   const ageGroup = getAgeGroup(answers?.age);
   const alumniCount = getAlumniCount(answers?.age);
 
+  const monthlyGoal = daily * 30;
+  const nearGoal = Math.round(monthlyGoal * 1.05); // slightly above to not look exact
+
   const projections = [
-    { period: "Semana 1", value: Math.round(daily * 0.3), bar: 15, label: "Primeiros resultados", color: "hsl(var(--primary) / 0.4)" },
-    { period: "Semana 2", value: Math.round(daily * 0.5), bar: 30, label: "Ganhando consistência", color: "hsl(var(--primary) / 0.55)" },
-    { period: "Mês 1", value: Math.round(daily * 0.7 * 30), bar: 55, label: "Renda mensal sólida", color: "hsl(var(--primary) / 0.7)" },
-    { period: "Mês 2", value: Math.round(daily * 0.85 * 30), bar: 75, label: "Crescimento acelerado", color: "hsl(var(--primary) / 0.85)" },
-    { period: "Mês 3", value: Math.round(daily * 1 * 30), bar: 100, label: "Meta atingida", color: "hsl(var(--primary))" },
+    { period: "Dia 3", value: Math.round(daily * 0.15), bar: 10, label: "Primeira operação no ar", color: "hsl(var(--primary) / 0.35)" },
+    { period: "Dia 7", value: Math.round(daily * 0.4), bar: 25, label: "Primeiros resultados reais", color: "hsl(var(--primary) / 0.5)" },
+    { period: "Dia 14", value: Math.round(daily * 0.65), bar: 45, label: "Ganhando consistência", color: "hsl(var(--primary) / 0.65)" },
+    { period: "Dia 21", value: Math.round(daily * 0.85), bar: 70, label: "Ritmo acelerando", color: "hsl(var(--primary) / 0.8)" },
+    { period: "Dia 30", value: nearGoal, bar: 100, label: "Meta batida", color: "hsl(var(--primary))" },
   ];
 
   return (
@@ -979,7 +982,7 @@ const EarningsProjection = ({ answers, firstName }: { answers?: QuizAnswers; fir
           <span className="text-[11px] font-bold text-primary uppercase tracking-wider">Projeção personalizada</span>
         </motion.div>
         <h3 className="font-display text-lg font-bold text-foreground leading-snug">
-          {firstName ? `${firstName}, ` : ""}Veja o que esperar nos próximos 90 dias
+          {firstName ? `${firstName}, ` : ""}Veja o que esperar nos próximos 30 dias
         </h3>
         <p className="text-sm text-muted-foreground leading-relaxed">
           Baseado nas suas respostas e nos resultados de{" "}
@@ -1040,9 +1043,9 @@ const EarningsProjection = ({ answers, firstName }: { answers?: QuizAnswers; fir
         {/* Bottom highlight */}
         <div className="px-4 py-3 border-t border-primary/10" style={{ background: "hsl(var(--primary) / 0.06)" }}>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-primary" />
-              <span className="text-sm font-bold text-foreground">Potencial em 90 dias</span>
+              <span className="text-sm font-bold text-foreground">Potencial em 30 dias</span>
             </div>
             <motion.span
               initial={{ scale: 0.8, opacity: 0 }}
@@ -1050,7 +1053,7 @@ const EarningsProjection = ({ answers, firstName }: { answers?: QuizAnswers; fir
               transition={{ delay: 0.9, type: "spring" }}
               className="text-xl font-display font-bold text-primary"
             >
-              R${(daily * 30).toLocaleString("pt-BR")}/mês
+              R${nearGoal.toLocaleString("pt-BR")}/mês
             </motion.span>
           </div>
         </div>
