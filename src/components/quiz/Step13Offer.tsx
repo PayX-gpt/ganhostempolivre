@@ -309,7 +309,7 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
             {/* Personalized strategy sentence */}
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               <Zap className="w-3 h-3 text-accent inline mr-1" />
-              {firstName ? <><span className="font-bold text-foreground">{firstName}</span>, a</> : "A"} IA traçou uma <span className="text-primary font-bold">estratégia sob medida</span> para alcançar <span className="text-accent font-bold">{getLabelFull("incomeGoal", answers?.incomeGoal)}</span> usando seu {getLabelFull("device", answers?.device)} com {getLabelFull("availability", answers?.availability)}/dia.
+              {firstName ? <><span className="font-bold text-foreground">{firstName}</span>, a</> : "A"} IA traçou uma <span className="text-primary font-bold">estratégia sob medida</span> para alcançar <span className="text-[13px] text-accent font-black">{getLabelFull("incomeGoal", answers?.incomeGoal)}</span> usando seu {getLabelFull("device", answers?.device)} com <span className="text-[13px] text-foreground font-bold">{getLabelFull("availability", answers?.availability)}</span>/dia.
             </p>
 
             {/* Rejection exclusivity — single line */}
