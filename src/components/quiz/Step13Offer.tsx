@@ -186,349 +186,121 @@ const UrgencyStrip = ({ minutes, seconds, show, priceLabel, installmentLabel }: 
   );
 };
 
-/* ─── Profile Analysis Card ─── */
+/* ─── Profile Analysis Card (Compact) ─── */
 const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstName: string }) => {
-  const [phase, setPhase] = useState(0); // 0=scanning, 1=items reveal, 2=projection
-  const [revealedItems, setRevealedItems] = useState(0);
   const [compatPercent, setCompatPercent] = useState(0);
+  const [revealed, setRevealed] = useState(false);
 
-  const getObstacleLabel = (o?: string) => {
-    const map: Record<string, string> = {
-      medo: "Medo de errar", tempo: "Falta de tempo",
-      inicio: "Não sabe por onde começar", dinheiro: "Pouco capital inicial",
+  const getLabel = (key: string, val?: string) => {
+    const maps: Record<string, Record<string, string>> = {
+      age: { "18-25": "18–25", "26-35": "26–35", "36-45": "36–45", "46-55": "46–55", "56+": "56+", "18 a 25 anos": "18–25", "26 a 35 anos": "26–35", "36 a 45 anos": "36–45", "46 a 55 anos": "46–55", "56 anos ou mais": "56+" },
+      incomeGoal: { "50-100": "R$50–100/dia", "100-300": "R$100–300/dia", "300-500": "R$300–500/dia", "500+": "+R$500/dia" },
+      obstacle: { medo: "Medo de errar", tempo: "Falta de tempo", inicio: "Não sabe começar", dinheiro: "Pouco capital" },
+      device: { celular: "Celular", computador: "PC", ambos: "Ambos" },
+      availability: { menos30: "<30min", "30-60": "30–60min", "1-2h": "1–2h", "2h+": "+2h" },
     };
-    return map[o || ""] || "—";
-  };
-
-  const getGoalLabel = (g?: string) => {
-    const map: Record<string, string> = {
-      "50-100": "R$50–R$100/dia", "100-300": "R$100–R$300/dia",
-      "300-500": "R$300–R$500/dia", "500+": "+R$500/dia",
-    };
-    return map[g || ""] || "Renda extra diária";
-  };
-
-  const getGoalWeekly = (g?: string) => {
-    const map: Record<string, string> = {
-      "50-100": "R$80/dia", "100-300": "R$150/dia",
-      "300-500": "R$250/dia", "500+": "R$350/dia",
-    };
-    return map[g || ""] || "R$80/dia";
-  };
-
-  const getGoalMonthly = (g?: string) => {
-    const map: Record<string, string> = {
-      "50-100": "R$2.000/mês", "100-300": "R$4.500/mês",
-      "300-500": "R$7.000/mês", "500+": "R$10.000/mês",
-    };
-    return map[g || ""] || "R$2.000/mês";
-  };
-
-  const getDeviceLabel = (d?: string) => {
-    const map: Record<string, string> = { celular: "Celular", computador: "Computador", ambos: "Ambos" };
-    return map[d || ""] || "Celular";
-  };
-
-  const getAvailabilityLabel = (a?: string) => {
-    const map: Record<string, string> = {
-      menos30: "< 30 min/dia", "30-60": "30–60 min/dia",
-      "1-2h": "1–2h/dia", "2h+": "+2h/dia",
-    };
-    return map[a || ""] || "Flexível";
-  };
-
-  const getAgeLabel = (a?: string) => {
-    const map: Record<string, string> = {
-      "18 a 25 anos": "18–25 anos", "26 a 35 anos": "26–35 anos",
-      "36 a 45 anos": "36–45 anos", "46 a 55 anos": "46–55 anos",
-      "56 anos ou mais": "56+ anos",
-      "18-25": "18–25 anos", "26-35": "26–35 anos",
-      "36-45": "36–45 anos", "46-55": "46–55 anos", "56+": "56+ anos",
-    };
-    return map[a || ""] || a || "—";
-  };
-
-  const getDreamLabel = (d?: string) => {
-    const map: Record<string, string> = {
-      contas: "Pagar contas em dia", dividas: "Quitar dívidas",
-      viagem: "Viajar com a família", independencia: "Independência financeira",
-      aposentadoria: "Complementar aposentadoria", negocio: "Ter próprio negócio",
-      valorizado: "Ser valorizado", familia: "Cuidar da família",
-      liberdade: "Tempo e liberdade",
-    };
-    return map[d || ""] || d || "—";
-  };
-
-  const getTriedLabel = (t?: string) => {
-    const map: Record<string, string> = {
-      sim_falhou: "Sim, sem resultado",
-      sim_experiencia: "Sim, com resultado",
-      nunca: "Primeira vez",
-    };
-    return map[t || ""] || "—";
-  };
-
-  const getBalanceLabel = (b?: string) => {
-    const map: Record<string, string> = {
-      "menos100": "Até R$100", "100-500": "R$100–R$500",
-      "500-2000": "R$500–R$2.000", "2000-10000": "R$2.000–R$10.000", "10000+": "+R$10.000",
-    };
-    return map[b || ""] || "—";
-  };
-
-  const getObstacleInsight = (o?: string) => {
-    const map: Record<string, string> = {
-      medo: "Nosso sistema elimina o risco — a IA toma as decisões por você.",
-      tempo: "Perfeito: bastam poucos minutos por dia. A IA trabalha 24h.",
-      inicio: "Ideal para iniciantes — tudo é guiado passo a passo.",
-      dinheiro: "O sistema foi feito para começar com qualquer valor.",
-    };
-    return map[o || ""] || "Você está no caminho certo.";
-  };
-
-  const getDreamInsight = (d?: string) => {
-    const map: Record<string, string> = {
-      contas: "Alunos como você já cobrem todas as contas do mês em até 3 semanas.",
-      dividas: "Com a renda extra gerada, muitos quitam dívidas em 60 dias.",
-      viagem: "Imagine reservar aquela viagem sem se preocupar com o cartão.",
-      independencia: "Você está a um passo de não depender mais de ninguém.",
-      aposentadoria: "O complemento ideal para garantir sua tranquilidade.",
-      negocio: "A IA faz o trabalho pesado — você só gerencia os resultados.",
-      valorizado: "As pessoas ao seu redor vão perceber a diferença.",
-      familia: "Cuide de quem você ama com a segurança que merece.",
-      liberdade: "Tempo e dinheiro: é exatamente isso que esse sistema entrega.",
-    };
-    return map[d || ""] || "Seus objetivos estão ao alcance.";
+    return maps[key]?.[val || ""] || val || "—";
   };
 
   const items = [
-    { icon: <Users className="w-4 h-4" />, label: "Faixa etária", value: getAgeLabel(answers?.age), color: "text-foreground" },
-    { icon: <TrendingUp className="w-4 h-4" />, label: "Meta de renda", value: getGoalLabel(answers?.incomeGoal), color: "text-primary" },
-    { icon: <AlertTriangle className="w-4 h-4" />, label: "Maior desafio", value: getObstacleLabel(answers?.obstacle), color: "text-foreground" },
-    { icon: <Heart className="w-4 h-4" />, label: "Sonho financeiro", value: getDreamLabel(answers?.financialDream), color: "text-foreground" },
-    { icon: <Smartphone className="w-4 h-4" />, label: "Dispositivo", value: getDeviceLabel(answers?.device), color: "text-foreground" },
-    { icon: <Clock className="w-4 h-4" />, label: "Tempo disponível", value: getAvailabilityLabel(answers?.availability), color: "text-foreground" },
-    { icon: <Eye className="w-4 h-4" />, label: "Experiência online", value: getTriedLabel(answers?.triedOnline), color: "text-foreground" },
-    { icon: <CircleDollarSign className="w-4 h-4" />, label: "Capital atual", value: getBalanceLabel(answers?.accountBalance), color: "text-foreground" },
+    { icon: <Users className="w-3.5 h-3.5" />, label: "Idade", value: getLabel("age", answers?.age) },
+    { icon: <TrendingUp className="w-3.5 h-3.5" />, label: "Meta", value: getLabel("incomeGoal", answers?.incomeGoal), highlight: true },
+    { icon: <AlertTriangle className="w-3.5 h-3.5" />, label: "Desafio", value: getLabel("obstacle", answers?.obstacle) },
+    { icon: <Smartphone className="w-3.5 h-3.5" />, label: "Dispositivo", value: getLabel("device", answers?.device) },
+    { icon: <Clock className="w-3.5 h-3.5" />, label: "Tempo/dia", value: getLabel("availability", answers?.availability) },
   ];
 
-  // Phase animation controller
   useEffect(() => {
-    // Phase 0: scanning (1.5s)
-    const t1 = setTimeout(() => setPhase(1), 1500);
-    return () => clearTimeout(t1);
+    const t = setTimeout(() => setRevealed(true), 400);
+    return () => clearTimeout(t);
   }, []);
 
-  // Item reveal sequence
   useEffect(() => {
-    if (phase < 1) return;
-    if (revealedItems >= items.length) {
-      const t = setTimeout(() => setPhase(2), 600);
-      return () => clearTimeout(t);
-    }
-    const t = setTimeout(() => setRevealedItems((p) => p + 1), 180);
-    return () => clearTimeout(t);
-  }, [phase, revealedItems, items.length]);
-
-  // Compat % counter
-  useEffect(() => {
-    if (phase < 2) return;
+    if (!revealed) return;
     const target = 97;
     const t = setInterval(() => {
-      setCompatPercent((p) => {
-        if (p >= target) { clearInterval(t); return target; }
-        return p + 3;
-      });
-    }, 30);
+      setCompatPercent((p) => { if (p >= target) { clearInterval(t); return target; } return p + 4; });
+    }, 25);
     return () => clearInterval(t);
-  }, [phase]);
+  }, [revealed]);
 
   return (
-    <div className="w-full space-y-4">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-2"
-      >
-        <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/25 rounded-full px-4 py-2">
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <span className="text-xs font-bold text-primary uppercase tracking-wider">
-            {phase < 1 ? "Analisando perfil..." : phase < 2 ? "Processando dados..." : "Análise completa"}
-          </span>
-        </div>
-      </motion.div>
-
-      {/* Main card */}
+    <div className="w-full">
       <div
         className="rounded-2xl overflow-hidden border border-primary/20"
         style={{ background: "linear-gradient(180deg, hsl(var(--card)), hsl(var(--primary) / 0.03))" }}
       >
         {/* Title bar */}
-        <div className="px-4 py-3 border-b border-primary/10 flex items-center gap-3" style={{ background: "hsl(var(--primary) / 0.06)" }}>
-          <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
-            <Bot className="w-4 h-4 text-primary" />
+        <div className="px-4 py-2.5 border-b border-primary/10 flex items-center gap-2.5" style={{ background: "hsl(var(--primary) / 0.06)" }}>
+          <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center">
+            <Bot className="w-3.5 h-3.5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-foreground truncate">
-              Relatório personalizado {firstName ? `para ${firstName}` : ""}
+              {firstName ? `Perfil de ${firstName}` : "Seu perfil"}
             </p>
-            <p className="text-[10px] text-muted-foreground">Gerado pela IA com base em 8 pontos de dados</p>
           </div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: revealed ? 1 : 0 }}
+            className="flex items-center gap-1 bg-primary/10 rounded-full px-2 py-0.5"
+          >
+            <CheckCircle className="w-3 h-3 text-primary" />
+            <span className="text-[10px] font-bold text-primary">Aprovado</span>
+          </motion.div>
         </div>
 
-        {/* Scanning phase */}
-        {phase < 1 && (
-          <div className="px-5 py-8 text-center space-y-4">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-              className="w-12 h-12 mx-auto rounded-full border-2 border-primary/20 border-t-primary"
-            />
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-foreground">Cruzando suas respostas com nossa base de dados...</p>
-              <p className="text-xs text-muted-foreground">Comparando com +36.000 perfis de alunos ativos</p>
-            </div>
-          </div>
-        )}
-
-        {/* Items reveal */}
-        {phase >= 1 && (
-          <div className="px-4 py-4 space-y-2">
+        {/* Compact items grid */}
+        <div className="px-3 py-3">
+          <div className="flex flex-wrap gap-1.5">
             {items.map((item, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{
-                  opacity: i < revealedItems ? 1 : 0,
-                  x: i < revealedItems ? 0 : -20,
-                }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
-                className="flex items-center gap-3 rounded-xl px-3 py-2.5"
-                style={{
-                  background: i < revealedItems
-                    ? item.color === "text-primary"
-                      ? "hsl(var(--primary) / 0.08)"
-                      : "hsl(var(--secondary) / 0.5)"
-                    : "transparent",
-                }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={revealed ? { opacity: 1, scale: 1 } : {}}
+                transition={{ delay: i * 0.08, duration: 0.25 }}
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs ${
+                  item.highlight
+                    ? "bg-primary/10 border border-primary/20 text-primary font-bold"
+                    : "bg-secondary/60 text-foreground"
+                }`}
               >
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                  item.color === "text-primary" ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
-                }`}>
-                  {item.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none mb-0.5">{item.label}</p>
-                  <p className={`text-sm font-bold ${item.color} truncate`}>{item.value}</p>
-                </div>
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: i < revealedItems ? 1 : 0 }}
-                  transition={{ delay: 0.15, type: "spring", stiffness: 300 }}
-                >
-                  <CheckCircle className="w-4 h-4 text-primary shrink-0" />
-                </motion.div>
+                <span className={item.highlight ? "text-primary" : "text-muted-foreground"}>{item.icon}</span>
+                <span className="font-medium">{item.value}</span>
               </motion.div>
             ))}
           </div>
-        )}
+        </div>
 
-        {/* Compatibility + projection */}
-        {phase >= 2 && (
+        {/* Compact compat bar + verdict */}
+        {revealed && (
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="px-4 pb-4 space-y-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="px-4 py-3 border-t border-primary/10"
+            style={{ background: "hsl(var(--primary) / 0.04)" }}
           >
-            {/* Compat bar */}
-            <div className="rounded-xl p-4 border border-primary/20" style={{ background: "hsl(var(--primary) / 0.06)" }}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-accent" />
-                  <span className="text-xs font-bold text-foreground uppercase tracking-wider">Compatibilidade</span>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Compatibilidade</span>
+                  <span className="text-lg font-display font-black text-primary">{compatPercent}%</span>
                 </div>
-                <span className="text-2xl font-display font-black text-primary">{compatPercent}%</span>
+                <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full progress-bar-fill"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${compatPercent}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  />
+                </div>
               </div>
-              <div className="w-full h-2.5 rounded-full bg-secondary overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full progress-bar-fill"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${compatPercent}%` }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                Seu perfil está entre os <span className="text-primary font-bold">top 3%</span> com maior chance de resultado rápido.
-              </p>
+              <Zap className="w-5 h-5 text-accent shrink-0" />
             </div>
-
-            {/* Personalized projection */}
-            <div className="rounded-xl overflow-hidden border border-accent/20">
-              <div className="px-4 py-2.5 flex items-center gap-2 border-b border-accent/10" style={{ background: "hsl(var(--accent) / 0.08)" }}>
-                <TrendingUp className="w-4 h-4 text-accent" />
-                <span className="text-xs font-bold text-accent uppercase tracking-wider">Projeção para seu perfil</span>
-              </div>
-              <div className="px-3 py-3 space-y-3" style={{ background: "hsl(var(--accent) / 0.03)" }}>
-                {/* Projections grid */}
-                <div className="grid grid-cols-3 gap-1">
-                  <div className="text-center p-1.5 rounded-lg bg-card border border-border overflow-hidden min-w-0">
-                    <p className="text-[8px] uppercase text-muted-foreground mb-0.5">Sem. 1</p>
-                    <p className="text-[10px] font-bold text-foreground leading-tight truncate">1ºs ganhos</p>
-                  </div>
-                  <div className="text-center p-1.5 rounded-lg bg-card border border-border overflow-hidden min-w-0">
-                    <p className="text-[8px] uppercase text-muted-foreground mb-0.5">Sem. 2-3</p>
-                    <p className="text-[10px] font-bold text-primary leading-tight truncate tabular-nums">{getGoalWeekly(answers?.incomeGoal)}</p>
-                  </div>
-                  <div className="text-center p-1.5 rounded-lg bg-card border border-border overflow-hidden min-w-0">
-                    <p className="text-[8px] uppercase text-muted-foreground mb-0.5">Mês 1</p>
-                    <p className="text-[10px] font-bold text-accent leading-tight truncate tabular-nums">{getGoalMonthly(answers?.incomeGoal)}</p>
-                  </div>
-                </div>
-
-                {/* Insight based on obstacle */}
-                <div className="rounded-lg p-3 bg-card border border-primary/10">
-                  <div className="flex gap-2">
-                    <Shield className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-bold text-foreground mb-0.5">Sobre seu desafio: "{getObstacleLabel(answers?.obstacle)}"</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{getObstacleInsight(answers?.obstacle)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Insight based on dream */}
-                <div className="rounded-lg p-3 bg-card border border-accent/10">
-                  <div className="flex gap-2">
-                    <Sun className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-bold text-foreground mb-0.5">Seu objetivo: "{getDreamLabel(answers?.financialDream)}"</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{getDreamInsight(answers?.financialDream)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Final verdict */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.4 }}
-              className="rounded-xl p-4 text-center border border-primary/25"
-              style={{ background: "linear-gradient(180deg, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.02))" }}
-            >
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-primary" />
-                <span className="text-sm font-bold text-primary uppercase tracking-wide">Perfil aprovado</span>
-              </div>
-              <p className="text-sm text-foreground leading-relaxed">
-                {firstName}, tudo indica que <span className="font-bold text-primary">esse sistema foi feito para o seu momento</span>. 
-                Com {getAvailabilityLabel(answers?.availability)} no seu {getDeviceLabel(answers?.device)?.toLowerCase()}, 
-                você já tem o necessário para começar a gerar resultados.
-              </p>
-            </motion.div>
+            <p className="text-[11px] text-muted-foreground mt-1.5 text-center">
+              Top <span className="text-primary font-bold">3%</span> dos perfis com maior chance de resultado rápido
+            </p>
           </motion.div>
         )}
       </div>
