@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, TrendingUp, TrendingDown, Check, Lock, Zap,
-  BarChart3, Eye, RefreshCw, Activity, Play, ArrowRight,
+  BarChart3, Eye, RefreshCw, Activity, ArrowRight,
+  Power, Bot, Bell, Banknote, Loader2, Play,
 } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
@@ -26,97 +27,244 @@ const useLiveCounter = (start: number) => {
   return count;
 };
 
-// ── Trade Simulator ──
-const TradeSimulator = () => {
-  const [mode, setMode] = useState<"risk" | "safe">("risk");
+// ── Platform style tokens (mirrors quiz demo) ──
+const plat = {
+  bg: "bg-[hsl(260,30%,8%)]",
+  card: "bg-[hsl(260,25%,12%)]",
+  border: "border-[hsl(270,30%,22%)]",
+  secondary: "bg-[hsl(260,22%,15%)]",
+  green: "text-[hsl(152,60%,42%)]",
+  red: "text-[hsl(0,72%,55%)]",
+};
+
+const pares = ["EUR/USD","GBP/USD","USD/JPY","BTC/USD","XAU/USD","AUD/USD","GBP/JPY","USD/CAD"];
+const precos = ["1.08432","1.26781","149.320","67,241.00","2,341.80","0.65123","188.410","1.36540"];
+
+// ── Analyzing bar ──
+const AnalyzingBar = ({ onDone, paused }: { onDone: () => void; paused?: boolean }) => {
+  const [progress, setProgress] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setMode(m => (m === "risk" ? "safe" : "risk")), 3200);
-    return () => clearInterval(t);
-  }, []);
-  const isRisk = mode === "risk";
+    if (paused) { setProgress(0); return; }
+    const duration = 900 + Math.random() * 700;
+    const start = Date.now();
+    const iv = setInterval(() => {
+      const pct = Math.min(100, ((Date.now() - start) / duration) * 100);
+      setProgress(pct);
+      if (pct >= 100) { clearInterval(iv); setTimeout(onDone, 120); }
+    }, 30);
+    return () => clearInterval(iv);
+  }, [onDone, paused]);
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
-      <div className="flex items-center justify-between px-4 py-2.5" style={{ background: "#0F172A" }}>
-        <div className="flex items-center gap-2">
-          <Activity className="w-3.5 h-3.5" style={{ color: "#64748B" }} />
-          <span className="text-[11px] font-semibold" style={{ color: "#64748B" }}>Alfa Híbrida · IA ao vivo</span>
+    <div className="w-full py-2 px-3">
+      <div className="flex items-center gap-2 mb-1.5">
+        <Loader2 className={`w-3 h-3 text-[hsl(280,70%,65%)] ${paused ? "" : "animate-spin"}`} />
+        <span className="text-[11px] font-semibold text-[hsl(280,70%,65%)]">
+          {paused ? "Aguardando próxima operação..." : "Analisando mercado..."}
+        </span>
+      </div>
+      <div className="w-full h-1.5 bg-[hsl(260,22%,15%)] rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-75 bg-gradient-to-r from-[hsl(280,70%,55%)] to-[hsl(260,70%,60%)]"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
+// ── Op toast ──
+const OpToast = ({ text, onDone }: { text: string; onDone: () => void }) => {
+  useEffect(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t); }, [onDone]);
+  return (
+    <div className="fixed bottom-4 left-4 right-4 z-50 animate-fade-in">
+      <div className="bg-[hsl(260,25%,12%)] border border-[hsl(280,70%,65%,0.3)] rounded-xl px-3 py-2.5 shadow-2xl flex items-center gap-2.5">
+        <div className="w-7 h-7 rounded-full bg-[hsl(280,70%,65%,0.2)] flex items-center justify-center shrink-0">
+          <Banknote className="w-3.5 h-3.5 text-[hsl(280,70%,65%)]" />
+        </div>
+        <p className="text-[12px] font-semibold text-[hsl(45,90%,65%)]">{text}</p>
+      </div>
+    </div>
+  );
+};
+
+// ── Safety Pro Platform Simulator ──
+type SimOp = { hora: string; par: string; preco: string; lucro: number; tipo: "win" | "loss"; conta: "real" | "demo" };
+
+const TradeSimulator = () => {
+  const [history, setHistory] = useState<SimOp[]>([]);
+  const [balance, setBalance] = useState(1_247.38);
+  const [profit, setProfit] = useState(0);
+  const [wins, setWins] = useState(0);
+  const [losses, setLosses] = useState(0);
+  const [isAnalyzing, setIsAnalyzing] = useState(true);
+  const [notification, setNotification] = useState<string | null>(null);
+  const [safetyStatus, setSafetyStatus] = useState<"real" | "demo">("real");
+  const historyRef = useRef<HTMLDivElement>(null);
+  const opRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissNotif = useCallback(() => setNotification(null), []);
+
+  const runOp = useCallback(() => {
+    const isRisk = Math.random() < 0.22; // ~1 in 5 ops → demo
+    const conta: "real" | "demo" = isRisk ? "demo" : "real";
+    setSafetyStatus(conta);
+
+    const isWin = conta === "real" ? Math.random() < 0.87 : Math.random() < 0.5;
+    const lucro = isWin
+      ? parseFloat((8 + Math.random() * 32).toFixed(2))
+      : parseFloat((-(4 + Math.random() * 14)).toFixed(2));
+
+    const parIdx = Math.floor(Math.random() * pares.length);
+    const hora = new Date().toLocaleTimeString("pt-BR").slice(0, 8);
+    const op: SimOp = { hora, par: pares[parIdx], preco: precos[parIdx], lucro, tipo: isWin ? "win" : "loss", conta };
+
+    setHistory(prev => [...prev.slice(-15), op]);
+
+    if (conta === "real") {
+      setProfit(prev => parseFloat((prev + lucro).toFixed(2)));
+      setBalance(prev => parseFloat((prev + lucro).toFixed(2)));
+      if (isWin) {
+        setWins(prev => prev + 1);
+        setNotification(`+R$${lucro.toFixed(2)} em ${pares[parIdx]} — conta real`);
+      } else {
+        setLosses(prev => prev + 1);
+      }
+    } else {
+      setNotification(`🛡 Safety Pro: risco detectado → operado em demo. Capital real intocado.`);
+    }
+
+    const delay = 500 + Math.random() * 800;
+    opRef.current = setTimeout(() => setIsAnalyzing(true), delay);
+  }, []);
+
+  const handleAnalysisDone = useCallback(() => {
+    setIsAnalyzing(false);
+    opRef.current = setTimeout(runOp, 180);
+  }, [runOp]);
+
+  useEffect(() => () => { if (opRef.current) clearTimeout(opRef.current); }, []);
+  useEffect(() => {
+    if (historyRef.current) historyRef.current.scrollTop = historyRef.current.scrollHeight;
+  }, [history]);
+
+  return (
+    <div className={`w-full rounded-2xl overflow-hidden shadow-2xl ${plat.bg} ${plat.border} border`}>
+      {/* Top bar */}
+      <div className={`bg-[hsl(260,28%,10%)] px-2.5 py-2 flex items-center justify-between ${plat.border} border-b`}>
+        <div className="flex items-center gap-1.5">
+          <Play className="w-3 h-3 text-[hsl(280,70%,65%)]" fill="currentColor" />
+          <span className="text-[11px] font-bold text-white tracking-wide">
+            <span className="text-[hsl(280,70%,65%)]">ALFA HÍBRIDA</span> · IA
+          </span>
         </div>
         <AnimatePresence mode="wait">
-          <motion.span
-            key={mode}
+          <motion.div
+            key={safetyStatus}
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.85 }}
-            className="text-[10px] font-bold px-2.5 py-1 rounded-full"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold"
             style={{
-              background: isRisk ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.15)",
-              color: isRisk ? "#F87171" : "#4ADE80",
-              border: isRisk ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(34,197,94,0.3)",
+              background: safetyStatus === "demo" ? "rgba(250,204,21,0.15)" : "rgba(22,163,74,0.15)",
+              border: safetyStatus === "demo" ? "1px solid rgba(250,204,21,0.4)" : "1px solid rgba(22,163,74,0.4)",
+              color: safetyStatus === "demo" ? "#FACC15" : "#22C55E",
             }}
           >
-            {isRisk ? "⚠ RISCO DETECTADO" : "✓ DEMO ATIVA — CAPITAL SALVO"}
-          </motion.span>
+            <ShieldCheck className="w-2.5 h-2.5" />
+            {safetyStatus === "demo" ? "DEMO (protegido)" : "REAL (operando)"}
+          </motion.div>
         </AnimatePresence>
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={mode}
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -5 }}
-          className="px-4 pb-4 pt-3"
-          style={{ background: "#060F1E" }}
-        >
-          <div className="flex justify-between mb-2.5">
-            <div>
-              <p className="text-[10px] uppercase tracking-wide font-bold" style={{ color: "#475569" }}>Operação</p>
-              <p className="text-[15px] font-extrabold mt-0.5" style={{ color: "#F8FAFC" }}>EUR/USD · Scalping IA</p>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px]" style={{ color: "#475569" }}>Conta</p>
-              <p className="text-[14px] font-bold" style={{ color: isRisk ? "#F87171" : "#4ADE80" }}>
-                {isRisk ? "Real (exposta)" : "Demo (protegida)"}
-              </p>
-            </div>
-          </div>
+      {/* Account */}
+      <div className={`${plat.card} mx-2.5 mt-2 rounded-lg p-2 flex items-center gap-2.5 ${plat.border} border`}>
+        <div className="w-8 h-8 rounded-md flex items-center justify-center bg-[hsl(152,60%,42%,0.15)] border border-[hsl(152,60%,42%,0.3)]">
+          <Power className="w-4 h-4 text-[hsl(152,60%,42%)]" />
+        </div>
+        <div className="flex-1">
+          <p className="text-[11px] font-bold text-white">Conta Real Protegida</p>
+          <p className="text-[9px] text-[hsl(260,15%,50%)]">Safety Pro ativo · DM7829401</p>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-[hsl(152,60%,42%)] animate-pulse" />
+          <span className="text-[9px] text-[hsl(152,60%,42%)] font-semibold">AO VIVO</span>
+        </div>
+      </div>
 
-          <div className="relative h-2 rounded-full overflow-hidden mb-2" style={{ background: "rgba(255,255,255,0.06)" }}>
-            <motion.div
-              initial={{ width: isRisk ? "0%" : "75%" }}
-              animate={{ width: isRisk ? "75%" : "100%" }}
-              transition={{ duration: 1.4, ease: "easeOut" }}
-              className="absolute inset-y-0 left-0 rounded-full"
-              style={{ background: isRisk ? "linear-gradient(90deg,#FACC15,#EF4444)" : "linear-gradient(90deg,#16A34A,#22C55E)" }}
-            />
-          </div>
+      {/* Balance / Profit */}
+      <div className="px-2.5 py-2 flex gap-1.5">
+        <div className={`flex-1 ${plat.card} rounded-lg p-2 ${plat.border} border`}>
+          <p className="text-[9px] text-[hsl(260,15%,50%)]">Saldo real</p>
+          <p className="text-[14px] font-bold text-white leading-tight mt-0.5">
+            R$ {balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+        <div className={`flex-1 ${plat.card} rounded-lg p-2 ${plat.border} border`}>
+          <p className="text-[9px] text-[hsl(260,15%,50%)]">Lucro da sessão</p>
+          <p className={`text-[14px] font-bold leading-tight mt-0.5 ${profit >= 0 ? plat.green : plat.red}`}>
+            {profit >= 0 ? "+" : ""}R$ {profit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+      </div>
 
-          <div
-            className="flex items-center justify-between rounded-xl px-3 py-2.5 mt-3"
-            style={{
-              background: isRisk ? "rgba(239,68,68,0.06)" : "rgba(22,163,74,0.08)",
-              border: isRisk ? "1px solid rgba(239,68,68,0.15)" : "1px solid rgba(22,163,74,0.2)",
-            }}
-          >
-            {isRisk ? (
-              <>
-                <div className="flex items-center gap-1.5">
-                  <TrendingDown className="w-4 h-4" style={{ color: "#F87171" }} />
-                  <span className="text-[12px]" style={{ color: "#F87171" }}>Sem Safety Pro: − R$ 340 perdidos</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4" style={{ color: "#4ADE80" }} />
-                  <span className="text-[12px]" style={{ color: "#4ADE80" }}>Com Safety Pro: R$ 0 de perda</span>
-                </div>
-                <span className="text-[10px] font-bold" style={{ color: "#22C55E" }}>✓ salvo</span>
-              </>
-            )}
+      {/* Robot status */}
+      <div className={`px-2.5 py-2 text-center ${plat.border} border-t border-b`}>
+        <div className="flex items-center justify-center gap-1.5">
+          <Bot className="w-3.5 h-3.5 text-[hsl(260,15%,50%)]" />
+          <span className="text-[11px] font-bold text-white">EASY 2.0</span>
+          <span className="text-[9px] text-[hsl(280,70%,65%)] font-semibold">+ Safety Pro</span>
+        </div>
+        <p className="text-[10px] text-[hsl(280,70%,65%)] font-semibold mt-0.5">robô operando — capital protegido</p>
+      </div>
+
+      {/* Analyzing bar */}
+      <AnalyzingBar key={isAnalyzing ? "a" : "i"} onDone={handleAnalysisDone} paused={!isAnalyzing} />
+
+      {/* History table */}
+      <div className={`${plat.border} border-t`}>
+        <div className={`px-2.5 py-1.5 flex items-center justify-between ${plat.border} border-b`}>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-white">Histórico</span>
+            <span className="text-[10px]">
+              <span className={plat.green + " font-bold"}>{wins}</span>
+              <span className="text-[hsl(260,15%,40%)]">/</span>
+              <span className={plat.red + " font-bold"}>{losses}</span>
+            </span>
           </div>
-        </motion.div>
-      </AnimatePresence>
+          <div className="flex items-center gap-1">
+            <ShieldCheck className="w-3 h-3 text-[hsl(280,70%,65%)]" />
+            <span className="text-[9px] text-[hsl(280,70%,65%)]">Safety Pro ativo</span>
+          </div>
+        </div>
+
+        <div className={`px-2.5 py-1 grid grid-cols-5 gap-1 ${plat.border} border-b ${plat.secondary}`}>
+          {["Hora","Par","Preço","Conta","Lucro"].map(h => (
+            <span key={h} className="text-[9px] font-semibold text-[hsl(260,15%,50%)] last:text-right">{h}</span>
+          ))}
+        </div>
+
+        <div ref={historyRef} className="max-h-[130px] overflow-y-auto" style={{ scrollBehavior: "smooth" }}>
+          {history.length === 0 && (
+            <div className="py-5 text-center">
+              <p className="text-[11px] text-[hsl(260,15%,40%)]">Aguardando primeira operação...</p>
+            </div>
+          )}
+          {history.map((op, i) => (
+            <div key={i} className={`px-2.5 py-1.5 grid grid-cols-5 gap-1 ${plat.border} border-b border-opacity-20 animate-fade-in`}>
+              <span className="text-[9px] text-[hsl(260,15%,40%)] font-mono">{op.hora}</span>
+              <span className="text-[9px] font-semibold text-white">{op.par}</span>
+              <span className="text-[9px] text-[hsl(260,15%,40%)] font-mono">{op.preco}</span>
+              <span className="text-[9px] font-bold" style={{ color: op.conta === "demo" ? "#FACC15" : "#64748B" }}>
+                {op.conta === "demo" ? "🛡Demo" : "Real"}
+              </span>
+              <span className={`text-[9px] font-bold text-right ${op.conta === "demo" ? "text-[hsl(260,15%,35%)]" : op.tipo === "win" ? plat.green : plat.red}`}>
+                {op.conta === "demo" ? "—" : `${op.lucro >= 0 ? "+" : ""}R$${op.lucro.toFixed(2)}`}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {notification && <OpToast text={notification} onDone={dismissNotif} />}
     </div>
   );
 };
