@@ -407,12 +407,8 @@ const features: Record<string, string[]> = {
 
 // ── Expert video (vturb) ──
 const ExpertVideo = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!containerRef.current) return;
-    // Inject the vturb player element
-    containerRef.current.innerHTML = `<vturb-smartplayer id="vid-690e73433ad3bcc011d96455" style="display:block;margin:0 auto;width:100%;max-width:400px;"></vturb-smartplayer>`;
-    // Inject the script only once
+    // Inject script first (only once)
     if (!document.getElementById("vturb-script-safety")) {
       const s = document.createElement("script");
       s.id = "vturb-script-safety";
@@ -421,7 +417,16 @@ const ExpertVideo = () => {
       document.head.appendChild(s);
     }
   }, []);
-  return <div ref={containerRef} className="w-full" />;
+
+  return (
+    <div className="w-full" style={{ maxWidth: 400, margin: "0 auto" }}>
+      {/* @ts-ignore custom web component */}
+      <vturb-smartplayer
+        id="vid-690e73433ad3bcc011d96455"
+        style={{ display: "block", margin: "0 auto", width: "100%", maxWidth: "400px" }}
+      />
+    </div>
+  );
 };
 
 // ── Main ──
