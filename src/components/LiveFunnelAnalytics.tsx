@@ -87,14 +87,14 @@ const LiveFunnelAnalytics = () => {
 
     pageLoads.forEach(log => {
       let pid = log.page_id || "";
-      // Map upsell sub-pages to their parent route
-      if (pid.startsWith("/upsell") && !stepCounts[pid]) {
+      // Map all upsell pages/sub-pages to their canonical route
+      if (pid.startsWith("/upsell")) {
         if (pid.startsWith("/upsell6") || pid.includes("forex")) pid = "/upsell6";
         else if (pid.startsWith("/upsell5") || pid.includes("safety")) pid = "/upsell5";
-        else if (pid.startsWith("/upsell4") || pid.includes("sucesso") || pid.includes("circulo")) pid = "/upsell4";
+        else if (pid.startsWith("/upsell4") || pid.includes("upsell4-") || pid.includes("sucesso") || pid.includes("circulo")) pid = "/upsell4";
         else if (pid.startsWith("/upsell3") || pid.includes("blindagem")) pid = "/upsell3";
         else if (pid.startsWith("/upsell2") || pid.includes("multiplicador")) pid = "/upsell2";
-        else if (pid.startsWith("/upsell-") || pid === "/upsell1") pid = "/upsell1";
+        else if (pid.startsWith("/upsell1") || pid.startsWith("/upsell-")) pid = "/upsell1";
       }
       if (stepCounts[pid]) {
         stepCounts[pid].add(log.session_id);
