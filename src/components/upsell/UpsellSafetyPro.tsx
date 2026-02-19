@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, TrendingUp, Check, Lock, Zap,
   BarChart3, RefreshCw, ArrowRight, Bot,
-  Banknote, Loader2, Play, AlertTriangle, CircleDot,
+  Loader2, Play, AlertTriangle, CircleDot,
 } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
@@ -34,8 +34,6 @@ const plat = {
   card: "bg-[hsl(260,25%,12%)]",
   border: "border-[hsl(270,30%,22%)]",
   secondary: "bg-[hsl(260,22%,15%)]",
-  green: "text-[hsl(152,60%,42%)]",
-  red: "text-[hsl(0,72%,55%)]",
 };
 
 const pares = ["EUR/USD", "GBP/USD", "USD/JPY", "BTC/USD", "XAU/USD", "AUD/USD"];
@@ -56,14 +54,14 @@ const AnalyzingBar = ({ onDone, paused }: { onDone: () => void; paused?: boolean
     return () => clearInterval(iv);
   }, [onDone, paused]);
   return (
-    <div className="px-3 py-2">
-      <div className="flex items-center gap-2 mb-1.5">
-        <Loader2 className={`w-3 h-3 text-[hsl(280,70%,65%)] ${paused ? "" : "animate-spin"}`} />
-        <span className="text-[10px] font-semibold text-[hsl(280,70%,65%)]">
+    <div className="px-3 py-2.5">
+      <div className="flex items-center gap-2 mb-2">
+        <Loader2 className={`w-3.5 h-3.5 text-[hsl(280,70%,70%)] ${paused ? "" : "animate-spin"}`} />
+        <span className="text-[12px] font-semibold text-[hsl(280,70%,70%)]">
           {paused ? "Monitorando próxima janela..." : "Analisando risco do mercado..."}
         </span>
       </div>
-      <div className="w-full h-1.5 bg-[hsl(260,22%,15%)] rounded-full overflow-hidden">
+      <div className="w-full h-2 bg-[hsl(260,22%,15%)] rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-75 bg-gradient-to-r from-[hsl(280,70%,55%)] to-[hsl(260,70%,60%)]"
           style={{ width: `${progress}%` }}
@@ -73,33 +71,10 @@ const AnalyzingBar = ({ onDone, paused }: { onDone: () => void; paused?: boolean
   );
 };
 
-// ── Op toast ──
-const OpToast = ({ text, color, onDone }: { text: string; color: string; onDone: () => void }) => {
-  useEffect(() => { const t = setTimeout(onDone, 3200); return () => clearTimeout(t); }, [onDone]);
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 24 }}
-      className="fixed bottom-4 left-4 right-4 z-50"
-    >
-      <div
-        className="rounded-xl px-3 py-2.5 shadow-2xl flex items-center gap-2.5"
-        style={{ background: "#0F172A", border: `1px solid ${color}40` }}
-      >
-        <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: `${color}20` }}>
-          <Banknote className="w-3.5 h-3.5" style={{ color }} />
-        </div>
-        <p className="text-[12px] font-semibold" style={{ color: "#E2E8F0" }}>{text}</p>
-      </div>
-    </motion.div>
-  );
-};
-
 // ── Simulator ──
 type SimOp = {
   hora: string; par: string; preco: string;
-  lucro: number; tipo: "win" | "loss"; conta: "real" | "demo";
+  lucro: number; tipo: "win"; conta: "real" | "demo";
 };
 
 const TradeSimulator = () => {
@@ -107,16 +82,14 @@ const TradeSimulator = () => {
   const [balance, setBalance] = useState(1_247.38);
   const [sessionProfit, setSessionProfit] = useState(0);
   const [wins, setWins] = useState(0);
+  const [savedCount, setSavedCount] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(true);
-  const [notification, setNotification] = useState<{ text: string; color: string } | null>(null);
   const [safetyStatus, setSafetyStatus] = useState<"real" | "demo" | "risk">("real");
-  const [lastSaved, setLastSaved] = useState<number | null>(null);
   const historyRef = useRef<HTMLDivElement>(null);
   const opRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dismissNotif = useCallback(() => setNotification(null), []);
 
   const runOp = useCallback(() => {
-    const isRisk = Math.random() < 0.28; // ~1 in 4 → Safety Pro kicks in → vai pra demo
+    const isRisk = Math.random() < 0.28;
     const conta: "real" | "demo" = isRisk ? "demo" : "real";
 
     if (isRisk) {
@@ -126,32 +99,26 @@ const TradeSimulator = () => {
       setSafetyStatus("real");
     }
 
-    // Conta real = sempre positivo (Safety Pro protegeu todas as negativas)
-    // Conta demo = valor que SERIA perdido, mas foi protegido
+    // Conta real = sempre positivo; demo = valor que seria perdido (protegido)
     const lucro = conta === "real"
       ? parseFloat((9 + Math.random() * 34).toFixed(2))
-      : parseFloat((-(5 + Math.random() * 18)).toFixed(2)); // só usado pra mostrar "quanto foi salvo"
+      : parseFloat((-(5 + Math.random() * 18)).toFixed(2));
 
     const parIdx = Math.floor(Math.random() * pares.length);
     const hora = new Date().toLocaleTimeString("pt-BR").slice(0, 8);
-    // Conta real → sempre win (Safety Pro bloqueou todas as negativas via demo)
     const op: SimOp = { hora, par: pares[parIdx], preco: precos[parIdx], lucro, tipo: "win", conta };
 
-    setHistory(prev => [...prev.slice(-14), op]);
+    setHistory(prev => [...prev.slice(-13), op]);
 
     if (conta === "real") {
       setSessionProfit(prev => parseFloat((prev + lucro).toFixed(2)));
       setBalance(prev => parseFloat((prev + lucro).toFixed(2)));
       setWins(prev => prev + 1);
-      setNotification({ text: `✅ +R$${lucro.toFixed(2)} creditado em ${pares[parIdx]}`, color: "#22C55E" });
     } else {
-      // Demo: mostra quanto foi protegido — nunca toca no saldo real
-      const saved = Math.abs(lucro);
-      setLastSaved(saved);
-      setNotification({ text: `🛡 Safety Pro: risco detectado → demo. R$${saved.toFixed(2)} protegidos.`, color: "#FACC15" });
+      setSavedCount(prev => prev + 1);
     }
 
-    opRef.current = setTimeout(() => setIsAnalyzing(true), 600 + Math.random() * 600);
+    opRef.current = setTimeout(() => setIsAnalyzing(true), 700 + Math.random() * 600);
   }, []);
 
   const handleAnalysisDone = useCallback(() => {
@@ -164,34 +131,33 @@ const TradeSimulator = () => {
     if (historyRef.current) historyRef.current.scrollTop = historyRef.current.scrollHeight;
   }, [history]);
 
-  const totalDemoOps = history.filter(h => h.conta === "demo").length;
-
   return (
     <div className={`w-full rounded-2xl overflow-hidden shadow-2xl ${plat.bg} ${plat.border} border`}>
-      {/* Top bar */}
-      <div className={`bg-[hsl(260,28%,10%)] px-3 py-2 flex items-center justify-between ${plat.border} border-b`}>
-        <div className="flex items-center gap-1.5">
-          <Play className="w-3 h-3 text-[hsl(280,70%,65%)]" fill="currentColor" />
-          <span className="text-[11px] font-bold text-white tracking-wide">
-            <span className="text-[hsl(280,70%,65%)]">ALFA HÍBRIDA</span> · IA ao vivo
+
+      {/* ── Top bar ── */}
+      <div className={`bg-[hsl(260,28%,10%)] px-3 py-2.5 flex items-center justify-between ${plat.border} border-b`}>
+        <div className="flex items-center gap-2">
+          <Play className="w-3.5 h-3.5 text-[hsl(280,70%,65%)]" fill="currentColor" />
+          <span className="text-[12px] font-bold text-white tracking-wide">
+            <span className="text-[hsl(280,70%,70%)]">ALFA HÍBRIDA</span> · IA ao vivo
           </span>
         </div>
         <AnimatePresence mode="wait">
           <motion.div
             key={safetyStatus}
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold"
+            exit={{ opacity: 0, scale: 0.85 }}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
             style={{
               background:
                 safetyStatus === "risk" ? "rgba(239,68,68,0.2)" :
-                safetyStatus === "demo" ? "rgba(250,204,21,0.15)" :
+                safetyStatus === "demo" ? "rgba(250,204,21,0.18)" :
                 "rgba(22,163,74,0.15)",
               border:
-                safetyStatus === "risk" ? "1px solid rgba(239,68,68,0.5)" :
-                safetyStatus === "demo" ? "1px solid rgba(250,204,21,0.4)" :
-                "1px solid rgba(22,163,74,0.4)",
+                safetyStatus === "risk" ? "1px solid rgba(239,68,68,0.55)" :
+                safetyStatus === "demo" ? "1px solid rgba(250,204,21,0.5)" :
+                "1px solid rgba(22,163,74,0.45)",
               color:
                 safetyStatus === "risk" ? "#EF4444" :
                 safetyStatus === "demo" ? "#FACC15" :
@@ -199,129 +165,124 @@ const TradeSimulator = () => {
             }}
           >
             {safetyStatus === "risk" ? (
-              <><AlertTriangle className="w-2.5 h-2.5" /> RISCO DETECTADO</>
+              <><AlertTriangle className="w-3 h-3" /> RISCO — BLOQUEANDO</>
             ) : safetyStatus === "demo" ? (
-              <><ShieldCheck className="w-2.5 h-2.5" /> CONTA DEMO (capital salvo)</>
+              <><ShieldCheck className="w-3 h-3" /> DEMO · capital salvo</>
             ) : (
-              <><CircleDot className="w-2.5 h-2.5" /> CONTA REAL (operando)</>
+              <><CircleDot className="w-3 h-3" /> REAL · operando</>
             )}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Balance row */}
-      <div className="px-3 py-2 flex gap-1.5">
-        <div className={`flex-1 ${plat.card} rounded-lg p-2 ${plat.border} border`}>
-          <p className="text-[9px] text-[hsl(260,15%,50%)]">Saldo real</p>
-          <p className="text-[14px] font-bold text-white leading-tight">
+      {/* ── Stats row ── */}
+      <div className="px-3 py-2.5 grid grid-cols-3 gap-2">
+        <div className={`${plat.card} rounded-xl p-2.5 ${plat.border} border`}>
+          <p className="text-[10px] font-medium text-[hsl(260,15%,55%)] mb-1">Saldo real</p>
+          <p className="text-[15px] font-extrabold text-white leading-none">
             R$ {balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
-        <div className={`flex-1 ${plat.card} rounded-lg p-2 ${plat.border} border`}>
-          <p className="text-[9px] text-[hsl(260,15%,50%)]">Lucro da sessão</p>
-          <p className={`text-[14px] font-bold leading-tight ${sessionProfit >= 0 ? plat.green : plat.red}`}>
-            {sessionProfit >= 0 ? "+" : ""}R$ {sessionProfit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+        <div className={`${plat.card} rounded-xl p-2.5 ${plat.border} border`}>
+          <p className="text-[10px] font-medium text-[hsl(260,15%,55%)] mb-1">Lucro hoje</p>
+          <p className="text-[15px] font-extrabold leading-none" style={{ color: "#22C55E" }}>
+            +R$ {sessionProfit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
-        <div className={`flex-1 ${plat.card} rounded-lg p-2 ${plat.border} border`}>
-          <p className="text-[9px] text-[hsl(260,15%,50%)]">Proteções ativas</p>
-          <p className="text-[14px] font-bold text-[hsl(45,90%,65%)] leading-tight">{totalDemoOps}</p>
+        <div className={`${plat.card} rounded-xl p-2.5 ${plat.border} border`}>
+          <p className="text-[10px] font-medium text-[hsl(260,15%,55%)] mb-1">Salvas</p>
+          <p className="text-[15px] font-extrabold leading-none" style={{ color: "#FACC15" }}>
+            {savedCount} <span className="text-[11px] font-bold">ops</span>
+          </p>
         </div>
       </div>
 
-      {/* Robot status */}
-      <div className={`px-3 py-1.5 flex items-center justify-between ${plat.border} border-t border-b ${plat.secondary}`}>
+      {/* ── Robot status bar ── */}
+      <div className={`px-3 py-2 flex items-center justify-between ${plat.border} border-t border-b ${plat.secondary}`}>
+        <div className="flex items-center gap-2">
+          <Bot className="w-3.5 h-3.5 text-[hsl(280,70%,70%)]" />
+          <span className="text-[11px] font-bold text-white">EASY 2.0</span>
+          <span className="text-[10px] font-semibold" style={{ color: "#FACC15" }}>+ Safety Pro</span>
+        </div>
         <div className="flex items-center gap-1.5">
-          <Bot className="w-3 h-3 text-[hsl(280,70%,65%)]" />
-          <span className="text-[10px] font-bold text-white">EASY 2.0</span>
-          <span className="text-[9px] text-[hsl(280,70%,65%)] font-semibold">+ Safety Pro</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-[hsl(152,60%,42%)] animate-pulse" />
-          <span className="text-[9px] text-[hsl(152,60%,42%)] font-semibold">Robô ativo</span>
+          <div className="w-2 h-2 rounded-full bg-[hsl(152,60%,45%)] animate-pulse" />
+          <span className="text-[10px] font-semibold text-[hsl(152,60%,50%)]">Robô ativo</span>
         </div>
       </div>
 
-      {/* Analyzing bar */}
+      {/* ── Analyzing bar ── */}
       <AnalyzingBar key={isAnalyzing ? "a" : "i"} onDone={handleAnalysisDone} paused={!isAnalyzing} />
 
-      {/* History */}
+      {/* ── History ── */}
       <div className={`${plat.border} border-t`}>
-        <div className={`px-3 py-1.5 flex items-center justify-between ${plat.border} border-b ${plat.secondary}`}>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-bold text-white">Operações</span>
-            <span className="text-[9px] text-[hsl(152,60%,42%)] font-bold">{wins} ganhos ✓</span>
+        {/* Header */}
+        <div className={`px-3 py-2 flex items-center justify-between ${plat.border} border-b ${plat.secondary}`}>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold text-white">Operações</span>
+            <span className="text-[11px] font-bold" style={{ color: "#22C55E" }}>{wins} ganhos</span>
           </div>
-          <div className="flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3 text-[hsl(280,70%,65%)]" />
-            <span className="text-[9px] text-[hsl(280,70%,65%)]">{totalDemoOps} proteções</span>
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#FACC15" }} />
+            <span className="text-[11px] font-semibold" style={{ color: "#FACC15" }}>{savedCount} protegidas</span>
           </div>
         </div>
 
         {/* Column headers */}
-        <div className={`px-3 py-1 grid gap-1 ${plat.border} border-b`} style={{ gridTemplateColumns: "52px 1fr 1fr 60px" }}>
+        <div className={`px-3 py-2 grid ${plat.border} border-b`} style={{ gridTemplateColumns: "55px 1fr 70px 70px" }}>
           {["Hora", "Par", "Conta", "Resultado"].map(h => (
-            <span key={h} className="text-[9px] font-semibold text-[hsl(260,15%,45%)] last:text-right">{h}</span>
+            <span key={h} className="text-[10px] font-bold text-[hsl(260,15%,55%)] last:text-right">{h}</span>
           ))}
         </div>
 
-        <div ref={historyRef} className="max-h-[138px] overflow-y-auto" style={{ scrollBehavior: "smooth" }}>
+        {/* Rows */}
+        <div ref={historyRef} className="max-h-[150px] overflow-y-auto" style={{ scrollBehavior: "smooth" }}>
           {history.length === 0 && (
-            <div className="py-6 text-center">
-              <p className="text-[10px] text-[hsl(260,15%,38%)]">Aguardando primeira operação...</p>
+            <div className="py-7 text-center">
+              <p className="text-[11px] text-[hsl(260,15%,45%)]">Aguardando primeira operação...</p>
             </div>
           )}
           {history.map((op, i) => (
-            <AnimatePresence key={i}>
-              <motion.div
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                className={`px-3 py-1.5 grid gap-1 ${plat.border} border-b border-opacity-20`}
-                style={{ gridTemplateColumns: "52px 1fr 1fr 60px" }}
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              className={`px-3 py-2 grid ${plat.border} border-b border-opacity-20`}
+              style={{ gridTemplateColumns: "55px 1fr 70px 70px" }}
+            >
+              <span className="text-[10px] text-[hsl(260,15%,50%)] font-mono">{op.hora}</span>
+              <span className="text-[10px] font-bold text-white">{op.par}</span>
+              <span
+                className="text-[10px] font-bold flex items-center gap-1"
+                style={{ color: op.conta === "demo" ? "#FACC15" : "#94A3B8" }}
               >
-                <span className="text-[9px] text-[hsl(260,15%,38%)] font-mono">{op.hora}</span>
-                <span className="text-[9px] font-semibold text-white">{op.par}</span>
-                <span
-                  className="text-[9px] font-bold flex items-center gap-0.5"
-                  style={{ color: op.conta === "demo" ? "#FACC15" : "#64748B" }}
-                >
-                  {op.conta === "demo" ? (
-                    <><ShieldCheck className="w-2.5 h-2.5" /> Demo</>
-                  ) : "Real"}
-                </span>
-                <span
-                  className="text-[9px] font-bold text-right"
-                  style={{
-                    color: op.conta === "demo" ? "#FACC15" : "#22C55E"
-                  }}
-                >
-                  {op.conta === "demo"
-                    ? `🛡 salvo`
-                    : `${op.lucro >= 0 ? "+" : ""}R$${op.lucro.toFixed(2)}`}
-                </span>
-              </motion.div>
-            </AnimatePresence>
+                {op.conta === "demo"
+                  ? <><ShieldCheck className="w-3 h-3" />Demo</>
+                  : "Real"}
+              </span>
+              <span
+                className="text-[10px] font-extrabold text-right"
+                style={{ color: op.conta === "demo" ? "#FACC15" : "#22C55E" }}
+              >
+                {op.conta === "demo"
+                  ? "Salvo"
+                  : `+R$${op.lucro.toFixed(2)}`}
+              </span>
+            </motion.div>
           ))}
         </div>
       </div>
 
-      {/* Legend */}
-      <div className={`px-3 py-2 flex items-center justify-between ${plat.border} border-t ${plat.secondary}`}>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-[hsl(152,60%,42%)]" />
-          <span className="text-[9px] text-[hsl(260,15%,45%)]">Real = lucro creditado</span>
+      {/* ── Legend ── */}
+      <div className={`px-3 py-2.5 flex items-center justify-between ${plat.border} border-t`} style={{ background: "rgba(15,23,42,0.9)" }}>
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#22C55E" }} />
+          <span className="text-[11px] font-semibold" style={{ color: "#CBD5E1" }}>Verde = lucro na conta real</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full" style={{ background: "#FACC15" }} />
-          <span className="text-[9px] text-[hsl(260,15%,45%)]">Demo = capital protegido</span>
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#FACC15" }} />
+          <span className="text-[11px] font-semibold" style={{ color: "#CBD5E1" }}>Amarelo = capital protegido</span>
         </div>
       </div>
-
-      <AnimatePresence>
-        {notification && (
-          <OpToast key={notification.text} text={notification.text} color={notification.color} onDone={dismissNotif} />
-        )}
-      </AnimatePresence>
     </div>
   );
 };
@@ -358,9 +319,29 @@ const plans = [
 ];
 
 const features: Record<string, string[]> = {
-  mensal: ["Safety Pro ativo por 1 mês", "Proteção automática conta demo→real", "Relatório diário de proteções", "Integra com robô EASY 2.0"],
-  anual: ["Safety Pro por 12 meses", "Proteção automática conta demo→real", "Relatório diário de proteções", "Integra com robô EASY 2.0", "Multiplicador de lucro 20x incluso", "Suporte prioritário WhatsApp"],
-  vitalicio: ["Safety Pro vitalício (para sempre)", "Proteção automática conta demo→real", "Relatório diário de proteções", "Integra com robô EASY 2.0", "Multiplicador de lucro 20x incluso", "Suporte prioritário WhatsApp", "Todas as atualizações futuras"],
+  mensal: [
+    "Safety Pro ativo por 1 mês",
+    "Proteção automática em tempo real",
+    "Relatório diário de operações salvas",
+    "Integra com o robô EASY 2.0",
+  ],
+  anual: [
+    "Safety Pro ativo por 12 meses",
+    "Proteção automática em tempo real",
+    "Relatório diário de operações salvas",
+    "Integra com o robô EASY 2.0",
+    "Multiplicador de lucro 20x incluso",
+    "Suporte prioritário via WhatsApp",
+  ],
+  vitalicio: [
+    "Safety Pro vitalício — para sempre",
+    "Proteção automática em tempo real",
+    "Relatório diário de operações salvas",
+    "Integra com o robô EASY 2.0",
+    "Multiplicador de lucro 20x incluso",
+    "Suporte prioritário via WhatsApp",
+    "Todas as atualizações futuras incluídas",
+  ],
 };
 
 // ── Main ──
@@ -386,7 +367,7 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
   };
 
   return (
-    <div className="flex flex-col gap-6 pt-4">
+    <div className="flex flex-col gap-7 pt-4">
 
       {/* ── HERO ── */}
       <motion.div
@@ -395,95 +376,92 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
         className="text-center"
       >
         <div
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full mb-4 text-[11px] font-bold uppercase tracking-widest"
-          style={{ background: "rgba(250,204,21,0.08)", border: "1px solid rgba(250,204,21,0.2)", color: "#FACC15" }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5 text-[12px] font-bold uppercase tracking-widest"
+          style={{ background: "rgba(250,204,21,0.1)", border: "1px solid rgba(250,204,21,0.25)", color: "#FACC15" }}
         >
-          <ShieldCheck className="w-3.5 h-3.5" />
+          <ShieldCheck className="w-4 h-4" />
           Módulo de Proteção de Capital
         </div>
 
-        <h1 className="text-[24px] font-extrabold leading-tight mb-3" style={{ color: "#F8FAFC" }}>
+        <h1 className="text-[26px] font-extrabold leading-tight mb-4" style={{ color: "#F8FAFC" }}>
           {firstName ? `${firstName}, o robô` : "O robô"} já está operando.
           <br />
           <span style={{ color: "#FACC15" }}>Mas e quando o mercado vira?</span>
         </h1>
 
-        <p className="text-[14px] leading-relaxed mb-5" style={{ color: "#94A3B8" }}>
-          Todo sistema de IA — por mais preciso que seja — pode ser pego em um momento ruim de mercado. Sem proteção, <strong style={{ color: "#F8FAFC" }}>uma operação negativa apaga dias de lucro</strong>.
+        <p className="text-[15px] leading-relaxed mb-5" style={{ color: "#CBD5E1" }}>
+          Todo sistema de IA pode encontrar momentos difíceis no mercado. Sem proteção,{" "}
+          <strong style={{ color: "#F8FAFC" }}>uma única operação ruim pode apagar dias de lucro</strong>.
         </p>
 
-        {/* Counter */}
         <div
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl"
-          style={{ background: "rgba(250,204,21,0.05)", border: "1px solid rgba(250,204,21,0.15)" }}
+          className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl"
+          style={{ background: "rgba(250,204,21,0.07)", border: "1px solid rgba(250,204,21,0.2)" }}
         >
-          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#FACC15" }} />
-          <span className="text-[12px]" style={{ color: "#E2E8F0" }}>
-            <span className="font-bold" style={{ color: "#FACC15" }}>{protectedOps.toLocaleString("pt-BR")}</span> operações protegidas hoje
+          <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "#FACC15" }} />
+          <span className="text-[13px]" style={{ color: "#E2E8F0" }}>
+            <span className="font-bold" style={{ color: "#FACC15" }}>{protectedOps.toLocaleString("pt-BR")}</span>{" "}
+            operações protegidas hoje
           </span>
         </div>
       </motion.div>
 
-      {/* ── DIDACTIC EXPLAINER ── */}
+      {/* ── HOW IT WORKS — passo a passo ── */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="rounded-2xl overflow-hidden"
-        style={{ border: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ border: "1px solid rgba(255,255,255,0.1)" }}
       >
-        {/* Header */}
-        <div className="px-4 py-3" style={{ background: "rgba(15,23,42,0.95)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <p className="text-[12px] font-bold uppercase tracking-wide" style={{ color: "#64748B" }}>
+        <div className="px-5 py-3.5" style={{ background: "rgba(15,23,42,0.98)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+          <p className="text-[13px] font-bold uppercase tracking-wide" style={{ color: "#94A3B8" }}>
             Como o Safety Pro funciona — passo a passo
           </p>
         </div>
 
-        {/* Steps */}
-        <div className="px-4 py-4 flex flex-col gap-0" style={{ background: "#0A1120" }}>
+        <div className="px-5 py-5 flex flex-col gap-0" style={{ background: "#0A1120" }}>
           {[
             {
               num: "1",
               icon: BarChart3,
               color: "#60A5FA",
-              title: "Robô analisa cada oportunidade antes de entrar",
-              desc: "O EASY 2.0 identifica uma entrada e avisa o Safety Pro. O Safety Pro analisa o risco daquele cenário em menos de 1 segundo.",
+              title: "O robô analisa cada oportunidade antes de entrar",
+              desc: "O EASY 2.0 encontra uma entrada. O Safety Pro verifica o risco daquele cenário em menos de 1 segundo.",
             },
             {
               num: "2",
               icon: AlertTriangle,
               color: "#FACC15",
-              title: "Risco alto detectado → vai pra DEMO automaticamente",
-              desc: "Se o Safety Pro detectar risco elevado, a operação é executada na conta demo. Seu dinheiro real não é tocado. Você não precisa fazer nada — acontece sozinho.",
+              title: "Risco alto? A operação vai para a conta DEMO",
+              desc: "O Safety Pro detecta o perigo e executa a operação em demo automaticamente. Seu dinheiro real não é tocado — você não precisa fazer nada.",
             },
             {
               num: "3",
               icon: TrendingUp,
               color: "#22C55E",
-              title: "Cenário positivo → volta pra conta REAL e lucra",
-              desc: "Quando o mercado está favorável, o robô opera na conta real normalmente — e com o Multiplicador ativo, os ganhos chegam até 20x maiores.",
+              title: "Cenário favorável? Opera na conta REAL e lucra",
+              desc: "Quando o mercado está positivo, o robô opera normalmente na conta real — e com o Multiplicador, os ganhos chegam até 20x maiores.",
             },
           ].map((step, i, arr) => (
-            <div key={step.num} className="flex gap-3">
-              {/* Line + dot */}
+            <div key={step.num} className="flex gap-4">
               <div className="flex flex-col items-center">
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold text-[12px]"
-                  style={{ background: `${step.color}18`, border: `1.5px solid ${step.color}40`, color: step.color }}
+                  className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-extrabold text-[14px]"
+                  style={{ background: `${step.color}20`, border: `2px solid ${step.color}50`, color: step.color }}
                 >
                   {step.num}
                 </div>
                 {i < arr.length - 1 && (
-                  <div className="w-[1.5px] flex-1 my-1" style={{ background: "rgba(255,255,255,0.07)" }} />
+                  <div className="w-[2px] flex-1 my-1.5" style={{ background: "rgba(255,255,255,0.08)" }} />
                 )}
               </div>
-              {/* Content */}
-              <div className={`pb-5 ${i === arr.length - 1 ? "" : ""}`}>
-                <div className="flex items-center gap-2 mb-1">
-                  <step.icon className="w-3.5 h-3.5" style={{ color: step.color }} />
-                  <p className="text-[13px] font-bold" style={{ color: "#F1F5F9" }}>{step.title}</p>
+              <div className="pb-6">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <step.icon className="w-4 h-4 shrink-0" style={{ color: step.color }} />
+                  <p className="text-[14px] font-bold" style={{ color: "#F1F5F9" }}>{step.title}</p>
                 </div>
-                <p className="text-[12px] leading-relaxed" style={{ color: "#64748B" }}>{step.desc}</p>
+                <p className="text-[13px] leading-relaxed" style={{ color: "#94A3B8" }}>{step.desc}</p>
               </div>
             </div>
           ))}
@@ -497,15 +475,23 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
         transition={{ delay: 0.15 }}
       >
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-1.5 h-1.5 rounded-full bg-[hsl(152,60%,42%)] animate-pulse" />
-          <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: "#64748B" }}>
-            Simulação ao vivo — veja o Safety Pro em ação:
+          <div className="w-2 h-2 rounded-full bg-[hsl(152,60%,45%)] animate-pulse" />
+          <p className="text-[12px] font-bold uppercase tracking-wide" style={{ color: "#94A3B8" }}>
+            Veja o Safety Pro funcionando em tempo real:
           </p>
         </div>
         <TradeSimulator />
-        <p className="text-[10px] mt-2 text-center" style={{ color: "#475569" }}>
-          As linhas em amarelo (Demo) são operações que <strong style={{ color: "#F8FAFC" }}>teriam causado perda</strong> — mas o capital real ficou protegido.
-        </p>
+        {/* Legenda explicativa — visível e clara */}
+        <div
+          className="mt-3 rounded-xl px-4 py-3"
+          style={{ background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.18)" }}
+        >
+          <p className="text-[13px] leading-relaxed font-medium" style={{ color: "#E2E8F0" }}>
+            <span style={{ color: "#FACC15", fontWeight: 700 }}>Amarelo = operação protegida.</span>{" "}
+            Quando o Safety Pro detecta risco, a operação vai para a conta demo — e o seu dinheiro real{" "}
+            <span style={{ color: "#F8FAFC", fontWeight: 700 }}>fica intacto</span>.
+          </p>
+        </div>
       </motion.div>
 
       {/* ── VIDEO ── */}
@@ -514,14 +500,14 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <p className="text-[11px] font-bold uppercase tracking-wide mb-2.5" style={{ color: "#64748B" }}>
+        <p className="text-[13px] font-bold uppercase tracking-wide mb-3" style={{ color: "#94A3B8" }}>
           Ricardo explica como funciona na prática:
         </p>
         <div
           className="relative rounded-2xl overflow-hidden flex items-center justify-center cursor-pointer"
           style={{
             background: "linear-gradient(135deg, #0F172A, #1E293B)",
-            border: "1px solid rgba(250,204,21,0.15)",
+            border: "1px solid rgba(250,204,21,0.2)",
             aspectRatio: "16/9",
           }}
           onClick={() => setShowVideo(true)}
@@ -531,17 +517,16 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
               <motion.div
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ repeat: Infinity, duration: 2 }}
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ background: "rgba(250,204,21,0.15)", border: "2px solid rgba(250,204,21,0.35)" }}
+                className="w-18 h-18 w-[72px] h-[72px] rounded-full flex items-center justify-center"
+                style={{ background: "rgba(250,204,21,0.15)", border: "2px solid rgba(250,204,21,0.4)" }}
               >
-                <Play className="w-7 h-7 ml-1" style={{ color: "#FACC15" }} />
+                <Play className="w-8 h-8 ml-1" style={{ color: "#FACC15" }} />
               </motion.div>
-              <p className="text-[12px]" style={{ color: "#94A3B8" }}>Toque para assistir</p>
+              <p className="text-[13px] font-medium" style={{ color: "#CBD5E1" }}>Toque para assistir</p>
             </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center p-6">
-              {/* ↓ Substituir pelo embed real do vídeo */}
-              <p className="text-[13px] text-center" style={{ color: "#64748B" }}>[Cole aqui o embed do vídeo do Ricardo]</p>
+              <p className="text-[14px] text-center" style={{ color: "#64748B" }}>[Cole aqui o embed do vídeo do Ricardo]</p>
             </div>
           )}
         </div>
@@ -552,27 +537,30 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.22 }}
-        className="rounded-2xl p-4"
-        style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.18)" }}
+        className="rounded-2xl p-5"
+        style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.22)" }}
       >
-        <div className="flex items-center gap-2 mb-3">
-          <AlertTriangle className="w-4 h-4" style={{ color: "#EF4444" }} />
-          <p className="text-[13px] font-bold" style={{ color: "#F1F5F9" }}>
+        <div className="flex items-center gap-2.5 mb-4">
+          <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
+          <p className="text-[15px] font-bold" style={{ color: "#F8FAFC" }}>
             O que acontece sem o Safety Pro:
           </p>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {[
-            "O robô entra em operações de risco sem aviso nenhum",
-            "Uma sequência negativa pode zerar semanas de lucro",
+            "O robô entra em operações de risco sem nenhuma proteção",
+            "Uma sequência negativa pode apagar semanas de lucro",
             "Você só descobre a perda quando já aconteceu",
-            "Sem proteção, o emocional bate — e você desliga o robô na hora errada",
+            "O emocional bate e você desliga o robô na hora errada — perdendo os ganhos futuros",
           ].map((item) => (
-            <div key={item} className="flex items-start gap-2">
-              <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: "rgba(239,68,68,0.15)" }}>
-                <span className="text-[9px] font-bold" style={{ color: "#EF4444" }}>✗</span>
+            <div key={item} className="flex items-start gap-3">
+              <div
+                className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                style={{ background: "rgba(239,68,68,0.18)", border: "1px solid rgba(239,68,68,0.3)" }}
+              >
+                <span className="text-[11px] font-bold" style={{ color: "#EF4444" }}>✕</span>
               </div>
-              <p className="text-[12px] leading-relaxed" style={{ color: "#94A3B8" }}>{item}</p>
+              <p className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>{item}</p>
             </div>
           ))}
         </div>
@@ -583,7 +571,7 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25 }}
-        className="flex flex-col gap-3"
+        className="flex flex-col gap-4"
       >
         {[
           {
@@ -594,23 +582,23 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
           {
             avatar: avatarMaria,
             name: "Maria C., 54 anos",
-            text: "\"Eu tinha medo de deixar o robô operar sozinho. Desde que ativei o Safety Pro, durmo tranquila. Sei que ele nunca vai arriscar meu dinheiro de verdade sem cenário favorável.\"",
+            text: "\"Eu tinha medo de deixar o robô operar sozinho. Desde que ativei o Safety Pro, durmo tranquila. Sei que ele nunca vai arriscar meu dinheiro sem o cenário estar favorável.\"",
           },
         ].map((t) => (
           <div
             key={t.name}
-            className="rounded-2xl p-4 flex items-start gap-3"
-            style={{ background: "rgba(30,41,59,0.6)", border: "1px solid rgba(255,255,255,0.05)" }}
+            className="rounded-2xl p-4 flex items-start gap-3.5"
+            style={{ background: "rgba(30,41,59,0.7)", border: "1px solid rgba(255,255,255,0.08)" }}
           >
             <img
               src={t.avatar}
               alt={t.name}
-              className="w-10 h-10 rounded-full object-cover shrink-0"
-              style={{ border: "2px solid rgba(34,197,94,0.25)" }}
+              className="w-12 h-12 rounded-full object-cover shrink-0"
+              style={{ border: "2px solid rgba(34,197,94,0.3)" }}
             />
             <div>
-              <p className="text-[13px] font-semibold mb-1" style={{ color: "#E2E8F0" }}>{t.name}</p>
-              <p className="text-[12px] italic leading-relaxed" style={{ color: "#94A3B8" }}>{t.text}</p>
+              <p className="text-[14px] font-bold mb-1.5" style={{ color: "#F1F5F9" }}>{t.name}</p>
+              <p className="text-[13px] italic leading-relaxed" style={{ color: "#CBD5E1" }}>{t.text}</p>
             </div>
           </div>
         ))}
@@ -622,12 +610,13 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.28 }}
-          className="rounded-xl px-4 py-3 flex items-start gap-2.5"
-          style={{ background: "rgba(250,204,21,0.05)", border: "1px solid rgba(250,204,21,0.2)" }}
+          className="rounded-xl px-5 py-4 flex items-start gap-3"
+          style={{ background: "rgba(250,204,21,0.07)", border: "1px solid rgba(250,204,21,0.25)" }}
         >
-          <Zap className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#FACC15" }} />
-          <p className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>
-            <strong style={{ color: "#FACC15" }}>{firstName}</strong>, com o Multiplicador que você já tem ativo, o Safety Pro age como um escudo: os lucros crescem mais rápido e as perdas <strong style={{ color: "#F8FAFC" }}>simplesmente não chegam ao seu saldo real</strong>.
+          <Zap className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#FACC15" }} />
+          <p className="text-[14px] leading-relaxed" style={{ color: "#E2E8F0" }}>
+            <strong style={{ color: "#FACC15" }}>{firstName}</strong>, com o Multiplicador que você já tem ativo, o Safety Pro age como um escudo: os lucros crescem mais rápido{" "}
+            <strong style={{ color: "#F8FAFC" }}>e as perdas simplesmente não chegam ao seu saldo real</strong>.
           </p>
         </motion.div>
       )}
@@ -638,12 +627,14 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <p className="text-[12px] text-center font-semibold mb-3" style={{ color: "#94A3B8" }}>
+        <p className="text-[14px] text-center font-semibold mb-4" style={{ color: "#CBD5E1" }}>
           Escolha por quanto tempo quer sua proteção ativa:
         </p>
+
+        {/* Tabs */}
         <div
-          className="flex rounded-2xl p-1.5 gap-1 mb-4"
-          style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.06)" }}
+          className="flex rounded-2xl p-1.5 gap-1.5 mb-5"
+          style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}
         >
           {plans.map((plan) => {
             const isActive = selectedPlan === plan.id;
@@ -652,28 +643,28 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
                 key={plan.id}
                 onClick={() => setSelectedPlan(plan.id)}
                 whileTap={{ scale: 0.96 }}
-                className="flex-1 py-3 rounded-xl text-center relative cursor-pointer"
+                className="flex-1 py-3.5 rounded-xl text-center relative cursor-pointer"
                 style={{
-                  background: isActive ? `${plan.color}12` : "rgba(255,255,255,0.02)",
-                  border: isActive ? `1.5px solid ${plan.color}` : "1.5px solid rgba(255,255,255,0.07)",
+                  background: isActive ? `${plan.color}14` : "rgba(255,255,255,0.02)",
+                  border: isActive ? `2px solid ${plan.color}` : "2px solid rgba(255,255,255,0.07)",
                 }}
               >
                 {plan.badge && (
                   <span
-                    className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[8px] font-bold px-2 py-0.5 rounded-full text-white whitespace-nowrap"
+                    className="absolute -top-3 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-0.5 rounded-full text-white whitespace-nowrap"
                     style={{ background: "#16A34A" }}
                   >
                     {plan.badge}
                   </span>
                 )}
-                <p className="text-[12px] font-bold" style={{ color: isActive ? plan.color : "#94A3B8" }}>{plan.label}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: isActive ? "#CBD5E1" : "#64748B" }}>R$ {plan.price}</p>
+                <p className="text-[13px] font-bold" style={{ color: isActive ? plan.color : "#94A3B8" }}>{plan.label}</p>
+                <p className="text-[11px] mt-0.5 font-medium" style={{ color: isActive ? "#E2E8F0" : "#64748B" }}>R$ {plan.price}</p>
               </motion.button>
             );
           })}
         </div>
 
-        {/* Plan detail */}
+        {/* Plan card */}
         <AnimatePresence mode="wait">
           <motion.div
             key={selectedPlan}
@@ -682,64 +673,70 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
             className="rounded-2xl overflow-hidden"
-            style={{ border: `1.5px solid ${activePlan.color}33` }}
+            style={{ border: `2px solid ${activePlan.color}40` }}
           >
+            {/* Plan header */}
             <div
               className="px-5 py-4 flex items-center justify-between"
-              style={{ background: `${activePlan.color}08` }}
+              style={{ background: `${activePlan.color}09`, borderBottom: `1px solid ${activePlan.color}25` }}
             >
               <div>
-                <div className="flex items-center gap-2 mb-0.5">
-                  <ShieldCheck className="w-4 h-4" style={{ color: activePlan.color }} />
-                  <h3 className="text-[16px] font-bold" style={{ color: "#F8FAFC" }}>Safety Pro {activePlan.label}</h3>
+                <div className="flex items-center gap-2 mb-1">
+                  <ShieldCheck className="w-5 h-5" style={{ color: activePlan.color }} />
+                  <h3 className="text-[17px] font-bold" style={{ color: "#F8FAFC" }}>
+                    Safety Pro {activePlan.label}
+                  </h3>
                 </div>
                 {activePlan.installments && (
-                  <p className="text-[11px]" style={{ color: "#64748B" }}>{activePlan.installments}</p>
+                  <p className="text-[12px] font-medium" style={{ color: "#94A3B8" }}>{activePlan.installments}</p>
                 )}
               </div>
               <div className="text-right">
-                <span className="text-[26px] font-extrabold" style={{ color: "#F8FAFC" }}>R$ {activePlan.price}</span>
-                <p className="text-[10px]" style={{ color: "#64748B" }}>único</p>
+                <span className="text-[28px] font-extrabold" style={{ color: "#F8FAFC" }}>R$ {activePlan.price}</span>
+                <p className="text-[11px] font-medium" style={{ color: "#64748B" }}>único</p>
               </div>
             </div>
 
-            <div className="px-5 py-4" style={{ background: "#0F172A" }}>
-              <div className="flex flex-col gap-2 mb-5">
+            {/* Features */}
+            <div className="px-5 py-5" style={{ background: "#0F172A" }}>
+              <div className="flex flex-col gap-3 mb-6">
                 {features[activePlan.id].map((f) => (
-                  <div key={f} className="flex items-center gap-2.5">
+                  <div key={f} className="flex items-center gap-3">
                     <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: `${activePlan.color}15` }}
+                      className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: `${activePlan.color}18`, border: `1px solid ${activePlan.color}35` }}
                     >
-                      <Check className="w-3 h-3" style={{ color: activePlan.color }} />
+                      <Check className="w-3.5 h-3.5" style={{ color: activePlan.color }} />
                     </div>
-                    <span className="text-[13px]" style={{ color: "#E2E8F0" }}>{f}</span>
+                    <span className="text-[14px]" style={{ color: "#E2E8F0" }}>{f}</span>
                   </div>
                 ))}
               </div>
 
+              {/* CTA */}
               <button
                 onClick={handleBuy}
                 disabled={loading}
-                className="w-full py-[17px] rounded-xl text-[15px] font-bold transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
+                className="w-full py-[18px] rounded-xl text-[16px] font-bold transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
                 style={{
                   background: "linear-gradient(135deg, #FACC15, #EAB308)",
                   color: "#020617",
-                  boxShadow: "0 0 24px rgba(250,204,21,0.22), 0 4px 12px rgba(0,0,0,0.3)",
+                  boxShadow: "0 0 28px rgba(250,204,21,0.25), 0 4px 16px rgba(0,0,0,0.35)",
                 }}
               >
                 {loading ? "Processando..." : <>ATIVAR SAFETY PRO — R$ {activePlan.price} <ArrowRight className="w-4 h-4" /></>}
               </button>
 
-              <div className="flex items-center justify-center gap-5 mt-3">
+              {/* Trust badges */}
+              <div className="flex items-center justify-center gap-6 mt-4">
                 {([
                   [Lock, "100% seguro"],
                   [ShieldCheck, "Garantia 30 dias"],
                   [RefreshCw, "Ativação imediata"],
                 ] as const).map(([Icon, label]) => (
-                  <div key={label} className="flex items-center gap-1">
-                    <Icon className="w-3.5 h-3.5" style={{ color: "#475569" }} />
-                    <span className="text-[10px]" style={{ color: "#475569" }}>{label}</span>
+                  <div key={label} className="flex items-center gap-1.5">
+                    <Icon className="w-3.5 h-3.5" style={{ color: "#64748B" }} />
+                    <span className="text-[11px] font-medium" style={{ color: "#64748B" }}>{label}</span>
                   </div>
                 ))}
               </div>
@@ -755,8 +752,8 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
           logAuditEvent({ eventType: "upsell_oneclick_decline", pageId: "/upsell5" });
           onDecline();
         }}
-        className="text-[12px] underline cursor-pointer bg-transparent border-none mx-auto py-2 pb-8"
-        style={{ color: "#475569" }}
+        className="text-[13px] underline cursor-pointer bg-transparent border-none mx-auto py-2 pb-8 block"
+        style={{ color: "#64748B" }}
       >
         Não, prefiro continuar sem proteção de capital.
       </button>
