@@ -107,7 +107,6 @@ const TradeSimulator = () => {
   const [balance, setBalance] = useState(1_247.38);
   const [sessionProfit, setSessionProfit] = useState(0);
   const [wins, setWins] = useState(0);
-  const [losses, setLosses] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(true);
   const [notification, setNotification] = useState<{ text: string; color: string } | null>(null);
   const [safetyStatus, setSafetyStatus] = useState<"real" | "demo" | "risk">("real");
@@ -117,7 +116,7 @@ const TradeSimulator = () => {
   const dismissNotif = useCallback(() => setNotification(null), []);
 
   const runOp = useCallback(() => {
-    const isRisk = Math.random() < 0.25; // 1 in 4 → Safety Pro kicks in
+    const isRisk = Math.random() < 0.28; // ~1 in 4 → Safety Pro kicks in → vai pra demo
     const conta: "real" | "demo" = isRisk ? "demo" : "real";
 
     if (isRisk) {
@@ -127,31 +126,29 @@ const TradeSimulator = () => {
       setSafetyStatus("real");
     }
 
-    const isWin = conta === "real" ? Math.random() < 0.85 : Math.random() < 0.45;
-    const lucro = isWin
+    // Conta real = sempre positivo (Safety Pro protegeu todas as negativas)
+    // Conta demo = valor que SERIA perdido, mas foi protegido
+    const lucro = conta === "real"
       ? parseFloat((9 + Math.random() * 34).toFixed(2))
-      : parseFloat((-(5 + Math.random() * 18)).toFixed(2));
+      : parseFloat((-(5 + Math.random() * 18)).toFixed(2)); // só usado pra mostrar "quanto foi salvo"
 
     const parIdx = Math.floor(Math.random() * pares.length);
     const hora = new Date().toLocaleTimeString("pt-BR").slice(0, 8);
-    const op: SimOp = { hora, par: pares[parIdx], preco: precos[parIdx], lucro, tipo: isWin ? "win" : "loss", conta };
+    // Conta real → sempre win (Safety Pro bloqueou todas as negativas via demo)
+    const op: SimOp = { hora, par: pares[parIdx], preco: precos[parIdx], lucro, tipo: "win", conta };
 
     setHistory(prev => [...prev.slice(-14), op]);
 
     if (conta === "real") {
       setSessionProfit(prev => parseFloat((prev + lucro).toFixed(2)));
       setBalance(prev => parseFloat((prev + lucro).toFixed(2)));
-      if (isWin) {
-        setWins(prev => prev + 1);
-        setNotification({ text: `✅ +R$${lucro.toFixed(2)} creditado em ${pares[parIdx]}`, color: "#22C55E" });
-      } else {
-        setLosses(prev => prev + 1);
-      }
+      setWins(prev => prev + 1);
+      setNotification({ text: `✅ +R$${lucro.toFixed(2)} creditado em ${pares[parIdx]}`, color: "#22C55E" });
     } else {
-      // Demo: show what WOULD have been lost
+      // Demo: mostra quanto foi protegido — nunca toca no saldo real
       const saved = Math.abs(lucro);
       setLastSaved(saved);
-      setNotification({ text: `🛡 Safety Pro: risco alto detectado → operado em demo. R$${saved.toFixed(2)} protegidos.`, color: "#FACC15" });
+      setNotification({ text: `🛡 Safety Pro: risco detectado → demo. R$${saved.toFixed(2)} protegidos.`, color: "#FACC15" });
     }
 
     opRef.current = setTimeout(() => setIsAnalyzing(true), 600 + Math.random() * 600);
@@ -253,8 +250,7 @@ const TradeSimulator = () => {
         <div className={`px-3 py-1.5 flex items-center justify-between ${plat.border} border-b ${plat.secondary}`}>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-bold text-white">Operações</span>
-            <span className="text-[9px] text-[hsl(152,60%,42%)] font-bold">{wins}✓</span>
-            <span className="text-[9px] text-[hsl(0,72%,55%)] font-bold">{losses}✗</span>
+            <span className="text-[9px] text-[hsl(152,60%,42%)] font-bold">{wins} ganhos ✓</span>
           </div>
           <div className="flex items-center gap-1">
             <ShieldCheck className="w-3 h-3 text-[hsl(280,70%,65%)]" />
@@ -296,8 +292,7 @@ const TradeSimulator = () => {
                 <span
                   className="text-[9px] font-bold text-right"
                   style={{
-                    color: op.conta === "demo" ? "#FACC15" :
-                           op.tipo === "win" ? "#22C55E" : "#EF4444"
+                    color: op.conta === "demo" ? "#FACC15" : "#22C55E"
                   }}
                 >
                   {op.conta === "demo"
