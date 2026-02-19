@@ -10,6 +10,12 @@ const OFFER_ID_MAP: Record<string, string> = {
   "4630333d-d5d1-4591-b767-2151f77c6b13": "front_37",
   "a404a378-2a59-4efd-86a8-dc57363c054c": "front_47",
   "863c8fe9-ca48-452f-9fa4-22e14df182cf": "acelerador_basico",
+  // Safety Pro plans
+  "c7f4277f-ad68-4952-92ba-8e2ea9bea47f": "safety_pro",
+  "0a54e723-14b9-4835-a20d-07a2289b4fc8": "safety_pro",
+  "c15f93e0-982e-47cd-ade1-b24791b79fab": "safety_pro",
+  // FOREX Mentoria
+  "bf6428b5-4257-496c-8d22-46e53c4e6689": "forex_mentoria",
 };
 
 function classifyByPrice(amount: number | null, offerName: string | null, productName: string | null): string {
@@ -27,6 +33,8 @@ function classifyByPrice(amount: number | null, offerName: string | null, produc
   }
   if (name.includes("blindagem") || offer.includes("blindagem")) return "blindagem";
   if (name.includes("circulo") || name.includes("círculo") || offer.includes("circulo")) return "circulo_interno";
+  if (name.includes("safety") || offer.includes("safety") || name.includes("proteção") || offer.includes("proteção")) return "safety_pro";
+  if (name.includes("forex") || offer.includes("forex") || name.includes("mentoria") || offer.includes("mentoria")) return "forex_mentoria";
   if (name.includes("guia") || offer.includes("guia") || (amount && amount < 35 && amount > 25)) return "downsell_guia";
   if (amount === 37) return "front_37";
   if (amount === 47) return "front_47";
