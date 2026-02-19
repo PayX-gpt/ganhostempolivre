@@ -9,6 +9,13 @@ import {
   Zap,
   Users,
   XCircle,
+  PackageCheck,
+  Sparkles,
+  Gift,
+  BookOpen,
+  BarChart2,
+  MessageSquare,
+  GraduationCap,
 } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
@@ -26,25 +33,25 @@ const PRICE = 297;
 const ORIGINAL_PRICE = 4997;
 
 const alreadyOwned = [
-  { icon: Shield, label: "Plataforma Híbrida com IA" },
-  { icon: TrendingUp, label: "Multiplicador de Lucro" },
-  { icon: Shield, label: "Blindagem de Conta" },
-  { icon: Users, label: "Círculo Interno VIP" },
-  { icon: Shield, label: "Camada Safety Pro" },
+  { Icon: Shield, label: "Plataforma Híbrida com IA" },
+  { Icon: TrendingUp, label: "Multiplicador de Lucro" },
+  { Icon: Shield, label: "Blindagem de Conta" },
+  { Icon: Users, label: "Círculo Interno VIP" },
+  { Icon: Shield, label: "Camada Safety Pro" },
 ];
 
 const newItems = [
-  { icon: Video, label: "Trader profissional ao vivo — 3x ao dia" },
-  { icon: TrendingUp, label: "Mentoria completa no FOREX" },
-  { icon: Check, label: "Operações guiadas diariamente" },
-  { icon: Zap, label: "Segunda Licença Premium" },
+  { Icon: Video, label: "Trader profissional ao vivo — 3x ao dia" },
+  { Icon: TrendingUp, label: "Mentoria completa no FOREX" },
+  { Icon: Check, label: "Operações guiadas diariamente" },
+  { Icon: Zap, label: "Segunda Licença Premium" },
 ];
 
 const bonusItems = [
-  { label: "Bônus 1: Guia FOREX para Iniciantes — R$ 297" },
-  { label: "Bônus 2: Planilha de Controle de Operações — R$ 97" },
-  { label: "Bônus 3: Grupo Exclusivo de Sinais ao Vivo — R$ 497" },
-  { label: "Bônus 4: Masterclass 'Primeiros R$ 1.000 no FOREX' — R$ 197" },
+  { Icon: BookOpen, label: "Bônus 1: Guia FOREX para Iniciantes — R$ 297" },
+  { Icon: BarChart2, label: "Bônus 2: Planilha de Controle de Operações — R$ 97" },
+  { Icon: MessageSquare, label: "Bônus 3: Grupo Exclusivo de Sinais ao Vivo — R$ 497" },
+  { Icon: GraduationCap, label: "Bônus 4: Masterclass 'Primeiros R$ 1.000 no FOREX' — R$ 197" },
 ];
 
 const licensePerks = [
@@ -107,7 +114,8 @@ const UpsellForexMentoria = ({ name, onNext, onDecline }: Props) => {
       >
         <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: "#EF4444" }} />
         <p className="text-[12px] font-semibold" style={{ color: "#FCA5A5" }}>
-          Essa oferta some quando você fechar esta página. <strong style={{ color: "#EF4444" }}>Não aparece de novo.</strong>
+          Essa oferta some quando você fechar esta página.{" "}
+          <strong style={{ color: "#EF4444" }}>Não aparece de novo.</strong>
         </p>
       </motion.div>
 
@@ -235,7 +243,7 @@ const UpsellForexMentoria = ({ name, onNext, onDecline }: Props) => {
         </ul>
       </motion.div>
 
-      {/* Everything included */}
+      {/* Everything included — 3 sections */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -245,13 +253,19 @@ const UpsellForexMentoria = ({ name, onNext, onDecline }: Props) => {
       >
         {/* Already Owned */}
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: "#64748B" }}>
-            ✅ O que você já conquistou
-          </p>
+          <div className="flex items-center gap-2 mb-3">
+            <PackageCheck className="w-3.5 h-3.5 shrink-0" style={{ color: "#64748B" }} />
+            <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#64748B" }}>
+              O que você já conquistou
+            </p>
+          </div>
           <div className="flex flex-col gap-2">
-            {alreadyOwned.map(({ icon: Icon, label }) => (
+            {alreadyOwned.map(({ Icon, label }) => (
               <div key={label} className="flex items-center gap-2.5">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(22,163,74,0.12)" }}>
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(22,163,74,0.12)" }}
+                >
                   <Icon className="w-3 h-3" style={{ color: "#22C55E" }} />
                 </div>
                 <span className="text-[13px]" style={{ color: "#94A3B8" }}>{label}</span>
@@ -264,13 +278,19 @@ const UpsellForexMentoria = ({ name, onNext, onDecline }: Props) => {
 
         {/* New Items */}
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: "#22C55E" }}>
-            🔥 O que você ganha agora
-          </p>
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-3.5 h-3.5 shrink-0" style={{ color: "#22C55E" }} />
+            <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#22C55E" }}>
+              O que você ganha agora
+            </p>
+          </div>
           <div className="flex flex-col gap-2">
-            {newItems.map(({ icon: Icon, label }) => (
+            {newItems.map(({ Icon, label }) => (
               <div key={label} className="flex items-center gap-2.5">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(22,163,74,0.2)", border: "1px solid rgba(34,197,94,0.3)" }}>
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(22,163,74,0.2)", border: "1px solid rgba(34,197,94,0.3)" }}
+                >
                   <Icon className="w-3 h-3" style={{ color: "#22C55E" }} />
                 </div>
                 <span className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>{label}</span>
@@ -283,20 +303,24 @@ const UpsellForexMentoria = ({ name, onNext, onDecline }: Props) => {
 
         {/* Bonus Items */}
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: "#FACC15" }}>
-            🎁 Bônus exclusivos incluídos
-          </p>
+          <div className="flex items-center gap-2 mb-3">
+            <Gift className="w-3.5 h-3.5 shrink-0" style={{ color: "#FACC15" }} />
+            <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#FACC15" }}>
+              Bônus exclusivos incluídos
+            </p>
+          </div>
           <div className="flex flex-col gap-2">
-            {bonusItems.map(({ label }) => (
+            {bonusItems.map(({ Icon, label }) => (
               <div key={label} className="flex items-start gap-2.5">
-                <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "#FACC15" }} />
+                <Icon className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "#FACC15" }} />
                 <span className="text-[13px]" style={{ color: "#E2E8F0" }}>{label}</span>
               </div>
             ))}
           </div>
           <div className="mt-3 pt-3" style={{ borderTop: "1px dashed rgba(250,204,21,0.2)" }}>
             <p className="text-[12px] font-bold text-center" style={{ color: "#FACC15" }}>
-              Valor total dos bônus: <span style={{ color: "#F8FAFC" }}>R$ 1.088 — GRÁTIS pra você</span>
+              Valor total dos bônus:{" "}
+              <span style={{ color: "#F8FAFC" }}>R$ 1.088 — GRÁTIS pra você</span>
             </p>
           </div>
         </div>
@@ -325,7 +349,10 @@ const UpsellForexMentoria = ({ name, onNext, onDecline }: Props) => {
 
         <div className="my-2 flex items-center gap-3 justify-center">
           <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.06)" }} />
-          <span className="text-[11px] font-bold px-3 py-1 rounded-full" style={{ background: "rgba(22,163,74,0.15)", color: "#22C55E" }}>
+          <span
+            className="text-[11px] font-bold px-3 py-1 rounded-full"
+            style={{ background: "rgba(22,163,74,0.15)", color: "#22C55E" }}
+          >
             HOJE APENAS
           </span>
           <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.06)" }} />
