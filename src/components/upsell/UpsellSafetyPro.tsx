@@ -43,7 +43,7 @@ const AnalyzingBar = ({ onDone, paused }: { onDone: () => void; paused?: boolean
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     if (paused) { setProgress(0); return; }
-    const duration = 1100 + Math.random() * 900;
+    const duration = 2500 + Math.random() * 1500;
     const start = Date.now();
     const iv = setInterval(() => {
       const pct = Math.min(100, ((Date.now() - start) / duration) * 100);
@@ -131,7 +131,7 @@ const TradeSimulator = () => {
         setTimeout(() => {
           setSafetyStatus("real");
           setIsAnalyzing(true);
-          opRef.current = setTimeout(runOp, 2500 + Math.random() * 2000);
+          opRef.current = setTimeout(runOp, 6000 + Math.random() * 4000);
         }, 2200);
       }, 800);
     } else {
@@ -153,7 +153,7 @@ const TradeSimulator = () => {
       setWins(w => w + 1);
       setSafetyStatus("real");
       setIsAnalyzing(true);
-      opRef.current = setTimeout(runOp, 2500 + Math.random() * 2000);
+      opRef.current = setTimeout(runOp, 6000 + Math.random() * 4000);
     }
   }, []);
 
