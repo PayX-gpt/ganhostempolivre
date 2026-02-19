@@ -268,6 +268,7 @@ Deno.serve(async (req) => {
           .update({
             status: normalizedStatus,
             amount, email,
+            buyer_name: buyerName,
             product_name: productName,
             plan_id: planId,
             funnel_step: funnelStep,
@@ -295,6 +296,7 @@ Deno.serve(async (req) => {
         plan_id: planId,
         product_name: productName,
         amount, email,
+        buyer_name: buyerName,
         status: normalizedStatus,
         funnel_step: funnelStep,
         session_id: sessionId,

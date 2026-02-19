@@ -176,6 +176,7 @@ export type Database = {
       purchase_tracking: {
         Row: {
           amount: number | null
+          buyer_name: string | null
           conversion_api_sent: boolean | null
           created_at: string
           email: string | null
@@ -210,6 +211,7 @@ export type Database = {
         }
         Insert: {
           amount?: number | null
+          buyer_name?: string | null
           conversion_api_sent?: boolean | null
           created_at?: string
           email?: string | null
@@ -244,6 +246,7 @@ export type Database = {
         }
         Update: {
           amount?: number | null
+          buyer_name?: string | null
           conversion_api_sent?: boolean | null
           created_at?: string
           email?: string | null

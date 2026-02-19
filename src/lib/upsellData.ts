@@ -6,6 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const getLeadName = (): string => {
   try {
+    // QuizFunnel saves to "quiz_answers" key
+    const raw = sessionStorage.getItem("quiz_answers");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.name && parsed.name.trim()) return parsed.name.trim().split(" ")[0];
+    }
+  } catch {}
+  try {
+    // Legacy key fallback
     const raw = sessionStorage.getItem("quizAnswers");
     if (raw) {
       const parsed = JSON.parse(raw);
