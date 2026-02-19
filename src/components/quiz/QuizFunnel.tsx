@@ -149,7 +149,13 @@ const QuizFunnel = () => {
       trackStepComplete({ key, value });
       setAnswers((prev) => {
         const updated = { ...prev, [key]: value };
-        try { sessionStorage.setItem("quiz_answers", JSON.stringify(updated)); } catch {}
+        try {
+          sessionStorage.setItem("quiz_answers", JSON.stringify(updated));
+          // Dispatch custom event immediately when name is set so presence tracking updates instantly
+          if (key === "name" && value.trim()) {
+            window.dispatchEvent(new CustomEvent("quiz_name_updated", { detail: { name: value.trim() } }));
+          }
+        } catch {}
         return updated;
       });
       const nextStep = Math.min(step + 1, TOTAL_STEPS);
