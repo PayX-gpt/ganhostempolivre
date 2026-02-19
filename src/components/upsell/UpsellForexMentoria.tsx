@@ -214,11 +214,107 @@ const UpsellForexMentoria = ({ name, onNext, onDecline }: Props) => {
         </div>
       </motion.div>
 
+      {/* Ricardo + Team Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.16 }}
+        className="rounded-2xl overflow-hidden"
+        style={{ border: "1px solid rgba(250,204,21,0.25)" }}
+      >
+        {/* Header */}
+        <div
+          className="px-5 py-4 flex items-center gap-3"
+          style={{ background: "rgba(250,204,21,0.07)" }}
+        >
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+            style={{ background: "rgba(250,204,21,0.15)", border: "1px solid rgba(250,204,21,0.35)" }}
+          >
+            <Users className="w-5 h-5" style={{ color: "#FACC15" }} />
+          </div>
+          <div>
+            <p className="text-[13px] font-bold" style={{ color: "#F8FAFC" }}>
+              Ricardo + Escritório com 30+ Especialistas
+            </p>
+            <p className="text-[11px]" style={{ color: "#FDE68A" }}>
+              Analistas e traders profissionais ao seu lado
+            </p>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="px-5 py-4 flex flex-col gap-3" style={{ background: "#0F172A" }}>
+          <p className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>
+            Quando você entra para essa mentoria, você não ganha apenas um curso.
+            Você ganha acesso direto ao{" "}
+            <strong style={{ color: "#F8FAFC" }}>Ricardo e ao escritório dele</strong>{" "}
+            — uma estrutura com mais de{" "}
+            <strong style={{ color: "#FACC15" }}>30 profissionais do mercado financeiro</strong>:
+            traders sênior, analistas gráficos e especialistas em FOREX operando todos os dias.
+          </p>
+
+          {/* Promise cards */}
+          <div className="flex flex-col gap-2 mt-1">
+            {[
+              {
+                Icon: TrendingUp,
+                title: "Operações em tempo real",
+                desc: "Cada entrada e saída transmitida ao vivo para você copiar exatamente.",
+              },
+              {
+                Icon: Shield,
+                title: "Análise coletiva de 30+ analistas",
+                desc: "Nenhuma operação é feita por impulso. Sempre validada por toda a equipe.",
+              },
+              {
+                Icon: Zap,
+                title: "Sem chance de erros isolados",
+                desc: "Com um time inteiro monitorando o mercado, as decisões são sempre baseadas em dados reais.",
+              },
+              {
+                Icon: Check,
+                title: "Todo mundo ganha junto",
+                desc: "O objetivo é que cada aluno acompanhe e lucre em cada operação realizada.",
+              },
+            ].map(({ Icon, title, desc }) => (
+              <div
+                key={title}
+                className="flex items-start gap-3 rounded-xl p-3"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}
+              >
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                  style={{ background: "rgba(250,204,21,0.12)" }}
+                >
+                  <Icon className="w-3.5 h-3.5" style={{ color: "#FACC15" }} />
+                </div>
+                <div>
+                  <p className="text-[13px] font-bold" style={{ color: "#F1F5F9" }}>{title}</p>
+                  <p className="text-[12px] mt-0.5 leading-relaxed" style={{ color: "#94A3B8" }}>{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Credibility pill */}
+          <div
+            className="mt-1 rounded-xl p-3 flex items-center gap-2.5"
+            style={{ background: "rgba(22,163,74,0.07)", border: "1px solid rgba(34,197,94,0.2)" }}
+          >
+            <Shield className="w-4 h-4 shrink-0" style={{ color: "#22C55E" }} />
+            <p className="text-[12px] leading-snug" style={{ color: "#86EFAC" }}>
+              <strong style={{ color: "#F8FAFC" }}>Garantia de operações:</strong> enquanto o mercado estiver aberto, o time do Ricardo está operando e transmitindo ao vivo para você.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Second License Highlight */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.18 }}
+        transition={{ delay: 0.20 }}
         className="rounded-2xl p-5"
         style={{
           background: "rgba(250,204,21,0.05)",
