@@ -334,7 +334,7 @@ const plans = [
     per: "/mês",
     highlight: false,
     badge: null,
-    checkoutUrl: "SAFETY-MENSAL-PLACEHOLDER",
+    checkoutUrl: "https://pay.kirvano.com/c7f4277f-ad68-4952-92ba-8e2ea9bea47f",
     features: ["Safety Pro ativo 24h", "Proteção em tempo real", "Suporte prioritário"],
   },
   {
@@ -344,7 +344,7 @@ const plans = [
     per: "/ano",
     highlight: true,
     badge: "MAIS POPULAR",
-    checkoutUrl: "SAFETY-ANUAL-PLACEHOLDER",
+    checkoutUrl: "https://pay.kirvano.com/0a54e723-14b9-4835-a20d-07a2289b4fc8",
     features: ["Safety Pro ativo 24h", "Proteção em tempo real", "Suporte VIP", "Economia de R$367/ano"],
   },
   {
@@ -354,7 +354,7 @@ const plans = [
     per: " único",
     highlight: false,
     badge: "MELHOR VALOR",
-    checkoutUrl: "SAFETY-VITALICIO-PLACEHOLDER",
+    checkoutUrl: "https://pay.kirvano.com/c15f93e0-982e-47cd-ade1-b24791b79fab",
     features: ["Safety Pro ativo para sempre", "Proteção em tempo real", "Suporte VIP vitalício", "Nunca paga de novo"],
   },
 ];
