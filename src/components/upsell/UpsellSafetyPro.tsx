@@ -166,9 +166,7 @@ const TradeSimulator = () => {
     return () => { if (opRef.current) clearTimeout(opRef.current); };
   }, []);
 
-  useEffect(() => {
-    if (historyRef.current) historyRef.current.scrollTop = 0;
-  }, [history]);
+  // Não usar scrollTop para não interferir no scroll da página
 
   return (
     <div
@@ -190,24 +188,26 @@ const TradeSimulator = () => {
         </div>
       </div>
 
-      {/* Alert overlay */}
-      <AnimatePresence>
-        {alertVisible && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25 }}
-            className="mx-3 mt-2 rounded-xl px-3 py-2 flex items-center gap-2"
-            style={{ background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.35)" }}
-          >
-            <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: "#FACC15" }} />
-            <p className="text-[12px] font-bold" style={{ color: "#FEF08A" }}>
-              🛡️ Safety Pro bloqueou — R${alertAmount.toFixed(2)} de perda evitados!
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Alert overlay — posição absoluta para não deslocar o layout */}
+      <div className="relative h-0 overflow-visible z-10">
+        <AnimatePresence>
+          {alertVisible && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="absolute left-3 right-3 top-2 rounded-xl px-3 py-2 flex items-center gap-2"
+              style={{ background: "rgba(250,204,21,0.92)", backdropFilter: "blur(4px)", boxShadow: "0 4px 16px rgba(0,0,0,0.3)" }}
+            >
+              <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: "#0F172A" }} />
+              <p className="text-[12px] font-bold" style={{ color: "#0F172A" }}>
+                🛡️ Safety Pro bloqueou — R${alertAmount.toFixed(2)} de perda evitados!
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-0" style={{ borderBottom: "1px solid hsl(270,30%,18%)" }}>
@@ -222,7 +222,7 @@ const TradeSimulator = () => {
             style={{ borderRight: i < 2 ? "1px solid hsl(270,30%,18%)" : "none" }}
           >
             <span className="text-[10px] text-[hsl(280,30%,60%)] mb-0.5">{s.label}</span>
-            <span className="text-[13px] font-bold tabular-nums" style={{ color: s.color }}>{s.value}</span>
+            <span className="text-[13px] font-bold tabular-nums" style={{ color: s.color, minWidth: "80px", textAlign: "center" }}>{s.value}</span>
           </div>
         ))}
       </div>
@@ -269,7 +269,7 @@ const TradeSimulator = () => {
       )}
 
       {/* History */}
-      <div ref={historyRef} className="flex flex-col gap-0 max-h-[220px] overflow-y-auto">
+      <div ref={historyRef} className="flex flex-col gap-0 max-h-[220px] overflow-y-auto" style={{ overflowAnchor: "none" }}>
         {history.length === 0 && (
           <div className="px-3 py-4 text-center">
             <p className="text-[12px] text-[hsl(280,30%,55%)]">Aguardando primeira operação...</p>
