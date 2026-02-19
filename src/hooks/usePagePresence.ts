@@ -66,6 +66,9 @@ export const usePagePresence = (pageId: string): void => {
 
   useEffect(() => {
     if (!pageId || isDevSession()) return;
+    // NEVER track presence from admin/live pages
+    const currentPath = window.location.pathname.toLowerCase();
+    if (currentPath.includes('/live') || currentPath.includes('/admin')) return;
     if (lastPageRef.current === pageId) return; // same page, skip
     lastPageRef.current = pageId;
 
