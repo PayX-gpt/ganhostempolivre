@@ -405,12 +405,30 @@ const features: Record<string, string[]> = {
   ],
 };
 
+// ── Expert video (vturb) ──
+const ExpertVideo = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!containerRef.current) return;
+    // Inject the vturb player element
+    containerRef.current.innerHTML = `<vturb-smartplayer id="vid-690e73433ad3bcc011d96455" style="display:block;margin:0 auto;width:100%;max-width:400px;"></vturb-smartplayer>`;
+    // Inject the script only once
+    if (!document.getElementById("vturb-script-safety")) {
+      const s = document.createElement("script");
+      s.id = "vturb-script-safety";
+      s.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/690e73433ad3bcc011d96455/v4/player.js";
+      s.async = true;
+      document.head.appendChild(s);
+    }
+  }, []);
+  return <div ref={containerRef} className="w-full" />;
+};
+
 // ── Main ──
 const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
   const [selectedPlan, setSelectedPlan] = useState("anual");
   const [loading, setLoading] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
   const protectedOps = useLiveCounter(12847);
 
   const activePlan = plans.find(p => p.id === selectedPlan)!;
@@ -465,6 +483,26 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
             operações protegidas hoje
           </span>
         </div>
+      </motion.div>
+
+      {/* ── VIDEO DO EXPERT (logo após contador) ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 }}
+        className="flex flex-col gap-3"
+      >
+        <div className="text-center px-1">
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "#FACC15" }}>
+            O criador do sistema explica
+          </p>
+          <h2 className="text-[20px] font-extrabold leading-snug" style={{ color: "#F8FAFC" }}>
+            Como o Safety Pro{" "}
+            <span style={{ color: "#22C55E" }}>protege seu dinheiro</span>{" "}
+            enquanto o robô lucra para você — sem que você precise fazer nada
+          </h2>
+        </div>
+        <ExpertVideo />
       </motion.div>
 
       {/* ── HOW IT WORKS — passo a passo ── */}
@@ -555,43 +593,8 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
         </div>
       </motion.div>
 
-      {/* ── VIDEO ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <p className="text-[13px] font-bold uppercase tracking-wide mb-3" style={{ color: "#94A3B8" }}>
-          Ricardo explica como funciona na prática:
-        </p>
-        <div
-          className="relative rounded-2xl overflow-hidden flex items-center justify-center cursor-pointer"
-          style={{
-            background: "linear-gradient(135deg, #0F172A, #1E293B)",
-            border: "1px solid rgba(250,204,21,0.2)",
-            aspectRatio: "16/9",
-          }}
-          onClick={() => setShowVideo(true)}
-        >
-          {!showVideo ? (
-            <div className="flex flex-col items-center gap-3">
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="w-18 h-18 w-[72px] h-[72px] rounded-full flex items-center justify-center"
-                style={{ background: "rgba(250,204,21,0.15)", border: "2px solid rgba(250,204,21,0.4)" }}
-              >
-                <Play className="w-8 h-8 ml-1" style={{ color: "#FACC15" }} />
-              </motion.div>
-              <p className="text-[13px] font-medium" style={{ color: "#CBD5E1" }}>Toque para assistir</p>
-            </div>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center p-6">
-              <p className="text-[14px] text-center" style={{ color: "#64748B" }}>[Cole aqui o embed do vídeo do Ricardo]</p>
-            </div>
-          )}
-        </div>
-      </motion.div>
+
+
 
       {/* ── O QUE VOCÊ PERDE SEM ISSO ── */}
       <motion.div
