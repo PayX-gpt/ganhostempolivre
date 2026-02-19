@@ -1,0 +1,1 @@
+ALTER TABLE public.purchase_tracking ADD COLUMN IF NOT EXISTS buyer_name text;
