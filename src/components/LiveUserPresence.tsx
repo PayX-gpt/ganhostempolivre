@@ -82,7 +82,9 @@ const toStepId = (page: string): string | null => {
 };
 
 const SKIP = new Set(["/admin", "/live", "/docs"]);
-const shouldSkip = (pageId: string) => {
+const shouldSkip = (pageId: string, sessionKey?: string) => {
+  // Skip admin observer sessions (keys starting with admin_observer_)
+  if (sessionKey && sessionKey.startsWith("admin_observer_")) return true;
   const p = pageId.toLowerCase();
   return Array.from(SKIP).some(s => p.includes(s));
 };
@@ -105,11 +107,12 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
     let total = 0;
     const users: OnlineUser[] = [];
 
-    Object.entries(state).forEach(([, presences]) => {
+    Object.entries(state).forEach(([sessionKey, presences]) => {
       if (!presences || presences.length === 0) return;
       const latest = presences[presences.length - 1];
       const pageId = latest.page_id || "";
-      if (shouldSkip(pageId)) return;
+      // Filter out admin observer sessions AND skip admin/live pages
+      if (shouldSkip(pageId, sessionKey)) return;
       const stepId = toStepId(pageId);
       if (stepId && counts[stepId] !== undefined) {
         counts[stepId]++;
@@ -125,7 +128,6 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
     });
 
     setFunnelSteps(prev => {
-      // Only update if counts actually changed (avoids unnecessary re-renders)
       let changed = false;
       const next = prev.map(step => {
         const newCount = counts[step.id] || 0;
@@ -144,7 +146,13 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
   useEffect(() => {
     setIsLoading(true);
 
-    const channel = supabase.channel("funnel-presence");
+    // CRITICAL: Admin observer uses a DIFFERENT channel name (read-only observer)
+    // Users track on "funnel-presence", admin ONLY listens — never tracks itself
+    // Using a unique admin key prevents admin from appearing as an online user
+    const ADMIN_OBSERVER_KEY = `admin_observer_${Date.now()}`;
+    const channel = supabase.channel("funnel-presence", {
+      config: { presence: { key: ADMIN_OBSERVER_KEY } },
+    });
 
     const sync = () => handlePresenceSync(channel);
 
@@ -155,6 +163,7 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           setIsLoading(false);
+          // Do NOT call channel.track() — admin is observer only, never tracked
           sync();
         }
       });
