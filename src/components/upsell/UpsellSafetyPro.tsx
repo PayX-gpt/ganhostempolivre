@@ -330,7 +330,7 @@ const plans = [
   {
     id: "mensal",
     label: "Mensal",
-    price: 47,
+    price: 97,
     per: "/mês",
     highlight: false,
     badge: null,
