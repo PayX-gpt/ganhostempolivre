@@ -35,19 +35,29 @@ export const getLeadName = (): string => {
  * Reads the price the lead paid from quiz data or localStorage.
  */
 export const getLeadPricePaid = (): number => {
+  // New pricing model: apenas R$37 (menos100) ou R$47 (demais)
+  const priceMap: Record<string, number> = {
+    "menos100": 37,
+    "100-500": 47,
+    "500-2000": 47,
+    "2000-10000": 47,
+    "10000+": 47,
+  };
+  try {
+    const raw = sessionStorage.getItem("quiz_answers");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.accountBalance) return priceMap[parsed.accountBalance] ?? 47;
+    }
+  } catch {}
   try {
     const raw = sessionStorage.getItem("quizAnswers");
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed.accountBalance) {
-        const map: Record<string, number> = {
-          "menos100": 37, "100-500": 47, "500-2000": 66, "2000-10000": 97, "10000+": 147,
-        };
-        return map[parsed.accountBalance] || 37;
-      }
+      if (parsed.accountBalance) return priceMap[parsed.accountBalance] ?? 47;
     }
   } catch {}
-  return 37;
+  return 47;
 };
 
 /**
