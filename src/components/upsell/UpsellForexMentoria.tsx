@@ -25,13 +25,26 @@ const CHECKOUT_URL = "https://pay.kirvano.com/FOREX-MENTORIA-PLACEHOLDER";
 const PRICE = 297;
 const ORIGINAL_PRICE = 4997;
 
-const checklist = [
-  { icon: Shield, label: "Plataforma Híbrida" },
+const alreadyOwned = [
+  { icon: Shield, label: "Plataforma Híbrida com IA" },
+  { icon: TrendingUp, label: "Multiplicador de Lucro" },
+  { icon: Shield, label: "Blindagem de Conta" },
+  { icon: Users, label: "Círculo Interno VIP" },
   { icon: Shield, label: "Camada Safety Pro" },
-  { icon: Zap, label: "Segunda Licença Premium" },
-  { icon: Video, label: "Trader ao vivo 3x ao dia" },
+];
+
+const newItems = [
+  { icon: Video, label: "Trader profissional ao vivo — 3x ao dia" },
   { icon: TrendingUp, label: "Mentoria completa no FOREX" },
   { icon: Check, label: "Operações guiadas diariamente" },
+  { icon: Zap, label: "Segunda Licença Premium" },
+];
+
+const bonusItems = [
+  { label: "Bônus 1: Guia FOREX para Iniciantes — R$ 297" },
+  { label: "Bônus 2: Planilha de Controle de Operações — R$ 97" },
+  { label: "Bônus 3: Grupo Exclusivo de Sinais ao Vivo — R$ 497" },
+  { label: "Bônus 4: Masterclass 'Primeiros R$ 1.000 no FOREX' — R$ 197" },
 ];
 
 const licensePerks = [
@@ -227,29 +240,65 @@ const UpsellForexMentoria = ({ name, onNext, onDecline }: Props) => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.22 }}
-        className="rounded-2xl p-5"
+        className="rounded-2xl p-5 flex flex-col gap-4"
         style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.06)" }}
       >
-        <p
-          className="text-[11px] font-bold uppercase tracking-wider mb-3"
-          style={{ color: "#64748B" }}
-        >
-          Tudo que você leva hoje
-        </p>
-        <div className="flex flex-col gap-2.5">
-          {checklist.map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-2.5">
-              <div
-                className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                style={{ background: "rgba(22,163,74,0.15)" }}
-              >
-                <Icon className="w-3 h-3" style={{ color: "#22C55E" }} />
+        {/* Already Owned */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: "#64748B" }}>
+            ✅ O que você já conquistou
+          </p>
+          <div className="flex flex-col gap-2">
+            {alreadyOwned.map(({ icon: Icon, label }) => (
+              <div key={label} className="flex items-center gap-2.5">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(22,163,74,0.12)" }}>
+                  <Icon className="w-3 h-3" style={{ color: "#22C55E" }} />
+                </div>
+                <span className="text-[13px]" style={{ color: "#94A3B8" }}>{label}</span>
               </div>
-              <span className="text-[14px]" style={{ color: "#E2E8F0" }}>
-                {label}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+
+        <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+
+        {/* New Items */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: "#22C55E" }}>
+            🔥 O que você ganha agora
+          </p>
+          <div className="flex flex-col gap-2">
+            {newItems.map(({ icon: Icon, label }) => (
+              <div key={label} className="flex items-center gap-2.5">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(22,163,74,0.2)", border: "1px solid rgba(34,197,94,0.3)" }}>
+                  <Icon className="w-3 h-3" style={{ color: "#22C55E" }} />
+                </div>
+                <span className="text-[13px] font-semibold" style={{ color: "#F1F5F9" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+
+        {/* Bonus Items */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: "#FACC15" }}>
+            🎁 Bônus exclusivos incluídos
+          </p>
+          <div className="flex flex-col gap-2">
+            {bonusItems.map(({ label }) => (
+              <div key={label} className="flex items-start gap-2.5">
+                <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "#FACC15" }} />
+                <span className="text-[13px]" style={{ color: "#E2E8F0" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 pt-3" style={{ borderTop: "1px dashed rgba(250,204,21,0.2)" }}>
+            <p className="text-[12px] font-bold text-center" style={{ color: "#FACC15" }}>
+              Valor total dos bônus: <span style={{ color: "#F8FAFC" }}>R$ 1.088 — GRÁTIS pra você</span>
+            </p>
+          </div>
         </div>
       </motion.div>
 
