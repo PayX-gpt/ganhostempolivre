@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import UpsellLayout from "./UpsellLayout";
-import UpsellCirculoInterno from "./UpsellCirculoInterno";
+import UpsellForexMentoria from "./UpsellForexMentoria";
 import UpsellStep6 from "./UpsellStep6";
 import { getLeadName, captureKirvanoToken } from "@/lib/upsellData";
 import { usePagePresence } from "@/hooks/usePagePresence";
@@ -41,7 +41,7 @@ const Upsell6Page = () => {
           transition={{ duration: 0.25 }}
         >
           {!showSuccess ? (
-            <UpsellCirculoInterno name={name} onNext={goToSuccess} onDecline={goToSuccess} />
+            <UpsellForexMentoria name={name} onNext={goToSuccess} onDecline={goToSuccess} />
           ) : (
             <UpsellStep6 name={name} />
           )}
