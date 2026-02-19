@@ -6,7 +6,7 @@ import {
   RefreshCw, Users, Eye, ShoppingCart, Zap, CheckCircle2,
   PlayCircle, Smartphone, Clock, Brain, MessageCircle, 
   UserCheck, Target, Star, Sparkles, Gift, Mail,
-  Rocket, BarChart3, CreditCard, ArrowDownCircle, Trophy
+  Rocket, BarChart3, CreditCard, ArrowDownCircle, Trophy, ShieldCheck, TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -62,14 +62,18 @@ const STEPS: FunnelStep[] = [
   { id: "upsell2", route: "/upsell2", label: "UP2 Multi.", icon: BarChart3, count: 0 },
   { id: "upsell3", route: "/upsell3", label: "UP3 Blind.", icon: CreditCard, count: 0 },
   { id: "upsell4", route: "/upsell4", label: "UP4 Círc.", icon: Trophy, count: 0 },
+  { id: "upsell5", route: "/upsell5", label: "UP5 Safety", icon: ShieldCheck, count: 0 },
+  { id: "upsell6", route: "/upsell6", label: "UP6 FOREX", icon: TrendingUp, count: 0 },
 ];
 
 const toStepId = (page: string): string | null => {
   const p = page.toLowerCase();
-  // Map individual upsell pages
-  if (p.includes("/upsell4") || p.includes("/upsell-sucesso")) return "upsell4";
-  if (p.includes("/upsell3")) return "upsell3";
-  if (p.includes("/upsell2")) return "upsell2";
+  // Map upsell pages — order matters (most specific first)
+  if (p.includes("/upsell6") || p.includes("forex")) return "upsell6";
+  if (p.includes("/upsell5") || p.includes("safety")) return "upsell5";
+  if (p.includes("/upsell4") || p.includes("/upsell-sucesso") || p.includes("upsell4-")) return "upsell4";
+  if (p.includes("/upsell3") || p.includes("blindagem")) return "upsell3";
+  if (p.includes("/upsell2") || p.includes("multiplicador")) return "upsell2";
   if (p.includes("/upsell")) return "upsell1"; // /upsell1, /upsell-confirmacao, /upsell-analise etc
   // Original steps
   if (p.includes("/thanks")) return "thanks";
