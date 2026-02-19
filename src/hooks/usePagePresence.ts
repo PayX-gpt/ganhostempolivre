@@ -119,7 +119,17 @@ export const usePagePresence = (pageId: string): void => {
       }]).then(() => {});
     }
 
-    // Poll for name update — re-track if name appears (e.g. user just typed name)
+    // Listen for instant name update event (fired by QuizFunnel when user submits name)
+    const handleNameEvent = () => {
+      const currentName = getLeadName();
+      if (currentName && currentName !== "Visitante") {
+        lastNameRef.current = currentName;
+        trackPresence(pageId);
+      }
+    };
+    window.addEventListener("quiz_name_updated", handleNameEvent);
+
+    // Poll every 2s as fallback (catches other name sources)
     const interval = setInterval(() => {
       const currentName = getLeadName();
       if (currentName !== "Visitante" && currentName !== lastNameRef.current) {
@@ -128,7 +138,10 @@ export const usePagePresence = (pageId: string): void => {
       }
     }, 2000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("quiz_name_updated", handleNameEvent);
+    };
   }, [pageId]);
 
   // Cleanup only on full unmount (tab close)

@@ -6,7 +6,7 @@ import {
   RefreshCw, Users, Eye, ShoppingCart, Zap, CheckCircle2,
   PlayCircle, Smartphone, Clock, Brain, MessageCircle, 
   UserCheck, Target, Star, Sparkles, Gift, Mail,
-  Rocket, BarChart3, CreditCard, ArrowDownCircle, Trophy, ShieldCheck, TrendingUp
+  Rocket, BarChart3, CreditCard, ArrowDownCircle, Trophy, ShieldCheck, TrendingUp, DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,13 @@ interface OnlineUser {
   name: string;
   page: string;
   joined_at: string;
+}
+
+interface RecentPurchase {
+  session_id: string | null;
+  buyer_name: string | null;
+  amount: number | null;
+  funnel_step: string | null;
 }
 
 interface LiveUserPresenceProps {
@@ -66,16 +73,30 @@ const STEPS: FunnelStep[] = [
   { id: "upsell6", route: "/upsell6", label: "UP6 FOREX", icon: TrendingUp, count: 0 },
 ];
 
+const FUNNEL_STEP_LABELS: Record<string, string> = {
+  front_37: "R$37",
+  front_47: "R$47",
+  acelerador_basico: "UP1",
+  acelerador_duplo: "UP1",
+  acelerador_maximo: "UP1",
+  multiplicador_prata: "UP2",
+  multiplicador_ouro: "UP2",
+  multiplicador_diamante: "UP2",
+  blindagem: "UP3",
+  circulo_interno: "UP4",
+  safety_pro: "UP5",
+  forex_mentoria: "UP6",
+  downsell_guia: "DS",
+};
+
 const toStepId = (page: string): string | null => {
   const p = page.toLowerCase();
-  // Map upsell pages — order matters (most specific first)
   if (p.includes("/upsell6") || p.includes("forex")) return "upsell6";
   if (p.includes("/upsell5") || p.includes("safety")) return "upsell5";
   if (p.includes("/upsell4") || p.includes("/upsell-sucesso") || p.includes("upsell4-")) return "upsell4";
   if (p.includes("/upsell3") || p.includes("blindagem")) return "upsell3";
   if (p.includes("/upsell2") || p.includes("multiplicador")) return "upsell2";
-  if (p.includes("/upsell")) return "upsell1"; // /upsell1, /upsell-confirmacao, /upsell-analise etc
-  // Original steps
+  if (p.includes("/upsell")) return "upsell1";
   if (p.includes("/thanks")) return "thanks";
   if (p.includes("/checkout") || p.includes("/processing")) return "checkout";
   for (let i = 19; i >= 1; i--) {
@@ -87,7 +108,6 @@ const toStepId = (page: string): string | null => {
 
 const SKIP = new Set(["/admin", "/live", "/docs"]);
 const shouldSkip = (pageId: string, sessionKey?: string) => {
-  // Skip admin observer sessions (keys starting with admin_observer_)
   if (sessionKey && sessionKey.startsWith("admin_observer_")) return true;
   const p = pageId.toLowerCase();
   return Array.from(SKIP).some(s => p.includes(s));
@@ -97,10 +117,24 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
   const [funnelSteps, setFunnelSteps] = useState<FunnelStep[]>(STEPS);
   const [totalOnline, setTotalOnline] = useState(0);
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+  const [recentPurchases, setRecentPurchases] = useState<RecentPurchase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const onTotalChangeRef = useRef(onTotalChange);
   onTotalChangeRef.current = onTotalChange;
+
+  // Fetch recent purchases (today) for cross-referencing online users
+  const fetchRecentPurchases = useCallback(async () => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const { data } = await supabase
+      .from("purchase_tracking")
+      .select("session_id, buyer_name, amount, funnel_step")
+      .eq("status", "approved")
+      .gte("created_at", todayStart.toISOString())
+      .order("created_at", { ascending: false });
+    if (data) setRecentPurchases(data as RecentPurchase[]);
+  }, []);
 
   // Stable ref-based handler — never changes, never causes channel recreation
   const handlePresenceSync = useCallback((channel: ReturnType<typeof supabase.channel>) => {
@@ -115,7 +149,6 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
       if (!presences || presences.length === 0) return;
       const latest = presences[presences.length - 1];
       const pageId = latest.page_id || "";
-      // Filter out admin observer sessions AND skip admin/live pages
       if (shouldSkip(pageId, sessionKey)) return;
       const stepId = toStepId(pageId);
       if (stepId && counts[stepId] !== undefined) {
@@ -124,7 +157,7 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
         const stepLabel = STEPS.find(s => s.id === stepId)?.label || pageId;
         users.push({
           session_id: latest.session_id,
-          name: latest.lead_name || "Anônimo",
+          name: latest.lead_name || "Visitante",
           page: stepLabel,
           joined_at: latest.joined_at,
         });
@@ -145,14 +178,12 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
     setOnlineUsers(users);
     setLastUpdated(new Date());
     onTotalChangeRef.current?.(total);
-  }, []); // Empty deps — stable forever
+  }, []);
 
   useEffect(() => {
     setIsLoading(true);
+    fetchRecentPurchases();
 
-    // CRITICAL: Admin observer uses a DIFFERENT channel name (read-only observer)
-    // Users track on "funnel-presence", admin ONLY listens — never tracks itself
-    // Using a unique admin key prevents admin from appearing as an online user
     const ADMIN_OBSERVER_KEY = `admin_observer_${Date.now()}`;
     const channel = supabase.channel("funnel-presence", {
       config: { presence: { key: ADMIN_OBSERVER_KEY } },
@@ -167,15 +198,55 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           setIsLoading(false);
-          // Do NOT call channel.track() — admin is observer only, never tracked
           sync();
         }
       });
 
+    // Refresh purchases every 30s to catch new sales
+    const purchaseInterval = setInterval(fetchRecentPurchases, 30_000);
+
+    // Realtime listener for new purchases
+    const purchaseChannel = supabase
+      .channel("presence-purchase-feed")
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "purchase_tracking",
+      }, () => fetchRecentPurchases())
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(purchaseChannel);
+      clearInterval(purchaseInterval);
     };
-  }, [handlePresenceSync]); // handlePresenceSync is stable (empty deps), so this runs once
+  }, [handlePresenceSync, fetchRecentPurchases]);
+
+  // Build a map of session_id → purchase for quick lookup
+  const purchaseBySession = recentPurchases.reduce<Record<string, RecentPurchase>>((acc, p) => {
+    if (p.session_id) acc[p.session_id] = p;
+    return acc;
+  }, {});
+
+  // Also build name → purchase for users whose name matches buyer_name (fallback)
+  const purchaseByName = recentPurchases.reduce<Record<string, RecentPurchase>>((acc, p) => {
+    if (p.buyer_name && p.buyer_name.trim()) {
+      const firstName = p.buyer_name.trim().split(" ")[0].toLowerCase();
+      if (!acc[firstName]) acc[firstName] = p;
+    }
+    return acc;
+  }, {});
+
+  const getPurchaseForUser = (user: OnlineUser): RecentPurchase | null => {
+    // Try session_id match first
+    if (purchaseBySession[user.session_id]) return purchaseBySession[user.session_id];
+    // Fallback: match by first name
+    if (user.name && user.name !== "Visitante") {
+      const firstName = user.name.toLowerCase();
+      if (purchaseByName[firstName]) return purchaseByName[firstName];
+    }
+    return null;
+  };
 
   return (
     <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-5">
@@ -229,16 +300,35 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
             <Eye className="w-3.5 h-3.5 text-emerald-400" /> Usuários Online Agora
           </h4>
           <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
-            {onlineUsers.map((user) => (
-              <div key={user.session_id} className="flex items-center gap-2 text-xs py-1 px-2 rounded-lg bg-[#1a1a1a]">
-                <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-                </span>
-                <span className="font-medium text-white truncate flex-1">{user.name}</span>
-                <span className="text-[#888] text-[10px] shrink-0">{user.page}</span>
-              </div>
-            ))}
+            {onlineUsers.map((user) => {
+              const purchase = getPurchaseForUser(user);
+              const isVisitante = user.name === "Visitante";
+              return (
+                <div key={user.session_id} className={cn(
+                  "flex items-center gap-2 text-xs py-1.5 px-2 rounded-lg",
+                  purchase ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-[#1a1a1a]"
+                )}>
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                  </span>
+                  <span className={cn("font-medium truncate flex-1", isVisitante ? "text-[#666] italic" : "text-white")}>
+                    {user.name}
+                  </span>
+                  {/* Purchase badge */}
+                  {purchase && (
+                    <span className="flex items-center gap-0.5 text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full border border-emerald-500/30 font-bold shrink-0">
+                      <DollarSign className="w-2.5 h-2.5" />
+                      R${Number(purchase.amount || 0).toFixed(0)}
+                      {purchase.funnel_step && FUNNEL_STEP_LABELS[purchase.funnel_step] && (
+                        <span className="ml-0.5 opacity-70">{FUNNEL_STEP_LABELS[purchase.funnel_step]}</span>
+                      )}
+                    </span>
+                  )}
+                  <span className="text-[#888] text-[10px] shrink-0">{user.page}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
