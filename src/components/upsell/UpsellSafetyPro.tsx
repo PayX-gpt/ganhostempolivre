@@ -75,6 +75,15 @@ const AnalyzingBar = ({ onDone, paused }: { onDone: () => void; paused?: boolean
 type SimOp = {
   hora: string; par: string; preco: string;
   lucro: number; tipo: "win"; conta: "real" | "demo";
+  savedAmount?: number;
+};
+
+// Força alternância: nunca mais de 2 reais seguidos sem um demo
+const nextConta = (history: SimOp[]): "real" | "demo" => {
+  const last2 = history.slice(-2);
+  const allReal = last2.length === 2 && last2.every(o => o.conta === "real");
+  if (allReal) return "demo"; // força demo após 2 reais seguidos
+  return Math.random() < 0.42 ? "demo" : "real"; // 42% de chance de demo
 };
 
 const TradeSimulator = () => {
@@ -83,47 +92,63 @@ const TradeSimulator = () => {
   const [sessionProfit, setSessionProfit] = useState(0);
   const [wins, setWins] = useState(0);
   const [savedCount, setSavedCount] = useState(0);
+  const [totalSavedR$, setTotalSavedR$] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(true);
   const [safetyStatus, setSafetyStatus] = useState<"real" | "demo" | "risk">("real");
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertAmount, setAlertAmount] = useState(0);
   const historyRef = useRef<HTMLDivElement>(null);
   const opRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const historySnapshot = useRef<SimOp[]>([]);
 
   const runOp = useCallback(() => {
-    const isRisk = Math.random() < 0.28;
-    const conta: "real" | "demo" = isRisk ? "demo" : "real";
+    const conta = nextConta(historySnapshot.current);
 
-    if (isRisk) {
+    if (conta === "demo") {
+      // Fase 1: mostra RISCO por 800ms antes
       setSafetyStatus("risk");
-      setTimeout(() => setSafetyStatus("demo"), 600);
+      setTimeout(() => {
+        setSafetyStatus("demo");
+
+        const savedAmount = parseFloat((12 + Math.random() * 48).toFixed(2));
+        const parIdx = Math.floor(Math.random() * pares.length);
+        const hora = new Date().toLocaleTimeString("pt-BR").slice(0, 8);
+        const op: SimOp = {
+          hora, par: pares[parIdx], preco: precos[parIdx],
+          lucro: -savedAmount, tipo: "win", conta: "demo", savedAmount,
+        };
+
+        historySnapshot.current = [...historySnapshot.current.slice(-13), op];
+        setHistory(prev => [...prev.slice(-13), op]);
+        setSavedCount(prev => prev + 1);
+        setTotalSavedR$(prev => parseFloat((prev + savedAmount).toFixed(2)));
+        setAlertAmount(savedAmount);
+        setAlertVisible(true);
+        setTimeout(() => setAlertVisible(false), 2800);
+        setTimeout(() => {
+          setSafetyStatus("real");
+          opRef.current = setTimeout(() => setIsAnalyzing(true), 500);
+        }, 1400);
+      }, 800);
     } else {
       setSafetyStatus("real");
-    }
+      const lucro = parseFloat((8 + Math.random() * 36).toFixed(2));
+      const parIdx = Math.floor(Math.random() * pares.length);
+      const hora = new Date().toLocaleTimeString("pt-BR").slice(0, 8);
+      const op: SimOp = { hora, par: pares[parIdx], preco: precos[parIdx], lucro, tipo: "win", conta: "real" };
 
-    // Conta real = sempre positivo; demo = valor que seria perdido (protegido)
-    const lucro = conta === "real"
-      ? parseFloat((9 + Math.random() * 34).toFixed(2))
-      : parseFloat((-(5 + Math.random() * 18)).toFixed(2));
-
-    const parIdx = Math.floor(Math.random() * pares.length);
-    const hora = new Date().toLocaleTimeString("pt-BR").slice(0, 8);
-    const op: SimOp = { hora, par: pares[parIdx], preco: precos[parIdx], lucro, tipo: "win", conta };
-
-    setHistory(prev => [...prev.slice(-13), op]);
-
-    if (conta === "real") {
+      historySnapshot.current = [...historySnapshot.current.slice(-13), op];
+      setHistory(prev => [...prev.slice(-13), op]);
       setSessionProfit(prev => parseFloat((prev + lucro).toFixed(2)));
       setBalance(prev => parseFloat((prev + lucro).toFixed(2)));
       setWins(prev => prev + 1);
-    } else {
-      setSavedCount(prev => prev + 1);
+      opRef.current = setTimeout(() => setIsAnalyzing(true), 500 + Math.random() * 400);
     }
-
-    opRef.current = setTimeout(() => setIsAnalyzing(true), 700 + Math.random() * 600);
   }, []);
 
   const handleAnalysisDone = useCallback(() => {
     setIsAnalyzing(false);
-    opRef.current = setTimeout(runOp, 200);
+    opRef.current = setTimeout(runOp, 180);
   }, [runOp]);
 
   useEffect(() => () => { if (opRef.current) clearTimeout(opRef.current); }, []);
@@ -132,7 +157,39 @@ const TradeSimulator = () => {
   }, [history]);
 
   return (
-    <div className={`w-full rounded-2xl overflow-hidden shadow-2xl ${plat.bg} ${plat.border} border`}>
+    <div className={`w-full rounded-2xl overflow-hidden shadow-2xl ${plat.bg} ${plat.border} border relative`}>
+
+      {/* ── ALERTA SAFETY PRO (overlay) ── */}
+      <AnimatePresence>
+        {alertVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25 }}
+            className="absolute top-0 left-0 right-0 z-20 flex items-center gap-3 px-4 py-3"
+            style={{
+              background: "linear-gradient(90deg, rgba(250,204,21,0.18), rgba(250,204,21,0.08))",
+              borderBottom: "2px solid rgba(250,204,21,0.5)",
+            }}
+          >
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+              style={{ background: "rgba(250,204,21,0.2)", border: "1.5px solid rgba(250,204,21,0.5)" }}
+            >
+              <ShieldCheck className="w-4 h-4" style={{ color: "#FACC15" }} />
+            </div>
+            <div>
+              <p className="text-[12px] font-extrabold" style={{ color: "#FACC15" }}>
+                Safety Pro bloqueou esta operação
+              </p>
+              <p className="text-[11px] font-semibold" style={{ color: "#E2E8F0" }}>
+                R$ {alertAmount.toFixed(2)} de perda evitados — capital real intacto
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Top bar ── */}
       <div className={`bg-[hsl(260,28%,10%)] px-3 py-2.5 flex items-center justify-between ${plat.border} border-b`}>
@@ -151,13 +208,13 @@ const TradeSimulator = () => {
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
             style={{
               background:
-                safetyStatus === "risk" ? "rgba(239,68,68,0.2)" :
-                safetyStatus === "demo" ? "rgba(250,204,21,0.18)" :
+                safetyStatus === "risk" ? "rgba(239,68,68,0.25)" :
+                safetyStatus === "demo" ? "rgba(250,204,21,0.2)" :
                 "rgba(22,163,74,0.15)",
               border:
-                safetyStatus === "risk" ? "1px solid rgba(239,68,68,0.55)" :
-                safetyStatus === "demo" ? "1px solid rgba(250,204,21,0.5)" :
-                "1px solid rgba(22,163,74,0.45)",
+                safetyStatus === "risk" ? "1.5px solid rgba(239,68,68,0.6)" :
+                safetyStatus === "demo" ? "1.5px solid rgba(250,204,21,0.55)" :
+                "1.5px solid rgba(22,163,74,0.45)",
               color:
                 safetyStatus === "risk" ? "#EF4444" :
                 safetyStatus === "demo" ? "#FACC15" :
@@ -165,9 +222,9 @@ const TradeSimulator = () => {
             }}
           >
             {safetyStatus === "risk" ? (
-              <><AlertTriangle className="w-3 h-3" /> RISCO — BLOQUEANDO</>
+              <><AlertTriangle className="w-3 h-3" /> RISCO DETECTADO</>
             ) : safetyStatus === "demo" ? (
-              <><ShieldCheck className="w-3 h-3" /> DEMO · capital salvo</>
+              <><ShieldCheck className="w-3 h-3" /> BLOQUEADO · demo</>
             ) : (
               <><CircleDot className="w-3 h-3" /> REAL · operando</>
             )}
@@ -179,20 +236,20 @@ const TradeSimulator = () => {
       <div className="px-3 py-2.5 grid grid-cols-3 gap-2">
         <div className={`${plat.card} rounded-xl p-2.5 ${plat.border} border`}>
           <p className="text-[10px] font-medium text-[hsl(260,15%,55%)] mb-1">Saldo real</p>
-          <p className="text-[15px] font-extrabold text-white leading-none">
+          <p className="text-[14px] font-extrabold text-white leading-none">
             R$ {balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
         <div className={`${plat.card} rounded-xl p-2.5 ${plat.border} border`}>
-          <p className="text-[10px] font-medium text-[hsl(260,15%,55%)] mb-1">Lucro hoje</p>
-          <p className="text-[15px] font-extrabold leading-none" style={{ color: "#22C55E" }}>
+          <p className="text-[10px] font-medium text-[hsl(260,15%,55%)] mb-1">Lucro real</p>
+          <p className="text-[14px] font-extrabold leading-none" style={{ color: "#22C55E" }}>
             +R$ {sessionProfit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
-        <div className={`${plat.card} rounded-xl p-2.5 ${plat.border} border`}>
-          <p className="text-[10px] font-medium text-[hsl(260,15%,55%)] mb-1">Salvas</p>
-          <p className="text-[15px] font-extrabold leading-none" style={{ color: "#FACC15" }}>
-            {savedCount} <span className="text-[11px] font-bold">ops</span>
+        <div className={`${plat.card} rounded-xl p-2.5 ${plat.border} border`} style={{ borderColor: "rgba(250,204,21,0.3)" }}>
+          <p className="text-[10px] font-medium mb-1" style={{ color: "#FACC15" }}>Perdas salvas</p>
+          <p className="text-[14px] font-extrabold leading-none" style={{ color: "#FACC15" }}>
+            R$ {totalSavedR$.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
       </div>
@@ -223,19 +280,19 @@ const TradeSimulator = () => {
           </div>
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#FACC15" }} />
-            <span className="text-[11px] font-semibold" style={{ color: "#FACC15" }}>{savedCount} protegidas</span>
+            <span className="text-[11px] font-semibold" style={{ color: "#FACC15" }}>{savedCount} bloqueadas</span>
           </div>
         </div>
 
         {/* Column headers */}
-        <div className={`px-3 py-2 grid ${plat.border} border-b`} style={{ gridTemplateColumns: "55px 1fr 70px 70px" }}>
+        <div className={`px-3 py-2 grid ${plat.border} border-b`} style={{ gridTemplateColumns: "52px 1fr 64px 80px" }}>
           {["Hora", "Par", "Conta", "Resultado"].map(h => (
             <span key={h} className="text-[10px] font-bold text-[hsl(260,15%,55%)] last:text-right">{h}</span>
           ))}
         </div>
 
         {/* Rows */}
-        <div ref={historyRef} className="max-h-[150px] overflow-y-auto" style={{ scrollBehavior: "smooth" }}>
+        <div ref={historyRef} className="max-h-[160px] overflow-y-auto" style={{ scrollBehavior: "smooth" }}>
           {history.length === 0 && (
             <div className="py-7 text-center">
               <p className="text-[11px] text-[hsl(260,15%,45%)]">Aguardando primeira operação...</p>
@@ -246,17 +303,21 @@ const TradeSimulator = () => {
               key={i}
               initial={{ opacity: 0, x: -6 }}
               animate={{ opacity: 1, x: 0 }}
-              className={`px-3 py-2 grid ${plat.border} border-b border-opacity-20`}
-              style={{ gridTemplateColumns: "55px 1fr 70px 70px" }}
+              className={`px-3 py-2 grid border-b`}
+              style={{
+                gridTemplateColumns: "52px 1fr 64px 80px",
+                borderColor: op.conta === "demo" ? "rgba(250,204,21,0.2)" : "rgba(255,255,255,0.05)",
+                background: op.conta === "demo" ? "rgba(250,204,21,0.05)" : "transparent",
+              }}
             >
               <span className="text-[10px] text-[hsl(260,15%,50%)] font-mono">{op.hora}</span>
               <span className="text-[10px] font-bold text-white">{op.par}</span>
               <span
-                className="text-[10px] font-bold flex items-center gap-1"
+                className="text-[10px] font-bold flex items-center gap-0.5"
                 style={{ color: op.conta === "demo" ? "#FACC15" : "#94A3B8" }}
               >
                 {op.conta === "demo"
-                  ? <><ShieldCheck className="w-3 h-3" />Demo</>
+                  ? <><ShieldCheck className="w-3 h-3 shrink-0" /> Demo</>
                   : "Real"}
               </span>
               <span
@@ -264,7 +325,7 @@ const TradeSimulator = () => {
                 style={{ color: op.conta === "demo" ? "#FACC15" : "#22C55E" }}
               >
                 {op.conta === "demo"
-                  ? "Salvo"
+                  ? `🛡 R$${op.savedAmount?.toFixed(2)} salvo`
                   : `+R$${op.lucro.toFixed(2)}`}
               </span>
             </motion.div>
@@ -273,14 +334,14 @@ const TradeSimulator = () => {
       </div>
 
       {/* ── Legend ── */}
-      <div className={`px-3 py-2.5 flex items-center justify-between ${plat.border} border-t`} style={{ background: "rgba(15,23,42,0.9)" }}>
+      <div className={`px-3 py-2.5 flex items-center justify-between ${plat.border} border-t`} style={{ background: "rgba(15,23,42,0.95)" }}>
         <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#22C55E" }} />
-          <span className="text-[11px] font-semibold" style={{ color: "#CBD5E1" }}>Verde = lucro na conta real</span>
+          <div className="w-3 h-3 rounded-full" style={{ background: "#22C55E" }} />
+          <span className="text-[11px] font-semibold" style={{ color: "#CBD5E1" }}>Verde = lucro real creditado</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#FACC15" }} />
-          <span className="text-[11px] font-semibold" style={{ color: "#CBD5E1" }}>Amarelo = capital protegido</span>
+          <div className="w-3 h-3 rounded-full" style={{ background: "#FACC15" }} />
+          <span className="text-[11px] font-semibold" style={{ color: "#CBD5E1" }}>Amarelo = perda bloqueada</span>
         </div>
       </div>
     </div>
