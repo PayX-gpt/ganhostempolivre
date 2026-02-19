@@ -30,10 +30,14 @@ const UPSELL_LABELS: Record<string, { label: string; icon: React.ElementType; co
   upsell2: { label: "UP2 — Multiplicador", icon: BarChart3, color: "violet" },
   upsell3: { label: "UP3 — Blindagem", icon: CreditCard, color: "amber" },
   upsell4: { label: "UP4 — Círculo", icon: Trophy, color: "sky" },
+  upsell5: { label: "UP5 — Safety Pro", icon: Users, color: "rose" },
+  upsell6: { label: "UP6 — FOREX", icon: TrendingUp, color: "lime" },
 };
 
 const classifyUpsellPage = (pageId: string): string | null => {
   const p = pageId.toLowerCase();
+  if (p.includes("/upsell6") || p.includes("forex_mentoria")) return "upsell6";
+  if (p.includes("/upsell5") || p.includes("safety_pro")) return "upsell5";
   if (p.includes("/upsell4") || p.includes("/upsell-sucesso")) return "upsell4";
   if (p.includes("/upsell3")) return "upsell3";
   if (p.includes("/upsell2")) return "upsell2";
@@ -47,6 +51,8 @@ export default function LiveUpsellMonitor() {
     upsell2: { views: 0, buys: 0, declines: 0, revenue: 0 },
     upsell3: { views: 0, buys: 0, declines: 0, revenue: 0 },
     upsell4: { views: 0, buys: 0, declines: 0, revenue: 0 },
+    upsell5: { views: 0, buys: 0, declines: 0, revenue: 0 },
+    upsell6: { views: 0, buys: 0, declines: 0, revenue: 0 },
   });
   const [recentActivity, setRecentActivity] = useState<UpsellActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +69,8 @@ export default function LiveUpsellMonitor() {
     blindagem: "upsell3",
     circulo_interno: "upsell4",
     downsell_guia: "upsell1",
+    safety_pro: "upsell5",
+    forex_mentoria: "upsell6",
   };
 
   const fetchUpsellData = useCallback(async () => {
@@ -104,11 +112,14 @@ export default function LiveUpsellMonitor() {
       upsell2: { views: 0, buys: 0, declines: 0, revenue: 0 },
       upsell3: { views: 0, buys: 0, declines: 0, revenue: 0 },
       upsell4: { views: 0, buys: 0, declines: 0, revenue: 0 },
+      upsell5: { views: 0, buys: 0, declines: 0, revenue: 0 },
+      upsell6: { views: 0, buys: 0, declines: 0, revenue: 0 },
     };
 
     // Count unique view sessions
     const viewSessions: Record<string, Set<string>> = {
       upsell1: new Set(), upsell2: new Set(), upsell3: new Set(), upsell4: new Set(),
+      upsell5: new Set(), upsell6: new Set(),
     };
 
     viewLogs?.forEach((log) => {
@@ -259,7 +270,7 @@ export default function LiveUpsellMonitor() {
       </div>
 
       {/* Per-Upsell Breakdown */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
         {Object.entries(UPSELL_LABELS).map(([key, { label, icon: Icon, color }]) => {
           const s = stats[key];
           const convRate = s.views > 0 ? ((s.buys / s.views) * 100).toFixed(0) : "0";
@@ -268,6 +279,8 @@ export default function LiveUpsellMonitor() {
             violet: "border-violet-500/30 text-violet-400",
             amber: "border-amber-500/30 text-amber-400",
             sky: "border-sky-500/30 text-sky-400",
+            rose: "border-rose-500/30 text-rose-400",
+            lime: "border-lime-500/30 text-lime-400",
           };
           const borderColor = colorMap[color] || colorMap.emerald;
 
