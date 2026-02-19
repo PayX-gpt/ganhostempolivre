@@ -510,11 +510,11 @@ const UpsellForexMentoria = ({ name, onNext, onDecline }: Props) => {
           </div>
           <div>
             <p className="text-[14px] font-extrabold" style={{ color: "#F8FAFC" }}>
-              Garantia Blindada de 7 dias
+              Garantia Blindada de 60 dias
             </p>
             <p className="text-[13px] mt-1 leading-relaxed" style={{ color: "#94A3B8" }}>
               Entre para a mentoria sem risco. Se por qualquer motivo você não ficar satisfeito nos primeiros{" "}
-              <strong style={{ color: "#F8FAFC" }}>7 dias</strong>, devolvemos{" "}
+              <strong style={{ color: "#F8FAFC" }}>60 dias</strong>, devolvemos{" "}
               <strong style={{ color: "#22C55E" }}>100% do seu dinheiro</strong> — sem burocracia, sem perguntas.
             </p>
             <p className="text-[12px] mt-2 font-semibold" style={{ color: "#22C55E" }}>
