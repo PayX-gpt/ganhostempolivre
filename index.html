@@ -37,10 +37,15 @@
     a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
     document.head.appendChild(a);
   </script>
+
+  <!-- MetricHub Pixel -->
+  <script src="https://lxinhdxpcaoeswucklyn.supabase.co/functions/v1/pixel?key=px_7b5a59965b69ef4f4f97f18219f6a708" async></script>
 </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- MetricHub autoEnrich -->
+    <script>MetricHub.autoEnrichCheckoutLinks();</script>
   </body>
 </html>
