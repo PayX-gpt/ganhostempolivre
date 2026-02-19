@@ -50,7 +50,8 @@ const PRICING_TIERS: Record<string, { price: number; installment: number; instal
 };
 
 const getPricing = (accountBalance?: string) => {
-  return PRICING_TIERS[accountBalance || ""] || PRICING_TIERS["500-2000"];
+  // Modelo consolidado: R$37 só para "menos100", R$47 para todos os demais
+  return PRICING_TIERS[accountBalance || ""] || PRICING_TIERS["100-500"];
 };
 
 const formatPrice = (price: number) => price.toFixed(2).replace(".", ",");
