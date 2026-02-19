@@ -3,9 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, TrendingUp, Check, Lock, Zap,
   BarChart3, RefreshCw, ArrowRight, Bot,
-  Loader2, Play, AlertTriangle, CircleDot,
+  Loader2, AlertTriangle, CircleDot,
 } from "lucide-react";
-import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
@@ -112,54 +111,86 @@ const TradeSimulator = () => {
 
         const savedAmount = parseFloat((12 + Math.random() * 48).toFixed(2));
         const parIdx = Math.floor(Math.random() * pares.length);
-        const hora = new Date().toLocaleTimeString("pt-BR").slice(0, 8);
+        const now = new Date();
         const op: SimOp = {
-          hora, par: pares[parIdx], preco: precos[parIdx],
-          lucro: -savedAmount, tipo: "win", conta: "demo", savedAmount,
+          hora: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
+          par: pares[parIdx],
+          preco: precos[parIdx],
+          lucro: savedAmount,
+          tipo: "win",
+          conta: "demo",
+          savedAmount,
         };
-
-        historySnapshot.current = [...historySnapshot.current.slice(-13), op];
-        setHistory(prev => [...prev.slice(-13), op]);
-        setSavedCount(prev => prev + 1);
-        setTotalSavedR$(prev => parseFloat((prev + savedAmount).toFixed(2)));
+        setHistory(h => [op, ...h].slice(0, 12));
+        historySnapshot.current = [op, ...historySnapshot.current].slice(0, 12);
+        setSavedCount(c => c + 1);
+        setTotalSavedR$(t => parseFloat((t + savedAmount).toFixed(2)));
         setAlertAmount(savedAmount);
         setAlertVisible(true);
-        setTimeout(() => setAlertVisible(false), 2800);
+        setTimeout(() => setAlertVisible(false), 3000);
         setTimeout(() => {
           setSafetyStatus("real");
-          opRef.current = setTimeout(() => setIsAnalyzing(true), 500);
-        }, 1400);
+          setIsAnalyzing(true);
+          opRef.current = setTimeout(runOp, 2500 + Math.random() * 2000);
+        }, 2200);
       }, 800);
     } else {
-      setSafetyStatus("real");
-      const lucro = parseFloat((8 + Math.random() * 36).toFixed(2));
+      const profit = parseFloat((8 + Math.random() * 42).toFixed(2));
       const parIdx = Math.floor(Math.random() * pares.length);
-      const hora = new Date().toLocaleTimeString("pt-BR").slice(0, 8);
-      const op: SimOp = { hora, par: pares[parIdx], preco: precos[parIdx], lucro, tipo: "win", conta: "real" };
-
-      historySnapshot.current = [...historySnapshot.current.slice(-13), op];
-      setHistory(prev => [...prev.slice(-13), op]);
-      setSessionProfit(prev => parseFloat((prev + lucro).toFixed(2)));
-      setBalance(prev => parseFloat((prev + lucro).toFixed(2)));
-      setWins(prev => prev + 1);
-      opRef.current = setTimeout(() => setIsAnalyzing(true), 500 + Math.random() * 400);
+      const now = new Date();
+      const op: SimOp = {
+        hora: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
+        par: pares[parIdx],
+        preco: precos[parIdx],
+        lucro: profit,
+        tipo: "win",
+        conta: "real",
+      };
+      setHistory(h => [op, ...h].slice(0, 12));
+      historySnapshot.current = [op, ...historySnapshot.current].slice(0, 12);
+      setBalance(b => parseFloat((b + profit).toFixed(2)));
+      setSessionProfit(p => parseFloat((p + profit).toFixed(2)));
+      setWins(w => w + 1);
+      setSafetyStatus("real");
+      setIsAnalyzing(true);
+      opRef.current = setTimeout(runOp, 2500 + Math.random() * 2000);
     }
   }, []);
 
   const handleAnalysisDone = useCallback(() => {
     setIsAnalyzing(false);
-    opRef.current = setTimeout(runOp, 180);
+    opRef.current = setTimeout(runOp, 400);
   }, [runOp]);
 
-  useEffect(() => () => { if (opRef.current) clearTimeout(opRef.current); }, []);
   useEffect(() => {
-    if (historyRef.current) historyRef.current.scrollTop = historyRef.current.scrollHeight;
+    return () => { if (opRef.current) clearTimeout(opRef.current); };
+  }, []);
+
+  useEffect(() => {
+    if (historyRef.current) historyRef.current.scrollTop = 0;
   }, [history]);
 
   return (
-    <div className={`w-full rounded-2xl overflow-hidden shadow-2xl ${plat.bg} ${plat.border} border relative`}>
+    <div
+      className={`rounded-2xl overflow-hidden ${plat.border} border`}
+      style={{ background: "hsl(260,30%,8%)" }}
+    >
+      {/* Header */}
+      <div
+        className="px-3 py-2.5 flex items-center justify-between"
+        style={{ background: "hsl(260,25%,11%)", borderBottom: "1px solid hsl(270,30%,20%)" }}
+      >
+        <div className="flex items-center gap-2">
+          <Bot className="w-4 h-4 text-[hsl(280,70%,70%)]" />
+          <span className="text-[13px] font-bold text-[hsl(280,70%,80%)]">Safety Pro · Ativo</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <span className="text-[11px] text-[hsl(280,40%,70%)]">AO VIVO</span>
+        </div>
+      </div>
 
-      {/* ── ALERTA SAFETY PRO (overlay) ── */}
+      {/* Alert overlay */}
       <AnimatePresence>
         {alertVisible && (
           <motion.div
@@ -167,64 +198,61 @@ const TradeSimulator = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25 }}
-            className="absolute top-0 left-0 right-0 z-20 flex items-center gap-3 px-4 py-3"
-            style={{
-              background: "linear-gradient(90deg, rgba(250,204,21,0.18), rgba(250,204,21,0.08))",
-              borderBottom: "2px solid rgba(250,204,21,0.5)",
-            }}
+            className="mx-3 mt-2 rounded-xl px-3 py-2 flex items-center gap-2"
+            style={{ background: "rgba(250,204,21,0.12)", border: "1px solid rgba(250,204,21,0.35)" }}
           >
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: "rgba(250,204,21,0.2)", border: "1.5px solid rgba(250,204,21,0.5)" }}
-            >
-              <ShieldCheck className="w-4 h-4" style={{ color: "#FACC15" }} />
-            </div>
-            <div>
-              <p className="text-[12px] font-extrabold" style={{ color: "#FACC15" }}>
-                Safety Pro bloqueou esta operação
-              </p>
-              <p className="text-[11px] font-semibold" style={{ color: "#E2E8F0" }}>
-                R$ {alertAmount.toFixed(2)} de perda evitados — capital real intacto
-              </p>
-            </div>
+            <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: "#FACC15" }} />
+            <p className="text-[12px] font-bold" style={{ color: "#FEF08A" }}>
+              🛡️ Safety Pro bloqueou — R${alertAmount.toFixed(2)} de perda evitados!
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Top bar ── */}
-      <div className={`bg-[hsl(260,28%,10%)] px-3 py-2.5 flex items-center justify-between ${plat.border} border-b`}>
-        <div className="flex items-center gap-2">
-          <Play className="w-3.5 h-3.5 text-[hsl(280,70%,65%)]" fill="currentColor" />
-          <span className="text-[12px] font-bold text-white tracking-wide">
-            <span className="text-[hsl(280,70%,70%)]">ALFA HÍBRIDA</span> · IA ao vivo
-          </span>
-        </div>
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-0" style={{ borderBottom: "1px solid hsl(270,30%,18%)" }}>
+        {[
+          { label: "Saldo", value: `R$${balance.toFixed(2)}`, color: "#22C55E" },
+          { label: "Lucro sessão", value: `+R$${sessionProfit.toFixed(2)}`, color: "#22C55E" },
+          { label: "Salvo hoje", value: `R$${totalSavedR$.toFixed(2)}`, color: "#FACC15" },
+        ].map((s, i) => (
+          <div
+            key={i}
+            className="flex flex-col items-center py-2.5"
+            style={{ borderRight: i < 2 ? "1px solid hsl(270,30%,18%)" : "none" }}
+          >
+            <span className="text-[10px] text-[hsl(280,30%,60%)] mb-0.5">{s.label}</span>
+            <span className="text-[13px] font-bold tabular-nums" style={{ color: s.color }}>{s.value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Safety status */}
+      <div
+        className="px-3 py-2 flex items-center justify-between"
+        style={{ background: "hsl(260,28%,10%)", borderBottom: "1px solid hsl(270,30%,18%)" }}
+      >
+        <span className="text-[11px] text-[hsl(280,30%,60%)]">Status Safety Pro:</span>
         <AnimatePresence mode="wait">
           <motion.div
             key={safetyStatus}
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.85 }}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
-            style={{
-              background:
-                safetyStatus === "risk" ? "rgba(239,68,68,0.25)" :
-                safetyStatus === "demo" ? "rgba(250,204,21,0.2)" :
-                "rgba(22,163,74,0.15)",
-              border:
-                safetyStatus === "risk" ? "1.5px solid rgba(239,68,68,0.6)" :
-                safetyStatus === "demo" ? "1.5px solid rgba(250,204,21,0.55)" :
-                "1.5px solid rgba(22,163,74,0.45)",
-              color:
-                safetyStatus === "risk" ? "#EF4444" :
-                safetyStatus === "demo" ? "#FACC15" :
-                "#22C55E",
-            }}
+            transition={{ duration: 0.15 }}
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold"
+            style={
+              safetyStatus === "risk"
+                ? { background: "rgba(239,68,68,0.2)", border: "1px solid rgba(239,68,68,0.5)", color: "#FCA5A5" }
+                : safetyStatus === "demo"
+                ? { background: "rgba(250,204,21,0.15)", border: "1px solid rgba(250,204,21,0.4)", color: "#FEF08A" }
+                : { background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.4)", color: "#86EFAC" }
+            }
           >
             {safetyStatus === "risk" ? (
-              <><AlertTriangle className="w-3 h-3" /> RISCO DETECTADO</>
+              <><AlertTriangle className="w-3 h-3" /> RISCO — BLOQUEANDO</>
             ) : safetyStatus === "demo" ? (
-              <><ShieldCheck className="w-3 h-3" /> BLOQUEADO · demo</>
+              <><ShieldCheck className="w-3 h-3" /> DEMO · protegido</>
             ) : (
               <><CircleDot className="w-3 h-3" /> REAL · operando</>
             )}
@@ -232,117 +260,66 @@ const TradeSimulator = () => {
         </AnimatePresence>
       </div>
 
-      {/* ── Stats row ── */}
-      <div className="px-3 py-2.5 grid grid-cols-3 gap-2">
-        <div className={`${plat.card} rounded-xl p-2.5 ${plat.border} border`}>
-          <p className="text-[10px] font-medium text-[hsl(260,15%,55%)] mb-1">Saldo real</p>
-          <p className="text-[14px] font-extrabold text-white leading-none">
-            R$ {balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-          </p>
-        </div>
-        <div className={`${plat.card} rounded-xl p-2.5 ${plat.border} border`}>
-          <p className="text-[10px] font-medium text-[hsl(260,15%,55%)] mb-1">Lucro real</p>
-          <p className="text-[14px] font-extrabold leading-none" style={{ color: "#22C55E" }}>
-            +R$ {sessionProfit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-          </p>
-        </div>
-        <div className={`${plat.card} rounded-xl p-2.5 ${plat.border} border`} style={{ borderColor: "rgba(250,204,21,0.3)" }}>
-          <p className="text-[10px] font-medium mb-1" style={{ color: "#FACC15" }}>Perdas salvas</p>
-          <p className="text-[14px] font-extrabold leading-none" style={{ color: "#FACC15" }}>
-            R$ {totalSavedR$.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-          </p>
-        </div>
-      </div>
+      {/* Analyzing bar */}
+      {isAnalyzing && (
+        <AnalyzingBar
+          onDone={handleAnalysisDone}
+          paused={safetyStatus === "demo" || safetyStatus === "risk"}
+        />
+      )}
 
-      {/* ── Robot status bar ── */}
-      <div className={`px-3 py-2 flex items-center justify-between ${plat.border} border-t border-b ${plat.secondary}`}>
-        <div className="flex items-center gap-2">
-          <Bot className="w-3.5 h-3.5 text-[hsl(280,70%,70%)]" />
-          <span className="text-[11px] font-bold text-white">EASY 2.0</span>
-          <span className="text-[10px] font-semibold" style={{ color: "#FACC15" }}>+ Safety Pro</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-[hsl(152,60%,45%)] animate-pulse" />
-          <span className="text-[10px] font-semibold text-[hsl(152,60%,50%)]">Robô ativo</span>
-        </div>
-      </div>
-
-      {/* ── Analyzing bar ── */}
-      <AnalyzingBar key={isAnalyzing ? "a" : "i"} onDone={handleAnalysisDone} paused={!isAnalyzing} />
-
-      {/* ── History ── */}
-      <div className={`${plat.border} border-t`}>
-        {/* Header */}
-        <div className={`px-3 py-2 flex items-center justify-between ${plat.border} border-b ${plat.secondary}`}>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold text-white">Operações</span>
-            <span className="text-[11px] font-bold" style={{ color: "#22C55E" }}>{wins} ganhos</span>
+      {/* History */}
+      <div ref={historyRef} className="flex flex-col gap-0 max-h-[220px] overflow-y-auto">
+        {history.length === 0 && (
+          <div className="px-3 py-4 text-center">
+            <p className="text-[12px] text-[hsl(280,30%,55%)]">Aguardando primeira operação...</p>
           </div>
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#FACC15" }} />
-            <span className="text-[11px] font-semibold" style={{ color: "#FACC15" }}>{savedCount} bloqueadas</span>
-          </div>
-        </div>
-
-        {/* Column headers */}
-        <div className={`px-3 py-2 grid ${plat.border} border-b`} style={{ gridTemplateColumns: "52px 1fr 64px 80px" }}>
-          {["Hora", "Par", "Conta", "Resultado"].map(h => (
-            <span key={h} className="text-[10px] font-bold text-[hsl(260,15%,55%)] last:text-right">{h}</span>
-          ))}
-        </div>
-
-        {/* Rows */}
-        <div ref={historyRef} className="max-h-[160px] overflow-y-auto" style={{ scrollBehavior: "smooth" }}>
-          {history.length === 0 && (
-            <div className="py-7 text-center">
-              <p className="text-[11px] text-[hsl(260,15%,45%)]">Aguardando primeira operação...</p>
+        )}
+        {history.map((op, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex items-center justify-between px-3 py-2.5"
+            style={{
+              borderBottom: "1px solid hsl(270,30%,15%)",
+              background: op.conta === "demo" ? "rgba(250,204,21,0.04)" : "transparent",
+            }}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-[10px] text-[hsl(280,30%,50%)] shrink-0">{op.hora}</span>
+              <span className="text-[12px] font-semibold text-[hsl(280,60%,75%)] truncate">{op.par}</span>
+              {op.conta === "demo" && (
+                <span
+                  className="text-[9px] font-bold rounded px-1 py-0.5 shrink-0"
+                  style={{ background: "rgba(250,204,21,0.15)", color: "#FACC15" }}
+                >
+                  DEMO
+                </span>
+              )}
             </div>
-          )}
-          {history.map((op, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -6 }}
-              animate={{ opacity: 1, x: 0 }}
-              className={`px-3 py-2 grid border-b`}
-              style={{
-                gridTemplateColumns: "52px 1fr 64px 80px",
-                borderColor: op.conta === "demo" ? "rgba(250,204,21,0.2)" : "rgba(255,255,255,0.05)",
-                background: op.conta === "demo" ? "rgba(250,204,21,0.05)" : "transparent",
-              }}
+            <span
+              className="text-[12px] font-bold tabular-nums shrink-0"
+              style={{ color: op.conta === "demo" ? "#FACC15" : "#22C55E" }}
             >
-              <span className="text-[10px] text-[hsl(260,15%,50%)] font-mono">{op.hora}</span>
-              <span className="text-[10px] font-bold text-white">{op.par}</span>
-              <span
-                className="text-[10px] font-bold flex items-center gap-0.5"
-                style={{ color: op.conta === "demo" ? "#FACC15" : "#94A3B8" }}
-              >
-                {op.conta === "demo"
-                  ? <><ShieldCheck className="w-3 h-3 shrink-0" /> Demo</>
-                  : "Real"}
-              </span>
-              <span
-                className="text-[10px] font-extrabold text-right"
-                style={{ color: op.conta === "demo" ? "#FACC15" : "#22C55E" }}
-              >
-                {op.conta === "demo"
-                  ? `🛡 R$${op.savedAmount?.toFixed(2)} salvo`
-                  : `+R$${op.lucro.toFixed(2)}`}
-              </span>
-            </motion.div>
-          ))}
-        </div>
+              {op.conta === "demo"
+                ? `Salvo R$${op.lucro.toFixed(2)}`
+                : `+R$${op.lucro.toFixed(2)}`}
+            </span>
+          </motion.div>
+        ))}
       </div>
 
-      {/* ── Legend ── */}
-      <div className={`px-3 py-2.5 flex items-center justify-between ${plat.border} border-t`} style={{ background: "rgba(15,23,42,0.95)" }}>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full" style={{ background: "#22C55E" }} />
-          <span className="text-[11px] font-semibold" style={{ color: "#CBD5E1" }}>Verde = lucro real creditado</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full" style={{ background: "#FACC15" }} />
-          <span className="text-[11px] font-semibold" style={{ color: "#CBD5E1" }}>Amarelo = perda bloqueada</span>
-        </div>
+      {/* Legend */}
+      <div
+        className="px-3 py-2.5 mt-1 mx-3 mb-3 rounded-xl"
+        style={{ background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.18)" }}
+      >
+        <p className="text-[12px] leading-relaxed font-medium" style={{ color: "#E2E8F0" }}>
+          <span style={{ color: "#FACC15", fontWeight: 700 }}>🟡 Amarelo = operação protegida.</span>{" "}
+          Quando o Safety Pro detecta risco, a operação vai para a conta demo — e o seu dinheiro real fica intacto.
+        </p>
       </div>
     </div>
   );
@@ -353,57 +330,34 @@ const plans = [
   {
     id: "mensal",
     label: "Mensal",
-    price: 37,
-    installments: null,
-    color: "#64748B",
+    price: 47,
+    per: "/mês",
+    highlight: false,
     badge: null,
-    checkoutUrl: "https://pay.kirvano.com/SAFETY-MENSAL-PLACEHOLDER",
+    checkoutUrl: "SAFETY-MENSAL-PLACEHOLDER",
+    features: ["Safety Pro ativo 24h", "Proteção em tempo real", "Suporte prioritário"],
   },
   {
     id: "anual",
     label: "Anual",
-    price: 97,
-    installments: "12x de R$ 9,50",
-    color: "#22C55E",
+    price: 197,
+    per: "/ano",
+    highlight: true,
     badge: "MAIS POPULAR",
-    checkoutUrl: "https://pay.kirvano.com/SAFETY-ANUAL-PLACEHOLDER",
+    checkoutUrl: "SAFETY-ANUAL-PLACEHOLDER",
+    features: ["Safety Pro ativo 24h", "Proteção em tempo real", "Suporte VIP", "Economia de R$367/ano"],
   },
   {
     id: "vitalicio",
     label: "Vitalício",
-    price: 147,
-    installments: "12x de R$ 14,37",
-    color: "#FACC15",
-    badge: null,
-    checkoutUrl: "https://pay.kirvano.com/SAFETY-VITALICIO-PLACEHOLDER",
+    price: 397,
+    per: " único",
+    highlight: false,
+    badge: "MELHOR VALOR",
+    checkoutUrl: "SAFETY-VITALICIO-PLACEHOLDER",
+    features: ["Safety Pro ativo para sempre", "Proteção em tempo real", "Suporte VIP vitalício", "Nunca paga de novo"],
   },
 ];
-
-const features: Record<string, string[]> = {
-  mensal: [
-    "Safety Pro ativo por 1 mês",
-    "Proteção automática em tempo real",
-    "Relatório diário de operações salvas",
-    "Integra com o robô EASY 2.0",
-  ],
-  anual: [
-    "Safety Pro ativo por 12 meses",
-    "Proteção automática em tempo real",
-    "Relatório diário de operações salvas",
-    "Integra com o robô EASY 2.0",
-    "Multiplicador de lucro 20x incluso",
-    "Suporte prioritário via WhatsApp",
-  ],
-  vitalicio: [
-    "Safety Pro vitalício — para sempre",
-    "Proteção automática em tempo real",
-    "Relatório diário de operações salvas",
-    "Integra com o robô EASY 2.0",
-    "Multiplicador de lucro 20x incluso",
-    "Suporte prioritário via WhatsApp",
-    "Todas as atualizações futuras incluídas",
-  ],
-};
 
 // ── Expert video (vturb) ──
 const ExpertVideo = () => {
@@ -438,16 +392,14 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
 
   const activePlan = plans.find(p => p.id === selectedPlan)!;
 
-  const handleBuy = () => {
+  const handleBuy = async () => {
     setLoading(true);
-    saveUpsellExtras("safety_pro" as any, { price: activePlan.price, plan: activePlan.id });
-    saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell5", product: `safety_pro_${activePlan.id}`, price: activePlan.price });
+    saveFunnelEvent("upsell_buy_click", { page_id: "/upsell5", product: `safety_pro_${activePlan.id}`, price: activePlan.price });
     logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell5", metadata: { product: `safety_pro_${activePlan.id}`, price: activePlan.price } });
-    const utmQs = buildTrackingQueryString();
-    const sep = activePlan.checkoutUrl.includes("?") ? "&" : "?";
-    const fullUrl = utmQs ? `${activePlan.checkoutUrl}${sep}${utmQs.slice(1)}` : activePlan.checkoutUrl;
-    window.open(fullUrl, "_blank");
-    setTimeout(() => setLoading(false), 3000);
+    const qs = buildTrackingQueryString();
+    const base = activePlan.checkoutUrl;
+    const url = base.includes("?") ? `${base}&${qs}` : `${base}?${qs}`;
+    setTimeout(() => { window.location.href = url; }, 400);
   };
 
   return (
@@ -455,42 +407,96 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
 
       {/* ── HERO ── */}
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center"
+        transition={{ duration: 0.4 }}
+        className="flex flex-col gap-5"
       >
+        {/* Urgência no topo */}
         <div
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5 text-[12px] font-bold uppercase tracking-widest"
-          style={{ background: "rgba(250,204,21,0.1)", border: "1px solid rgba(250,204,21,0.25)", color: "#FACC15" }}
+          className="flex items-center justify-center gap-2 rounded-xl px-4 py-2"
+          style={{ background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.25)" }}
         >
-          <ShieldCheck className="w-4 h-4" />
-          Módulo de Proteção de Capital
+          <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#FCA5A5" }}>
+            ⚠️ Atenção — leia antes de fechar essa página
+          </span>
         </div>
 
-        <h1 className="text-[26px] font-extrabold leading-tight mb-4" style={{ color: "#F8FAFC" }}>
-          {firstName ? `${firstName}, o robô` : "O robô"} já está operando.
-          <br />
-          <span style={{ color: "#FACC15" }}>Mas e quando o mercado vira?</span>
-        </h1>
+        {/* Headline principal */}
+        <div className="flex flex-col gap-3 text-center">
+          <p className="text-[13px] font-bold uppercase tracking-widest" style={{ color: "#FACC15" }}>
+            O robô já está operando para você.
+          </p>
+          <h1 className="text-[26px] sm:text-[30px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
+            Mas e quando o mercado virar contra você —{" "}
+            <span style={{ color: "#F87171" }}>quem vai proteger</span>{" "}
+            o que você acabou de construir?
+          </h1>
+          <p className="text-[16px] leading-relaxed" style={{ color: "#CBD5E1" }}>
+            Sem proteção, <strong style={{ color: "#FBBF24" }}>uma única operação ruim</strong> pode apagar dias inteiros de lucro.{" "}
+            Isso acontece com quem não tem o escudo certo — e acontece sem avisar.
+          </p>
+        </div>
 
-        <p className="text-[15px] leading-relaxed mb-5" style={{ color: "#CBD5E1" }}>
-          Todo sistema de IA pode encontrar momentos difíceis no mercado. Sem proteção,{" "}
-          <strong style={{ color: "#F8FAFC" }}>uma única operação ruim pode apagar dias de lucro</strong>.
-        </p>
+        {/* Bloco dor vs solução */}
+        <div className="flex flex-col gap-3">
+          {/* Sem proteção */}
+          <div
+            className="rounded-2xl p-4 flex flex-col gap-3"
+            style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.18)" }}
+          >
+            <p className="text-[13px] font-bold" style={{ color: "#FCA5A5" }}>Sem proteção, é assim que acontece:</p>
+            {[
+              { icon: "✅", text: "Segunda: +R$ 87 — ótimo dia.", dim: false },
+              { icon: "✅", text: "Terça: +R$ 63 — tudo certo.", dim: false },
+              { icon: "📉", text: "Quarta: mercado vira. −R$ 210 em 4 minutos.", dim: false },
+              { icon: "😶", text: "O lucro de 3 dias: apagado em uma tarde.", dim: true },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="text-[14px] shrink-0">{item.icon}</span>
+                <p className="text-[14px] leading-snug" style={{ color: item.dim ? "#F87171" : "#E2E8F0", fontWeight: item.dim ? 700 : 400 }}>
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
 
-        <div
-          className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl"
-          style={{ background: "rgba(250,204,21,0.07)", border: "1px solid rgba(250,204,21,0.2)" }}
-        >
-          <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "#FACC15" }} />
-          <span className="text-[13px]" style={{ color: "#E2E8F0" }}>
-            <span className="font-bold" style={{ color: "#FACC15" }}>{protectedOps.toLocaleString("pt-BR")}</span>{" "}
-            operações protegidas hoje
+          {/* Com Safety Pro */}
+          <div
+            className="rounded-2xl p-4 flex flex-col gap-3"
+            style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.20)" }}
+          >
+            <p className="text-[13px] font-bold" style={{ color: "#86EFAC" }}>Com o Safety Pro ativado, a mesma semana:</p>
+            {[
+              { icon: "✅", text: "Segunda: +R$ 87 — lucro real.", highlight: false },
+              { icon: "✅", text: "Terça: +R$ 63 — lucro real.", highlight: false },
+              { icon: "🛡️", text: "Quarta: Safety Pro detecta o risco e bloqueia.", highlight: true },
+              { icon: "💰", text: "Lucros intactos. Capital protegido. Você nem soube.", highlight: true },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="text-[14px] shrink-0">{item.icon}</span>
+                <p className="text-[14px] leading-snug" style={{ color: item.highlight ? "#86EFAC" : "#E2E8F0", fontWeight: item.highlight ? 700 : 400 }}>
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Contador de operações protegidas */}
+        <div className="flex flex-col items-center gap-1 py-2">
+          <div className="flex items-baseline gap-2">
+            <span className="text-[40px] font-extrabold tabular-nums" style={{ color: "#22C55E" }}>
+              {protectedOps.toLocaleString("pt-BR")}
+            </span>
+          </div>
+          <span className="text-[14px] font-medium" style={{ color: "#94A3B8" }}>
+            operações protegidas hoje pelo Safety Pro
           </span>
         </div>
       </motion.div>
 
-      {/* ── VIDEO DO EXPERT (logo após contador) ── */}
+      {/* ── VIDEO DO EXPERT ── */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -510,61 +516,58 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
         <ExpertVideo />
       </motion.div>
 
-      {/* ── HOW IT WORKS — passo a passo ── */}
+      {/* ── HOW IT WORKS ── */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="rounded-2xl overflow-hidden"
-        style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+        style={{ border: "1px solid rgba(250,204,21,0.2)" }}
       >
-        <div className="px-5 py-3.5" style={{ background: "rgba(15,23,42,0.98)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-          <p className="text-[13px] font-bold uppercase tracking-wide" style={{ color: "#94A3B8" }}>
-            Como o Safety Pro funciona — passo a passo
+        <div
+          className="px-4 py-3"
+          style={{ background: "rgba(250,204,21,0.08)" }}
+        >
+          <p className="text-[13px] font-bold uppercase tracking-wide text-center" style={{ color: "#FACC15" }}>
+            Como o Safety Pro funciona
           </p>
         </div>
-
-        <div className="px-5 py-5 flex flex-col gap-0" style={{ background: "#0A1120" }}>
+        <div className="flex flex-col divide-y divide-white/5">
           {[
             {
               num: "1",
+              title: "Monitora o mercado 24 horas",
+              desc: "O sistema analisa cada operação antes de executar, verificando padrões de risco em tempo real.",
               icon: BarChart3,
-              color: "#60A5FA",
-              title: "O robô analisa cada oportunidade antes de entrar",
-              desc: "O EASY 2.0 encontra uma entrada. O Safety Pro verifica o risco daquele cenário em menos de 1 segundo.",
             },
             {
               num: "2",
+              title: "Detecta o perigo antes de acontecer",
+              desc: "Quando identifica condição adversa, intercepta a operação em milissegundos.",
               icon: AlertTriangle,
-              color: "#FACC15",
-              title: "Risco alto? A operação vai para a conta DEMO",
-              desc: "O Safety Pro detecta o perigo e executa a operação em demo automaticamente. Seu dinheiro real não é tocado — você não precisa fazer nada.",
             },
             {
               num: "3",
-              icon: TrendingUp,
-              color: "#22C55E",
-              title: "Cenário favorável? Opera na conta REAL e lucra",
-              desc: "Quando o mercado está positivo, o robô opera normalmente na conta real — e com o Multiplicador, os ganhos chegam até 20x maiores.",
+              title: "Desvia para conta demo automaticamente",
+              desc: "A operação perigosa vai para a conta demo. Seu dinheiro real fica 100% protegido.",
+              icon: ShieldCheck,
             },
-          ].map((step, i, arr) => (
-            <div key={step.num} className="flex gap-4">
-              <div className="flex flex-col items-center">
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-extrabold text-[14px]"
-                  style={{ background: `${step.color}20`, border: `2px solid ${step.color}50`, color: step.color }}
-                >
-                  {step.num}
-                </div>
-                {i < arr.length - 1 && (
-                  <div className="w-[2px] flex-1 my-1.5" style={{ background: "rgba(255,255,255,0.08)" }} />
-                )}
+            {
+              num: "4",
+              title: "Você nem percebe — e seu saldo cresce",
+              desc: "O robô continua operando normalmente. Você só vê os lucros entrando.",
+              icon: TrendingUp,
+            },
+          ].map((step, i) => (
+            <div key={i} className="flex items-start gap-3 px-4 py-4" style={{ background: "hsl(260,28%,10%)" }}>
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[13px] font-bold"
+                style={{ background: "rgba(250,204,21,0.15)", color: "#FACC15" }}
+              >
+                {step.num}
               </div>
-              <div className="pb-6">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <step.icon className="w-4 h-4 shrink-0" style={{ color: step.color }} />
-                  <p className="text-[14px] font-bold" style={{ color: "#F1F5F9" }}>{step.title}</p>
-                </div>
+              <div className="flex flex-col gap-1">
+                <p className="text-[14px] font-bold" style={{ color: "#F8FAFC" }}>{step.title}</p>
                 <p className="text-[13px] leading-relaxed" style={{ color: "#94A3B8" }}>{step.desc}</p>
               </div>
             </div>
@@ -572,34 +575,22 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
         </div>
       </motion.div>
 
-      {/* ── SIMULATOR ── */}
+      {/* ── SIMULADOR AO VIVO ── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
       >
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-2 h-2 rounded-full bg-[hsl(152,60%,45%)] animate-pulse" />
-          <p className="text-[12px] font-bold uppercase tracking-wide" style={{ color: "#94A3B8" }}>
-            Veja o Safety Pro funcionando em tempo real:
+        <div className="text-center mb-3">
+          <p className="text-[13px] font-bold uppercase tracking-wide mb-1" style={{ color: "#94A3B8" }}>
+            Veja funcionando ao vivo
+          </p>
+          <p className="text-[16px] font-extrabold" style={{ color: "#F8FAFC" }}>
+            Simulador em tempo real — observe o Safety Pro em ação
           </p>
         </div>
         <TradeSimulator />
-        {/* Legenda explicativa — visível e clara */}
-        <div
-          className="mt-3 rounded-xl px-4 py-3"
-          style={{ background: "rgba(250,204,21,0.06)", border: "1px solid rgba(250,204,21,0.18)" }}
-        >
-          <p className="text-[13px] leading-relaxed font-medium" style={{ color: "#E2E8F0" }}>
-            <span style={{ color: "#FACC15", fontWeight: 700 }}>Amarelo = operação protegida.</span>{" "}
-            Quando o Safety Pro detecta risco, a operação vai para a conta demo — e o seu dinheiro real{" "}
-            <span style={{ color: "#F8FAFC", fontWeight: 700 }}>fica intacto</span>.
-          </p>
-        </div>
       </motion.div>
-
-
-
 
       {/* ── O QUE VOCÊ PERDE SEM ISSO ── */}
       <motion.div
@@ -607,29 +598,21 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.22 }}
         className="rounded-2xl p-5"
-        style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.22)" }}
+        style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.22)" }}
       >
-        <div className="flex items-center gap-2.5 mb-4">
-          <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
-          <p className="text-[15px] font-bold" style={{ color: "#F8FAFC" }}>
-            O que acontece sem o Safety Pro:
-          </p>
-        </div>
+        <p className="text-[15px] font-extrabold mb-4 text-center" style={{ color: "#FCA5A5" }}>
+          O que acontece sem o Safety Pro:
+        </p>
         <div className="flex flex-col gap-3">
           {[
-            "O robô entra em operações de risco sem nenhuma proteção",
-            "Uma sequência negativa pode apagar semanas de lucro",
-            "Você só descobre a perda quando já aconteceu",
-            "O emocional bate e você desliga o robô na hora errada — perdendo os ganhos futuros",
-          ].map((item) => (
-            <div key={item} className="flex items-start gap-3">
-              <div
-                className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                style={{ background: "rgba(239,68,68,0.18)", border: "1px solid rgba(239,68,68,0.3)" }}
-              >
-                <span className="text-[11px] font-bold" style={{ color: "#EF4444" }}>✕</span>
-              </div>
-              <p className="text-[13px] leading-relaxed" style={{ color: "#CBD5E1" }}>{item}</p>
+            "Uma operação ruim pode apagar semanas de lucro em minutos",
+            "Você fica refém do humor do mercado — sem controle nenhum",
+            "O robô opera, mas sem escudo, qualquer turbu­lência chega até você",
+            "Quem tem Safety Pro protege o que construiu. Quem não tem... reza",
+          ].map((item, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <span className="text-[16px] shrink-0">❌</span>
+              <p className="text-[14px] leading-snug" style={{ color: "#E2E8F0" }}>{item}</p>
             </div>
           ))}
         </div>
@@ -645,30 +628,30 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
         {[
           {
             avatar: avatarAntonio,
-            name: "Antônio R., 61 anos",
-            text: "\"O mercado virou de repente em fevereiro. Sem o Safety Pro, teria perdido R$ 1.200. A IA foi pra demo sozinha. Não perdi nada — e ainda fechei o dia no verde.\"",
+            name: "Antônio S., 54 anos",
+            city: "Campo Grande, MS",
+            text: "Estava com medo de perder o que ganhei. Desde que ativei o Safety Pro, nunca mais tive aquela angústia. O robô opera, o escudo protege e eu durmo tranquilo.",
           },
           {
             avatar: avatarMaria,
-            name: "Maria C., 54 anos",
-            text: "\"Eu tinha medo de deixar o robô operar sozinho. Desde que ativei o Safety Pro, durmo tranquila. Sei que ele nunca vai arriscar meu dinheiro sem o cenário estar favorável.\"",
+            name: "Maria T., 61 anos",
+            city: "Fortaleza, CE",
+            text: "Numa semana de mercado ruim, todo mundo perdeu. Eu não perdi nada. Meu saldo continuou crescendo. Isso não tem preço.",
           },
-        ].map((t) => (
+        ].map((t, i) => (
           <div
-            key={t.name}
-            className="rounded-2xl p-4 flex items-start gap-3.5"
-            style={{ background: "rgba(30,41,59,0.7)", border: "1px solid rgba(255,255,255,0.08)" }}
+            key={i}
+            className="rounded-2xl p-4 flex flex-col gap-3"
+            style={{ background: "hsl(260,25%,12%)", border: "1px solid hsl(270,30%,20%)" }}
           >
-            <img
-              src={t.avatar}
-              alt={t.name}
-              className="w-12 h-12 rounded-full object-cover shrink-0"
-              style={{ border: "2px solid rgba(34,197,94,0.3)" }}
-            />
-            <div>
-              <p className="text-[14px] font-bold mb-1.5" style={{ color: "#F1F5F9" }}>{t.name}</p>
-              <p className="text-[13px] italic leading-relaxed" style={{ color: "#CBD5E1" }}>{t.text}</p>
+            <div className="flex items-center gap-3">
+              <img src={t.avatar} alt={t.name} className="w-12 h-12 rounded-full object-cover shrink-0" style={{ border: "2px solid rgba(250,204,21,0.3)" }} />
+              <div>
+                <p className="text-[14px] font-bold" style={{ color: "#F8FAFC" }}>{t.name}</p>
+                <p className="text-[12px]" style={{ color: "#64748B" }}>{t.city} · Aluno verificado ✓</p>
+              </div>
             </div>
+            <p className="text-[14px] leading-relaxed italic" style={{ color: "#CBD5E1" }}>"{t.text}"</p>
           </div>
         ))}
       </motion.div>
@@ -680,57 +663,51 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.28 }}
           className="rounded-xl px-5 py-4 flex items-start gap-3"
-          style={{ background: "rgba(250,204,21,0.07)", border: "1px solid rgba(250,204,21,0.25)" }}
+          style={{ background: "rgba(34,197,94,0.07)", border: "1px solid rgba(34,197,94,0.2)" }}
         >
-          <Zap className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#FACC15" }} />
-          <p className="text-[14px] leading-relaxed" style={{ color: "#E2E8F0" }}>
-            <strong style={{ color: "#FACC15" }}>{firstName}</strong>, com o Multiplicador que você já tem ativo, o Safety Pro age como um escudo: os lucros crescem mais rápido{" "}
+          <Zap className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "#22C55E" }} />
+          <p className="text-[14px] leading-relaxed" style={{ color: "#CBD5E1" }}>
+            <strong style={{ color: "#F8FAFC" }}>{firstName}</strong>, o robô já está trabalhando por você.{" "}
+            Com o Safety Pro, o sistema completo entra em modo de máxima proteção —{" "}
             <strong style={{ color: "#F8FAFC" }}>e as perdas simplesmente não chegam ao seu saldo real</strong>.
           </p>
         </motion.div>
       )}
 
-      {/* ── PLAN SELECTOR ── */}
+      {/* ── PLANOS ── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
         <p className="text-[14px] text-center font-semibold mb-4" style={{ color: "#CBD5E1" }}>
-          Escolha por quanto tempo quer sua proteção ativa:
+          Escolha como ativar seu escudo:
         </p>
 
-        {/* Tabs */}
-        <div
-          className="flex rounded-2xl p-1.5 gap-1.5 mb-5"
-          style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.08)" }}
-        >
-          {plans.map((plan) => {
-            const isActive = selectedPlan === plan.id;
-            return (
-              <motion.button
-                key={plan.id}
-                onClick={() => setSelectedPlan(plan.id)}
-                whileTap={{ scale: 0.96 }}
-                className="flex-1 py-3.5 rounded-xl text-center relative cursor-pointer"
-                style={{
-                  background: isActive ? `${plan.color}14` : "rgba(255,255,255,0.02)",
-                  border: isActive ? `2px solid ${plan.color}` : "2px solid rgba(255,255,255,0.07)",
-                }}
-              >
-                {plan.badge && (
-                  <span
-                    className="absolute -top-3 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-0.5 rounded-full text-white whitespace-nowrap"
-                    style={{ background: "#16A34A" }}
-                  >
-                    {plan.badge}
-                  </span>
-                )}
-                <p className="text-[13px] font-bold" style={{ color: isActive ? plan.color : "#94A3B8" }}>{plan.label}</p>
-                <p className="text-[11px] mt-0.5 font-medium" style={{ color: isActive ? "#E2E8F0" : "#64748B" }}>R$ {plan.price}</p>
-              </motion.button>
-            );
-          })}
+        {/* Plan tabs */}
+        <div className="flex gap-2 mb-4">
+          {plans.map(p => (
+            <button
+              key={p.id}
+              onClick={() => setSelectedPlan(p.id)}
+              className="flex-1 rounded-xl py-2.5 text-[13px] font-bold transition-all relative"
+              style={
+                selectedPlan === p.id
+                  ? { background: "rgba(250,204,21,0.18)", border: "2px solid rgba(250,204,21,0.6)", color: "#FACC15" }
+                  : { background: "hsl(260,25%,12%)", border: "2px solid hsl(270,30%,20%)", color: "#94A3B8" }
+              }
+            >
+              {p.badge && (
+                <span
+                  className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold rounded-full px-2 py-0.5 whitespace-nowrap"
+                  style={{ background: "#FACC15", color: "#0F172A" }}
+                >
+                  {p.badge}
+                </span>
+              )}
+              {p.label}
+            </button>
+          ))}
         </div>
 
         {/* Plan card */}
@@ -741,91 +718,73 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
-            className="rounded-2xl overflow-hidden"
-            style={{ border: `2px solid ${activePlan.color}40` }}
+            className="rounded-2xl p-5 flex flex-col gap-4"
+            style={{
+              background: activePlan.highlight ? "rgba(250,204,21,0.06)" : "hsl(260,25%,12%)",
+              border: activePlan.highlight ? "2px solid rgba(250,204,21,0.35)" : "1px solid hsl(270,30%,20%)",
+            }}
           >
-            {/* Plan header */}
-            <div
-              className="px-5 py-4 flex items-center justify-between"
-              style={{ background: `${activePlan.color}09`, borderBottom: `1px solid ${activePlan.color}25` }}
-            >
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <ShieldCheck className="w-5 h-5" style={{ color: activePlan.color }} />
-                  <h3 className="text-[17px] font-bold" style={{ color: "#F8FAFC" }}>
-                    Safety Pro {activePlan.label}
-                  </h3>
-                </div>
-                {activePlan.installments && (
-                  <p className="text-[12px] font-medium" style={{ color: "#94A3B8" }}>{activePlan.installments}</p>
-                )}
-              </div>
-              <div className="text-right">
-                <span className="text-[28px] font-extrabold" style={{ color: "#F8FAFC" }}>R$ {activePlan.price}</span>
-                <p className="text-[11px] font-medium" style={{ color: "#64748B" }}>único</p>
-              </div>
+            <div className="flex items-baseline gap-1 justify-center">
+              <span className="text-[15px] font-semibold" style={{ color: "#94A3B8" }}>R$</span>
+              <span className="text-[48px] font-extrabold leading-none" style={{ color: "#F8FAFC" }}>
+                {activePlan.price}
+              </span>
+              <span className="text-[14px] font-medium" style={{ color: "#94A3B8" }}>{activePlan.per}</span>
             </div>
 
-            {/* Features */}
-            <div className="px-5 py-5" style={{ background: "#0F172A" }}>
-              <div className="flex flex-col gap-3 mb-6">
-                {features[activePlan.id].map((f) => (
-                  <div key={f} className="flex items-center gap-3">
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: `${activePlan.color}18`, border: `1px solid ${activePlan.color}35` }}
-                    >
-                      <Check className="w-3.5 h-3.5" style={{ color: activePlan.color }} />
-                    </div>
-                    <span className="text-[14px]" style={{ color: "#E2E8F0" }}>{f}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="flex flex-col gap-2">
+              {activePlan.features.map((f, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Check className="w-4 h-4 shrink-0" style={{ color: "#22C55E" }} />
+                  <span className="text-[13px]" style={{ color: "#CBD5E1" }}>{f}</span>
+                </div>
+              ))}
+            </div>
 
-              {/* CTA */}
-              <button
-                onClick={handleBuy}
-                disabled={loading}
-                className="w-full py-[18px] rounded-xl text-[16px] font-bold transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
-                style={{
-                  background: "linear-gradient(135deg, #FACC15, #EAB308)",
-                  color: "#020617",
-                  boxShadow: "0 0 28px rgba(250,204,21,0.25), 0 4px 16px rgba(0,0,0,0.35)",
-                }}
-              >
-                {loading ? "Processando..." : <>ATIVAR SAFETY PRO — R$ {activePlan.price} <ArrowRight className="w-4 h-4" /></>}
-              </button>
+            <button
+              onClick={handleBuy}
+              disabled={loading}
+              className="w-full rounded-2xl py-[18px] text-[16px] font-extrabold transition-all flex items-center justify-center gap-2"
+              style={{
+                background: loading ? "rgba(250,204,21,0.3)" : "linear-gradient(135deg, #FACC15, #F59E0B)",
+                color: "#0F172A",
+                boxShadow: loading ? "none" : "0 8px 24px rgba(250,204,21,0.35)",
+              }}
+            >
+              {loading ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Processando...</>
+              ) : (
+                <><ShieldCheck className="w-5 h-5" /> ATIVAR SAFETY PRO AGORA <ArrowRight className="w-4 h-4" /></>
+              )}
+            </button>
 
-              {/* Trust badges */}
-              <div className="flex items-center justify-center gap-6 mt-4">
-                {([
-                  [Lock, "100% seguro"],
-                  [ShieldCheck, "Garantia 30 dias"],
-                  [RefreshCw, "Ativação imediata"],
-                ] as const).map(([Icon, label]) => (
-                  <div key={label} className="flex items-center gap-1.5">
-                    <Icon className="w-3.5 h-3.5" style={{ color: "#64748B" }} />
-                    <span className="text-[11px] font-medium" style={{ color: "#64748B" }}>{label}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="flex items-center justify-center gap-4">
+              {([
+                [Lock, "100% seguro"],
+                [ShieldCheck, "Garantia 30 dias"],
+                [RefreshCw, "Ativação imediata"],
+              ] as const).map(([Icon, label]) => (
+                <div key={label} className="flex items-center gap-1">
+                  <Icon className="w-3.5 h-3.5" style={{ color: "#64748B" }} />
+                  <span className="text-[11px]" style={{ color: "#64748B" }}>{label}</span>
+                </div>
+              ))}
             </div>
           </motion.div>
         </AnimatePresence>
       </motion.div>
 
       {/* ── SKIP ── */}
-      <button
-        onClick={() => {
-          saveFunnelEvent("upsell_oneclick_decline", { page: "/upsell5" });
-          logAuditEvent({ eventType: "upsell_oneclick_decline", pageId: "/upsell5" });
-          onDecline();
-        }}
-        className="text-[13px] underline cursor-pointer bg-transparent border-none mx-auto py-2 pb-8 block"
-        style={{ color: "#64748B" }}
-      >
-        Não, prefiro continuar sem proteção de capital.
-      </button>
+      <div className="text-center pb-4">
+        <button
+          onClick={onDecline}
+          className="text-[12px] underline underline-offset-2"
+          style={{ color: "#475569" }}
+        >
+          Não, prefiro operar sem proteção e assumir o risco
+        </button>
+      </div>
+
     </div>
   );
 };
