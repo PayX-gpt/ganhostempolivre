@@ -31,7 +31,7 @@ interface Props {
   onDecline: () => void;
 }
 
-const CHECKOUT_URL = "https://pay.kirvano.com/FOREX-MENTORIA-PLACEHOLDER";
+const CHECKOUT_URL = "https://pay.kirvano.com/bf6428b5-4257-496c-8d22-46e53c4e6689";
 const PRICE = 297;
 const ORIGINAL_PRICE = 4997;
 const TIMER_SECONDS = 15 * 60; // 15 minutes
