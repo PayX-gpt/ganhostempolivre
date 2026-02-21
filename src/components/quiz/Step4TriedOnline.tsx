@@ -1,14 +1,33 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard, CTAButton } from "./QuizUI";
 import { Frown, ThumbsUp, HelpCircle, CheckCircle, BarChart3 } from "lucide-react";
+import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface Step4Props {
   onNext: (answer: string) => void;
   userName?: string;
+  userAge?: string;
 }
 
-const getFeedback = (answer: string, name?: string) => {
+const getFeedback = (answer: string, name?: string, young?: boolean) => {
   const n = name || "você";
+  if (young) {
+    const messages: Record<string, { title: string; message: string }> = {
+      sim_falhou: {
+        title: `${n}, esquece o que não deu certo.`,
+        message: `A internet tá cheia de promessas vazias — cursos caros, gurus falsos, esquemas que não funcionam. Se não deu certo antes, o problema foi o método, não você. O que vou te mostrar aqui é uma tecnologia que faz o trabalho pesado por você. Sem complicação, sem precisar ser expert. Só seguir o passo a passo.`,
+      },
+      sim_experiencia: {
+        title: `Boa, ${n}! Você já tem uma vantagem.`,
+        message: `Quem já botou a mão na massa sabe que resultado online é real. A diferença agora é que você vai ter uma inteligência artificial fazendo 90% do trabalho. Imagina juntar o que você já sabe com uma tecnologia que trabalha 24h por dia. Os resultados vão ser bem diferentes.`,
+      },
+      nunca: {
+        title: `${n}, isso na verdade é uma vantagem.`,
+        message: `Quem nunca tentou nada começa sem vícios e sem medo de repetir erros. Você vai seguir o passo a passo do zero e ver resultado rápido. Se sabe usar o celular, já sabe o suficiente. Sério — é mais simples do que parece.`,
+      },
+    };
+    return messages[answer];
+  }
   const messages: Record<string, { title: string; message: string }> = {
     sim_falhou: {
       title: `${n}, eu preciso te dizer uma coisa.`,
@@ -26,9 +45,10 @@ const getFeedback = (answer: string, name?: string) => {
   return messages[answer];
 };
 
-const Step4TriedOnline = ({ onNext, userName }: Step4Props) => {
+const Step4TriedOnline = ({ onNext, userName, userAge }: Step4Props) => {
   const [selected, setSelected] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const young = isYoungProfile(userAge);
 
   const handleSelect = (answer: string) => {
     setSelected(answer);
@@ -36,7 +56,7 @@ const Step4TriedOnline = ({ onNext, userName }: Step4Props) => {
   };
 
   if (showFeedback && selected) {
-    const fb = getFeedback(selected, userName);
+    const fb = getFeedback(selected, userName, young);
     if (fb) {
       return (
         <StepContainer>

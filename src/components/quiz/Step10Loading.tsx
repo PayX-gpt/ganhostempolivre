@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { StepContainer } from "./QuizUI";
 import { Search, Settings, BarChart3, Target, MapPin, Sparkles, CheckCircle, Square, Lock, Loader2 } from "lucide-react";
 import mentorPhoto from "@/assets/mentor-new.webp";
+import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface Step10Props {
   onNext: () => void;
+  userAge?: string;
 }
 
 const loadingSteps = [
@@ -16,10 +18,11 @@ const loadingSteps = [
   { text: "Gerando seu acesso personalizado...", icon: <Sparkles className="w-4 h-4" />, detail: "Tudo pronto! Preparando seus resultados" },
 ];
 
-const Step10Loading = ({ onNext }: Step10Props) => {
+const Step10Loading = ({ onNext, userAge }: Step10Props) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [showResult, setShowResult] = useState(false);
+  const young = isYoungProfile(userAge);
 
   useEffect(() => {
     const stepInterval = setInterval(() => {
@@ -90,7 +93,9 @@ const Step10Loading = ({ onNext }: Step10Props) => {
             Analisando suas respostas...
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-            Nosso sistema está cruzando seus dados com o perfil dos nossos <span className="text-primary font-semibold">36.000+ alunos</span> de sucesso.
+            {young
+              ? "Estamos analisando suas respostas para criar um plano exclusivo para você, baseado no sucesso de milhares de pessoas que já transformaram suas vidas."
+              : <>Nosso sistema está cruzando seus dados com o perfil dos nossos <span className="text-primary font-semibold">36.000+ alunos</span> de sucesso.</>}
           </p>
         </div>
       )}

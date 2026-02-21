@@ -12,8 +12,8 @@ interface Step2Props {
 }
 
 const ageOptions = [
-  { label: "18 a 25 anos", sublabel: "Início de carreira", imageSrc: couple1825 },
-  { label: "26 a 35 anos", sublabel: "Fase de crescimento", imageSrc: couple2635 },
+  { label: "18 a 25 anos", sublabel: "Início da jornada: construindo sua independência", imageSrc: couple1825 },
+  { label: "26 a 35 anos", sublabel: "Acelerando o crescimento e novas conquistas", imageSrc: couple2635 },
   { label: "36 a 45 anos", sublabel: "Maturidade profissional", imageSrc: couple3645 },
   { label: "46 a 55 anos", sublabel: "Experiência de vida", imageSrc: couple4655 },
   { label: "56 anos ou mais", sublabel: "Sabedoria e experiência", imageSrc: couple56plus },
@@ -21,12 +21,12 @@ const ageOptions = [
 
 const feedbackMessages: Record<string, { title: string; message: string }> = {
   "18 a 25 anos": {
-    title: "Olha, pouca gente começa tão cedo.",
-    message: "E isso é bom pra você. Enquanto a maioria só descobre isso lá pelos 40, depois de muito perrengue, você tem a chance de construir essa base agora. O sistema é tão simples que a idade nem importa — o que importa é dar o primeiro passo. E você já tá dando.",
+    title: "Mandou bem! Você está à frente da maioria.",
+    message: "Enquanto muitos esperam a vida acontecer, você está construindo seu futuro agora. Nosso método é simples e focado em resultados, perfeito para quem quer começar a gerar renda extra e conquistar a liberdade que sempre sonhou. O primeiro passo já foi dado!",
   },
   "26 a 35 anos": {
-    title: "Fase boa pra construir algo sólido.",
-    message: "Você tá naquele ponto da vida onde ainda dá tempo de montar uma renda extra antes de realmente precisar dela. A maioria das pessoas só corre atrás quando a água bate no pescoço. Você tá se antecipando — e isso faz toda a diferença.",
+    title: "Timing perfeito pra acelerar seus resultados.",
+    message: "Você está naquela fase onde cada decisão inteligente vale ouro. A maioria das pessoas só acorda pra isso depois dos 40. Você tem a vantagem de construir agora, com uma tecnologia que trabalha por você. Vamos montar o caminho certo pro seu perfil.",
   },
   "36 a 45 anos": {
     title: "Sabe o que faz diferença na sua idade?",

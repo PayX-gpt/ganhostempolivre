@@ -1,13 +1,16 @@
 import { StepContainer, StepTitle, StepSubtitle, OptionCard } from "./QuizUI";
 import { Wallet, PiggyBank, Landmark, TrendingUp, Gem } from "lucide-react";
+import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface StepAccountBalanceProps {
   onNext: (value: string) => void;
   userName?: string;
+  userAge?: string;
 }
 
-const StepAccountBalance = ({ onNext, userName }: StepAccountBalanceProps) => {
+const StepAccountBalance = ({ onNext, userName, userAge }: StepAccountBalanceProps) => {
   const firstName = userName?.split(" ")[0];
+  const young = isYoungProfile(userAge);
 
   const options = [
     {
@@ -45,12 +48,15 @@ const StepAccountBalance = ({ onNext, userName }: StepAccountBalanceProps) => {
   return (
     <StepContainer>
       <StepTitle>
-        {firstName ? `${firstName}, seja` : "Seja"} sincero(a) agora — consigo mesmo e comigo.
+        {firstName ? `${firstName}, vamos` : "Vamos"}{" "}
+        {young
+          ? "ser realistas: quanto você tem disponível para investir no seu futuro hoje?"
+          : "ser sincero(a) agora — consigo mesmo e comigo."}
       </StepTitle>
       <StepSubtitle>
-        Quanto você tem hoje parado na sua conta? Isso vai nos ajudar a traçar um
-        investimento <strong className="text-foreground">personalizado de multiplicação</strong> pra você.
-        De valores maiores a menores — não importa. O importante é a sinceridade.
+        {young
+          ? "Sua resposta é importante para criarmos um plano de crescimento financeiro sob medida para você. Não importa o valor, o que vale é a sua honestidade."
+          : <>Quanto você tem hoje parado na sua conta? Isso vai nos ajudar a traçar um investimento <strong className="text-foreground">personalizado de multiplicação</strong> pra você. De valores maiores a menores — não importa. O importante é a sinceridade.</>}
       </StepSubtitle>
 
       <div className="w-full space-y-3">

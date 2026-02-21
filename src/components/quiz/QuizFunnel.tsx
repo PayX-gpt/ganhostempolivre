@@ -174,17 +174,17 @@ const QuizFunnel = () => {
       case 3:
         return <StepName onNext={(name) => updateAndNext("name", name)} />;
       case 4:
-        return <Step3SocialProof onNext={goNext} />;
+        return <Step3SocialProof onNext={goNext} userAge={answers.age} />;
       case 5:
-        return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} userName={answers.name} />;
+        return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} userName={answers.name} userAge={answers.age} />;
       case 6:
-        return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} userName={answers.name} />;
+        return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} userName={answers.name} userAge={answers.age} />;
       case 7:
-        return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} userName={answers.name} />;
+        return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} userName={answers.name} userAge={answers.age} />;
       case 8:
-        return <StepFinancialDream onNext={(v) => updateAndNext("financialDream", v)} userName={answers.name} />;
+        return <StepFinancialDream onNext={(v) => updateAndNext("financialDream", v)} userName={answers.name} userAge={answers.age} />;
       case 9:
-        return <StepAccountBalance onNext={(v) => updateAndNext("accountBalance", v)} userName={answers.name} />;
+        return <StepAccountBalance onNext={(v) => updateAndNext("accountBalance", v)} userName={answers.name} userAge={answers.age} />;
       case 10:
         return <Step7MentorVideo onNext={goNext} />;
       case 11:
@@ -194,9 +194,9 @@ const QuizFunnel = () => {
       case 13:
         return <StepPlatformDemo onNext={goNext} userName={answers.name} />;
       case 14:
-        return <Step10Loading onNext={goNext} />;
+        return <Step10Loading onNext={goNext} userAge={answers.age} />;
       case 15:
-        return <Step11SocialProof2 onNext={goNext} />;
+        return <Step11SocialProof2 onNext={goNext} userAge={answers.age} />;
       case 16:
         return <StepWhatsAppProof onNext={goNext} />;
       case 17:
