@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard, CTAButton } from "./QuizUI";
 import { Smartphone, Laptop, MonitorSmartphone, CheckCircle } from "lucide-react";
+import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface Step8Props {
   onNext: (answer: string) => void;
   userName?: string;
+  userAge?: string;
 }
 
 const getFeedback = (answer: string, name?: string) => {
@@ -26,9 +28,10 @@ const getFeedback = (answer: string, name?: string) => {
   return messages[answer];
 };
 
-const Step8Device = ({ onNext, userName }: Step8Props) => {
+const Step8Device = ({ onNext, userName, userAge }: Step8Props) => {
   const [selected, setSelected] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const young = isYoungProfile(userAge);
 
   const handleSelect = (answer: string) => {
     setSelected(answer);
@@ -65,7 +68,9 @@ const Step8Device = ({ onNext, userName }: Step8Props) => {
     <StepContainer>
       <StepTitle>Qual aparelho você mais usa no dia a dia?</StepTitle>
       <StepSubtitle>
-        O método funciona em qualquer um deles. Não precisa de computador caro nem de internet rápida.
+        {young
+          ? "Nosso método é flexível e se adapta ao seu dia a dia. Use o aparelho que você preferir, sem complicação!"
+          : "O método funciona em qualquer um deles. Não precisa de computador caro nem de internet rápida."}
       </StepSubtitle>
 
       <div className="w-full space-y-3 mt-2">

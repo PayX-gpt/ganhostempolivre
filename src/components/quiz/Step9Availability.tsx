@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard, CTAButton } from "./QuizUI";
 import { Timer, Clock, Clock2, Clock3, CheckCircle } from "lucide-react";
+import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface Step9Props {
   onNext: (answer: string) => void;
   userName?: string;
+  userAge?: string;
 }
 
 const getFeedback = (answer: string, name?: string) => {
@@ -30,9 +32,10 @@ const getFeedback = (answer: string, name?: string) => {
   return messages[answer];
 };
 
-const Step9Availability = ({ onNext, userName }: Step9Props) => {
+const Step9Availability = ({ onNext, userName, userAge }: Step9Props) => {
   const [selected, setSelected] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const young = isYoungProfile(userAge);
 
   const handleSelect = (answer: string) => {
     setSelected(answer);
@@ -69,7 +72,9 @@ const Step9Availability = ({ onNext, userName }: Step9Props) => {
     <StepContainer>
       <StepTitle>Quanto tempo livre você tem por dia?</StepTitle>
       <StepSubtitle>
-        Nossos alunos com os melhores resultados dedicam em média 15 a 30 minutos. Mas mesmo com 10 minutos, já é possível começar.
+        {young
+          ? "Com apenas 10 a 30 minutos por dia, você já pode começar a ver resultados. O que importa é a sua dedicação!"
+          : "Nossos alunos com os melhores resultados dedicam em média 15 a 30 minutos. Mas mesmo com 10 minutos, já é possível começar."}
       </StepSubtitle>
 
       <div className="w-full space-y-3 mt-2">

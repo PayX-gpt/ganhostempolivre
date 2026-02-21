@@ -16,8 +16,8 @@ const Step1Intro = ({ onNext }: Step1Props) => {
           <AlertTriangle className="w-5 h-5 text-funnel-warning shrink-0 mt-0.5" />
           <p className="text-sm sm:text-base text-foreground leading-relaxed">
             <span className="text-funnel-warning font-bold">Atenção:</span>{" "}
-            este teste rápido vai revelar se você pode usar a mesma tecnologia que já está gerando renda extra para{" "}
-            <span className="font-bold">milhares de brasileiros acima de 40 anos.</span>
+            descubra em 2 minutos se você pode usar a tecnologia que está{" "}
+            <span className="font-bold">transformando a vida financeira de milhares de brasileiros.</span>
           </p>
         </div>
       </div>
@@ -31,7 +31,7 @@ const Step1Intro = ({ onNext }: Step1Props) => {
         />
         <div>
           <p className="text-sm sm:text-base text-foreground leading-snug italic">
-            "Eu ajudei mais de <span className="font-bold text-primary">36.000 pessoas</span> a encontrarem segurança financeira. Deixe-me mostrar como."
+            "Mais de <span className="font-bold text-primary">36.000 pessoas</span> já transformaram suas finanças com a minha ajuda. Quer saber como?"
           </p>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1 font-medium">— Ricardo Almeida, Especialista</p>
         </div>
@@ -45,11 +45,11 @@ const Step1Intro = ({ onNext }: Step1Props) => {
         </h3>
 
         <p className="text-base sm:text-lg font-semibold text-foreground leading-relaxed">
-          As próximas perguntas vão mostrar,{" "}
-          <span className="funnel-highlight">em menos de 2 minutos</span>, o caminho para você gerar uma{" "}
-          <span className="text-gradient-green font-extrabold">renda extra segura de R$50 a R$300 por dia</span>{" "}
-          para <span className="font-extrabold">pagar suas contas com tranquilidade</span>,{" "}
-          usando apenas alguns minutos do seu tempo livre.
+          Descubra{" "}
+          <span className="funnel-highlight">em menos de 2 minutos</span> como gerar uma{" "}
+          <span className="text-gradient-green font-extrabold">renda extra de R$50 a R$300 por dia</span>,{" "}
+          usando seu tempo livre para{" "}
+          <span className="font-extrabold">conquistar seus objetivos e viver com mais liberdade</span>.
         </p>
 
         <p className="text-sm text-muted-foreground font-medium">

@@ -186,11 +186,11 @@ const QuizFunnel = () => {
       case 9:
         return <StepAccountBalance onNext={(v) => updateAndNext("accountBalance", v)} userName={answers.name} userAge={answers.age} />;
       case 10:
-        return <Step7MentorVideo onNext={goNext} />;
+        return <Step7MentorVideo onNext={goNext} userAge={answers.age} />;
       case 11:
-        return <Step8Device onNext={(v) => updateAndNext("device", v)} userName={answers.name} />;
+        return <Step8Device onNext={(v) => updateAndNext("device", v)} userName={answers.name} userAge={answers.age} />;
       case 12:
-        return <Step9Availability onNext={(v) => updateAndNext("availability", v)} userName={answers.name} />;
+        return <Step9Availability onNext={(v) => updateAndNext("availability", v)} userName={answers.name} userAge={answers.age} />;
       case 13:
         return <StepPlatformDemo onNext={goNext} userName={answers.name} />;
       case 14:
