@@ -3,6 +3,8 @@ import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
 import { Target, CheckCircle, Loader2 } from "lucide-react";
 import avatarJose from "@/assets/avatar-jose.jpg";
 import avatarLucia from "@/assets/avatar-lucia.jpg";
+import avatarRafael from "@/assets/avatar-rafael.jpg";
+import avatarCamila from "@/assets/avatar-camila.jpg";
 import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface Step11Props {
@@ -103,8 +105,8 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
       {/* Testimonials - compact */}
       <div className="w-full space-y-2">
         {(young ? [
-          { img: avatarJose, name: "Rafael, 29", loc: "SP", text: "Comecei dedicando 15 minutos por dia. No terceiro dia já tinha feito R$92. Hoje é parte da minha renda mensal." },
-          { img: avatarLucia, name: "Camila, 32", loc: "RJ", text: "Complemento com R$140 por dia e finalmente consigo investir no meu futuro. O suporte é excelente." },
+          { img: avatarRafael, name: "Rafael, 29", loc: "SP", text: "Comecei dedicando 15 minutos por dia. No terceiro dia já tinha feito R$92. Hoje é parte da minha renda mensal." },
+          { img: avatarCamila, name: "Camila, 32", loc: "RJ", text: "Complemento com R$140 por dia e finalmente consigo investir no meu futuro. O suporte é excelente." },
         ] : [
           { img: avatarJose, name: "Antônio, 45", loc: "SP", text: "Comecei devagar e no terceiro dia já tinha feito R$87. Hoje pago minhas contas com tranquilidade." },
           { img: avatarLucia, name: "Cláudia, 53", loc: "MG", text: "Complemento com R$150 por dia e finalmente durmo sem preocupação. O suporte ajudou em cada passo." },

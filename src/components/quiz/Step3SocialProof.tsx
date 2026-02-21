@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
 import { BarChart3, CheckCircle, Loader2 } from "lucide-react";
 import avatarRegina from "@/assets/avatar-regina.jpg";
-import avatarCarlos from "@/assets/avatar-carlos.jpg";
+import avatarRafael from "@/assets/avatar-rafael.jpg";
 import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface Step3Props {
@@ -75,7 +75,7 @@ const Step3SocialProof = ({ onNext, userAge }: Step3Props) => {
 
       <div className="w-full funnel-card border-primary/25 bg-primary/5">
         <div className="flex items-center gap-3 mb-3">
-          <img src={young ? avatarCarlos : avatarRegina} alt={young ? "Lucas" : "Dona Márcia"} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
+          <img src={young ? avatarRafael : avatarRegina} alt={young ? "Lucas" : "Dona Márcia"} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
           <div className="min-w-0">
             <p className="font-bold text-foreground text-sm sm:text-base">{young ? "Lucas Oliveira, 27 anos" : "Dona Márcia, 52 anos"}</p>
             <div className="flex items-center gap-1">
