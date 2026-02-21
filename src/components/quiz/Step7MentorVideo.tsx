@@ -2,21 +2,23 @@ import { useState, useEffect, useRef } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
 import { MessageSquare, Loader2 } from "lucide-react";
 import mentorPhoto from "@/assets/mentor-new.webp";
+import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface Step7Props {
   onNext: () => void;
+  userAge?: string;
 }
 
-const Step7MentorVideo = ({ onNext }: Step7Props) => {
+const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
   const [showCTA, setShowCTA] = useState(false);
   const videoRef = useRef<HTMLDivElement>(null);
+  const young = isYoungProfile(userAge);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowCTA(true), 20_000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Scroll to top on mount so title is visible first
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, []);
@@ -60,7 +62,9 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
       </StepTitle>
 
       <StepSubtitle>
-        Ricardo já ajudou mais de 36.000 pessoas a conquistarem segurança financeira. Ouça o que ele tem a dizer — são apenas 3 minutos:
+        {young
+          ? "Ricardo Almeida, nosso mentor em renda digital, já transformou a vida de milhares de pessoas. Ele tem uma mensagem importante para você que busca liberdade financeira. Assista em 3 minutos:"
+          : "Ricardo já ajudou mais de 36.000 pessoas a conquistarem segurança financeira. Ouça o que ele tem a dizer — são apenas 3 minutos:"}
       </StepSubtitle>
 
       {/* ConverteAI Video Player */}
@@ -102,7 +106,9 @@ const Step7MentorVideo = ({ onNext }: Step7Props) => {
         <div className="flex items-start gap-2">
           <MessageSquare className="w-4 h-4 text-primary shrink-0 mt-0.5" />
           <p className="text-sm text-foreground/80 text-center leading-relaxed italic">
-            "A maioria dos meus melhores alunos tem mais de 50 anos. Eles não tinham experiência nenhuma com tecnologia. Mesmo assim, conseguiram. Se eles conseguiram, você também consegue."
+            {young
+              ? '"Já ajudei pessoas de todas as idades — desde jovens de 20 anos até aposentados. O método é o mesmo. O resultado também. Se você seguir o passo a passo, vai funcionar."'
+              : '"A maioria dos meus melhores alunos tem mais de 50 anos. Eles não tinham experiência nenhuma com tecnologia. Mesmo assim, conseguiram. Se eles conseguiram, você também consegue."'}
           </p>
         </div>
       </div>
