@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard, CTAButton } from "./QuizUI";
 import { Shield, CheckCircle, Home, Star } from "lucide-react";
+import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface Step5Props {
   onNext: (answer: string) => void;
   userName?: string;
+  userAge?: string;
 }
 
 const getFeedback = (answer: string, name?: string) => {
@@ -30,9 +32,10 @@ const getFeedback = (answer: string, name?: string) => {
   return messages[answer];
 };
 
-const Step5IncomeGoal = ({ onNext, userName }: Step5Props) => {
+const Step5IncomeGoal = ({ onNext, userName, userAge }: Step5Props) => {
   const [selected, setSelected] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const young = isYoungProfile(userAge);
 
   const handleSelect = (answer: string) => {
     setSelected(answer);
@@ -69,34 +72,36 @@ const Step5IncomeGoal = ({ onNext, userName }: Step5Props) => {
     <StepContainer>
       <StepTitle>Quanto você gostaria de <span className="text-gradient-green">ganhar a mais</span> por dia?</StepTitle>
       <StepSubtitle>
-        Pense no valor que faria diferença real na sua vida hoje. O que importa é a consistência.
+        {young
+          ? "Pense no valor que te daria mais liberdade pra fazer o que você quer. Consistência é a chave."
+          : "Pense no valor que faria diferença real na sua vida hoje. O que importa é a consistência."}
       </StepSubtitle>
 
       <div className="w-full space-y-3 mt-2">
         <OptionCard
           label="R$50 a R$100 por dia"
-          sublabel="O suficiente para pagar contas e ter paz"
+          sublabel={young ? "Para ter mais liberdade e bancar seus hobbies" : "O suficiente para pagar contas e ter paz"}
           icon={<Shield className="w-5 h-5" />}
           selected={selected === "50-100"}
           onClick={() => handleSelect("50-100")}
         />
         <OptionCard
           label="R$100 a R$300 por dia"
-          sublabel="Uma renda extra que traz segurança real"
+          sublabel={young ? "Uma grana extra para investir em você, viajar ou realizar aquele sonho" : "Uma renda extra que traz segurança real"}
           icon={<CheckCircle className="w-5 h-5" />}
           selected={selected === "100-300"}
           onClick={() => handleSelect("100-300")}
         />
         <OptionCard
           label="R$300 a R$500 por dia"
-          sublabel="O valor que muda o padrão de vida da família"
+          sublabel={young ? "O boost que você precisa para mudar de vida e conquistar independência" : "O valor que muda o padrão de vida da família"}
           icon={<Home className="w-5 h-5" />}
           selected={selected === "300-500"}
           onClick={() => handleSelect("300-500")}
         />
         <OptionCard
           label="Mais de R$500 por dia"
-          sublabel="Quero construir algo maior para minha família"
+          sublabel={young ? "Construir algo grande e viver a vida dos seus sonhos" : "Quero construir algo maior para minha família"}
           icon={<Star className="w-5 h-5" />}
           selected={selected === "500+"}
           onClick={() => handleSelect("500+")}

@@ -2,21 +2,23 @@ import { useState, useEffect, useRef } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
 import { BarChart3, CheckCircle, Loader2 } from "lucide-react";
 import avatarRegina from "@/assets/avatar-regina.jpg";
+import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface Step3Props {
   onNext: () => void;
+  userAge?: string;
 }
 
-const Step3SocialProof = ({ onNext }: Step3Props) => {
+const Step3SocialProof = ({ onNext, userAge }: Step3Props) => {
   const [showCTA, setShowCTA] = useState(false);
   const videoRef = useRef<HTMLDivElement>(null);
+  const young = isYoungProfile(userAge);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowCTA(true), 5000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Scroll to top on mount
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, []);
@@ -49,20 +51,15 @@ const Step3SocialProof = ({ onNext }: Step3Props) => {
       </StepTitle>
 
       <StepSubtitle>
-        Veja o depoimento de quem estava na mesma situação que você — e hoje vive com tranquilidade financeira:
+        {young
+          ? "Veja o depoimento de quem deu o primeiro passo — e hoje vive com mais liberdade financeira:"
+          : "Veja o depoimento de quem estava na mesma situação que você — e hoje vive com tranquilidade financeira:"}
       </StepSubtitle>
 
-      {/* Video testimonial - 50+ person */}
       {/* ConverteAI Video Player */}
       <div className="w-full rounded-2xl overflow-hidden border border-border scroll-mt-24" ref={videoRef}>
-        <div
-          id="ifr_67d187e9fad7e51c45b357f2_wrapper"
-          style={{ margin: "0 auto", width: "100%" }}
-        >
-          <div
-            style={{ padding: "56.25% 0 0 0", position: "relative" }}
-            id="ifr_67d187e9fad7e51c45b357f2_aspect"
-          >
+        <div id="ifr_67d187e9fad7e51c45b357f2_wrapper" style={{ margin: "0 auto", width: "100%" }}>
+          <div style={{ padding: "56.25% 0 0 0", position: "relative" }} id="ifr_67d187e9fad7e51c45b357f2_aspect">
             <iframe
               frameBorder="0"
               allowFullScreen
@@ -95,7 +92,11 @@ const Step3SocialProof = ({ onNext }: Step3Props) => {
         <div className="flex items-center justify-center gap-2">
           <BarChart3 className="w-4 h-4 text-accent shrink-0" />
           <p className="text-sm text-foreground/80 leading-relaxed">
-            <strong>Dado real:</strong> 73% dos nossos alunos acima de 40 anos conseguiram seus primeiros resultados na primeira semana.
+            {young ? (
+              <><strong>Dado real:</strong> Nossos alunos de todas as idades estão transformando suas vidas financeiras — os primeiros resultados vêm já na primeira semana.</>
+            ) : (
+              <><strong>Dado real:</strong> 73% dos nossos alunos acima de 40 anos conseguiram seus primeiros resultados na primeira semana.</>
+            )}
           </p>
         </div>
       </div>

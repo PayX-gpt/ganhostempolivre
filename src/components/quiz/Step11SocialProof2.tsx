@@ -3,16 +3,19 @@ import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
 import { Target, CheckCircle, Loader2 } from "lucide-react";
 import avatarJose from "@/assets/avatar-jose.jpg";
 import avatarLucia from "@/assets/avatar-lucia.jpg";
+import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface Step11Props {
   onNext: () => void;
+  userAge?: string;
 }
 
-const Step11SocialProof2 = ({ onNext }: Step11Props) => {
+const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
   const [showCTA, setShowCTA] = useState(false);
+  const young = isYoungProfile(userAge);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowCTA(true), 100_000); // 100 seconds
+    const timer = setTimeout(() => setShowCTA(true), 100_000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -41,15 +44,23 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
       <StepTitle>Ótima notícia: seu perfil é <span className="text-gradient-green">compatível!</span></StepTitle>
 
       <p className="text-xs sm:text-sm text-muted-foreground text-center -mt-1">
-        Pessoas com o mesmo perfil que o seu já estão tendo resultados reais.
+        {young
+          ? "Seu perfil é compatível! Pessoas como você estão conquistando resultados incríveis com nosso método."
+          : "Pessoas com o mesmo perfil que o seu já estão tendo resultados reais."}
       </p>
 
       {/* Headline Copy */}
       <div className="w-full funnel-card border-accent/30 bg-accent/5 text-center py-2.5 px-3">
         <p className="text-xs sm:text-sm text-foreground font-bold leading-snug">
-          Nos próximos <span className="text-accent">30 SEGUNDOS</span> vou te explicar como ganhar com apenas{" "}
-          <span className="text-accent">10 MIN DO SEU TEMPO LIVRE</span>{" "}
-          de <span className="text-gradient-green">R$200 a R$1.000</span> reais!
+          {young ? (
+            <>Prepare-se! Em apenas <span className="text-accent">30 SEGUNDOS</span>, vou te mostrar como gerar de{" "}
+            <span className="text-gradient-green">R$200 a R$1.000</span> de renda extra, dedicando apenas{" "}
+            <span className="text-accent">10 MINUTOS DO SEU DIA</span>!</>
+          ) : (
+            <>Nos próximos <span className="text-accent">30 SEGUNDOS</span> vou te explicar como ganhar com apenas{" "}
+            <span className="text-accent">10 MIN DO SEU TEMPO LIVRE</span>{" "}
+            de <span className="text-gradient-green">R$200 a R$1.000</span> reais!</>
+          )}
         </p>
       </div>
 
@@ -113,8 +124,13 @@ const Step11SocialProof2 = ({ onNext }: Step11Props) => {
       {/* Emotional CTA - compact */}
       <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center py-2 px-3">
         <p className="text-xs sm:text-sm text-foreground font-semibold leading-snug">
-          Você merece a <span className="text-primary font-bold">tranquilidade</span> de ter as contas pagas.{" "}
-          <span className="font-bold">Chega de viver no limite.</span>
+          {young ? (
+            <>Você merece viver com <span className="text-primary font-bold">liberdade financeira</span>.{" "}
+            <span className="font-bold">Comece agora a construir o seu futuro.</span></>
+          ) : (
+            <>Você merece a <span className="text-primary font-bold">tranquilidade</span> de ter as contas pagas.{" "}
+            <span className="font-bold">Chega de viver no limite.</span></>
+          )}
         </p>
       </div>
     </StepContainer>

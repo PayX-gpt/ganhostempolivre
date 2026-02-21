@@ -1,14 +1,40 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard, CTAButton } from "./QuizUI";
 import { AlertCircle, Clock, Compass, Wallet, Heart, CheckCircle } from "lucide-react";
+import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface Step6Props {
   onNext: (answer: string) => void;
   userName?: string;
+  userAge?: string;
 }
 
-const getObstacleMessages = (name?: string) => {
+const getObstacleMessages = (name?: string, young?: boolean) => {
   const n = name || "você";
+  if (young) {
+    return {
+      medo: {
+        icon: <Heart className="w-8 h-8 text-accent" />,
+        title: `${n}, é normal ter pé atrás.`,
+        message: `A internet tá cheia de coisa furada — todo dia aparece um "guru" novo prometendo fortuna fácil. Mas isso aqui é diferente: é uma tecnologia que já foi testada por milhares de pessoas. Você não precisa acreditar de olhos fechados. É só ver o resultado e decidir.`,
+      },
+      tempo: {
+        icon: <Clock className="w-8 h-8 text-accent" />,
+        title: `${n}, a gente sabe que o dia é corrido.`,
+        message: `Trabalho, estudo, compromissos... sobra pouco tempo. Por isso o sistema foi feito pra funcionar com apenas 10 minutos por dia. Pode ser no ônibus, na pausa do almoço, antes de dormir. A IA trabalha o dia inteiro — você só dá uma olhada quando puder.`,
+      },
+      inicio: {
+        icon: <Compass className="w-8 h-8 text-accent" />,
+        title: `${n}, a gente resolve isso agora.`,
+        message: `Informação demais paralisa qualquer um. Aqui não tem 500 vídeos pra assistir nem tutorial complicado. É passo 1, passo 2, passo 3. Direto ao ponto. O sistema te guia do zero e em poucos minutos você já tá no caminho.`,
+      },
+      dinheiro: {
+        icon: <Wallet className="w-8 h-8 text-accent" />,
+        title: `${n}, eu entendo — cada real conta.`,
+        message: `Quando o dinheiro tá apertado, qualquer investimento dá medo. Por isso o valor aqui é mínimo — e muita gente já recupera nos primeiros dias. Não tô pedindo pra você apostar tudo. É um passo pequeno que pode mudar seu jogo financeiro.`,
+      },
+    };
+  }
   return {
     medo: {
       icon: <Heart className="w-8 h-8 text-accent" />,
@@ -33,16 +59,17 @@ const getObstacleMessages = (name?: string) => {
   };
 };
 
-const Step6Obstacle = ({ onNext, userName }: Step6Props) => {
+const Step6Obstacle = ({ onNext, userName, userAge }: Step6Props) => {
   const [selected, setSelected] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
+  const young = isYoungProfile(userAge);
 
   const handleSelect = (answer: string) => {
     setSelected(answer);
     setShowValidation(true);
   };
 
-  const obstacleMessages = getObstacleMessages(userName);
+  const obstacleMessages = getObstacleMessages(userName, young);
 
   if (showValidation && selected) {
     const msg = obstacleMessages[selected as keyof typeof obstacleMessages];
