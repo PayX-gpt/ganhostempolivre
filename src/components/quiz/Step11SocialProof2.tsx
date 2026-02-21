@@ -15,7 +15,7 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
   const young = isYoungProfile(userAge);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowCTA(true), 100_000);
+    const timer = setTimeout(() => setShowCTA(true), 60_000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -45,7 +45,7 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
 
       <p className="text-xs sm:text-sm text-muted-foreground text-center -mt-1">
         {young
-          ? "Seu perfil é compatível! Pessoas como você estão conquistando resultados incríveis com nosso método."
+          ? "Pessoas com o mesmo perfil que o seu já estão construindo resultados reais com nosso método."
           : "Pessoas com o mesmo perfil que o seu já estão tendo resultados reais."}
       </p>
 
@@ -102,10 +102,13 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
 
       {/* Testimonials - compact */}
       <div className="w-full space-y-2">
-        {[
+        {(young ? [
+          { img: avatarJose, name: "Rafael, 29", loc: "SP", text: "Comecei dedicando 15 minutos por dia. No terceiro dia já tinha feito R$92. Hoje é parte da minha renda mensal." },
+          { img: avatarLucia, name: "Camila, 32", loc: "RJ", text: "Complemento com R$140 por dia e finalmente consigo investir no meu futuro. O suporte é excelente." },
+        ] : [
           { img: avatarJose, name: "Antônio, 45", loc: "SP", text: "Comecei devagar e no terceiro dia já tinha feito R$87. Hoje pago minhas contas com tranquilidade." },
           { img: avatarLucia, name: "Cláudia, 53", loc: "MG", text: "Complemento com R$150 por dia e finalmente durmo sem preocupação. O suporte ajudou em cada passo." },
-        ].map((t, i) => (
+        ]).map((t, i) => (
           <div key={i} className="funnel-card border-primary/25 bg-primary/5 py-2.5 px-3">
             <div className="flex items-center gap-2.5">
               <img src={t.img} alt={t.name} className="w-9 h-9 rounded-full object-cover border border-primary/30 shrink-0" />
@@ -125,8 +128,8 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
       <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center py-2 px-3">
         <p className="text-xs sm:text-sm text-foreground font-semibold leading-snug">
           {young ? (
-            <>Você merece viver com <span className="text-primary font-bold">liberdade financeira</span>.{" "}
-            <span className="font-bold">Comece agora a construir o seu futuro.</span></>
+            <>Você merece ter <span className="text-primary font-bold">autonomia financeira</span>.{" "}
+            <span className="font-bold">Comece agora a construir algo que é seu.</span></>
           ) : (
             <>Você merece a <span className="text-primary font-bold">tranquilidade</span> de ter as contas pagas.{" "}
             <span className="font-bold">Chega de viver no limite.</span></>

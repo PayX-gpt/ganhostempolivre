@@ -94,7 +94,7 @@ const Step10Loading = ({ onNext, userAge }: Step10Props) => {
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
             {young
-              ? "Estamos analisando suas respostas para criar um plano exclusivo para você, baseado no sucesso de milhares de pessoas que já transformaram suas vidas."
+              ? "Estamos cruzando suas respostas com o perfil dos nossos alunos de maior resultado para criar um plano sob medida."
               : <>Nosso sistema está cruzando seus dados com o perfil dos nossos <span className="text-primary font-semibold">36.000+ alunos</span> de sucesso.</>}
           </p>
         </div>

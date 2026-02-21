@@ -73,35 +73,35 @@ const Step5IncomeGoal = ({ onNext, userName, userAge }: Step5Props) => {
       <StepTitle>Quanto você gostaria de <span className="text-gradient-green">ganhar a mais</span> por dia?</StepTitle>
       <StepSubtitle>
         {young
-          ? "Pense no valor que te daria mais liberdade pra fazer o que você quer. Consistência é a chave."
+          ? "Pense no valor que te daria mais autonomia financeira. Consistência é o que separa quem sonha de quem conquista."
           : "Pense no valor que faria diferença real na sua vida hoje. O que importa é a consistência."}
       </StepSubtitle>
 
       <div className="w-full space-y-3 mt-2">
         <OptionCard
           label="R$50 a R$100 por dia"
-          sublabel={young ? "Para ter mais liberdade e bancar seus hobbies" : "O suficiente para pagar contas e ter paz"}
+          sublabel={young ? "Um complemento sólido para ter mais autonomia" : "O suficiente para pagar contas e ter paz"}
           icon={<Shield className="w-5 h-5" />}
           selected={selected === "50-100"}
           onClick={() => handleSelect("50-100")}
         />
         <OptionCard
           label="R$100 a R$300 por dia"
-          sublabel={young ? "Uma grana extra para investir em você, viajar ou realizar aquele sonho" : "Uma renda extra que traz segurança real"}
+          sublabel={young ? "Renda extra consistente para investir no seu futuro" : "Uma renda extra que traz segurança real"}
           icon={<CheckCircle className="w-5 h-5" />}
           selected={selected === "100-300"}
           onClick={() => handleSelect("100-300")}
         />
         <OptionCard
           label="R$300 a R$500 por dia"
-          sublabel={young ? "O boost que você precisa para mudar de vida e conquistar independência" : "O valor que muda o padrão de vida da família"}
+          sublabel={young ? "O impulso necessário para conquistar independência real" : "O valor que muda o padrão de vida da família"}
           icon={<Home className="w-5 h-5" />}
           selected={selected === "300-500"}
           onClick={() => handleSelect("300-500")}
         />
         <OptionCard
           label="Mais de R$500 por dia"
-          sublabel={young ? "Construir algo grande e viver a vida dos seus sonhos" : "Quero construir algo maior para minha família"}
+          sublabel={young ? "Construir algo sólido e viver com liberdade de escolha" : "Quero construir algo maior para minha família"}
           icon={<Star className="w-5 h-5" />}
           selected={selected === "500+"}
           onClick={() => handleSelect("500+")}

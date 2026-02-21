@@ -4,9 +4,11 @@ import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarClaudia from "@/assets/avatar-claudia.jpg";
 import avatarCarlos from "@/assets/avatar-carlos.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
+import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface StepWhatsAppProps {
   onNext: () => void;
+  userAge?: string;
 }
 
 interface WhatsAppMessage {
@@ -22,7 +24,7 @@ interface WhatsAppChat {
   messages: WhatsAppMessage[];
 }
 
-const chats: WhatsAppChat[] = [
+const matureChats: WhatsAppChat[] = [
   {
     name: "Antônio Ferreira",
     avatar: avatarAntonio,
@@ -74,6 +76,61 @@ const chats: WhatsAppChat[] = [
       { text: "Recomendo pra qualquer pessoa que tenha medo de começar", time: "08:05" },
       { text: "Vale muito mais do que o valor que paguei pra entrar", time: "08:05" },
       { text: "Resultado incrível Maria!! Inspiração total!", time: "08:07", sent: true },
+    ],
+  },
+];
+
+const youngChats: WhatsAppChat[] = [
+  {
+    name: "Rafael Souza",
+    avatar: avatarAntonio,
+    status: "online",
+    messages: [
+      { text: "Pessoal, vim compartilhar meu resultado da semana", time: "20:14" },
+      { text: "Comecei segunda-feira e já fechei a semana com R$620 de lucro", time: "20:14" },
+      { text: "Dedico uns 20 minutos por dia, geralmente à noite depois do trabalho", time: "20:15" },
+      { text: "Tenho 28 anos e sempre quis ter uma renda extra consistente", time: "20:15" },
+      { text: "O sistema realmente funciona. Não é promessa, é resultado", time: "20:16" },
+      { text: "Parabéns Rafael! Resultado muito sólido pra primeira semana!", time: "20:17", sent: true },
+    ],
+  },
+  {
+    name: "Juliana Martins",
+    avatar: avatarClaudia,
+    status: "online",
+    messages: [
+      { text: "Gente, preciso contar uma coisa", time: "15:32" },
+      { text: "Consegui juntar o suficiente pra dar entrada no meu apartamento", time: "15:32" },
+      { text: "Em 3 meses acumulei mais de R$9.000 de renda extra", time: "15:33" },
+      { text: "Continuo no meu emprego e uso isso como complemento", time: "15:33" },
+      { text: "Com 25 anos, nunca imaginei que seria possível", time: "15:34" },
+      { text: "Que conquista Juliana! Exemplo de disciplina e foco!", time: "15:35", sent: true },
+    ],
+  },
+  {
+    name: "Pedro Henrique",
+    avatar: avatarCarlos,
+    status: "visto por último às 22:10",
+    messages: [
+      { text: "Confesso que pesquisei muito antes de entrar", time: "22:01" },
+      { text: "Já tinha visto muita coisa na internet que não funcionava", time: "22:01" },
+      { text: "Mas aqui o suporte respondeu todas as minhas dúvidas antes mesmo de eu começar", time: "22:02" },
+      { text: "Hoje tiro em média R$150 por dia dedicando 15 minutos", time: "22:03" },
+      { text: "Tenho 31 anos e finalmente sinto que estou construindo algo sólido", time: "22:03" },
+      { text: "Seu relato é muito importante Pedro! Continue firme!", time: "22:05", sent: true },
+    ],
+  },
+  {
+    name: "Amanda Costa",
+    avatar: avatarMaria,
+    status: "online",
+    messages: [
+      { text: "Bom dia pessoal!", time: "09:12" },
+      { text: "1 mês completo e vim compartilhar: R$3.850 de renda extra", time: "09:12" },
+      { text: "Uso no horário de almoço e um pouco antes de dormir", time: "09:13" },
+      { text: "Com 24 anos, era a pessoa mais cética do grupo kk", time: "09:13" },
+      { text: "Mas os números não mentem. Recomendo para quem está em dúvida", time: "09:14" },
+      { text: "Amanda, resultado incrível! Obrigado por compartilhar!", time: "09:16", sent: true },
     ],
   },
 ];
@@ -167,13 +224,15 @@ const WhatsAppScreen = ({ chat }: { chat: WhatsAppChat }) => (
   </div>
 );
 
-const StepWhatsAppProof = ({ onNext }: StepWhatsAppProps) => {
+const StepWhatsAppProof = ({ onNext, userAge }: StepWhatsAppProps) => {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
+  const young = isYoungProfile(userAge);
+  const chats = young ? youngChats : matureChats;
 
   const next = useCallback(() => {
     setCurrent((p) => (p + 1) % chats.length);
-  }, []);
+  }, [chats.length]);
 
   useEffect(() => {
     if (paused) return;

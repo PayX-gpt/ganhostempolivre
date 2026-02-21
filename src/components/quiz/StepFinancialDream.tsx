@@ -16,32 +16,32 @@ const StepFinancialDream = ({ onNext, userName, userAge }: StepFinancialDreamPro
     ? [
         {
           value: "contas",
-          label: "Ter grana pra tudo sem perrengue",
-          sublabel: "Pagar as contas e ainda sobrar pra curtir",
+          label: "Ter estabilidade financeira real",
+          sublabel: "Pagar as contas com folga e investir no que importa",
           icon: <Banknote className="w-5 h-5" />,
         },
         {
           value: "independencia",
-          label: "Ser meu próprio patrão",
-          sublabel: "Dizer adeus ao chefe e construir algo meu",
+          label: "Construir minha própria fonte de renda",
+          sublabel: "Ter autonomia e não depender de um único salário",
           icon: <Briefcase className="w-5 h-5" />,
         },
         {
           value: "valorizado",
-          label: "Construir algo do zero",
-          sublabel: "Ver o resultado do meu próprio esforço crescer",
+          label: "Criar algo do zero com o meu esforço",
+          sublabel: "Ver um projeto meu crescer e gerar resultados concretos",
           icon: <Trophy className="w-5 h-5" />,
         },
         {
           value: "familia",
-          label: "Cuidar melhor da minha família",
-          sublabel: "Sem depender de ninguém",
+          label: "Poder ajudar quem eu amo",
+          sublabel: "Ter condições de cuidar da minha família com tranquilidade",
           icon: <Heart className="w-5 h-5" />,
         },
         {
           value: "liberdade",
-          label: "Viver a vida que eu sempre quis",
-          sublabel: "Com tempo e liberdade para fazer o que amo",
+          label: "Conquistar liberdade de escolha",
+          sublabel: "Ter tempo e recursos para viver do meu jeito",
           icon: <Sun className="w-5 h-5" />,
         },
       ]
@@ -83,11 +83,11 @@ const StepFinancialDream = ({ onNext, userName, userAge }: StepFinancialDreamPro
       <StepTitle>
         {firstName ? `${firstName}, qual` : "Qual"}{" "}
         {young
-          ? "a sua maior motivação para começar a gerar renda extra?"
+          ? "é a sua principal motivação para construir uma nova fonte de renda?"
           : "o primeiro grande problema que você vai resolver ao ser aceito?"}
       </StepTitle>
       <StepSubtitle>
-        Escolha uma única opção abaixo:
+        Escolha a opção que mais se conecta com o seu momento:
       </StepSubtitle>
       <div className="w-full space-y-3">
         {options.map((opt) => (

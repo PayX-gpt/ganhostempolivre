@@ -73,7 +73,7 @@ const Step9Availability = ({ onNext, userName, userAge }: Step9Props) => {
       <StepTitle>Quanto tempo livre você tem por dia?</StepTitle>
       <StepSubtitle>
         {young
-          ? "Com apenas 10 a 30 minutos por dia, você já pode começar a ver resultados. O que importa é a sua dedicação!"
+          ? "Com 15 a 30 minutos por dia já é possível gerar resultados consistentes. A IA trabalha continuamente — você acompanha quando puder."
           : "Nossos alunos com os melhores resultados dedicam em média 15 a 30 minutos. Mas mesmo com 10 minutos, já é possível começar."}
       </StepSubtitle>
 
