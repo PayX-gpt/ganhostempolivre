@@ -15,23 +15,23 @@ const getObstacleMessages = (name?: string, young?: boolean) => {
     return {
       medo: {
         icon: <Heart className="w-8 h-8 text-accent" />,
-        title: `${n}, é normal ter pé atrás.`,
-        message: `A internet tá cheia de coisa furada — todo dia aparece um "guru" novo prometendo fortuna fácil. Mas isso aqui é diferente: é uma tecnologia que já foi testada por milhares de pessoas. Você não precisa acreditar de olhos fechados. É só ver o resultado e decidir.`,
+        title: `${n}, desconfiar é sinal de inteligência.`,
+        message: `A internet está cheia de promessas vazias — e você tem razão em questionar. Mas este sistema é diferente: é uma tecnologia já validada por milhares de pessoas, com resultados documentados. Você não precisa acreditar de olhos fechados. Veja os dados, analise os depoimentos, e decida por conta própria.`,
       },
       tempo: {
         icon: <Clock className="w-8 h-8 text-accent" />,
-        title: `${n}, a gente sabe que o dia é corrido.`,
-        message: `Trabalho, estudo, compromissos... sobra pouco tempo. Por isso o sistema foi feito pra funcionar com apenas 10 minutos por dia. Pode ser no ônibus, na pausa do almoço, antes de dormir. A IA trabalha o dia inteiro — você só dá uma olhada quando puder.`,
+        title: `${n}, sabemos que seu tempo é valioso.`,
+        message: `Trabalho, estudo, compromissos — a rotina é puxada. Por isso o sistema foi projetado para funcionar com apenas 10 minutos por dia. Pode ser no transporte, na pausa do almoço, antes de dormir. A IA trabalha o dia inteiro — você só precisa acompanhar quando puder.`,
       },
       inicio: {
         icon: <Compass className="w-8 h-8 text-accent" />,
-        title: `${n}, a gente resolve isso agora.`,
-        message: `Informação demais paralisa qualquer um. Aqui não tem 500 vídeos pra assistir nem tutorial complicado. É passo 1, passo 2, passo 3. Direto ao ponto. O sistema te guia do zero e em poucos minutos você já tá no caminho.`,
+        title: `${n}, vamos resolver isso agora.`,
+        message: `Excesso de informação paralisa qualquer pessoa. Aqui não existem 500 vídeos para assistir nem tutoriais complicados. É passo 1, passo 2, passo 3 — direto ao ponto. O sistema te guia do zero, e em poucos minutos você já está no caminho.`,
       },
       dinheiro: {
         icon: <Wallet className="w-8 h-8 text-accent" />,
-        title: `${n}, eu entendo — cada real conta.`,
-        message: `Quando o dinheiro tá apertado, qualquer investimento dá medo. Por isso o valor aqui é mínimo — e muita gente já recupera nos primeiros dias. Não tô pedindo pra você apostar tudo. É um passo pequeno que pode mudar seu jogo financeiro.`,
+        title: `${n}, entendo perfeitamente — cada real importa.`,
+        message: `Quando o orçamento está apertado, qualquer investimento parece arriscado. Por isso o valor de entrada aqui é mínimo — e muitas pessoas já recuperam nos primeiros dias. Não estou pedindo para você apostar tudo. É um passo estratégico que pode transformar sua situação financeira.`,
       },
     };
   }

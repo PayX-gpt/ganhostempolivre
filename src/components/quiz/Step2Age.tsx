@@ -21,12 +21,12 @@ const ageOptions = [
 
 const feedbackMessages: Record<string, { title: string; message: string }> = {
   "18 a 25 anos": {
-    title: "Mandou bem! Você está à frente da maioria.",
-    message: "Enquanto muitos esperam a vida acontecer, você está construindo seu futuro agora. Nosso método é simples e focado em resultados, perfeito para quem quer começar a gerar renda extra e conquistar a liberdade que sempre sonhou. O primeiro passo já foi dado!",
+    title: "Excelente decisão. Poucos começam tão cedo.",
+    message: "A maioria das pessoas só começa a pensar em independência financeira depois dos 30. Você está saindo na frente — e isso faz toda a diferença. Nosso método foi desenhado para funcionar com pouco tempo e sem experiência prévia. O primeiro passo já foi dado.",
   },
   "26 a 35 anos": {
-    title: "Timing perfeito pra acelerar seus resultados.",
-    message: "Você está naquela fase onde cada decisão inteligente vale ouro. A maioria das pessoas só acorda pra isso depois dos 40. Você tem a vantagem de construir agora, com uma tecnologia que trabalha por você. Vamos montar o caminho certo pro seu perfil.",
+    title: "Este é o momento ideal para acelerar.",
+    message: "Você está numa fase em que cada decisão inteligente tem um impacto desproporcional no seu futuro. A maioria só acorda para isso depois dos 40. Você tem a vantagem de construir agora, com uma tecnologia que trabalha por você. Vamos montar o caminho certo para o seu perfil.",
   },
   "36 a 45 anos": {
     title: "Sabe o que faz diferença na sua idade?",

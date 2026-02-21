@@ -198,7 +198,7 @@ const QuizFunnel = () => {
       case 15:
         return <Step11SocialProof2 onNext={goNext} userAge={answers.age} />;
       case 16:
-        return <StepWhatsAppProof onNext={goNext} />;
+        return <StepWhatsAppProof onNext={goNext} userAge={answers.age} />;
       case 17:
         return <StepContactMethod userName={answers.name} onNext={(v) => updateAndNext("contactMethod", v)} />;
       case 18:

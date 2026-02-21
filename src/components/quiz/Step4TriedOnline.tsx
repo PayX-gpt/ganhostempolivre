@@ -14,16 +14,16 @@ const getFeedback = (answer: string, name?: string, young?: boolean) => {
   if (young) {
     const messages: Record<string, { title: string; message: string }> = {
       sim_falhou: {
-        title: `${n}, esquece o que não deu certo.`,
-        message: `A internet tá cheia de promessas vazias — cursos caros, gurus falsos, esquemas que não funcionam. Se não deu certo antes, o problema foi o método, não você. O que vou te mostrar aqui é uma tecnologia que faz o trabalho pesado por você. Sem complicação, sem precisar ser expert. Só seguir o passo a passo.`,
+        title: `${n}, o problema não foi você — foi o método.`,
+        message: `A internet está cheia de promessas vazias: cursos sem suporte, métodos desatualizados, esquemas que não entregam resultado. Se não funcionou antes, é porque você ainda não tinha acesso à tecnologia certa. O que vou te mostrar aqui é diferente — uma inteligência artificial que faz o trabalho pesado por você. Sem complicação, sem precisar de experiência prévia.`,
       },
       sim_experiencia: {
-        title: `Boa, ${n}! Você já tem uma vantagem.`,
-        message: `Quem já botou a mão na massa sabe que resultado online é real. A diferença agora é que você vai ter uma inteligência artificial fazendo 90% do trabalho. Imagina juntar o que você já sabe com uma tecnologia que trabalha 24h por dia. Os resultados vão ser bem diferentes.`,
+        title: `Excelente, ${n}. Você já tem uma vantagem real.`,
+        message: `Quem já colocou a mão na massa sabe que resultado online é possível. A diferença agora é que você vai contar com uma inteligência artificial fazendo 90% do trabalho. Imagine unir a sua experiência com uma tecnologia que opera 24 horas por dia. Os resultados vão surpreender.`,
       },
       nunca: {
-        title: `${n}, isso na verdade é uma vantagem.`,
-        message: `Quem nunca tentou nada começa sem vícios e sem medo de repetir erros. Você vai seguir o passo a passo do zero e ver resultado rápido. Se sabe usar o celular, já sabe o suficiente. Sério — é mais simples do que parece.`,
+        title: `${n}, começar do zero é na verdade uma vantagem.`,
+        message: `Quem nunca tentou começa sem vícios e sem medo de repetir erros antigos. Você vai seguir um passo a passo claro, do zero, e ver resultado rapidamente. Se sabe usar o celular, já tem o que precisa. É mais simples do que parece.`,
       },
     };
     return messages[answer];

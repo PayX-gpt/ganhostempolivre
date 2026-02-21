@@ -69,7 +69,7 @@ const Step8Device = ({ onNext, userName, userAge }: Step8Props) => {
       <StepTitle>Qual aparelho você mais usa no dia a dia?</StepTitle>
       <StepSubtitle>
         {young
-          ? "Nosso método é flexível e se adapta ao seu dia a dia. Use o aparelho que você preferir, sem complicação!"
+          ? "O método se adapta ao seu dia a dia. Use o aparelho que preferir — o processamento acontece na nuvem."
           : "O método funciona em qualquer um deles. Não precisa de computador caro nem de internet rápida."}
       </StepSubtitle>
 

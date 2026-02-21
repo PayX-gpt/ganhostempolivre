@@ -63,7 +63,7 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
 
       <StepSubtitle>
         {young
-          ? "Ricardo Almeida, nosso mentor em renda digital, já transformou a vida de milhares de pessoas. Ele tem uma mensagem importante para você que busca liberdade financeira. Assista em 3 minutos:"
+          ? "Ricardo Almeida já orientou milhares de pessoas — de todas as idades — a construírem uma fonte de renda consistente. Ele tem uma mensagem para você. São apenas 3 minutos:"
           : "Ricardo já ajudou mais de 36.000 pessoas a conquistarem segurança financeira. Ouça o que ele tem a dizer — são apenas 3 minutos:"}
       </StepSubtitle>
 
@@ -107,7 +107,7 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
           <MessageSquare className="w-4 h-4 text-primary shrink-0 mt-0.5" />
           <p className="text-sm text-foreground/80 text-center leading-relaxed italic">
             {young
-              ? '"Já ajudei pessoas de todas as idades — desde jovens de 20 anos até aposentados. O método é o mesmo. O resultado também. Se você seguir o passo a passo, vai funcionar."'
+              ? '"Já orientei pessoas de 20 a 65 anos. A idade não importa — o que importa é seguir o processo. Se você dedicar 10 minutos por dia, vai ver resultado. Não é promessa, é método."'
               : '"A maioria dos meus melhores alunos tem mais de 50 anos. Eles não tinham experiência nenhuma com tecnologia. Mesmo assim, conseguiram. Se eles conseguiram, você também consegue."'}
           </p>
         </div>

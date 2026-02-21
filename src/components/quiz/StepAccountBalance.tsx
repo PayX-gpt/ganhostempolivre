@@ -16,7 +16,7 @@ const StepAccountBalance = ({ onNext, userName, userAge }: StepAccountBalancePro
     {
       value: "menos100",
       label: "Menos de R$100",
-      sublabel: "Tô apertado, mas quero sair dessa",
+      sublabel: young ? "Começo com pouco, mas estou decidido(a)" : "Tô apertado, mas quero sair dessa",
       icon: <Wallet className="w-5 h-5" />,
     },
     {
@@ -40,7 +40,7 @@ const StepAccountBalance = ({ onNext, userName, userAge }: StepAccountBalancePro
     {
       value: "10000+",
       label: "Mais de R$10.000",
-      sublabel: "Tenho capital disponível pra investir",
+      sublabel: "Tenho capital disponível para investir",
       icon: <Gem className="w-5 h-5" />,
     },
   ];
@@ -50,12 +50,12 @@ const StepAccountBalance = ({ onNext, userName, userAge }: StepAccountBalancePro
       <StepTitle>
         {firstName ? `${firstName}, vamos` : "Vamos"}{" "}
         {young
-          ? "ser realistas: quanto você tem disponível para investir no seu futuro hoje?"
+          ? "ser diretos: quanto você tem disponível para dar o primeiro passo?"
           : "ser sincero(a) agora — consigo mesmo e comigo."}
       </StepTitle>
       <StepSubtitle>
         {young
-          ? "Sua resposta é importante para criarmos um plano de crescimento financeiro sob medida para você. Não importa o valor, o que vale é a sua honestidade."
+          ? "Essa informação nos ajuda a criar um plano personalizado para o seu perfil. Não existe valor certo ou errado — o importante é a honestidade."
           : <>Quanto você tem hoje parado na sua conta? Isso vai nos ajudar a traçar um investimento <strong className="text-foreground">personalizado de multiplicação</strong> pra você. De valores maiores a menores — não importa. O importante é a sinceridade.</>}
       </StepSubtitle>
 
