@@ -4,6 +4,10 @@ import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarClaudia from "@/assets/avatar-claudia.jpg";
 import avatarCarlos from "@/assets/avatar-carlos.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
+import avatarRafael from "@/assets/avatar-rafael.jpg";
+import avatarCamila from "@/assets/avatar-camila.jpg";
+import avatarPedro from "@/assets/avatar-pedro.jpg";
+import avatarAmanda from "@/assets/avatar-amanda.jpg";
 import { isYoungProfile } from "@/lib/agePersonalization";
 
 interface StepWhatsAppProps {
@@ -83,7 +87,7 @@ const matureChats: WhatsAppChat[] = [
 const youngChats: WhatsAppChat[] = [
   {
     name: "Rafael Souza",
-    avatar: avatarAntonio,
+    avatar: avatarRafael,
     status: "online",
     messages: [
       { text: "Pessoal, vim compartilhar meu resultado da semana", time: "20:14" },
@@ -96,7 +100,7 @@ const youngChats: WhatsAppChat[] = [
   },
   {
     name: "Juliana Martins",
-    avatar: avatarClaudia,
+    avatar: avatarCamila,
     status: "online",
     messages: [
       { text: "Gente, preciso contar uma coisa", time: "15:32" },
@@ -109,7 +113,7 @@ const youngChats: WhatsAppChat[] = [
   },
   {
     name: "Pedro Henrique",
-    avatar: avatarCarlos,
+    avatar: avatarPedro,
     status: "visto por último às 22:10",
     messages: [
       { text: "Confesso que pesquisei muito antes de entrar", time: "22:01" },
@@ -122,7 +126,7 @@ const youngChats: WhatsAppChat[] = [
   },
   {
     name: "Amanda Costa",
-    avatar: avatarMaria,
+    avatar: avatarAmanda,
     status: "online",
     messages: [
       { text: "Bom dia pessoal!", time: "09:12" },
