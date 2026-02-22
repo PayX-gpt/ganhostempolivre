@@ -32,7 +32,7 @@ const Step1Intro = ({ onNext }: Step1Props) => {
       {/* Main headline */}
       <div className="text-center space-y-4 mt-1">
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-foreground leading-tight">
-          <span className="text-gradient-green">R$300 por dia.</span>{" "}
+          <span className="text-gradient-green">R$50 a R$300 por dia.</span>{" "}
           10 minutos.{" "}
           <span className="text-gradient-green">Uma IA faz o resto.</span>
         </h1>
