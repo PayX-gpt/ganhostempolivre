@@ -946,6 +946,63 @@ const VIDEO_TESTIMONIALS = [
   { id: "692bc7a9eb5ec5285cecf25c", padding: "56.25%", sdk: "v4" },
 ];
 
+const loadVideoSrc = (v: typeof VIDEO_TESTIMONIALS[number]) => {
+  const iframe = document.getElementById(`ifr_${v.id}`) as HTMLIFrameElement;
+  if (!iframe || iframe.src !== "about:blank") return;
+  const base = `https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/${v.id}`;
+  const suffix = (window.location.search || "?") + "&vl=" + encodeURIComponent(window.location.href);
+  iframe.src = v.sdk === "v4" ? `${base}/v4/embed.html${suffix}` : `${base}/embed.html${suffix}`;
+};
+
+const VideoTestimonialItem = ({ v, autoplay }: { v: typeof VIDEO_TESTIMONIALS[number]; autoplay: boolean }) => {
+  const [activated, setActivated] = useState(autoplay);
+
+  useEffect(() => {
+    if (autoplay) {
+      loadVideoSrc(v);
+    }
+  }, [autoplay, v]);
+
+  const handleActivate = () => {
+    if (activated) return;
+    setActivated(true);
+    // Small delay to let iframe render before setting src
+    requestAnimationFrame(() => loadVideoSrc(v));
+  };
+
+  return (
+    <div className="w-full rounded-2xl overflow-hidden border border-border relative">
+      <div id={`ifr_${v.id}_wrapper`} style={{ margin: "0 auto", width: "100%" }}>
+        <div style={{ padding: `${v.padding} 0 0 0`, position: "relative" }} id={`ifr_${v.id}_aspect`}>
+          <iframe
+            frameBorder="0"
+            allowFullScreen
+            src="about:blank"
+            id={`ifr_${v.id}`}
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+            referrerPolicy="origin"
+          />
+        </div>
+      </div>
+      {/* Play overlay for non-autoplay videos */}
+      {!activated && (
+        <button
+          onClick={handleActivate}
+          className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-black/40 backdrop-blur-[2px] transition-opacity hover:bg-black/30"
+          aria-label="Reproduzir vídeo"
+        >
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/90 flex items-center justify-center shadow-lg transition-transform hover:scale-110">
+            <svg className="w-7 h-7 sm:w-9 sm:h-9 text-primary-foreground ml-1" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+            </svg>
+          </div>
+          <span className="absolute bottom-4 text-xs text-white/80 font-medium">Toque para assistir</span>
+        </button>
+      )}
+    </div>
+  );
+};
+
 const VideoTestimonialsSection = () => {
   useEffect(() => {
     const s1 = document.createElement("script");
@@ -956,42 +1013,15 @@ const VideoTestimonialsSection = () => {
     s4.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
     s4.async = true;
     document.head.appendChild(s4);
-
-    VIDEO_TESTIMONIALS.filter(v => v.sdk === "v1").forEach(v => {
-      const iframe = document.getElementById(`ifr_${v.id}`) as HTMLIFrameElement;
-      if (iframe) {
-        iframe.src = `https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/${v.id}/embed.html` +
-          (window.location.search || "?") + "&vl=" + encodeURIComponent(window.location.href);
-      }
-    });
-    const v4 = VIDEO_TESTIMONIALS.find(v => v.sdk === "v4");
-    if (v4) {
-      const iframe = document.getElementById(`ifr_${v4.id}`) as HTMLIFrameElement;
-      if (iframe && iframe.src === "about:blank") {
-        iframe.src = `https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/${v4.id}/v4/embed.html` +
-          (window.location.search || "?") + "&vl=" + encodeURIComponent(window.location.href);
-      }
-    }
     return () => { s1.remove(); s4.remove(); };
   }, []);
 
+  const sectionVideos = VIDEO_TESTIMONIALS.slice(1);
+
   return (
     <div className="w-full space-y-4">
-      {VIDEO_TESTIMONIALS.slice(1).map((v) => (
-        <div key={v.id} className="w-full rounded-2xl overflow-hidden border border-border">
-          <div id={`ifr_${v.id}_wrapper`} style={{ margin: "0 auto", width: "100%" }}>
-            <div style={{ padding: `${v.padding} 0 0 0`, position: "relative" }} id={`ifr_${v.id}_aspect`}>
-              <iframe
-                frameBorder="0"
-                allowFullScreen
-                src="about:blank"
-                id={`ifr_${v.id}`}
-                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-                referrerPolicy="origin"
-              />
-            </div>
-          </div>
-        </div>
+      {sectionVideos.map((v, i) => (
+        <VideoTestimonialItem key={v.id} v={v} autoplay={i === 0} />
       ))}
     </div>
   );
