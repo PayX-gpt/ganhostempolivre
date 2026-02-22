@@ -83,6 +83,12 @@ const LiveFunnelAnalytics = () => {
       hourCounts[`${i.toString().padStart(2, "0")}h`] = 0;
     }
 
+    // Map old 19-step routes to current 17-step structure
+    const ROUTE_ALIASES: Record<string, string> = {
+      "/step-18": "/step-16", // old Input → new Input (step-16)
+      "/step-19": "/step-17", // old Oferta → new Oferta (step-17)
+    };
+
     pageLoads.forEach(log => {
       let pid = log.page_id || "";
       // Map all upsell pages/sub-pages to their canonical route
@@ -94,6 +100,8 @@ const LiveFunnelAnalytics = () => {
         else if (pid.startsWith("/upsell2") || pid.includes("multiplicador")) pid = "/upsell2";
         else if (pid.startsWith("/upsell1") || pid.startsWith("/upsell-")) pid = "/upsell1";
       }
+      // Apply historical route aliases
+      if (ROUTE_ALIASES[pid]) pid = ROUTE_ALIASES[pid];
       if (stepCounts[pid]) {
         stepCounts[pid].add(log.session_id);
       }
@@ -117,7 +125,15 @@ const LiveFunnelAnalytics = () => {
     setTotalViews(steps[0]?.views || 0);
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
     setOfferViews(stepCounts["/step-17"]?.size || 0);
-    setCheckoutClicks(stepCounts["/step-17"]?.size || 0);
+
+    // Fetch real checkout clicks from funnel_events
+    const { data: checkoutEvents } = await supabase
+      .from("funnel_events")
+      .select("session_id")
+      .eq("event_name", "checkout_click")
+      .gte("created_at", todayISO);
+    const uniqueCheckouts = new Set(checkoutEvents?.map(e => e.session_id) || []);
+    setCheckoutClicks(uniqueCheckouts.size);
     setLoading(false);
   }, []);
 

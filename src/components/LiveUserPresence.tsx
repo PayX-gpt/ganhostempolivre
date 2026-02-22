@@ -97,8 +97,10 @@ const toStepId = (page: string): string | null => {
   if (p.includes("/upsell")) return "upsell1";
   if (p.includes("/thanks")) return "thanks";
   if (p.includes("/checkout") || p.includes("/processing")) return "checkout";
+  // Map old 19-step routes to current 17-step structure
+  const OLD_STEP_MAP: Record<number, string> = { 18: "step16", 19: "step17" };
   for (let i = 19; i >= 1; i--) {
-    if (p.includes(`/step-${i}`)) return `step${i}`;
+    if (p.includes(`/step-${i}`)) return OLD_STEP_MAP[i] || `step${i}`;
   }
   if (p === "/") return "step1";
   return null;
