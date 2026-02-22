@@ -24,18 +24,16 @@ const FUNNEL_STEPS = [
   { route: "/step-5", label: "Online?" },
   { route: "/step-6", label: "Meta" },
   { route: "/step-7", label: "Obstáculo" },
-  { route: "/step-8", label: "Sonho" },
+  { route: "/step-8", label: "Mentor" },
   { route: "/step-9", label: "Saldo" },
-  { route: "/step-10", label: "Mentor" },
-  { route: "/step-11", label: "Device" },
-  { route: "/step-12", label: "Tempo" },
-  { route: "/step-13", label: "Demo" },
-  { route: "/step-14", label: "Loading" },
-  { route: "/step-15", label: "Prova 2" },
-  { route: "/step-16", label: "WhatsApp" },
-  { route: "/step-17", label: "Contato" },
-  { route: "/step-18", label: "Input" },
-  { route: "/step-19", label: "Oferta" },
+  { route: "/step-10", label: "Tempo" },
+  { route: "/step-11", label: "Demo" },
+  { route: "/step-12", label: "Loading" },
+  { route: "/step-13", label: "Prova 2" },
+  { route: "/step-14", label: "WhatsApp" },
+  { route: "/step-15", label: "Contato" },
+  { route: "/step-16", label: "Input" },
+  { route: "/step-17", label: "Oferta" },
   { route: "/upsell1", label: "UP1 Acel." },
   { route: "/upsell2", label: "UP2 Multi." },
   { route: "/upsell3", label: "UP3 Blind." },
@@ -118,8 +116,8 @@ const LiveFunnelAnalytics = () => {
     setHourlyData(hourly);
     setTotalViews(steps[0]?.views || 0);
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
-    setOfferViews(stepCounts["/step-19"]?.size || 0);
-    setCheckoutClicks(stepCounts["/step-19"]?.size || 0);
+    setOfferViews(stepCounts["/step-17"]?.size || 0);
+    setCheckoutClicks(stepCounts["/step-17"]?.size || 0);
     setLoading(false);
   }, []);
 
