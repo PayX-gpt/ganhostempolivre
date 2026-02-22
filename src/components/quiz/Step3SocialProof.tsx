@@ -73,6 +73,19 @@ const Step3SocialProof = ({ onNext, userAge }: Step3Props) => {
         </div>
       </div>
 
+      {showCTA ? (
+        <CTAButton onClick={onNext} className="animate-fade-in">
+          CONTINUAR MEU TESTE →
+        </CTAButton>
+      ) : (
+        <div className="flex items-center gap-2 justify-center">
+          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+          <p className="text-sm text-muted-foreground animate-pulse">
+            Assista o depoimento para continuar...
+          </p>
+        </div>
+      )}
+
       <div className="w-full funnel-card border-primary/25 bg-primary/5">
         <div className="flex items-center gap-3 mb-3">
           <img src={young ? avatarRafael : avatarRegina} alt={young ? "Lucas" : "Dona Márcia"} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
@@ -103,19 +116,6 @@ const Step3SocialProof = ({ onNext, userAge }: Step3Props) => {
           </p>
         </div>
       </div>
-
-      {showCTA ? (
-        <CTAButton onClick={onNext} className="animate-fade-in">
-          CONTINUAR MEU TESTE →
-        </CTAButton>
-      ) : (
-        <div className="flex items-center gap-2 justify-center">
-          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
-          <p className="text-sm text-muted-foreground animate-pulse">
-            Assista o depoimento para continuar...
-          </p>
-        </div>
-      )}
     </StepContainer>
   );
 };
