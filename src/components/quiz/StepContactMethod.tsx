@@ -1,5 +1,5 @@
 import { StepContainer, StepTitle, StepSubtitle, OptionCard, TrustBadge } from "./QuizUI";
-import { PartyPopper, Mail, Smartphone } from "lucide-react";
+import { PartyPopper, Mail, Smartphone, Users, MessageSquare } from "lucide-react";
 
 interface StepContactMethodProps {
   userName?: string;
@@ -27,10 +27,20 @@ const StepContactMethod = ({ userName, onNext }: StepContactMethodProps) => {
         Última etapa: por onde você quer receber seu acesso exclusivo?
       </StepTitle>
       <StepSubtitle>
-        Seu plano personalizado está pronto. Escolha onde quer receber o link de acesso e o suporte da nossa equipe:
+        Seu plano personalizado está pronto. Escolha onde quer receber:
       </StepSubtitle>
 
-      <div className="w-full space-y-3 mt-2">
+      {/* Escassez */}
+      <div className="w-full funnel-card border-accent/20 bg-accent/5 py-2 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <Users className="w-4 h-4 text-accent" />
+          <p className="text-xs font-bold text-accent">
+            Restam 7 vagas na sua região
+          </p>
+        </div>
+      </div>
+
+      <div className="w-full space-y-3">
         <OptionCard
           icon={<Mail className="w-5 h-5" />}
           label="Quero receber por E-mail"
@@ -43,6 +53,16 @@ const StepContactMethod = ({ userName, onNext }: StepContactMethodProps) => {
           sublabel="Link de acesso + suporte humano direto no seu celular"
           onClick={() => onNext("whatsapp")}
         />
+      </div>
+
+      {/* Micro-depoimento */}
+      <div className="w-full funnel-card border-border/30 bg-card/30 py-2">
+        <div className="flex items-start gap-2">
+          <MessageSquare className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+          <p className="text-xs text-foreground/70 italic">
+            "Recebi pelo WhatsApp e em 10 minutos já tava operando." — Carlos, 41
+          </p>
+        </div>
       </div>
 
       <TrustBadge>Seus dados estão protegidos e jamais serão compartilhados.</TrustBadge>
