@@ -34,7 +34,7 @@ const Step1Intro = ({ onNext }: Step1Props) => {
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-foreground leading-tight">
           <span className="text-gradient-green">R$50 a R$300 por dia.</span>{" "}
           10 minutos.{" "}
-          <span className="text-gradient-green">Uma IA faz o resto.</span>
+          <span className="text-gradient-green">A IA faz o resto.</span>
         </h1>
         <p className="text-sm sm:text-base font-semibold text-primary/90">
           O resto do dia é seu. Tempo livre de verdade.
