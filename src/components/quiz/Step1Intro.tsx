@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { StepContainer, CTAButton } from "./QuizUI";
 import { Lock, Zap, TrendingUp, Users } from "lucide-react";
+import chatgptLogo from "@/assets/chatgpt-logo.png";
 
 interface Step1Props {
   onNext: () => void;
@@ -36,9 +37,12 @@ const Step1Intro = ({ onNext }: Step1Props) => {
           <span className="text-gradient-green">Uma IA faz o resto.</span>
         </h1>
 
-        <p className="text-base sm:text-lg font-bold text-foreground/80">
-          Você vai ficar de fora?
-        </p>
+        <div className="flex items-center justify-center gap-2 mt-1">
+          <img src={chatgptLogo} alt="ChatGPT" className="w-6 h-6 sm:w-7 sm:h-7" />
+          <p className="text-base sm:text-lg font-bold text-foreground/80">
+            Powered by ChatGPT — Você vai ficar de fora?
+          </p>
+        </div>
       </div>
 
       {/* Dopamine triggers */}
