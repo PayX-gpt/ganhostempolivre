@@ -196,8 +196,7 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
       age: { "18-25": "18–25", "26-35": "26–35", "36-45": "36–45", "46-55": "46–55", "56+": "56+", "18 a 25 anos": "18–25", "26 a 35 anos": "26–35", "36 a 45 anos": "36–45", "46 a 55 anos": "46–55", "56 anos ou mais": "56+" },
       incomeGoal: { "50-100": "R$50–100/dia", "100-300": "R$100–300/dia", "300-500": "R$300–500/dia", "500+": "+R$500/dia" },
       obstacle: { medo: "Superar o medo", tempo: "Otimizar tempo", inicio: "Primeiro passo", dinheiro: "Pouco capital" },
-      device: { celular: "Celular", computador: "PC", ambos: "Ambos" },
-      availability: { menos30: "<30min", "30-60": "30–60min", "1-2h": "1–2h", "2h+": "+2h" },
+      availability: { sim: "10min/dia", nao: "Flexível" },
     };
     return maps[key]?.[val || ""] || val || "—";
   };
@@ -205,8 +204,7 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
   const getLabelFull = (key: string, val?: string) => {
     const maps: Record<string, Record<string, string>> = {
       incomeGoal: { "50-100": "R$50 a R$100/dia", "100-300": "R$100 a R$300/dia", "300-500": "R$300 a R$500/dia", "500+": "mais de R$500/dia" },
-      device: { celular: "celular", computador: "computador", ambos: "celular e computador" },
-      availability: { menos30: "menos de 30min", "30-60": "30–60min", "1-2h": "1–2h", "2h+": "mais de 2h" },
+      availability: { sim: "apenas 10 minutos", nao: "poucos minutos" },
     };
     return maps[key]?.[val || ""] || val || "—";
   };
@@ -215,7 +213,6 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
     { icon: <Users className="w-3.5 h-3.5" />, value: getLabel("age", answers?.age) },
     { icon: <TrendingUp className="w-3.5 h-3.5" />, value: getLabel("incomeGoal", answers?.incomeGoal), highlight: true },
     { icon: <AlertTriangle className="w-3.5 h-3.5" />, value: getLabel("obstacle", answers?.obstacle) },
-    { icon: <Smartphone className="w-3.5 h-3.5" />, value: getLabel("device", answers?.device) },
     { icon: <Clock className="w-3.5 h-3.5" />, value: getLabel("availability", answers?.availability) },
   ];
 
@@ -311,7 +308,7 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
             {/* Personalized strategy sentence */}
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               <Zap className="w-3 h-3 text-accent inline mr-1" />
-              {firstName ? <><span className="font-bold text-foreground">{firstName}</span>, a</> : "A"} IA traçou uma <span className="text-primary font-bold">estratégia sob medida</span> para alcançar <span className="text-[13px] text-accent font-black">{getLabelFull("incomeGoal", answers?.incomeGoal)}</span> usando seu {getLabelFull("device", answers?.device)} com <span className="text-[13px] text-foreground font-bold">{getLabelFull("availability", answers?.availability)}</span>/dia.
+              {firstName ? <><span className="font-bold text-foreground">{firstName}</span>, a</> : "A"} IA traçou uma <span className="text-primary font-bold">estratégia sob medida</span> para você alcançar <span className="text-[13px] text-accent font-black">{getLabelFull("incomeGoal", answers?.incomeGoal)}</span> dedicando <span className="text-[13px] text-foreground font-bold">{getLabelFull("availability", answers?.availability)}</span> por dia — direto do seu celular.
             </p>
 
             {/* Rejection exclusivity — single line */}
