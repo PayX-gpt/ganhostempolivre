@@ -10,10 +10,7 @@ import Step3SocialProof from "./Step3SocialProof";
 import Step4TriedOnline from "./Step4TriedOnline";
 import Step5IncomeGoal from "./Step5IncomeGoal";
 import Step6Obstacle from "./Step6Obstacle";
-import StepFinancialDream from "./StepFinancialDream";
-import StepAccountBalance from "./StepAccountBalance";
 import Step7MentorVideo from "./Step7MentorVideo";
-import Step8Device from "./Step8Device";
 import Step9Availability from "./Step9Availability";
 import StepPlatformDemo from "./StepPlatformDemo";
 import Step10Loading from "./Step10Loading";
@@ -24,25 +21,22 @@ import StepContactInput from "./StepContactInput";
 import Step13Offer from "./Step13Offer";
 
 const STEP_SLUGS = [
-  "step-1",
-  "step-2",
-  "step-3",
-  "step-4",
-  "step-5",
-  "step-6",
-  "step-7",
-  "step-8",
-  "step-9",
-  "step-10",
-  "step-11",
-  "step-12",
-  "step-13",
-  "step-14",
-  "step-15",
-  "step-16",
-  "step-17",
-  "step-18",
-  "step-19",
+  "step-1",  // 1: Intro
+  "step-2",  // 2: Idade
+  "step-3",  // 3: Nome
+  "step-4",  // 4: Prova social (vídeo depoimento)
+  "step-5",  // 5: Tentou online
+  "step-6",  // 6: Meta de renda
+  "step-7",  // 7: Obstáculo
+  "step-8",  // 8: Vídeo mentor
+  "step-9",  // 9: Disponibilidade (binário)
+  "step-10", // 10: Demo plataforma
+  "step-11", // 11: Loading
+  "step-12", // 12: Prova social 2 + vídeo venda
+  "step-13", // 13: WhatsApp proof
+  "step-14", // 14: Método contato
+  "step-15", // 15: Input contato
+  "step-16", // 16: Oferta final
 ] as const;
 
 const TOTAL_STEPS = STEP_SLUGS.length;
@@ -50,10 +44,9 @@ const TOTAL_STEPS = STEP_SLUGS.length;
 const STEP_NAMES: Record<string, string> = {
   "step-1": "intro", "step-2": "idade", "step-3": "nome", "step-4": "prova_social",
   "step-5": "tentou_online", "step-6": "meta_renda", "step-7": "obstaculo",
-  "step-8": "sonho_financeiro", "step-9": "saldo_conta", "step-10": "video_mentor",
-  "step-11": "dispositivo", "step-12": "disponibilidade", "step-13": "demo_plataforma",
-  "step-14": "loading", "step-15": "prova_social_2", "step-16": "whatsapp_proof",
-  "step-17": "metodo_contato", "step-18": "input_contato", "step-19": "oferta_final",
+  "step-8": "video_mentor", "step-9": "disponibilidade", "step-10": "demo_plataforma",
+  "step-11": "loading", "step-12": "prova_social_2", "step-13": "whatsapp_proof",
+  "step-14": "metodo_contato", "step-15": "input_contato", "step-16": "oferta_final",
 };
 
 const QuizFunnel = () => {
@@ -74,7 +67,6 @@ const QuizFunnel = () => {
 
   useEffect(() => {
     if (isNonQuizRoute) {
-      // Force a hard navigation to break out of the /:slug catch-all
       window.location.replace(`/${slug}${window.location.search}`);
       return;
     }
@@ -86,22 +78,19 @@ const QuizFunnel = () => {
   const step = Math.max(1, (STEP_SLUGS.indexOf(currentSlug as any) + 1) || 1);
   const stepEnteredAt = useRef<number>(Date.now());
 
-  // Track presence for the current step
   usePagePresence(`/${currentSlug}`);
 
-  // Block back navigation and reset on reload
+  // Block back navigation
   useEffect(() => {
-    // Push a dummy state so popstate fires on back
     window.history.pushState(null, "", window.location.href);
     const handlePopState = () => {
-      // Re-push to prevent going back
       window.history.pushState(null, "", window.location.href);
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [currentSlug]);
 
-  // On first mount, always redirect to step-1 (handles page reload)
+  // On first mount, redirect to step-1 on reload
   const hasRedirected = useRef(false);
   useEffect(() => {
     if (!hasRedirected.current) {
@@ -151,7 +140,6 @@ const QuizFunnel = () => {
         const updated = { ...prev, [key]: value };
         try {
           sessionStorage.setItem("quiz_answers", JSON.stringify(updated));
-          // Dispatch custom event immediately when name is set so presence tracking updates instantly
           if (key === "name" && value.trim()) {
             window.dispatchEvent(new CustomEvent("quiz_name_updated", { detail: { name: value.trim() } }));
           }
@@ -182,26 +170,20 @@ const QuizFunnel = () => {
       case 7:
         return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} userName={answers.name} userAge={answers.age} />;
       case 8:
-        return <StepFinancialDream onNext={(v) => updateAndNext("financialDream", v)} userName={answers.name} userAge={answers.age} />;
-      case 9:
-        return <StepAccountBalance onNext={(v) => updateAndNext("accountBalance", v)} userName={answers.name} userAge={answers.age} />;
-      case 10:
         return <Step7MentorVideo onNext={goNext} userAge={answers.age} />;
-      case 11:
-        return <Step8Device onNext={(v) => updateAndNext("device", v)} userName={answers.name} userAge={answers.age} />;
-      case 12:
+      case 9:
         return <Step9Availability onNext={(v) => updateAndNext("availability", v)} userName={answers.name} userAge={answers.age} />;
-      case 13:
+      case 10:
         return <StepPlatformDemo onNext={goNext} userName={answers.name} />;
-      case 14:
+      case 11:
         return <Step10Loading onNext={goNext} userAge={answers.age} />;
-      case 15:
+      case 12:
         return <Step11SocialProof2 onNext={goNext} userAge={answers.age} />;
-      case 16:
+      case 13:
         return <StepWhatsAppProof onNext={goNext} userAge={answers.age} />;
-      case 17:
+      case 14:
         return <StepContactMethod userName={answers.name} onNext={(v) => updateAndNext("contactMethod", v)} />;
-      case 18:
+      case 15:
         return (
           <StepContactInput
             method={answers.contactMethod || "email"}
@@ -216,15 +198,18 @@ const QuizFunnel = () => {
             }}
           />
         );
-      case 19:
+      case 16:
         return <Step13Offer userName={answers.name} answers={answers} />;
       default:
         return null;
     }
   };
 
-  // Don't render quiz UI for non-quiz slugs (e.g. /upsell1, /upsell2)
   if (!isValidQuizSlug || isNonQuizRoute) return null;
+
+  // Progress bar: start at 15% offset
+  const progressCurrent = step - 1;
+  const progressTotal = TOTAL_STEPS - 2;
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col">
@@ -239,7 +224,7 @@ const QuizFunnel = () => {
             <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">ivre</span>
           </h1>
         </div>
-        {step > 1 && step < TOTAL_STEPS && <ProgressBar current={step - 1} total={TOTAL_STEPS - 2} />}
+        {step > 1 && step < TOTAL_STEPS && <ProgressBar current={progressCurrent} total={progressTotal} />}
       </header>
 
       <main className="flex-1 flex items-start justify-center pt-2" key={step}>

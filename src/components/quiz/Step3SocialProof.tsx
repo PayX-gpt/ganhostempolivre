@@ -48,7 +48,7 @@ const Step3SocialProof = ({ onNext, userAge }: Step3Props) => {
   return (
     <StepContainer>
       <StepTitle>
-        Mais de <span className="text-gradient-green">36.000 brasileiros</span> já descobriram como ter uma renda extra segura
+        <span className="text-gradient-green">36.000 brasileiros.</span> R$50 a R$300 por dia. Veja quem já tá fazendo.
       </StepTitle>
 
       <StepSubtitle>
@@ -106,7 +106,7 @@ const Step3SocialProof = ({ onNext, userAge }: Step3Props) => {
 
       {showCTA ? (
         <CTAButton onClick={onNext} className="animate-fade-in">
-          QUERO DESCOBRIR SE É PRA MIM →
+          CONTINUAR MEU TESTE →
         </CTAButton>
       ) : (
         <div className="flex items-center gap-2 justify-center">

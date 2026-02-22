@@ -15,7 +15,7 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
   const young = isYoungProfile(userAge);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowCTA(true), 20_000);
+    const timer = setTimeout(() => setShowCTA(true), 12_000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -53,7 +53,7 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
         />
         <div className="min-w-0">
           <p className="font-bold text-foreground text-sm sm:text-base">Ricardo Almeida</p>
-          <p className="text-xs sm:text-sm text-muted-foreground">Especialista em Renda Digital</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Criador do Método Tempo Livre — +R$12M em resultados</p>
         </div>
       </div>
 
@@ -89,15 +89,14 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
         </div>
       </div>
 
-      {showCTA ? (
-        <CTAButton onClick={onNext} className="animate-fade-in">
-          ENTENDI, QUERO CONTINUAR →
-        </CTAButton>
-      ) : (
+      <CTAButton onClick={onNext} className={showCTA ? "animate-fade-in" : "opacity-0 pointer-events-none"}>
+        CONTINUAR MEU TESTE →
+      </CTAButton>
+      {!showCTA && (
         <div className="flex items-center gap-2 justify-center">
           <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
           <p className="text-sm text-muted-foreground animate-pulse">
-            Assista o vídeo para continuar...
+            Já vi o suficiente. Quero continuar →
           </p>
         </div>
       )}

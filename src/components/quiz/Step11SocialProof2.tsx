@@ -17,7 +17,7 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
   const young = isYoungProfile(userAge);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowCTA(true), 60_000);
+    const timer = setTimeout(() => setShowCTA(true), 30_000);
     return () => clearTimeout(timer);
   }, []);
 

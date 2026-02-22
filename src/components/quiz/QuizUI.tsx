@@ -23,8 +23,9 @@ interface ProgressBarProps {
 }
 
 export const ProgressBar = ({ current, total }: ProgressBarProps) => {
-  const percentage = Math.round((current / total) * 100);
-
+  // Start at 15% minimum to create momentum
+  const rawPercentage = Math.round((current / total) * 100);
+  const percentage = Math.max(15, rawPercentage);
   return (
     <div className="w-full px-4 py-2">
       <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
