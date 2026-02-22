@@ -93,8 +93,8 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
       {/* Price + token explanation */}
       <div className="text-center space-y-1.5">
         <div className="flex items-center justify-center gap-2">
-          <img src={chatgptLogo} alt="ChatGPT" className="w-5 h-5 object-contain rounded" />
-          <p className="text-xs text-muted-foreground">Taxa única do <span className="font-bold text-foreground">Token ChatGPT</span></p>
+          <img src={chatgptLogo} alt="IA" className="w-5 h-5 object-contain rounded" />
+          <p className="text-xs text-muted-foreground">Taxa única de <span className="font-bold text-foreground">ativação da IA</span></p>
         </div>
         <p className="text-2xl font-display font-black text-foreground">
           {pricing.installments}x de R$<span className="text-gradient-green">{formatPrice(pricing.installment)}</span>
@@ -188,7 +188,8 @@ const UrgencyStrip = ({ minutes, seconds, show, priceLabel, installmentLabel }: 
 const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstName: string }) => {
   const [compatPercent, setCompatPercent] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [rejectedCount] = useState(() => Math.floor(Math.random() * 60) + 140);
+  const [analyzedCount] = useState(() => Math.floor(Math.random() * 8) + 20);
+  const [approvedCount] = useState(() => Math.floor(Math.random() * 2) + 3);
 
   const getLabel = (key: string, val?: string) => {
     const maps: Record<string, Record<string, string>> = {
@@ -316,7 +317,7 @@ const ProfileAnalysis = ({ answers, firstName }: { answers?: QuizAnswers; firstN
             {/* Rejection exclusivity — single line */}
             <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
               <Eye className="w-3 h-3 text-destructive shrink-0" />
-              <span><span className="font-bold text-destructive">{rejectedCount} perfis rejeitados</span> nos últimos 30 min — você está no <span className="text-primary font-bold">top 3%</span> aprovados.</span>
+              <span><span className="font-bold text-foreground">{analyzedCount} perfis analisados</span> nos últimos 30 min — apenas <span className="text-primary font-bold">{approvedCount} aprovados</span>. Você é um deles.</span>
             </p>
           </motion.div>
         )}
@@ -763,12 +764,19 @@ const EarningsProjection = ({ answers, firstName }: { answers?: QuizAnswers; fir
   const monthlyGoal = daily * 30;
   const nearGoal = Math.round(monthlyGoal * 1.05); // slightly above to not look exact
 
+  // Show daily values with accumulated monthly at Dia 30
+  const day3 = Math.round(daily * 0.15);
+  const day7 = Math.round(daily * 0.4);
+  const day14 = Math.round(daily * 0.65);
+  const day21 = Math.round(daily * 0.85);
+  const day30 = Math.round(daily * 1.05);
+
   const projections = [
-    { period: "Dia 3", value: Math.round(daily * 0.15), bar: 10, label: "Primeira operação no ar", color: "hsl(var(--primary) / 0.35)" },
-    { period: "Dia 7", value: Math.round(daily * 0.4), bar: 25, label: "Primeiros resultados reais", color: "hsl(var(--primary) / 0.5)" },
-    { period: "Dia 14", value: Math.round(daily * 0.65), bar: 45, label: "Ganhando consistência", color: "hsl(var(--primary) / 0.65)" },
-    { period: "Dia 21", value: Math.round(daily * 0.85), bar: 70, label: "Ritmo acelerando", color: "hsl(var(--primary) / 0.8)" },
-    { period: "Dia 30", value: nearGoal, bar: 100, label: "Meta batida", color: "hsl(var(--primary))" },
+    { period: "Dia 3", value: day3, bar: 10, label: "Primeira operação no ar", color: "hsl(var(--primary) / 0.35)" },
+    { period: "Dia 7", value: day7, bar: 25, label: "Primeiros resultados reais", color: "hsl(var(--primary) / 0.5)" },
+    { period: "Dia 14", value: day14, bar: 45, label: "Ganhando consistência", color: "hsl(var(--primary) / 0.65)" },
+    { period: "Dia 21", value: day21, bar: 70, label: "Ritmo acelerando", color: "hsl(var(--primary) / 0.8)" },
+    { period: "Dia 30", value: day30, bar: 100, label: `≈ R$${nearGoal.toLocaleString("pt-BR")}/mês acumulado`, color: "hsl(var(--primary))" },
   ];
 
   return (
@@ -1172,7 +1180,6 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   const navigate = useNavigate();
   const [showCTA, setShowCTA] = useState(false);
   const [timeLeft, setTimeLeft] = useState(900);
-  const [spotsLeft] = useState(() => Math.floor(Math.random() * 4) + 3);
 
 
   // ─── Behavior Tracker Init ───
@@ -1238,12 +1245,8 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
     { title: "Modo Auto-Lucro Inteligente", value: "R$997", description: "Ative e o sistema escolhe o melhor ativo, horário e valor por operação baseado no seu saldo. Você só clica em 'ativar'." },
     { title: "Suporte VIP — Resposta em 2 Minutos", value: "R$397", description: "Dúvida? Travou? Só chamar. Canal direto com especialistas que respondem em tempo real. Você nunca fica sozinho." },
     { title: "Turbo de Lucro — Versão Estratégica", value: "R$297", description: "Rotina inteligente que multiplica saldos pequenos com entradas automáticas em sequência controlada." },
-    { title: "Auto-Config de Bancas (100% Automático)", value: "R$297", description: "O sistema identifica o valor da sua banca e ajusta risco, valor por entrada e metas. Até uma criança opera com isso ativado." },
-    { title: "Relatório Diário: Melhor Horário pra Ativar", value: "R$197", description: "Você recebe uma notificação todo dia: 'ATIVE AGORA' — na melhor hora estatística de lucro." },
     { title: "Bot de Lucros em Dólar — Versão Silenciosa", value: "R$497", description: "Roda em segundo plano e envia alertas de ganhos e oportunidades no Telegram. Nem precisa abrir o sistema." },
     { title: "Bloqueador de Ganância e Pânico", value: "R$497", description: "Sistema interno que trava operações fora da lógica. Protege seu lucro e controla a ansiedade do operador." },
-    { title: "Dashboard Comparativo Real x Dólar", value: "R$147", description: "Mostra em tempo real quanto você ganharia operando no Brasil vs em dólar. Clareza total do seu poder de escala." },
-    { title: "Acesso Prioritário a Todas as Atualizações", value: "R$397", description: "Você será um dos primeiros a testar cada melhoria antes de todo mundo. Vantagem competitiva total." },
     { title: "Comunidade VIP no WhatsApp", value: "R$147", description: "Grupo exclusivo com +36.000 alunos que se ajudam todos os dias. Nunca mais fique sozinho." },
   ];
 
@@ -1298,7 +1301,32 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   ];
 
   return (
-    <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-4 sm:px-5 py-5 sm:py-6 pb-24 gap-5 sm:gap-6">
+    <>
+    {/* ═══ FIXED URGENCY BAR (top) ═══ */}
+    {showCTA && (
+      <motion.div
+        initial={{ y: -60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+        className="fixed top-0 left-0 right-0 z-50"
+        style={{ background: "hsl(var(--destructive) / 0.12)", borderBottom: "1px solid hsl(var(--destructive) / 0.3)", backdropFilter: "blur(12px)" }}
+      >
+        <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+            <span className="text-xs font-bold text-destructive uppercase tracking-wider">Oferta expira em</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-destructive" />
+            <span className="text-base font-display font-bold text-foreground tabular-nums">
+              {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+            </span>
+          </div>
+          <span className="text-[10px] text-muted-foreground">Depois: R$297</span>
+        </div>
+      </motion.div>
+    )}
+    <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-4 sm:px-5 py-5 sm:py-6 pb-24 gap-5 sm:gap-6" style={{ paddingTop: showCTA ? "3.5rem" : undefined }}>
 
       {/* ═══ 1. URGENCY + HERO (compact) ═══ */}
       <SectionTracker id="urgency">
@@ -1411,7 +1439,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
               <p className="text-xl font-display font-bold text-foreground">
                 R$<span className="text-primary">{formatPrice(pricing.price)}</span>
               </p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Taxa dos tokens de IA</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Taxa de ativação da IA</p>
             </div>
             <div className="rounded-xl p-3 text-center border border-accent/15 bg-accent/5">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Nós ficamos com</p>
@@ -1546,7 +1574,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
       <Divider />
 
       {/* ═══ 6. CTA 1 ═══ */}
-      <CTABlock showCTA={showCTA} context="Restam apenas poucas vagas hoje" pricing={pricing} />
+      <CTABlock showCTA={showCTA} pricing={pricing} />
 
       <Divider />
 
@@ -1679,7 +1707,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             <span className="text-xs uppercase tracking-wider text-accent font-bold">BÔNUS EXCLUSIVOS</span>
           </div>
           <h3 className="font-display text-xl font-bold text-foreground leading-snug">
-            Receba <span className="text-accent">10 ferramentas extras</span> ao ativar sua 
+            Receba <span className="text-accent">6 ferramentas extras</span> ao ativar sua 
             <span className="text-gradient-green"> Plataforma de Ganhos com Tempo Livre</span> hoje
           </h3>
           <p className="text-sm text-muted-foreground">Tudo incluso. Sem pagar nada a mais.</p>
@@ -1699,8 +1727,8 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           viewport={{ once: true }}
           className="rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/10 via-accent/5 to-background text-center p-5 space-y-2"
         >
-          <p className="text-sm text-muted-foreground">Valor total dos 10 bônus:</p>
-          <p className="text-2xl text-muted-foreground line-through font-semibold">R$3.870,00</p>
+          <p className="text-sm text-muted-foreground">Valor total dos 6 bônus:</p>
+          <p className="text-2xl text-muted-foreground line-through font-semibold">R$2.832,00</p>
           <div className="flex items-center justify-center gap-2">
             <Gift className="w-5 h-5 text-accent" />
             <p className="text-lg font-bold text-accent">Hoje: GRÁTIS com seu acesso</p>
@@ -1785,11 +1813,6 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       <Divider />
 
-      {/* ═══ CTA (after all objection-breaking content) ═══ */}
-      <CTABlock showCTA={showCTA} pricing={pricing} />
-
-      <Divider />
-
       {/* ═══ PRICE ANCHOR (single pricing section) ═══ */}
       <ScrollReveal>
       <div className="w-full space-y-5">
@@ -1809,8 +1832,8 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             <span className="text-sm text-muted-foreground line-through">R$1.632</span>
           </div>
           <div className="flex justify-between items-center py-1.5 border-b border-border/50">
-            <span className="text-sm text-muted-foreground">10 bônus exclusivos</span>
-            <span className="text-sm text-muted-foreground line-through">R$3.870</span>
+            <span className="text-sm text-muted-foreground">6 bônus exclusivos</span>
+            <span className="text-sm text-muted-foreground line-through">R$2.832</span>
           </div>
           <div className="flex justify-between items-center py-1.5 border-b border-border/50">
             <span className="text-sm text-muted-foreground">Suporte VIP em tempo real</span>
@@ -1818,7 +1841,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           </div>
           <div className="flex justify-between items-center py-1.5">
             <span className="text-sm font-bold text-foreground">Valor total real</span>
-            <span className="text-sm font-bold text-muted-foreground line-through">R$5.899</span>
+            <span className="text-sm font-bold text-muted-foreground line-through">R$4.861</span>
           </div>
         </div>
 
@@ -1826,11 +1849,11 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         <div className="funnel-card border-primary/25 bg-card text-center space-y-4">
           <img src={chatgptLogo} alt="ChatGPT" className="w-10 h-10 object-contain mx-auto rounded-xl" />
           <p className="text-sm text-muted-foreground leading-relaxed text-left">
-            A plataforma usa a <span className="font-bold text-foreground">inteligência artificial do ChatGPT</span> pra trabalhar por você.
-            Cada operação consome <span className="font-bold text-foreground">tokens de IA</span> — e esses tokens têm custo real.
+            A plataforma usa <span className="font-bold text-foreground">inteligência artificial avançada</span> pra trabalhar por você.
+            Cada operação consome <span className="font-bold text-foreground">processamento de IA</span> — e esse processamento tem custo real.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed text-left">
-            O valor abaixo é <span className="font-bold text-foreground">apenas a taxa do token</span>.
+            O valor abaixo é <span className="font-bold text-foreground">apenas a taxa de ativação</span>.
             Nós <span className="text-primary font-bold">não ficamos com nenhum centavo</span> desse pagamento.
           </p>
           <div className="bg-primary/10 rounded-xl p-3 border border-primary/20 text-left">
@@ -2074,7 +2097,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
               const fullUrl = utmQs ? `${pricing.checkoutUrl}${separator}${utmQs.slice(1)}` : pricing.checkoutUrl;
               window.open(fullUrl, "_blank");
             }} variant="accent" className="text-base sm:text-lg tracking-wider w-full funnel-glow-button">
-              ATIVAR MINHA CHAVE AGORA
+              ATIVAR MINHA CHAVE AGORA — {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
             </CTAButton>
             <div className="flex items-center justify-center gap-3 mt-1.5">
               <p className="text-[10px] text-muted-foreground flex items-center gap-1">
@@ -2082,13 +2105,14 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
               </p>
               <span className="text-[10px] text-muted-foreground">•</span>
               <p className="text-[10px] text-muted-foreground">
-                {spotsLeft} vagas restantes hoje
+                Garantia de 30 dias
               </p>
             </div>
           </div>
         </motion.div>
       )}
     </div>
+    </>
   );
 };
 
