@@ -1554,20 +1554,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
           <p className="text-sm text-muted-foreground text-center leading-relaxed">
             Assista o depoimento de quem já vive isso na prática:
           </p>
-          <div className="w-full rounded-2xl overflow-hidden border border-border">
-            <div id={`ifr_${VIDEO_TESTIMONIALS[0].id}_wrapper`} style={{ margin: "0 auto", width: "100%" }}>
-              <div style={{ padding: `${VIDEO_TESTIMONIALS[0].padding} 0 0 0`, position: "relative" }} id={`ifr_${VIDEO_TESTIMONIALS[0].id}_aspect`}>
-                <iframe
-                  frameBorder="0"
-                  allowFullScreen
-                  src="about:blank"
-                  id={`ifr_${VIDEO_TESTIMONIALS[0].id}`}
-                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-                  referrerPolicy="origin"
-                />
-              </div>
-            </div>
-          </div>
+          <VideoTestimonialItem v={VIDEO_TESTIMONIALS[0]} autoplay={true} />
         </div>
       </ScrollReveal>
 
