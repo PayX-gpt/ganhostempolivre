@@ -36,6 +36,9 @@ const Step1Intro = ({ onNext }: Step1Props) => {
           10 minutos.{" "}
           <span className="text-gradient-green">Uma IA faz o resto.</span>
         </h1>
+        <p className="text-sm sm:text-base font-semibold text-primary/90">
+          O resto do dia é seu. Tempo livre de verdade.
+        </p>
 
         <div className="flex items-center justify-center gap-2 mt-1">
           <img src={chatgptLogo} alt="ChatGPT" className="w-6 h-6 sm:w-7 sm:h-7" />
@@ -61,7 +64,7 @@ const Step1Intro = ({ onNext }: Step1Props) => {
           Não importa se você tem <strong className="text-foreground">18 ou 65 anos</strong>. 
           Não importa se você nunca mexeu com tecnologia. 
           Não importa se já tentou de tudo. 
-          <strong className="text-foreground"> Essa IA foi feita pra pessoas comuns.</strong>
+          <strong className="text-foreground"> Essa IA foi feita pra pessoas comuns que querem tempo livre e renda extra.</strong>
         </p>
       </div>
 
