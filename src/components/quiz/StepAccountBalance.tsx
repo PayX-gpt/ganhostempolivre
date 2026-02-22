@@ -16,31 +16,31 @@ const StepAccountBalance = ({ onNext, userName, userAge }: StepAccountBalancePro
     {
       value: "menos100",
       label: "Menos de R$100",
-      sublabel: young ? "Começo com pouco, mas estou decidido(a)" : "Tô apertado, mas quero sair dessa",
+      sublabel: "Tudo bem — muitos começaram assim",
       icon: <Wallet className="w-5 h-5" />,
     },
     {
       value: "100-500",
       label: "Entre R$100 e R$500",
-      sublabel: "Tenho um pouco guardado",
+      sublabel: "Já é o suficiente pra começar",
       icon: <PiggyBank className="w-5 h-5" />,
     },
     {
       value: "500-2000",
       label: "Entre R$500 e R$2.000",
-      sublabel: "Tenho uma reserva moderada",
+      sublabel: "Ótimo ponto de partida",
       icon: <Landmark className="w-5 h-5" />,
     },
     {
       value: "2000-10000",
       label: "Entre R$2.000 e R$10.000",
-      sublabel: "Tenho uma reserva confortável",
+      sublabel: "Excelente — mais opções pra você",
       icon: <TrendingUp className="w-5 h-5" />,
     },
     {
       value: "10000+",
       label: "Mais de R$10.000",
-      sublabel: "Tenho capital disponível para investir",
+      sublabel: "Máximo potencial de retorno",
       icon: <Gem className="w-5 h-5" />,
     },
   ];
@@ -48,15 +48,11 @@ const StepAccountBalance = ({ onNext, userName, userAge }: StepAccountBalancePro
   return (
     <StepContainer>
       <StepTitle>
-        {firstName ? `${firstName}, vamos` : "Vamos"}{" "}
-        {young
-          ? "ser diretos: quanto você tem disponível para dar o primeiro passo?"
-          : "ser sincero(a) agora — consigo mesmo e comigo."}
+        {firstName ? `${firstName}, última` : "Última"} pergunta antes do seu plano personalizado:
       </StepTitle>
       <StepSubtitle>
-        {young
-          ? "Essa informação nos ajuda a criar um plano personalizado para o seu perfil. Não existe valor certo ou errado — o importante é a honestidade."
-          : <>Quanto você tem hoje parado na sua conta? Isso vai nos ajudar a traçar um investimento <strong className="text-foreground">personalizado de multiplicação</strong> pra você. De valores maiores a menores — não importa. O importante é a sinceridade.</>}
+        Pra IA montar a <strong className="text-foreground">melhor estratégia pro seu perfil</strong>, 
+        preciso saber: quanto você tem disponível hoje pra dar o primeiro passo?
       </StepSubtitle>
 
       <div className="w-full space-y-3">
@@ -72,7 +68,7 @@ const StepAccountBalance = ({ onNext, userName, userAge }: StepAccountBalancePro
       </div>
 
       <p className="text-xs text-muted-foreground/60 text-center leading-relaxed">
-        🔒 Sua resposta é 100% sigilosa e usada apenas para personalizar seu plano.
+        🔒 Resposta 100% sigilosa — usada apenas pela IA para calibrar seu plano.
       </p>
     </StepContainer>
   );
