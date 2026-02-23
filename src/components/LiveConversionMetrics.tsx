@@ -20,21 +20,21 @@ const LiveConversionMetrics = () => {
   const fetchMetrics = useCallback(async () => {
     try {
       const { data: icData } = await supabase
-        .from("funnel_audit_logs")
+        .from("funnel_events")
         .select("session_id")
-        .eq("event_type", "checkout_initiated")
+        .eq("event_name", "checkout_click")
         .gte("created_at", new Date().toISOString().split("T")[0]);
 
       const { data: purchaseData } = await supabase
         .from("purchase_tracking")
-        .select("session_id")
-        .eq("utmify_sent", true)
+        .select("session_id, email")
+        .eq("status", "approved")
         .gte("created_at", new Date().toISOString().split("T")[0]);
 
       const totalICs = icData?.length || 0;
       const uniqueICSessions = new Set(icData?.map(r => r.session_id)).size;
       const utmifyPurchases = purchaseData?.length || 0;
-      const uniqueBuyers = new Set(purchaseData?.map(r => r.session_id)).size;
+      const uniqueBuyers = new Set(purchaseData?.filter(r => r.email).map(r => (r.email as string).toLowerCase())).size;
 
       const conversionRate = uniqueICSessions > 0 
         ? (uniqueBuyers / uniqueICSessions) * 100 
