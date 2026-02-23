@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ProgressBar, type QuizAnswers } from "./QuizUI";
 import { usePagePresence } from "@/hooks/usePagePresence";
 import { saveFunnelEvent } from "@/lib/metricsClient";
+import { saveSessionAttribution } from "@/lib/trackingDataLayer";
 import Step1Intro from "./Step1Intro";
 import Step2Age from "./Step2Age";
 import StepName from "./StepName";
@@ -106,6 +107,13 @@ const QuizFunnel = () => {
       }
     }
   }, []);
+
+  // Save attribution on funnel entry (step 1)
+  useEffect(() => {
+    if (step === 1) {
+      saveSessionAttribution();
+    }
+  }, [step]);
 
   // Track time spent when step changes
   useEffect(() => {

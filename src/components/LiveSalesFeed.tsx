@@ -12,10 +12,15 @@ interface Sale {
   funnel_step: string | null;
   status: string | null;
   created_at: string;
+  session_id: string | null;
   utm_source: string | null;
   utm_campaign: string | null;
   utm_term: string | null;
   fbclid: string | null;
+  // From our own attribution (cross-referenced)
+  own_source?: string | null;
+  own_ttclid?: string | null;
+  own_fbclid?: string | null;
 }
 
 /** Strip Facebook/Kirvano ad IDs from campaign names: "[OB LOVABLE]|12024..." → "[OB LOVABLE]" */
@@ -25,15 +30,27 @@ const parseCampaignName = (raw: string | null): string | null => {
   return pipeIdx > 0 ? raw.substring(0, pipeIdx).trim() : raw;
 };
 
-/** Detect if traffic is from Meta (FB/IG) — includes FBjLj prefix pattern from Kirvano */
+/** Detect if traffic is from Meta — prioritizes OUR attribution over Kirvano */
 const isMetaSource = (sale: Sale): boolean => {
+  if (sale.own_fbclid) return true;
+  if (sale.own_source) {
+    const s = sale.own_source.toLowerCase();
+    return s.startsWith("fb") || s.includes("facebook") || s.includes("instagram") || s.includes("meta");
+  }
+  // Fallback to Kirvano data
   if (sale.fbclid) return true;
   const src = sale.utm_source?.toLowerCase() || "";
   return src.startsWith("fb") || src.includes("facebook") || src.includes("instagram") || src.includes("meta");
 };
 
-/** Detect if traffic is from TikTok */
+/** Detect if traffic is from TikTok — prioritizes OUR attribution over Kirvano */
 const isTiktokSource = (sale: Sale): boolean => {
+  if (sale.own_ttclid) return true;
+  if (sale.own_source) {
+    const s = sale.own_source.toLowerCase();
+    return s.includes("tiktok");
+  }
+  // Fallback to Kirvano data
   const src = sale.utm_source?.toLowerCase() || "";
   return src.includes("tiktok") || src.includes("ttclid");
 };
@@ -76,12 +93,41 @@ export default function LiveSalesfeed() {
     const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const { data } = await supabase
       .from("purchase_tracking")
-      .select("id, buyer_name, email, amount, product_name, funnel_step, status, created_at, utm_source, utm_campaign, utm_term, fbclid")
+      .select("id, buyer_name, email, amount, product_name, funnel_step, status, created_at, session_id, utm_source, utm_campaign, utm_term, fbclid")
       .eq("status", "approved")
       .gte("created_at", todayUTC.toISOString())
       .order("created_at", { ascending: false })
       .limit(20);
-    if (data) setSales(data as Sale[]);
+    
+    if (!data) return;
+
+    // Cross-reference with our own attribution data
+    const sessionIds = data.map(s => s.session_id).filter(Boolean) as string[];
+    let attributionMap: Record<string, { utm_source: string | null; ttclid: string | null; fbclid: string | null }> = {};
+    
+    if (sessionIds.length > 0) {
+      const { data: attrs } = await supabase
+        .from("session_attribution" as any)
+        .select("session_id, utm_source, ttclid, fbclid")
+        .in("session_id", sessionIds);
+      if (attrs) {
+        (attrs as any[]).forEach((a: any) => {
+          attributionMap[a.session_id] = { utm_source: a.utm_source, ttclid: a.ttclid, fbclid: a.fbclid };
+        });
+      }
+    }
+
+    const enriched: Sale[] = data.map(sale => {
+      const own = sale.session_id ? attributionMap[sale.session_id] : null;
+      return {
+        ...sale,
+        own_source: own?.utm_source || null,
+        own_ttclid: own?.ttclid || null,
+        own_fbclid: own?.fbclid || null,
+      } as Sale;
+    });
+
+    setSales(enriched);
   };
 
   useEffect(() => {
