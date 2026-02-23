@@ -51,6 +51,7 @@ const getOrCreateChannel = (sessionId: string): ReturnType<typeof supabase.chann
           session_id: sessionId,
           page_id: pendingPageId,
           lead_name: getLeadName(),
+          traffic_source: detectTrafficSource(),
           joined_at: new Date().toISOString(),
         });
         pendingPageId = null;
@@ -61,6 +62,17 @@ const getOrCreateChannel = (sessionId: string): ReturnType<typeof supabase.chann
   return sharedChannel;
 };
 
+const detectTrafficSource = (): string => {
+  try {
+    const data = getTrackingData();
+    if (data.ttclid || (data.utm_source && data.utm_source.toLowerCase().includes("tiktok"))) return "tiktok";
+    if (data.fbclid || data.fbp || data.fbc || (data.utm_source && (data.utm_source.toLowerCase().includes("facebook") || data.utm_source.toLowerCase().includes("fb") || data.utm_source.toLowerCase().includes("instagram") || data.utm_source.toLowerCase().includes("meta")))) return "meta";
+    if (data.gclid || (data.utm_source && data.utm_source.toLowerCase().includes("google"))) return "google";
+    if (data.utm_source) return data.utm_source.toLowerCase();
+  } catch {}
+  return "organic";
+};
+
 const trackPresence = (pageId: string) => {
   const currentPath = window.location.pathname.toLowerCase();
   if (currentPath.includes('/live') || currentPath.includes('/admin')) return;
@@ -69,12 +81,14 @@ const trackPresence = (pageId: string) => {
   const sessionId = getOrCreateSessionId();
   const channel = getOrCreateChannel(sessionId);
   const name = getLeadName();
+  const trafficSource = detectTrafficSource();
 
   if (subscribedStatus === "subscribed") {
     channel.track({
       session_id: sessionId,
       page_id: pageId,
       lead_name: name,
+      traffic_source: trafficSource,
       joined_at: new Date().toISOString(),
     });
   } else {
