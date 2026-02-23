@@ -225,6 +225,8 @@ Deno.serve(async (req) => {
     const gclid = body.cookies?.gclid || body.gclid || null;
     const fbp = body.cookies?.fbp || null;
     const fbc = body.cookies?.fbc || null;
+    const ttclid = body.cookies?.ttclid || body.ttclid || utmData.ttclid || null;
+    const ttp = body.cookies?.ttp || body.ttp || null;
     const clientIp = body.ip || null;
 
     const sessionId = (src && src.startsWith("sess_")) ? src : null;
@@ -336,10 +338,41 @@ Deno.serve(async (req) => {
     }
 
     // ====== FACEBOOK CAPI — DISABLED (UTMify handles Purchase events) ======
-    // Purchase events are sent to Facebook exclusively via UTMify pixel
-    // to avoid duplication (different event_ids cause Facebook to count twice).
-    // IC (InitiateCheckout) is still handled by the dedicated edge function.
     const capiSent = false;
+
+    // ====== TIKTOK EVENTS API — CompletePayment ======
+    let tiktokSent = false;
+    if (normalizedStatus === "approved") {
+      try {
+        const tiktokToken = Deno.env.get("TIKTOK_ACCESS_TOKEN");
+        if (tiktokToken) {
+          const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+          const ttResp = await fetch(`${supabaseUrl}/functions/v1/tiktok-capi`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              event_name: "CompletePayment",
+              event_id: `tt_purchase_${transactionId || Date.now()}`,
+              email,
+              phone,
+              amount,
+              currency: "BRL",
+              ttclid,
+              ttp,
+              ip: clientIp,
+              user_agent: req.headers.get("user-agent"),
+              source_url: "https://ganhostempolivre.lovable.app",
+              session_id: sessionId,
+            }),
+          });
+          const ttResult = await ttResp.json();
+          tiktokSent = ttResult.sent === true;
+          console.log(`🎵 [TikTok] ${tiktokSent ? "✅ Sent" : "⏭️ Skipped"}`, ttResult);
+        }
+      } catch (ttErr) {
+        console.warn("⚠️ [TikTok CAPI] Error:", ttErr);
+      }
+    }
 
     // ====== AUDIT LOG ======
     await supabase.from("funnel_audit_logs").insert({
@@ -356,10 +389,11 @@ Deno.serve(async (req) => {
         payment_method: paymentMethod, buyer_name: buyerName,
         event, raw_status: status,
         capi_sent: capiSent,
+        tiktok_sent: tiktokSent,
       },
     });
 
-    return new Response(JSON.stringify({ success: true, status: normalizedStatus, amount, funnel_step: funnelStep, capi_sent: capiSent }), {
+    return new Response(JSON.stringify({ success: true, status: normalizedStatus, amount, funnel_step: funnelStep, capi_sent: capiSent, tiktok_sent: tiktokSent }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
