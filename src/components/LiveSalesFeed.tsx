@@ -72,15 +72,15 @@ export default function LiveSalesfeed() {
   const [newSaleId, setNewSaleId] = useState<string | null>(null);
 
   const fetchSales = async () => {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const { data } = await supabase
       .from("purchase_tracking")
       .select("id, buyer_name, email, amount, product_name, funnel_step, status, created_at, utm_source, utm_campaign, utm_term, fbclid")
       .eq("status", "approved")
-      .gte("created_at", todayStart.toISOString())
+      .gte("created_at", todayUTC.toISOString())
       .order("created_at", { ascending: false })
-      .limit(15);
+      .limit(20);
     if (data) setSales(data as Sale[]);
   };
 
@@ -101,13 +101,21 @@ export default function LiveSalesfeed() {
           setTimeout(() => setNewSaleId(null), 3000);
           setSales(prev => {
             const filtered = prev.filter(s => s.id !== row.id);
-            return [row, ...filtered].slice(0, 15);
+            return [row, ...filtered].slice(0, 20);
           });
         }
+        // Refetch on any change to ensure accuracy
+        fetchSales();
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Polling fallback every 15s for reliability
+    const pollInterval = setInterval(fetchSales, 15000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
+    };
   }, []);
 
   if (sales.length === 0) return null;
