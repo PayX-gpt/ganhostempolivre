@@ -12,6 +12,8 @@ interface Sale {
   funnel_step: string | null;
   status: string | null;
   created_at: string;
+  utm_source: string | null;
+  fbclid: string | null;
 }
 
 const STEP_LABELS: Record<string, string> = {
@@ -52,7 +54,7 @@ export default function LiveSalesfeed() {
     todayStart.setHours(0, 0, 0, 0);
     const { data } = await supabase
       .from("purchase_tracking")
-      .select("id, buyer_name, email, amount, product_name, funnel_step, status, created_at")
+      .select("id, buyer_name, email, amount, product_name, funnel_step, status, created_at, utm_source, fbclid")
       .eq("status", "approved")
       .gte("created_at", todayStart.toISOString())
       .order("created_at", { ascending: false })
@@ -114,6 +116,8 @@ export default function LiveSalesfeed() {
           const isNew = sale.id === newSaleId;
           const label = STEP_LABELS[sale.funnel_step || ""] || sale.product_name || "Produto";
           const displayName = formatName(sale.buyer_name, sale.email);
+          const isTiktok = sale.utm_source?.toLowerCase().includes("tiktok") || false;
+          const isMeta = !!sale.fbclid || sale.utm_source?.toLowerCase().includes("facebook") || sale.utm_source?.toLowerCase().includes("fb") || sale.utm_source?.toLowerCase().includes("instagram") || sale.utm_source?.toLowerCase().includes("meta") || false;
 
           return (
             <div
@@ -121,13 +125,13 @@ export default function LiveSalesfeed() {
               className={cn(
                 "flex items-center gap-3 p-3 rounded-xl border transition-all duration-500",
                 isNew
-                  ? "bg-emerald-500/10 border-emerald-500/40 scale-[1.01]"
+                  ? isTiktok ? "bg-red-500/10 border-red-500/40 scale-[1.01]" : "bg-emerald-500/10 border-emerald-500/40 scale-[1.01]"
                   : "bg-[#0d0d0d] border-[#2a2a2a]"
               )}
             >
               <div className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold",
-                isNew ? "bg-emerald-500/20 text-emerald-300" : "bg-[#1a1a1a] text-[#888]"
+                isNew ? (isTiktok ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300") : "bg-[#1a1a1a] text-[#888]"
               )}>
                 {displayName[0].toUpperCase()}
               </div>
@@ -136,8 +140,21 @@ export default function LiveSalesfeed() {
                 <div className="flex items-center gap-1.5">
                   <span className="text-white font-semibold text-sm truncate">{displayName}</span>
                   {isNew && (
-                    <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full border border-emerald-500/30 font-medium flex-shrink-0">
+                    <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full border font-medium flex-shrink-0",
+                      isTiktok ? "bg-red-500/20 text-red-400 border-red-500/30" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    )}>
                       NOVO
+                    </span>
+                  )}
+                  {/* Source badge */}
+                  {isTiktok && (
+                    <span className="text-[8px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full border border-red-500/30 font-bold flex-shrink-0 shadow-[0_0_6px_rgba(239,68,68,0.3)]">
+                      TikTok
+                    </span>
+                  )}
+                  {isMeta && (
+                    <span className="text-[8px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/30 font-bold flex-shrink-0">
+                      Meta
                     </span>
                   )}
                 </div>
@@ -145,7 +162,7 @@ export default function LiveSalesfeed() {
               </div>
 
               <div className="flex flex-col items-end flex-shrink-0 gap-0.5">
-                <span className="text-emerald-400 font-bold text-sm tabular-nums">
+                <span className={cn("font-bold text-sm tabular-nums", isTiktok ? "text-red-400" : "text-emerald-400")}>
                   R$ {Number(sale.amount || 0).toFixed(0)}
                 </span>
                 <span className="text-[9px] text-[#666] flex items-center gap-0.5">
@@ -154,7 +171,7 @@ export default function LiveSalesfeed() {
                 </span>
               </div>
 
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <CheckCircle2 className={cn("w-4 h-4 flex-shrink-0", isTiktok ? "text-red-400" : "text-emerald-400")} />
             </div>
           );
         })}

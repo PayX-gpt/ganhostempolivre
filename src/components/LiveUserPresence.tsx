@@ -16,12 +16,14 @@ interface FunnelStep {
   label: string;
   icon: React.ElementType;
   count: number;
+  sources?: string[];
 }
 
 interface PresencePayload {
   session_id: string;
   page_id: string;
   lead_name?: string;
+  traffic_source?: string;
   joined_at: string;
 }
 
@@ -29,6 +31,7 @@ interface OnlineUser {
   session_id: string;
   name: string;
   page: string;
+  traffic_source: string;
   joined_at: string;
 }
 
@@ -145,6 +148,9 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
     let total = 0;
     const users: OnlineUser[] = [];
 
+    const stepSources: Record<string, Set<string>> = {};
+    STEPS.forEach(s => { stepSources[s.id] = new Set(); });
+
     Object.entries(state).forEach(([sessionKey, presences]) => {
       if (!presences || presences.length === 0) return;
       const latest = presences[presences.length - 1];
@@ -154,11 +160,14 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
       if (stepId && counts[stepId] !== undefined) {
         counts[stepId]++;
         total++;
+        const source = latest.traffic_source || "organic";
+        stepSources[stepId].add(source);
         const stepLabel = STEPS.find(s => s.id === stepId)?.label || pageId;
         users.push({
           session_id: latest.session_id,
           name: latest.lead_name || "Visitante",
           page: stepLabel,
+          traffic_source: source,
           joined_at: latest.joined_at,
         });
       }
@@ -168,7 +177,11 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
       let changed = false;
       const next = prev.map(step => {
         const newCount = counts[step.id] || 0;
-        if (step.count !== newCount) { changed = true; return { ...step, count: newCount }; }
+        const newSources = Array.from(stepSources[step.id] || []);
+        if (step.count !== newCount || JSON.stringify((step as any).sources) !== JSON.stringify(newSources)) {
+          changed = true;
+          return { ...step, count: newCount, sources: newSources };
+        }
         return step;
       });
       return changed ? next : prev;
@@ -279,15 +292,35 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
         {funnelSteps.map((step) => {
           const Icon = step.icon;
           const hasUsers = step.count > 0;
+          const sources = step.sources || [];
+          const hasTiktok = sources.some(s => s === "tiktok");
+          const hasMeta = sources.some(s => s === "meta");
+          const isMixed = hasTiktok && hasMeta;
+          const borderColor = !hasUsers ? "border-[#2a2a2a]"
+            : isMixed ? "border-yellow-400/40"
+            : hasTiktok ? "border-red-500/40 shadow-lg shadow-red-500/10"
+            : hasMeta ? "border-emerald-500/30 shadow-lg shadow-emerald-500/10"
+            : "border-emerald-500/30 shadow-lg shadow-emerald-500/10";
+          const iconColor = !hasUsers ? "text-[#666]"
+            : isMixed ? "text-yellow-400"
+            : hasTiktok ? "text-red-400"
+            : hasMeta ? "text-emerald-400"
+            : "text-emerald-400";
           return (
             <div key={step.id} className={cn(
               "flex flex-col items-center justify-center p-1.5 sm:p-2.5 rounded-xl transition-all overflow-hidden",
-              "bg-[#0d0d0d] border",
-              hasUsers ? "border-emerald-500/30 shadow-lg shadow-emerald-500/10" : "border-[#2a2a2a]"
+              "bg-[#0d0d0d] border", borderColor
             )}>
-              <Icon className={cn("w-3.5 h-3.5 mb-0.5 flex-shrink-0", hasUsers ? "text-emerald-400" : "text-[#666]")} />
+              <Icon className={cn("w-3.5 h-3.5 mb-0.5 flex-shrink-0", iconColor)} />
               <span className={cn("text-sm sm:text-lg font-bold tabular-nums leading-none", hasUsers ? "text-white" : "text-[#444]")}>{step.count}</span>
               <span className="text-[7px] sm:text-[9px] text-[#666] text-center leading-tight truncate w-full">{step.label}</span>
+              {/* Source indicators */}
+              {hasUsers && (hasTiktok || hasMeta) && (
+                <div className="flex items-center gap-0.5 mt-0.5">
+                  {hasTiktok && <span className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.7)]" title="TikTok" />}
+                  {hasMeta && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.7)]" title="Meta" />}
+                </div>
+              )}
             </div>
           );
         })}
@@ -303,18 +336,35 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
             {onlineUsers.map((user) => {
               const purchase = getPurchaseForUser(user);
               const isVisitante = user.name === "Visitante";
+              const isTiktok = user.traffic_source === "tiktok";
+              const isMeta = user.traffic_source === "meta";
+              const dotColor = isTiktok ? "bg-red-500" : isMeta ? "bg-emerald-400" : "bg-gray-400";
+              const dotGlow = isTiktok ? "bg-red-500" : isMeta ? "bg-emerald-400" : "bg-gray-400";
               return (
                 <div key={user.session_id} className={cn(
                   "flex items-center gap-2 text-xs py-1.5 px-2 rounded-lg",
-                  purchase ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-[#1a1a1a]"
+                  purchase ? "bg-emerald-500/10 border border-emerald-500/20"
+                  : isTiktok ? "bg-red-500/5 border border-red-500/15"
+                  : "bg-[#1a1a1a]"
                 )}>
                   <span className="relative flex h-2 w-2 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                    <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", dotGlow)}></span>
+                    <span className={cn("relative inline-flex rounded-full h-2 w-2", dotColor)}></span>
                   </span>
                   <span className={cn("font-medium truncate flex-1", isVisitante ? "text-[#666] italic" : "text-white")}>
                     {user.name}
                   </span>
+                  {/* Source badge */}
+                  {isTiktok && (
+                    <span className="text-[8px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full border border-red-500/30 font-bold shrink-0 shadow-[0_0_6px_rgba(239,68,68,0.3)]">
+                      TikTok
+                    </span>
+                  )}
+                  {isMeta && (
+                    <span className="text-[8px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/30 font-bold shrink-0">
+                      Meta
+                    </span>
+                  )}
                   {/* Purchase badge */}
                   {purchase && (
                     <span className="flex items-center gap-0.5 text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full border border-emerald-500/30 font-bold shrink-0">
