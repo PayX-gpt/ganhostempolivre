@@ -13,6 +13,8 @@ export interface TrackingData {
   gclid: string | null;
   fbp: string | null;
   fbc: string | null;
+  ttclid: string | null;
+  ttp: string | null;
   xcod: string | null;
   cwr: string | null;
   cname: string | null;
@@ -38,7 +40,7 @@ export interface TrackingData {
 
 const TRACKING_PARAMS = [
   "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
-  "fbclid", "gclid", "xcod", "cwr", "cname", "domain", "placement",
+  "fbclid", "gclid", "ttclid", "xcod", "cwr", "cname", "domain", "placement",
   "adset", "adname", "site", "xid", "src", "sck",
 ] as const;
 
@@ -93,6 +95,10 @@ const extractFacebookCookies = (): { fbp: string | null; fbc: string | null } =>
   return { fbp: getCookie("_fbp"), fbc: getCookie("_fbc") };
 };
 
+const extractTikTokCookies = (): { ttp: string | null } => {
+  return { ttp: getCookie("_ttp") };
+};
+
 const saveToStorage = (data: TrackingData): void => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -123,6 +129,7 @@ export const initializeTrackingDataLayer = (): TrackingData => {
   const urlParams = extractUrlParams();
   const storedData = loadFromStorage();
   const fbCookies = extractFacebookCookies();
+  const ttCookies = extractTikTokCookies();
   const now = new Date().toISOString();
   const currentPath = window.location.pathname;
 
@@ -136,6 +143,8 @@ export const initializeTrackingDataLayer = (): TrackingData => {
     gclid: urlParams.gclid || storedData?.gclid || null,
     fbp: fbCookies.fbp || storedData?.fbp || null,
     fbc: fbCookies.fbc || storedData?.fbc || null,
+    ttclid: urlParams.ttclid || storedData?.ttclid || null,
+    ttp: ttCookies.ttp || storedData?.ttp || null,
     xcod: urlParams.xcod || storedData?.xcod || null,
     cwr: urlParams.cwr || storedData?.cwr || null,
     cname: urlParams.cname || storedData?.cname || null,
@@ -216,11 +225,13 @@ export const getTrackingDataForCheckout = (): Record<string, string> => {
   if (data.utm_term) result.utm_term = data.utm_term;
   if (data.fbclid) result.fbclid = data.fbclid;
   if (data.gclid) result.gclid = data.gclid;
+  if (data.ttclid) result.ttclid = data.ttclid;
   if (data.xcod) result.xcod = data.xcod;
   if (data.src) result.src = data.src;
   if (data.sck) result.sck = data.sck;
   if (data.fbp) result.fbp = data.fbp;
   if (data.fbc) result.fbc = data.fbc;
+  if (data.ttp) result.ttp = data.ttp;
   if (data.vsl_variant) result.vsl_variant = data.vsl_variant;
   if (data.vsl_player_id) result.vsl_player_id = data.vsl_player_id;
   result.session_id = data.session_id;
@@ -295,6 +306,8 @@ export const getTrackingData = (): TrackingData => {
         referrer: stored.referrer || window.trackingData.referrer,
         src: stored.src || window.trackingData.src,
         sck: stored.sck || window.trackingData.sck,
+        ttclid: stored.ttclid || window.trackingData.ttclid,
+        ttp: stored.ttp || window.trackingData.ttp,
       };
     }
   }
