@@ -286,6 +286,41 @@ export const ensureUrlHasTrackingParams = (): void => {
   }
 };
 
+/**
+ * Save session attribution to the database (once per session).
+ * Called on funnel entry to create an independent source of truth.
+ */
+export const saveSessionAttribution = async (): Promise<void> => {
+  try {
+    const data = getTrackingData();
+    const sessionId = data.session_id;
+    if (!sessionId || sessionStorage.getItem("attribution_saved")) return;
+
+    const { supabase } = await import("@/integrations/supabase/client");
+    await supabase.from("session_attribution" as any).upsert([{
+      session_id: sessionId,
+      utm_source: data.utm_source,
+      utm_medium: data.utm_medium,
+      utm_campaign: data.utm_campaign,
+      utm_content: data.utm_content,
+      utm_term: data.utm_term,
+      fbclid: data.fbclid,
+      ttclid: data.ttclid,
+      fbp: data.fbp,
+      fbc: data.fbc,
+      ttp: data.ttp,
+      gclid: data.gclid,
+      referrer: data.referrer || null,
+      landing_page: data.landing_page || null,
+    }] as any, { onConflict: "session_id" } as any);
+
+    sessionStorage.setItem("attribution_saved", "1");
+    console.log("✅ Atribuição salva:", { sessionId, utm_source: data.utm_source, fbclid: data.fbclid, ttclid: data.ttclid });
+  } catch (e) {
+    console.warn("[Attribution] Failed to save:", e);
+  }
+};
+
 export const getTrackingData = (): TrackingData => {
   if (!window.trackingData) return initializeTrackingDataLayer();
   if (!window.trackingData.utm_source && !window.trackingData.utm_campaign) {

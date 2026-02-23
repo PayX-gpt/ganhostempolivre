@@ -308,6 +308,63 @@ export type Database = {
         }
         Relationships: []
       }
+      session_attribution: {
+        Row: {
+          created_at: string
+          fbc: string | null
+          fbclid: string | null
+          fbp: string | null
+          gclid: string | null
+          id: string
+          landing_page: string | null
+          referrer: string | null
+          session_id: string
+          ttclid: string | null
+          ttp: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          created_at?: string
+          fbc?: string | null
+          fbclid?: string | null
+          fbp?: string | null
+          gclid?: string | null
+          id?: string
+          landing_page?: string | null
+          referrer?: string | null
+          session_id: string
+          ttclid?: string | null
+          ttp?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          created_at?: string
+          fbc?: string | null
+          fbclid?: string | null
+          fbp?: string | null
+          gclid?: string | null
+          id?: string
+          landing_page?: string | null
+          referrer?: string | null
+          session_id?: string
+          ttclid?: string | null
+          ttp?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
