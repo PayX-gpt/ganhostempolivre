@@ -192,11 +192,10 @@ export default function AdminFunnelAudit() {
     todayStart.setHours(0, 0, 0, 0);
     const todayISO = todayStart.toISOString();
 
-    const { data: checkoutPageLoads } = await supabase.from("funnel_audit_logs").select("session_id")
-      .eq("event_type", "page_loaded").in("page_id", ["/checkout", "/step-19"]).gte("created_at", todayISO);
-
-    const icSessions = new Set<string>();
-    checkoutPageLoads?.forEach(r => icSessions.add(r.session_id));
+    // IC = unique sessions that clicked checkout (from funnel_events)
+    const { data: checkoutClickEvents } = await supabase.from("funnel_events").select("session_id")
+      .eq("event_name", "checkout_click").gte("created_at", todayISO);
+    const icSessions = new Set(checkoutClickEvents?.map(r => r.session_id) || []);
     setFrontendICs(icSessions.size);
 
     const { data: purchaseData } = await supabase.from("purchase_tracking").select("amount, status, email").gte("created_at", todayISO);
@@ -226,22 +225,29 @@ export default function AdminFunnelAudit() {
     setIcToSalesRate(rate);
     setIcToSalesRatio(uniqueBuyers > 0 ? `1:${Math.round(icSessions.size / uniqueBuyers)}` : "0:0");
 
-    // Fetch lead behavior KPIs
+    // Leads = unique sessions that captured lead info (from funnel_events)
+    const { data: leadCapturedEvents } = await supabase.from("funnel_events")
+      .select("session_id")
+      .eq("event_name", "lead_captured")
+      .gte("created_at", todayISO);
+    const uniqueLeadSessions = new Set(leadCapturedEvents?.map(r => r.session_id) || []);
+    setTotalLeadsToday(uniqueLeadSessions.size);
+
+    // Qualified = leads with intent_score >= 50 (from lead_behavior)
     const { data: leadData } = await supabase.from("lead_behavior")
       .select("cta_clicks, intent_score, checkout_clicked")
       .gte("created_at", todayISO);
-    const tLeads = leadData?.length || 0;
-    setTotalLeadsToday(tLeads);
     setQualifiedLeadsToday(leadData?.filter(l => (l.intent_score || 0) >= 50).length || 0);
-    setInteractionRateToday(tLeads > 0 ? ((leadData?.filter(l => l.cta_clicks > 0).length || 0) / tLeads) * 100 : 0);
+    const tLeads = uniqueLeadSessions.size;
+    const interactingLeads = leadData?.filter(l => l.cta_clicks > 0).length || 0;
+    setInteractionRateToday(tLeads > 0 ? (interactingLeads / tLeads) * 100 : 0);
 
-    // Count unique sessions (visitors) today
-    const { data: visitRows } = await supabase.from("funnel_audit_logs")
+    // Count unique sessions (visitors) today from funnel_events
+    const { data: visitRows } = await supabase.from("funnel_events")
       .select("session_id")
-      .eq("event_type", "page_loaded")
-      .eq("page_id", "/step-1")
+      .eq("event_name", "step_viewed")
       .gte("created_at", todayISO);
-    const uniqueVisits = new Set(visitRows?.map(r => r.session_id)).size;
+    const uniqueVisits = new Set(visitRows?.map(r => r.session_id) || []).size;
     setTotalVisitsToday(uniqueVisits);
 
     setLastUpdated(new Date());
