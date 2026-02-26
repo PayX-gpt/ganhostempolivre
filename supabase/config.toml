@@ -8,3 +8,15 @@ verify_jwt = false
 
 [functions.tiktok-capi]
 verify_jwt = false
+
+[functions.whatsapp-send]
+verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.whatsapp-ai-reply]
+verify_jwt = false
+
+[functions.whatsapp-delayed-welcome]
+verify_jwt = false
