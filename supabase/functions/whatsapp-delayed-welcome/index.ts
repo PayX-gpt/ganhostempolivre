@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
       .eq("sent", false)
       .lte("send_at", now)
       .order("send_at", { ascending: true })
-      .limit(20);
+      .limit(5);
 
     if (fetchError) {
       return new Response(JSON.stringify({ error: fetchError.message }), {
@@ -111,6 +111,11 @@ Deno.serve(async (req) => {
         .eq("id", entry.id);
 
       results.push({ phone, lead_type: leadType, sent: sendOk });
+
+      // Delay 8s between sends to avoid overwhelming the instance
+      if (sendOk) {
+        await new Promise(resolve => setTimeout(resolve, 8000));
+      }
     }
 
     return new Response(
