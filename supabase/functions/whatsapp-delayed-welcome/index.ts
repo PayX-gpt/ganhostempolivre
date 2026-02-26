@@ -40,6 +40,9 @@ Deno.serve(async (req) => {
 
     const results = [];
 
+    // 🔴 PAUSA DE RECUPERAÇÃO — altere para false quando quiser reativar
+    const PAUSE_RECOVERY = true;
+
     for (const entry of pendingEntries) {
       const { phone, lead_name, session_id } = entry;
 
@@ -59,6 +62,12 @@ Deno.serve(async (req) => {
       }
 
       const leadType = hasPurchased ? "post_purchase" : "recovery";
+
+      // Pular leads de recuperação se a pausa estiver ativa
+      if (PAUSE_RECOVERY && leadType === "recovery") {
+        results.push({ phone, lead_type: leadType, sent: false, skipped: "recovery_paused" });
+        continue;
+      }
 
       const firstName = lead_name ? lead_name.split(" ")[0] : "";
       const greeting = firstName || ""; 
