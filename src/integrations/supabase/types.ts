@@ -440,6 +440,45 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_pending_followups: {
+        Row: {
+          created_at: string
+          id: string
+          last_incoming_message: string | null
+          lead_name: string | null
+          phone: string
+          reason: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          unanswered_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_incoming_message?: string | null
+          lead_name?: string | null
+          phone: string
+          reason?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          unanswered_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_incoming_message?: string | null
+          lead_name?: string | null
+          phone?: string
+          reason?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          unanswered_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       whatsapp_welcome_queue: {
         Row: {
           created_at: string

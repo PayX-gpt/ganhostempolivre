@@ -10,11 +10,10 @@ const OFFER_ID_MAP: Record<string, string> = {
   "4630333d-d5d1-4591-b767-2151f77c6b13": "front_37",
   "a404a378-2a59-4efd-86a8-dc57363c054c": "front_47",
   "863c8fe9-ca48-452f-9fa4-22e14df182cf": "acelerador_basico",
-  // Safety Pro plans
+  "59a5cba3-f876-46a8-b0e4-6e2c72cf725a": "acelerador_duplo",
   "c7f4277f-ad68-4952-92ba-8e2ea9bea47f": "safety_pro",
   "0a54e723-14b9-4835-a20d-07a2289b4fc8": "safety_pro",
   "c15f93e0-982e-47cd-ade1-b24791b79fab": "safety_pro",
-  // FOREX Mentoria
   "bf6428b5-4257-496c-8d22-46e53c4e6689": "forex_mentoria",
 };
 
@@ -53,7 +52,7 @@ function identifyFunnelStep(body: any, amount: number | null): string {
 
 function extractAmount(body: any): number | null {
   if (body.total_price && typeof body.total_price === "string") {
-    const cleaned = body.total_price.replace(/[^\d,.-]/g, "").replace(",", ".");
+    const cleaned = body.total_price.replace(/[^\\d,.-]/g, "").replace(",", ".");
     const val = parseFloat(cleaned);
     if (!isNaN(val) && val > 0) return val;
   }
@@ -66,7 +65,7 @@ function extractAmount(body: any): number | null {
     if (!isNaN(val) && val > 0) return val;
   }
   if (body.products?.[0]?.price && typeof body.products[0].price === "string") {
-    const cleaned = body.products[0].price.replace(/[^\d,.-]/g, "").replace(",", ".");
+    const cleaned = body.products[0].price.replace(/[^\\d,.-]/g, "").replace(",", ".");
     const val = parseFloat(cleaned);
     if (!isNaN(val) && val > 0) return val;
   }
@@ -89,87 +88,6 @@ function extractAmount(body: any): number | null {
     return 37;
   }
   return null;
-}
-
-// ====== FACEBOOK CONVERSION API ======
-async function sendFacebookCAPI(params: {
-  eventName: string;
-  eventId: string;
-  email: string | null;
-  phone: string | null;
-  fbclid: string | null;
-  fbp: string | null;
-  fbc: string | null;
-  amount: number | null;
-  currency?: string;
-  ip: string | null;
-  userAgent: string | null;
-  sourceUrl?: string;
-}): Promise<boolean> {
-  const pixelId = Deno.env.get("FB_PIXEL_ID");
-  const accessToken = Deno.env.get("FB_ACCESS_TOKEN");
-  if (!pixelId || !accessToken) {
-    console.warn("⚠️ [CAPI] Missing FB_PIXEL_ID or FB_ACCESS_TOKEN");
-    return false;
-  }
-
-  const userData: Record<string, string> = {};
-  // Hash user data per Facebook requirements
-  if (params.email) {
-    const emailNorm = params.email.trim().toLowerCase();
-    const emailHash = await hashSHA256(emailNorm);
-    userData.em = emailHash;
-  }
-  if (params.phone) {
-    // Normalize phone: digits only
-    const phoneNorm = params.phone.replace(/\D/g, "");
-    const phoneHash = await hashSHA256(phoneNorm);
-    userData.ph = phoneHash;
-  }
-  if (params.fbclid) userData.fbc = params.fbc || `fb.1.${Date.now()}.${params.fbclid}`;
-  if (params.fbc) userData.fbc = params.fbc;
-  if (params.fbp) userData.fbp = params.fbp;
-  if (params.ip) userData.client_ip_address = params.ip;
-  if (params.userAgent) userData.client_user_agent = params.userAgent;
-
-  const eventData: Record<string, unknown> = {
-    event_name: params.eventName,
-    event_time: Math.floor(Date.now() / 1000),
-    event_id: params.eventId, // Critical for deduplication with pixel
-    action_source: "website",
-    user_data: userData,
-  };
-
-  if (params.sourceUrl) {
-    eventData.event_source_url = params.sourceUrl;
-  }
-
-  if (params.eventName === "Purchase" && params.amount) {
-    eventData.custom_data = {
-      currency: params.currency || "BRL",
-      value: params.amount,
-    };
-  }
-
-  try {
-    const url = `https://graph.facebook.com/v21.0/${pixelId}/events?access_token=${accessToken}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: [eventData] }),
-    });
-    const result = await response.json();
-    if (response.ok) {
-      console.log(`✅ [CAPI] ${params.eventName} sent (event_id: ${params.eventId})`);
-      return true;
-    } else {
-      console.error(`❌ [CAPI] ${params.eventName} failed:`, JSON.stringify(result));
-      return false;
-    }
-  } catch (err) {
-    console.error(`❌ [CAPI] ${params.eventName} error:`, err);
-    return false;
-  }
 }
 
 async function hashSHA256(value: string): Promise<string> {
@@ -255,7 +173,7 @@ Deno.serve(async (req) => {
     let recordId: string | null = null;
     let alreadySentCAPI = false;
 
-    // ====== DEDUPLICATION: check if this exact transaction already exists ======
+    // ====== DEDUPLICATION ======
     if (transactionId) {
       const { data: existing } = await supabase
         .from("purchase_tracking")
@@ -337,10 +255,10 @@ Deno.serve(async (req) => {
       console.log(`✅ [Kirvano] New record: ${data.id} → ${funnelStep} R$${amount}`);
     }
 
-    // ====== FACEBOOK CAPI — DISABLED (UTMify handles Purchase events) ======
+    // ====== FACEBOOK CAPI — DISABLED ======
     const capiSent = false;
 
-    // ====== TIKTOK EVENTS API — CompletePayment ======
+    // ====== TIKTOK EVENTS API ======
     let tiktokSent = false;
     if (normalizedStatus === "approved") {
       try {
@@ -353,12 +271,9 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
               event_name: "CompletePayment",
               event_id: `tt_purchase_${transactionId || Date.now()}`,
-              email,
-              phone,
-              amount,
+              email, phone, amount,
               currency: "BRL",
-              ttclid,
-              ttp,
+              ttclid, ttp,
               ip: clientIp,
               user_agent: req.headers.get("user-agent"),
               source_url: "https://ganhostempolivre.lovable.app",
@@ -374,7 +289,74 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ====== WHATSAPP WELCOME QUEUE: Mark purchase ======
+    // ====== WHATSAPP: COMPRA APROVADA → ENVIAR WELCOME IMEDIATO ======
+    if (normalizedStatus === "approved" && phone && (funnelStep === "front_37" || funnelStep === "front_47")) {
+      try {
+        const cleanPhone = phone.replace(/\D/g, "");
+        const firstName = buyerName ? buyerName.split(" ")[0] : "";
+        const greeting = firstName ? `, ${firstName}` : "";
+
+        // Mark any existing queue entries as purchased
+        const phoneSuffix = cleanPhone.slice(-9);
+        if (phoneSuffix.length >= 8) {
+          await supabase
+            .from("whatsapp_welcome_queue")
+            .update({ purchased: true, purchased_at: new Date().toISOString(), lead_type: "post_purchase" })
+            .eq("sent", false)
+            .ilike("phone", `%${phoneSuffix}`);
+        }
+
+        // Check if we already sent a welcome to this phone
+        const { data: existingConvo } = await supabase
+          .from("whatsapp_conversations")
+          .select("id")
+          .eq("phone", cleanPhone)
+          .eq("direction", "outgoing")
+          .limit(1);
+
+        if (!existingConvo || existingConvo.length === 0) {
+          // No conversation yet — send welcome immediately
+          const welcomeMsg = `Opa${greeting}! Aqui é o Mark. Seja muito bem-vindo(a) à nossa plataforma! 🎉
+
+Seu acesso já está liberado! Anota aí:
+
+- Site: https://alfahibrida.com/login
+- Email: ${email || "(o mesmo que você usou na compra)"}
+- Senha: 123456
+
+Consegue acessar agora pra gente já dar os próximos passos juntos?`;
+
+          // Save to conversations
+          await supabase.from("whatsapp_conversations").insert({
+            phone: cleanPhone,
+            direction: "outgoing",
+            message: welcomeMsg,
+            ai_generated: true,
+            lead_name: firstName || null,
+          });
+
+          // Send via whatsapp-send
+          const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+          const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+          const sendRes = await fetch(`${supabaseUrl}/functions/v1/whatsapp-send`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${supabaseKey}`,
+            },
+            body: JSON.stringify({ phone: cleanPhone, message: welcomeMsg }),
+          });
+          const sendData = await sendRes.json();
+          console.log(`📱 [Kirvano→WhatsApp] Welcome sent to ${cleanPhone}: ${sendRes.ok}`, sendData);
+        } else {
+          console.log(`📱 [Kirvano→WhatsApp] Phone ${cleanPhone} already has conversation, skipping welcome`);
+        }
+      } catch (wqErr) {
+        console.warn("⚠️ [Kirvano→WhatsApp] Error sending welcome:", wqErr);
+      }
+    }
+
+    // ====== WHATSAPP WELCOME QUEUE: Mark purchase for non-front products ======
     if (normalizedStatus === "approved" && phone) {
       try {
         const phoneSuffix = phone.replace(/\D/g, "").slice(-9);
@@ -399,7 +381,7 @@ Deno.serve(async (req) => {
       status: normalizedStatus === "approved" ? "success" : "pending",
       metadata: {
         transaction_id: transactionId,
-        email, amount,
+        email, amount, phone,
         product_name: productName,
         offer_id: offerId, offer_name: offerName,
         funnel_step: funnelStep,
