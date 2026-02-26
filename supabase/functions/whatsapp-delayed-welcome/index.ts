@@ -17,13 +17,20 @@ Deno.serve(async (req) => {
 
   try {
     const now = new Date().toISOString();
+
+    // 🔴 PAUSA DE RECUPERAÇÃO — altere para false quando quiser reativar
+    const PAUSE_RECOVERY = true;
+
+    // Quando recovery está pausado, buscamos uma janela maior para não bloquear post_purchase
+    const fetchLimit = PAUSE_RECOVERY ? 50 : 5;
+
     const { data: pendingEntries, error: fetchError } = await supabase
       .from("whatsapp_welcome_queue")
       .select("*")
       .eq("sent", false)
       .lte("send_at", now)
       .order("send_at", { ascending: true })
-      .limit(5);
+      .limit(fetchLimit);
 
     if (fetchError) {
       return new Response(JSON.stringify({ error: fetchError.message }), {
@@ -39,11 +46,11 @@ Deno.serve(async (req) => {
     }
 
     const results = [];
-
-    // 🔴 PAUSA DE RECUPERAÇÃO — altere para false quando quiser reativar
-    const PAUSE_RECOVERY = true;
+    let processedSends = 0;
 
     for (const entry of pendingEntries) {
+      // Mantém no máximo 5 tentativas de envio por execução
+      if (processedSends >= 5) break;
       const { phone, lead_name, session_id } = entry;
 
       let hasPurchased = entry.purchased === true;
@@ -111,6 +118,7 @@ Deno.serve(async (req) => {
         .eq("id", entry.id);
 
       results.push({ phone, lead_type: leadType, sent: sendOk });
+      processedSends += 1;
 
       // Delay 8s between sends to avoid overwhelming the instance
       if (sendOk) {
