@@ -30,6 +30,46 @@ Deno.serve(async (req) => {
 
     const cleanPhone = phone.replace(/\D/g, "");
 
+    // Anti-race-condition: check if we already replied to this phone in the last 3 seconds
+    const threeSecondsAgo = new Date(Date.now() - 3000).toISOString();
+    const { data: recentOutgoing } = await supabase
+      .from("whatsapp_conversations")
+      .select("id")
+      .eq("phone", cleanPhone)
+      .eq("direction", "outgoing")
+      .gte("created_at", threeSecondsAgo)
+      .limit(1);
+
+    if (recentOutgoing && recentOutgoing.length > 0) {
+      // There's a reply being processed right now, just save the incoming message
+      // but DON'T trigger another AI reply to avoid duplicate responses
+      await supabase.from("whatsapp_conversations").insert({
+        phone: cleanPhone,
+        direction: "incoming",
+        message: text,
+        ai_generated: false,
+      });
+      return new Response(JSON.stringify({ ok: true, debounced: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Also check if there's a recent incoming message we already saved (duplicate webhook call)
+    const { data: recentIncoming } = await supabase
+      .from("whatsapp_conversations")
+      .select("id")
+      .eq("phone", cleanPhone)
+      .eq("direction", "incoming")
+      .eq("message", text)
+      .gte("created_at", threeSecondsAgo)
+      .limit(1);
+
+    if (recentIncoming && recentIncoming.length > 0) {
+      return new Response(JSON.stringify({ ok: true, duplicate: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     await supabase.from("whatsapp_conversations").insert({
       phone: cleanPhone,
       direction: "incoming",
