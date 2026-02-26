@@ -60,11 +60,14 @@ Deno.serve(async (req) => {
 
       const leadType = hasPurchased ? "post_purchase" : "recovery";
 
+      const firstName = lead_name ? lead_name.split(" ")[0] : "";
+      const greeting = firstName || ""; 
+
       let message;
       if (hasPurchased) {
-        message = `Fala! Aqui é o Henrique Matos. Seja muito bem-vindo à família HM Copy! Parabéns por essa decisão, de verdade. A partir de agora você vai copiar as minhas operações de forma 100% automática.\n\nPra sua conta começar a lucrar junto com a minha, só falta um passo: abrir sua conta na corretora MultiBank. É a corretora que eu uso pessoalmente há anos, regulamentada internacionalmente e com saque rápido direto pra sua conta.\n\nEsse é o link pra abrir sua conta, leva menos de 5 minutos: https://multibankfx.com/account/live-account?acc=9924595&off=1767\n\nE aqui tem um video curtinho mostrando o passo a passo do cadastro: https://files.manuscdn.com/user_upload_by_module/session_file/310419663029830305/gGSqGzqcnwGrXaix.mp4\n\nAbre lá e me avisa quando terminar que eu te guio no próximo passo!`;
+        message = `Opa${greeting ? ", " + greeting : ""}! Aqui é o Mark. Seja muito bem-vindo(a) à nossa plataforma! Seu acesso já está liberado! Anota aí:\n\n- Site: https://alfahibrida.com/login\n- Email: (o mesmo que você usou na compra)\n- Senha: 123456\n\nConsegue acessar agora pra gente já dar os próximos passos juntos?`;
       } else {
-        message = `Fala! Aqui é o Henrique Matos. Vi que você fez o quiz e descobriu seu potencial de lucro com copy trading, mas não finalizou sua inscrição. Aconteceu alguma coisa? Ficou com alguma dúvida sobre como funciona?\n\nTô aqui pra te explicar tudo pessoalmente. Me conta: o que te travou?`;
+        message = `Opa${greeting ? ", " + greeting : ""}! Aqui é o Mark. Vi que você se interessou em nossa plataforma para ganhar com seu tempo livre, mas não finalizou sua inscrição. Ficou com alguma dúvida que eu possa te ajudar?`;
       }
 
       await supabase.from("whatsapp_conversations").insert({
