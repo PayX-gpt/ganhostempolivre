@@ -173,6 +173,22 @@ Depois da primeira vez, NUNCA mais mencionar.
 
 Responda APENAS com o texto da mensagem, sem formatação JSON, sem aspas extras. Mantenha respostas concisas e naturais.`;
 
+// ====== POST-PROCESSING: Remove any [Nome] or bracket placeholders ======
+function sanitizeAIResponse(text: string): string {
+  // Remove [Nome], [nome], [Name] or any [placeholder] patterns
+  let cleaned = text.replace(/\[Nome\]/gi, "");
+  cleaned = cleaned.replace(/\[Name\]/gi, "");
+  cleaned = cleaned.replace(/\[[A-Za-zÀ-ÿ]+\]/g, "");
+  // Clean up double spaces or commas left behind
+  cleaned = cleaned.replace(/,\s*!/g, "!");
+  cleaned = cleaned.replace(/,\s*\./g, ".");
+  cleaned = cleaned.replace(/\s{2,}/g, " ");
+  cleaned = cleaned.replace(/Opa,\s*!/g, "Opa!");
+  cleaned = cleaned.replace(/Opa,\s*Aqui/g, "Opa! Aqui");
+  cleaned = cleaned.replace(/tranquilo\(a\),\s*\./g, "tranquilo(a).");
+  return cleaned.trim();
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -191,7 +207,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { phone, incoming_message, lead_type } = await req.json();
+    const { phone, incoming_message, lead_type, is_frustrated } = await req.json();
 
     if (!phone || !incoming_message) {
       return new Response(JSON.stringify({ error: "phone and incoming_message required" }), {
@@ -208,32 +224,51 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: true })
       .limit(20);
 
-    // Detect lead type
+    // ====== DETECT LEAD TYPE — PRIORITIZE PHONE MATCH ======
     let detectedLeadType = lead_type || "unknown";
     if (detectedLeadType === "unknown") {
-      const { data: purchase } = await supabase
-        .from("purchase_tracking")
-        .select("status")
-        .or(`email.ilike.%${phone}%`)
-        .eq("status", "approved")
-        .limit(1);
-      
+      // 1) Check whatsapp_welcome_queue by phone (most reliable)
+      const phoneSuffix = phone.slice(-9);
       const { data: queueEntry } = await supabase
         .from("whatsapp_welcome_queue")
-        .select("lead_type, purchased")
-        .eq("phone", phone)
+        .select("lead_type, purchased, lead_name")
+        .ilike("phone", `%${phoneSuffix}`)
         .order("created_at", { ascending: false })
         .limit(1);
 
-      if (queueEntry?.[0]?.purchased || (purchase && purchase.length > 0)) {
+      if (queueEntry?.[0]?.purchased) {
         detectedLeadType = "post_purchase";
-      } else if (queueEntry?.[0]?.lead_type) {
+      } else if (queueEntry?.[0]?.lead_type && queueEntry[0].lead_type !== "unknown") {
         detectedLeadType = queueEntry[0].lead_type;
       } else {
-        detectedLeadType = "recovery";
+        // 2) Check purchase_tracking by phone (Kirvano webhook stores phone in event_id JSON)
+        const { data: purchases } = await supabase
+          .from("purchase_tracking")
+          .select("status, event_id")
+          .eq("status", "approved")
+          .order("created_at", { ascending: false })
+          .limit(50);
+
+        const hasApprovedPurchase = purchases?.some(p => {
+          try {
+            if (p.event_id) {
+              const meta = JSON.parse(p.event_id);
+              const purchasePhone = (meta.phone || "").replace(/\D/g, "");
+              return purchasePhone.endsWith(phoneSuffix);
+            }
+          } catch { /* ignore parse errors */ }
+          return false;
+        });
+
+        if (hasApprovedPurchase) {
+          detectedLeadType = "post_purchase";
+        } else {
+          detectedLeadType = "recovery";
+        }
       }
     }
 
+    // Get lead name from history or queue
     const leadName = history?.find((m) => m.lead_name)?.lead_name || "";
     
     let contextNote = "";
@@ -243,8 +278,21 @@ Deno.serve(async (req) => {
       contextNote = "\n\n[CONTEXTO DO SISTEMA: Este lead NÃO pagou R$37. Use o FLUXO B (Recuperação). Objetivo: convencer a finalizar a compra de R$37.]";
     }
 
+    // Add frustration context if detected
+    if (is_frustrated) {
+      contextNote += "\n\n[⚠️ ALERTA: O lead está FRUSTRADO/IRRITADO. Use APENAS o protocolo de DETECÇÃO DE FRUSTRAÇÃO E ESCALAÇÃO. NÃO continue o script normal. Seja empático, reconheça o problema e ofereça encaminhamento para suporte humano. NÃO repita dados de acesso se já foram passados.]";
+    }
+
+    // Check if notifications were already mentioned
+    const notificationsMentioned = history?.some(m =>
+      m.direction === "outgoing" && m.message.toLowerCase().includes("notificaç")
+    );
+    if (notificationsMentioned) {
+      contextNote += "\n\n[SISTEMA: Notificações já foram mencionadas. NÃO mencione novamente.]";
+    }
+
     const messages = [
-      { role: "system", content: SYSTEM_PROMPT + contextNote + (leadName ? `\n\nO nome do lead é: ${leadName}` : "") },
+      { role: "system", content: SYSTEM_PROMPT + contextNote + (leadName ? `\n\nO nome do lead é: ${leadName}` : "\n\n[SISTEMA: Nome do lead DESCONHECIDO. NÃO use placeholder. OMITA o nome completamente.]") },
     ];
 
     for (const msg of history || []) {
@@ -263,7 +311,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages,
-        max_tokens: 250,
+        max_tokens: 300,
         temperature: 0.85,
       }),
     });
@@ -277,13 +325,16 @@ Deno.serve(async (req) => {
     }
 
     const aiData = await aiResponse.json();
-    const replyText = aiData.choices?.[0]?.message?.content?.trim();
+    let replyText = aiData.choices?.[0]?.message?.content?.trim();
 
     if (!replyText) {
       return new Response(JSON.stringify({ error: "Empty AI response" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // ====== POST-PROCESSING: Remove any [Nome] placeholders ======
+    replyText = sanitizeAIResponse(replyText);
 
     // Save reply
     await supabase.from("whatsapp_conversations").insert({
@@ -312,6 +363,7 @@ Deno.serve(async (req) => {
         success: true,
         reply: replyText,
         lead_type: detectedLeadType,
+        frustrated: is_frustrated || false,
         send_result: sendData,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
