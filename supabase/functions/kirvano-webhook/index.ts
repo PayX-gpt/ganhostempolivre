@@ -374,6 +374,23 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ====== WHATSAPP WELCOME QUEUE: Mark purchase ======
+    if (normalizedStatus === "approved" && phone) {
+      try {
+        const phoneSuffix = phone.replace(/\D/g, "").slice(-9);
+        if (phoneSuffix.length >= 8) {
+          await supabase
+            .from("whatsapp_welcome_queue")
+            .update({ purchased: true, purchased_at: new Date().toISOString() })
+            .eq("sent", false)
+            .ilike("phone", `%${phoneSuffix}`);
+          console.log(`📱 [WhatsApp Queue] Marked purchase for phone suffix: ${phoneSuffix}`);
+        }
+      } catch (wqErr) {
+        console.warn("⚠️ [WhatsApp Queue] Error marking purchase:", wqErr);
+      }
+    }
+
     // ====== AUDIT LOG ======
     await supabase.from("funnel_audit_logs").insert({
       event_type: `kirvano_${normalizedStatus}`,

@@ -204,6 +204,26 @@ const QuizFunnel = () => {
             onNext={(value) => {
               if (answers.contactMethod === "whatsapp") {
                 setAnswers((prev) => ({ ...prev, phone: value }));
+                // Enqueue for WhatsApp welcome message (10 min delay)
+                const cleanPhone = value.replace(/\D/g, "");
+                if (cleanPhone.length >= 10) {
+                  const sessionId = sessionStorage.getItem("session_id") || localStorage.getItem("session_id") || "";
+                  const sendAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+                  import("@/integrations/supabase/client").then(({ supabase }) => {
+                    supabase.from("whatsapp_welcome_queue").insert({
+                      phone: cleanPhone,
+                      lead_name: answers.name || null,
+                      session_id: sessionId || null,
+                      send_at: sendAt,
+                      lead_type: "unknown",
+                      purchased: false,
+                      sent: false,
+                    }).then(({ error }) => {
+                      if (error) console.warn("WhatsApp queue insert error:", error.message);
+                      else console.log("✅ Lead enqueued for WhatsApp welcome");
+                    });
+                  });
+                }
               } else {
                 setAnswers((prev) => ({ ...prev, email: value }));
               }

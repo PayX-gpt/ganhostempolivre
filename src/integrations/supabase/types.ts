@@ -365,6 +365,123 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_conversations: {
+        Row: {
+          ai_generated: boolean | null
+          created_at: string
+          direction: string
+          id: string
+          lead_name: string | null
+          message: string
+          phone: string
+          session_id: string | null
+        }
+        Insert: {
+          ai_generated?: boolean | null
+          created_at?: string
+          direction?: string
+          id?: string
+          lead_name?: string | null
+          message: string
+          phone: string
+          session_id?: string | null
+        }
+        Update: {
+          ai_generated?: boolean | null
+          created_at?: string
+          direction?: string
+          id?: string
+          lead_name?: string | null
+          message?: string
+          phone?: string
+          session_id?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_instances: {
+        Row: {
+          created_at: string
+          health_status: string | null
+          id: string
+          instance_id: string
+          is_active: boolean
+          label: string
+          last_error: string | null
+          last_health_check: string | null
+          messages_sent: number | null
+          priority: number | null
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          health_status?: string | null
+          id?: string
+          instance_id: string
+          is_active?: boolean
+          label?: string
+          last_error?: string | null
+          last_health_check?: string | null
+          messages_sent?: number | null
+          priority?: number | null
+          token: string
+        }
+        Update: {
+          created_at?: string
+          health_status?: string | null
+          id?: string
+          instance_id?: string
+          is_active?: boolean
+          label?: string
+          last_error?: string | null
+          last_health_check?: string | null
+          messages_sent?: number | null
+          priority?: number | null
+          token?: string
+        }
+        Relationships: []
+      }
+      whatsapp_welcome_queue: {
+        Row: {
+          created_at: string
+          id: string
+          lead_name: string | null
+          lead_type: string
+          phone: string
+          purchased: boolean
+          purchased_at: string | null
+          send_at: string
+          sent: boolean
+          sent_at: string | null
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lead_name?: string | null
+          lead_type?: string
+          phone: string
+          purchased?: boolean
+          purchased_at?: string | null
+          send_at: string
+          sent?: boolean
+          sent_at?: string | null
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lead_name?: string | null
+          lead_type?: string
+          phone?: string
+          purchased?: boolean
+          purchased_at?: string | null
+          send_at?: string
+          sent?: boolean
+          sent_at?: string | null
+          session_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
