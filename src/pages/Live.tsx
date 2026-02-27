@@ -18,6 +18,7 @@ import LiveRevenueChart from "@/components/LiveRevenueChart";
 import LiveUserPresence from "@/components/LiveUserPresence";
 import LiveIntelligence from "@/components/LiveIntelligence";
 import LiveFunnelAnalytics from "@/components/LiveFunnelAnalytics";
+import CampaignFilter, { type CampaignFilterState } from "@/components/CampaignFilter";
 import LiveLeadsTable from "@/components/LiveLeadsTable";
 import LiveUpsellMonitor from "@/components/LiveUpsellMonitor";
 import LiveSalesFeed from "@/components/LiveSalesFeed";
@@ -134,6 +135,7 @@ export default function AdminFunnelAudit() {
   const [interactionRateToday, setInteractionRateToday] = useState(0);
   const [totalVisitsToday, setTotalVisitsToday] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [campaignFilterState, setCampaignFilterState] = useState<CampaignFilterState>({ selectedCampaigns: new Set(), allCampaigns: [], campaignColors: {} });
   
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const saved = localStorage.getItem('live-sound-enabled');
@@ -511,9 +513,10 @@ export default function AdminFunnelAudit() {
         </div>
 
         <LiveUserPresence onTotalChange={handlePresenceTotalChange} />
+        <CampaignFilter onChange={setCampaignFilterState} />
         <LiveSalesFeed />
         <LiveUpsellMonitor />
-        <LiveFunnelAnalytics />
+        <LiveFunnelAnalytics campaignFilter={campaignFilterState} />
         <LiveRevenueChart usdToBrl={1} />
         <LiveIntelligence />
         <LiveLeadsTable />
