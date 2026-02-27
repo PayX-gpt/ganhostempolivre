@@ -21,16 +21,28 @@ Deno.serve(async (req) => {
     // 🔴 PAUSA DE RECUPERAÇÃO — altere para false quando quiser reativar
     const PAUSE_RECOVERY = true;
 
-    // Quando recovery está pausado, buscamos uma janela maior para não bloquear post_purchase
-    const fetchLimit = PAUSE_RECOVERY ? 50 : 5;
-
-    const { data: pendingEntries, error: fetchError } = await supabase
+    // Buscar compradores primeiro (prioridade máxima)
+    const { data: purchasedEntries, error: fetchError1 } = await supabase
       .from("whatsapp_welcome_queue")
       .select("*")
       .eq("sent", false)
+      .eq("purchased", true)
       .lte("send_at", now)
       .order("send_at", { ascending: true })
-      .limit(fetchLimit);
+      .limit(10);
+
+    // Depois buscar os demais (recovery etc.)
+    const { data: otherEntries, error: fetchError2 } = await supabase
+      .from("whatsapp_welcome_queue")
+      .select("*")
+      .eq("sent", false)
+      .eq("purchased", false)
+      .lte("send_at", now)
+      .order("send_at", { ascending: true })
+      .limit(PAUSE_RECOVERY ? 0 : 5);
+
+    const fetchError = fetchError1 || fetchError2;
+    const pendingEntries = [...(purchasedEntries || []), ...(otherEntries || [])];
 
     if (fetchError) {
       return new Response(JSON.stringify({ error: fetchError.message }), {
