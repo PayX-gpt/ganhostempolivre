@@ -512,7 +512,7 @@ export default function AdminFunnelAudit() {
           </div>
         </div>
 
-        <LiveUserPresence onTotalChange={handlePresenceTotalChange} />
+        <LiveUserPresence onTotalChange={handlePresenceTotalChange} campaignFilter={campaignFilterState} />
         <CampaignFilter onChange={setCampaignFilterState} />
         <LiveSalesFeed />
         <LiveUpsellMonitor />

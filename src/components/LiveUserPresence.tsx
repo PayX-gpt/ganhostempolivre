@@ -9,6 +9,8 @@ import {
   Rocket, BarChart3, CreditCard, ArrowDownCircle, Trophy, ShieldCheck, TrendingUp, DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { CampaignFilterState } from "./CampaignFilter";
+import { cleanCampaignName } from "./CampaignFilter";
 
 interface FunnelStep {
   id: string;
@@ -44,6 +46,7 @@ interface RecentPurchase {
 
 interface LiveUserPresenceProps {
   onTotalChange?: (total: number) => void;
+  campaignFilter?: CampaignFilterState;
 }
 
 const STEPS: FunnelStep[] = [
@@ -75,19 +78,10 @@ const STEPS: FunnelStep[] = [
 ];
 
 const FUNNEL_STEP_LABELS: Record<string, string> = {
-  front_37: "R$37",
-  front_47: "R$47",
-  acelerador_basico: "UP1",
-  acelerador_duplo: "UP1",
-  acelerador_maximo: "UP1",
-  multiplicador_prata: "UP2",
-  multiplicador_ouro: "UP2",
-  multiplicador_diamante: "UP2",
-  blindagem: "UP3",
-  circulo_interno: "UP4",
-  safety_pro: "UP5",
-  forex_mentoria: "UP6",
-  downsell_guia: "DS",
+  front_37: "R$37", front_47: "R$47",
+  acelerador_basico: "UP1", acelerador_duplo: "UP1", acelerador_maximo: "UP1",
+  multiplicador_prata: "UP2", multiplicador_ouro: "UP2", multiplicador_diamante: "UP2",
+  blindagem: "UP3", circulo_interno: "UP4", safety_pro: "UP5", forex_mentoria: "UP6", downsell_guia: "DS",
 };
 
 const toStepId = (page: string): string | null => {
@@ -100,7 +94,6 @@ const toStepId = (page: string): string | null => {
   if (p.includes("/upsell")) return "upsell1";
   if (p.includes("/thanks")) return "thanks";
   if (p.includes("/checkout") || p.includes("/processing")) return "checkout";
-  // Map old 19-step routes to current 17-step structure
   const OLD_STEP_MAP: Record<number, string> = { 18: "step16", 19: "step17" };
   for (let i = 19; i >= 1; i--) {
     if (p.includes(`/step-${i}`)) return OLD_STEP_MAP[i] || `step${i}`;
@@ -116,17 +109,34 @@ const shouldSkip = (pageId: string, sessionKey?: string) => {
   return Array.from(SKIP).some(s => p.includes(s));
 };
 
-export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProps) {
+export default function LiveUserPresence({ onTotalChange, campaignFilter }: LiveUserPresenceProps) {
   const [funnelSteps, setFunnelSteps] = useState<FunnelStep[]>(STEPS);
   const [totalOnline, setTotalOnline] = useState(0);
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+  const [allOnlineUsers, setAllOnlineUsers] = useState<OnlineUser[]>([]);
   const [recentPurchases, setRecentPurchases] = useState<RecentPurchase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [sessionCampaignMap, setSessionCampaignMap] = useState<Record<string, string>>({});
   const onTotalChangeRef = useRef(onTotalChange);
   onTotalChangeRef.current = onTotalChange;
+  const allPresenceDataRef = useRef<{ counts: Record<string, number>; users: OnlineUser[]; stepSources: Record<string, Set<string>>; total: number } | null>(null);
 
-  // Fetch recent purchases (today) for cross-referencing online users
+  // Fetch session → campaign mapping
+  const fetchSessionCampaigns = useCallback(async () => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const { data } = await supabase
+      .from("session_attribution")
+      .select("session_id, utm_campaign")
+      .gte("created_at", todayStart.toISOString());
+    const map: Record<string, string> = {};
+    (data || []).forEach(a => {
+      map[a.session_id] = a.utm_campaign ? cleanCampaignName(a.utm_campaign) : "Direto";
+    });
+    setSessionCampaignMap(map);
+  }, []);
+
   const fetchRecentPurchases = useCallback(async () => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -139,7 +149,7 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
     if (data) setRecentPurchases(data as RecentPurchase[]);
   }, []);
 
-  // Stable ref-based handler — never changes, never causes channel recreation
+  // Core presence handler - stores ALL users (unfiltered)
   const handlePresenceSync = useCallback((channel: ReturnType<typeof supabase.channel>) => {
     const state = channel.presenceState<PresencePayload>();
     const counts: Record<string, number> = {};
@@ -147,7 +157,6 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
 
     let total = 0;
     const users: OnlineUser[] = [];
-
     const stepSources: Record<string, Set<string>> = {};
     STEPS.forEach(s => { stepSources[s.id] = new Set(); });
 
@@ -173,12 +182,68 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
       }
     });
 
+    // Store all unfiltered data
+    allPresenceDataRef.current = { counts, users, stepSources, total };
+    setAllOnlineUsers(users);
+    setLastUpdated(new Date());
+    
+    // Apply will be called by the effect below
+  }, []);
+
+  // Apply campaign filter to presence data
+  const selectedCampaigns = campaignFilter?.selectedCampaigns || new Set<string>();
+  const campaignMode = selectedCampaigns.size > 0;
+
+  useEffect(() => {
+    const data = allPresenceDataRef.current;
+    if (!data) return;
+
+    if (!campaignMode) {
+      // No filter - show all
+      setFunnelSteps(prev => {
+        let changed = false;
+        const next = prev.map(step => {
+          const newCount = data.counts[step.id] || 0;
+          const newSources = Array.from(data.stepSources[step.id] || []);
+          if (step.count !== newCount || JSON.stringify(step.sources) !== JSON.stringify(newSources)) {
+            changed = true;
+            return { ...step, count: newCount, sources: newSources };
+          }
+          return step;
+        });
+        return changed ? next : prev;
+      });
+      setTotalOnline(data.total);
+      setOnlineUsers(data.users);
+      onTotalChangeRef.current?.(data.total);
+      return;
+    }
+
+    // Filter by selected campaigns
+    const filteredUsers = data.users.filter(u => {
+      const camp = sessionCampaignMap[u.session_id] || "Direto";
+      return selectedCampaigns.has(camp);
+    });
+
+    // Recalculate counts from filtered users
+    const filteredCounts: Record<string, number> = {};
+    const filteredSources: Record<string, Set<string>> = {};
+    STEPS.forEach(s => { filteredCounts[s.id] = 0; filteredSources[s.id] = new Set(); });
+
+    filteredUsers.forEach(u => {
+      const stepId = STEPS.find(s => s.label === u.page)?.id;
+      if (stepId) {
+        filteredCounts[stepId]++;
+        filteredSources[stepId].add(u.traffic_source);
+      }
+    });
+
     setFunnelSteps(prev => {
       let changed = false;
       const next = prev.map(step => {
-        const newCount = counts[step.id] || 0;
-        const newSources = Array.from(stepSources[step.id] || []);
-        if (step.count !== newCount || JSON.stringify((step as any).sources) !== JSON.stringify(newSources)) {
+        const newCount = filteredCounts[step.id] || 0;
+        const newSources = Array.from(filteredSources[step.id] || []);
+        if (step.count !== newCount || JSON.stringify(step.sources) !== JSON.stringify(newSources)) {
           changed = true;
           return { ...step, count: newCount, sources: newSources };
         }
@@ -187,15 +252,16 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
       return changed ? next : prev;
     });
 
-    setTotalOnline(prev => { if (prev !== total) return total; return prev; });
-    setOnlineUsers(users);
-    setLastUpdated(new Date());
-    onTotalChangeRef.current?.(total);
-  }, []);
+    const filteredTotal = filteredUsers.length;
+    setTotalOnline(filteredTotal);
+    setOnlineUsers(filteredUsers);
+    onTotalChangeRef.current?.(filteredTotal);
+  }, [allOnlineUsers, campaignMode, selectedCampaigns, sessionCampaignMap]);
 
   useEffect(() => {
     setIsLoading(true);
     fetchRecentPurchases();
+    fetchSessionCampaigns();
 
     const ADMIN_OBSERVER_KEY = `admin_observer_${Date.now()}`;
     const channel = supabase.channel("funnel-presence", {
@@ -215,33 +281,28 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
         }
       });
 
-    // Refresh purchases every 30s to catch new sales
     const purchaseInterval = setInterval(fetchRecentPurchases, 30_000);
+    const campaignInterval = setInterval(fetchSessionCampaigns, 30_000);
 
-    // Realtime listener for new purchases
     const purchaseChannel = supabase
       .channel("presence-purchase-feed")
-      .on("postgres_changes", {
-        event: "*",
-        schema: "public",
-        table: "purchase_tracking",
-      }, () => fetchRecentPurchases())
+      .on("postgres_changes", { event: "*", schema: "public", table: "purchase_tracking" },
+        () => fetchRecentPurchases())
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(purchaseChannel);
       clearInterval(purchaseInterval);
+      clearInterval(campaignInterval);
     };
-  }, [handlePresenceSync, fetchRecentPurchases]);
+  }, [handlePresenceSync, fetchRecentPurchases, fetchSessionCampaigns]);
 
-  // Build a map of session_id → purchase for quick lookup
   const purchaseBySession = recentPurchases.reduce<Record<string, RecentPurchase>>((acc, p) => {
     if (p.session_id) acc[p.session_id] = p;
     return acc;
   }, {});
 
-  // Also build name → purchase for users whose name matches buyer_name (fallback)
   const purchaseByName = recentPurchases.reduce<Record<string, RecentPurchase>>((acc, p) => {
     if (p.buyer_name && p.buyer_name.trim()) {
       const firstName = p.buyer_name.trim().split(" ")[0].toLowerCase();
@@ -251,9 +312,7 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
   }, {});
 
   const getPurchaseForUser = (user: OnlineUser): RecentPurchase | null => {
-    // Try session_id match first
     if (purchaseBySession[user.session_id]) return purchaseBySession[user.session_id];
-    // Fallback: match by first name
     if (user.name && user.name !== "Visitante") {
       const firstName = user.name.toLowerCase();
       if (purchaseByName[firstName]) return purchaseByName[firstName];
@@ -270,7 +329,9 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
           </div>
           <div className="min-w-0">
             <h3 className="font-semibold text-white text-sm truncate">Mapa do Funil — Tempo Real</h3>
-            <p className="text-[10px] text-[#666]">Zero delay • Presença instantânea</p>
+            <p className="text-[10px] text-[#666]">
+              {campaignMode ? "Filtrado por campanha" : "Zero delay • Presença instantânea"}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -314,7 +375,6 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
               <Icon className={cn("w-3.5 h-3.5 mb-0.5 flex-shrink-0", iconColor)} />
               <span className={cn("text-sm sm:text-lg font-bold tabular-nums leading-none", hasUsers ? "text-white" : "text-[#444]")}>{step.count}</span>
               <span className="text-[7px] sm:text-[9px] text-[#666] text-center leading-tight truncate w-full">{step.label}</span>
-              {/* Source indicators */}
               {hasUsers && (hasTiktok || hasMeta) && (
                 <div className="flex items-center gap-0.5 mt-0.5">
                   {hasTiktok && <span className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.7)]" title="TikTok" />}
@@ -326,7 +386,6 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
         })}
       </div>
 
-      {/* Online Users List */}
       {onlineUsers.length > 0 && (
         <div className="mt-4 rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3">
           <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -340,6 +399,7 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
               const isMeta = user.traffic_source === "meta";
               const dotColor = isTiktok ? "bg-red-500" : isMeta ? "bg-emerald-400" : "bg-gray-400";
               const dotGlow = isTiktok ? "bg-red-500" : isMeta ? "bg-emerald-400" : "bg-gray-400";
+              const userCampaign = sessionCampaignMap[user.session_id];
               return (
                 <div key={user.session_id} className={cn(
                   "flex items-center gap-2 text-xs py-1.5 px-2 rounded-lg",
@@ -354,7 +414,6 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
                   <span className={cn("font-medium truncate flex-1", isVisitante ? "text-[#666] italic" : "text-white")}>
                     {user.name}
                   </span>
-                  {/* Source badge */}
                   {isTiktok && (
                     <span className="text-[8px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full border border-red-500/30 font-bold shrink-0 shadow-[0_0_6px_rgba(239,68,68,0.3)]">
                       TikTok
@@ -365,7 +424,17 @@ export default function LiveUserPresence({ onTotalChange }: LiveUserPresenceProp
                       Meta
                     </span>
                   )}
-                  {/* Purchase badge */}
+                  {/* Campaign badge when filtering */}
+                  {campaignMode && userCampaign && (
+                    <span className="text-[7px] px-1.5 py-0.5 rounded-full border font-medium shrink-0 truncate max-w-[80px]"
+                      style={{
+                        backgroundColor: (campaignFilter?.campaignColors?.[userCampaign] || "#666") + "22",
+                        borderColor: campaignFilter?.campaignColors?.[userCampaign] || "#666",
+                        color: campaignFilter?.campaignColors?.[userCampaign] || "#888",
+                      }}>
+                      {userCampaign}
+                    </span>
+                  )}
                   {purchase && (
                     <span className="flex items-center gap-0.5 text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full border border-emerald-500/30 font-bold shrink-0">
                       <DollarSign className="w-2.5 h-2.5" />
