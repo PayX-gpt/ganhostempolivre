@@ -14,6 +14,33 @@ const LOCALE_MAP: Record<Language, string> = {
   es: "es-ES",
 };
 
+/* ─── Currency Conversion ─── */
+const BRL_USD_RATE = 5.0;
+
+export function useCurrency() {
+  const { lang, locale } = useLanguage();
+  const isBrl = lang === "pt";
+  const sym = isBrl ? "R$" : "$";
+
+  /** Convert BRL value to local display value */
+  const toLocal = (brl: number, decimals?: number): number => {
+    const val = isBrl ? brl : brl / BRL_USD_RATE;
+    if (decimals !== undefined) return parseFloat(val.toFixed(decimals));
+    return Math.round(val);
+  };
+
+  /** Format BRL amount with correct symbol and locale */
+  const format = (brl: number, decimals = 0): string => {
+    const val = toLocal(brl, decimals);
+    if (decimals > 0) {
+      return `${sym}${val.toLocaleString(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
+    }
+    return `${sym}${val.toLocaleString(locale)}`;
+  };
+
+  return { sym, toLocal, format, isBrl, locale };
+}
+
 function detectLanguage(): Language {
   try {
     const stored = localStorage.getItem("app_lang");
