@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
+import { LanguageSelector } from "@/lib/i18n";
 
 interface UpsellLayoutProps {
   children: ReactNode;
@@ -10,10 +11,11 @@ const UpsellLayout = ({ children, progress }: UpsellLayoutProps) => {
   return (
     <div className="min-h-screen" style={{ background: "#020617", fontFamily: "'Inter', system-ui, sans-serif" }}>
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center py-3.5 backdrop-blur-sm" style={{ background: "rgba(2,6,23,0.95)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3.5 backdrop-blur-sm" style={{ background: "rgba(2,6,23,0.95)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <span style={{ fontSize: 13, letterSpacing: 3, fontWeight: 600, color: "rgba(248,250,252,0.9)" }}>
           <span style={{ color: "#16A34A", fontWeight: 700 }}>G</span>ANHOS COM TEMPO LIVRE
         </span>
+        <LanguageSelector />
       </header>
 
       {/* Progress bar */}

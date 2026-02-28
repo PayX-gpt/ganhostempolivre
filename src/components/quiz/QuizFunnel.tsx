@@ -4,6 +4,7 @@ import { ProgressBar, type QuizAnswers } from "./QuizUI";
 import { usePagePresence } from "@/hooks/usePagePresence";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { saveSessionAttribution } from "@/lib/trackingDataLayer";
+import { useLanguage, LanguageSelector, type Language } from "@/lib/i18n";
 import Step1Intro from "./Step1Intro";
 import Step2Age from "./Step2Age";
 import StepName from "./StepName";
@@ -21,6 +22,12 @@ import StepWhatsAppProof from "./StepWhatsAppProof";
 import StepContactMethod from "./StepContactMethod";
 import StepContactInput from "./StepContactInput";
 import Step13Offer from "./Step13Offer";
+
+const footerTexts: Record<Language, string> = {
+  pt: "© 2026 — Plataforma de Ganhos com Tempo Livre • Todos os direitos reservados",
+  en: "© 2026 — Free Time Earnings Platform • All rights reserved",
+  es: "© 2026 — Plataforma Ganancias con Tiempo Libre • Todos los derechos reservados",
+};
 
 const STEP_SLUGS = [
   "step-1",  // 1: Intro
@@ -56,6 +63,7 @@ const STEP_NAMES: Record<string, string> = {
 const QuizFunnel = () => {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
+  const { lang } = useLanguage();
   const [answers, setAnswers] = useState<QuizAnswers>(() => {
     try {
       const saved = sessionStorage.getItem("quiz_answers");
@@ -204,7 +212,6 @@ const QuizFunnel = () => {
             onNext={(value) => {
               if (answers.contactMethod === "whatsapp") {
                 setAnswers((prev) => ({ ...prev, phone: value }));
-                // Enqueue for WhatsApp welcome message (10 min delay)
                 const cleanPhone = value.replace(/\D/g, "");
                 if (cleanPhone.length >= 10) {
                   const sessionId = sessionStorage.getItem("session_id") || localStorage.getItem("session_id") || "";
@@ -247,7 +254,7 @@ const QuizFunnel = () => {
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col">
       <header className="w-full bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-        <div className="max-w-lg mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-center">
+        <div className="max-w-lg mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-between">
           <h1 className="font-bold text-lg sm:text-xl text-foreground tracking-tight flex items-center gap-1.5">
             <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">G</span>
             <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">anhos com</span>
@@ -256,6 +263,7 @@ const QuizFunnel = () => {
             <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">L</span>
             <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">ivre</span>
           </h1>
+          <LanguageSelector />
         </div>
         {step > 1 && step < TOTAL_STEPS && <ProgressBar current={progressCurrent} total={progressTotal} />}
       </header>
@@ -266,7 +274,7 @@ const QuizFunnel = () => {
 
       <footer className="w-full py-3 border-t border-border">
         <p className="text-xs sm:text-sm text-muted-foreground text-center">
-          © 2026 — Plataforma de Ganhos com Tempo Livre • Todos os direitos reservados
+          {footerTexts[lang]}
         </p>
       </footer>
     </div>

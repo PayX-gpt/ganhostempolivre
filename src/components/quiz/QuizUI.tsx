@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { Lock } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 export interface QuizAnswers {
   age?: string;
@@ -23,9 +24,10 @@ interface ProgressBarProps {
 }
 
 export const ProgressBar = ({ current, total }: ProgressBarProps) => {
-  // Start at 15% minimum to create momentum
+  const { lang } = useLanguage();
   const rawPercentage = Math.round((current / total) * 100);
   const percentage = Math.max(15, rawPercentage);
+  const label = { pt: "completo", en: "complete", es: "completado" }[lang];
   return (
     <div className="w-full px-4 py-2">
       <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
@@ -35,7 +37,7 @@ export const ProgressBar = ({ current, total }: ProgressBarProps) => {
         />
       </div>
       <p className="text-xs text-muted-foreground mt-1.5 text-right font-medium">
-        {percentage}% completo
+        {percentage}% {label}
       </p>
     </div>
   );
