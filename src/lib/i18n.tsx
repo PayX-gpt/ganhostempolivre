@@ -14,28 +14,26 @@ const LOCALE_MAP: Record<Language, string> = {
   es: "es-ES",
 };
 
-/* ─── Currency Conversion ─── */
-const BRL_USD_RATE = 5.0;
+/* ─── Currency Display (1:1 values, only symbol changes) ─── */
 
 export function useCurrency() {
   const { lang, locale } = useLanguage();
   const isBrl = lang === "pt";
   const sym = isBrl ? "R$" : "$";
 
-  /** Convert BRL value to local display value */
-  const toLocal = (brl: number, decimals?: number): number => {
-    const val = isBrl ? brl : brl / BRL_USD_RATE;
+  /** Return value as-is (no conversion) */
+  const toLocal = (val: number, decimals?: number): number => {
     if (decimals !== undefined) return parseFloat(val.toFixed(decimals));
-    return Math.round(val);
+    return val;
   };
 
-  /** Format BRL amount with correct symbol and locale */
-  const format = (brl: number, decimals = 0): string => {
-    const val = toLocal(brl, decimals);
+  /** Format amount with correct symbol and locale */
+  const format = (val: number, decimals = 0): string => {
+    const display = toLocal(val, decimals);
     if (decimals > 0) {
-      return `${sym}${val.toLocaleString(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
+      return `${sym}${display.toLocaleString(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
     }
-    return `${sym}${val.toLocaleString(locale)}`;
+    return `${sym}${display.toLocaleString(locale)}`;
   };
 
   return { sym, toLocal, format, isBrl, locale };
