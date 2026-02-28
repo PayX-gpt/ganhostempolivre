@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton, TrustBadge } from "./QuizUI";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { Clock, Users, MessageSquare } from "lucide-react";
+import { useLanguage, type Language } from "@/lib/i18n";
 
 interface StepContactInputProps {
   method: string;
@@ -9,23 +10,72 @@ interface StepContactInputProps {
   onNext: (value: string) => void;
 }
 
+const texts = {
+  pt: {
+    titleWithName: (name: string) => `${name}, seu plano de ganhos está pronto.`,
+    titleNoName: "Seu plano de ganhos está pronto.",
+    subtitleEmail: "Só falta o e-mail pra liberar seu acesso.",
+    subtitleWhatsapp: "Só falta o WhatsApp pra liberar seu acesso.",
+    timerLabel: (time: string) => `Seu acesso personalizado expira em ${time}`,
+    labelEmail: "Seu melhor e-mail",
+    labelWhatsapp: "Seu WhatsApp (com DDD)",
+    placeholderEmail: "seuemail@exemplo.com",
+    placeholderWhatsapp: "(11) 99999-9999",
+    cta: "LIBERAR MEU ACESSO AGORA →",
+    trustEmail: "Seu e-mail é protegido. Só a equipe de suporte tem acesso.",
+    trustWhatsapp: "Seu número é protegido. Só a equipe de suporte tem acesso.",
+    social: (n: number) => <><strong className="text-foreground">{n} pessoas</strong> da sua região ativaram nos últimos 30 minutos</>,
+    testimonial: "\"Dei meu número, recebi o link em 2 minutos e no mesmo dia já tava operando.\" — Maria, 34, MG",
+  },
+  en: {
+    titleWithName: (name: string) => `${name}, your earnings plan is ready.`,
+    titleNoName: "Your earnings plan is ready.",
+    subtitleEmail: "Just your email left to unlock your access.",
+    subtitleWhatsapp: "Just your WhatsApp left to unlock your access.",
+    timerLabel: (time: string) => `Your personalized access expires in ${time}`,
+    labelEmail: "Your best email",
+    labelWhatsapp: "Your WhatsApp (with area code)",
+    placeholderEmail: "youremail@example.com",
+    placeholderWhatsapp: "(11) 99999-9999",
+    cta: "UNLOCK MY ACCESS NOW →",
+    trustEmail: "Your email is protected. Only the support team has access.",
+    trustWhatsapp: "Your number is protected. Only the support team has access.",
+    social: (n: number) => <><strong className="text-foreground">{n} people</strong> in your region activated in the last 30 minutes</>,
+    testimonial: "\"I gave my number, received the link in 2 minutes and was operating the same day.\" — Maria, 34",
+  },
+  es: {
+    titleWithName: (name: string) => `${name}, tu plan de ganancias está listo.`,
+    titleNoName: "Tu plan de ganancias está listo.",
+    subtitleEmail: "Solo falta tu e-mail para liberar tu acceso.",
+    subtitleWhatsapp: "Solo falta tu WhatsApp para liberar tu acceso.",
+    timerLabel: (time: string) => `Tu acceso personalizado expira en ${time}`,
+    labelEmail: "Tu mejor e-mail",
+    labelWhatsapp: "Tu WhatsApp (con código de área)",
+    placeholderEmail: "tuemail@ejemplo.com",
+    placeholderWhatsapp: "(11) 99999-9999",
+    cta: "LIBERAR MI ACCESO AHORA →",
+    trustEmail: "Tu e-mail está protegido. Solo el equipo de soporte tiene acceso.",
+    trustWhatsapp: "Tu número está protegido. Solo el equipo de soporte tiene acceso.",
+    social: (n: number) => <><strong className="text-foreground">{n} personas</strong> de tu región activaron en los últimos 30 minutos</>,
+    testimonial: "\"Di mi número, recibí el link en 2 minutos y ese mismo día ya estaba operando.\" — María, 34",
+  },
+};
+
 const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) => {
+  const { lang } = useLanguage();
+  const t = texts[lang];
   const [value, setValue] = useState("");
   const firstName = userName?.split(" ")[0] || "";
-  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutes
-  const [recentCount] = useState(() => Math.floor(Math.random() * 8) + 8); // 8-15
-
+  const [timeLeft, setTimeLeft] = useState(15 * 60);
+  const [recentCount] = useState(() => Math.floor(Math.random() * 8) + 8);
   const isEmail = method === "email";
 
   const isValid = isEmail
     ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
     : value.replace(/\D/g, "").length >= 10;
 
-  // Countdown timer
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => Math.max(0, prev - 1));
-    }, 1000);
+    const interval = setInterval(() => { setTimeLeft((prev) => Math.max(0, prev - 1)); }, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -44,77 +94,51 @@ const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) =
 
   return (
     <StepContainer>
-      <StepTitle>
-        {firstName
-          ? `${firstName}, seu plano de ganhos está pronto.`
-          : "Seu plano de ganhos está pronto."}
-      </StepTitle>
-      <StepSubtitle>
-        {isEmail
-          ? `Só falta o e-mail pra liberar seu acesso.`
-          : `Só falta o WhatsApp pra liberar seu acesso.`}
-      </StepSubtitle>
+      <StepTitle>{firstName ? t.titleWithName(firstName) : t.titleNoName}</StepTitle>
+      <StepSubtitle>{isEmail ? t.subtitleEmail : t.subtitleWhatsapp}</StepSubtitle>
 
-      {/* Timer de urgência */}
       <div className="w-full funnel-card border-accent/30 bg-accent/5 text-center py-2.5">
         <div className="flex items-center justify-center gap-2">
           <Clock className="w-4 h-4 text-accent animate-pulse" />
-          <p className="text-sm font-bold text-accent">
-            Seu acesso personalizado expira em {formatTime(timeLeft)}
-          </p>
+          <p className="text-sm font-bold text-accent">{t.timerLabel(formatTime(timeLeft))}</p>
         </div>
       </div>
 
       <div className="w-full mt-1">
         <label className="text-sm text-muted-foreground font-medium mb-1.5 block">
-          {isEmail ? "Seu melhor e-mail" : "Seu WhatsApp (com DDD)"}
+          {isEmail ? t.labelEmail : t.labelWhatsapp}
         </label>
         <input
           type={isEmail ? "email" : "tel"}
-          placeholder={isEmail ? "seuemail@exemplo.com" : "(11) 99999-9999"}
+          placeholder={isEmail ? t.placeholderEmail : t.placeholderWhatsapp}
           value={value}
           onChange={(e) => setValue(isEmail ? e.target.value : formatPhone(e.target.value))}
           maxLength={isEmail ? 255 : 15}
           className="w-full px-5 py-4 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && isValid) onNext(value.trim());
-          }}
+          onKeyDown={(e) => { if (e.key === "Enter" && isValid) onNext(value.trim()); }}
         />
       </div>
 
       <CTAButton onClick={() => {
-        saveFunnelEvent("lead_captured", {
-          method,
-          has_value: !!value.trim(),
-        });
+        saveFunnelEvent("lead_captured", { method, has_value: !!value.trim() });
         onNext(value.trim());
       }} disabled={!isValid}>
-        LIBERAR MEU ACESSO AGORA →
+        {t.cta}
       </CTAButton>
 
-      <TrustBadge>
-        {isEmail
-          ? "Seu e-mail é protegido. Só a equipe de suporte tem acesso."
-          : "Seu número é protegido. Só a equipe de suporte tem acesso."}
-      </TrustBadge>
+      <TrustBadge>{isEmail ? t.trustEmail : t.trustWhatsapp}</TrustBadge>
 
-      {/* Prova social em tempo real */}
       <div className="w-full funnel-card border-primary/20 bg-primary/5 py-2.5">
         <div className="flex items-center justify-center gap-2">
           <Users className="w-4 h-4 text-primary" />
-          <p className="text-xs text-foreground/70">
-            <strong className="text-foreground">{recentCount} pessoas</strong> da sua região ativaram nos últimos 30 minutos
-          </p>
+          <p className="text-xs text-foreground/70">{t.social(recentCount)}</p>
         </div>
       </div>
 
-      {/* Micro-depoimento */}
       <div className="w-full funnel-card border-border/30 bg-card/30 py-2.5">
         <div className="flex items-start gap-2">
           <MessageSquare className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-          <p className="text-xs text-foreground/70 italic leading-relaxed">
-            "Dei meu número, recebi o link em 2 minutos e no mesmo dia já tava operando." — Maria, 34, MG
-          </p>
+          <p className="text-xs text-foreground/70 italic leading-relaxed">{t.testimonial}</p>
         </div>
       </div>
     </StepContainer>
