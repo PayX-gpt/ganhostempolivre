@@ -31,7 +31,7 @@ const texts = {
     title2: "?",
     subtitle: "This helps us create the ideal plan for your profile.",
     options: [
-      { label: "18 to 25", sublabel: "Our students in this range earn R$120/day on average" },
+      { label: "18 to 25", sublabel: "Our students in this range earn $25/day on average" },
       { label: "26 to 35", sublabel: "Highest success rate in the first week" },
       { label: "36 to 45", sublabel: "Most popular income supplement in this range" },
       { label: "46 to 55", sublabel: "Fastest growing group on the platform — +340% in 2024" },
@@ -44,7 +44,7 @@ const texts = {
     title2: "?",
     subtitle: "Esta información nos ayuda a personalizar el plan ideal para tu perfil.",
     options: [
-      { label: "18 a 25 años", sublabel: "Nuestros alumnos en este rango ganan R$120/día en promedio" },
+      { label: "18 a 25 años", sublabel: "Nuestros alumnos en este rango ganan $25/día en promedio" },
       { label: "26 a 35 años", sublabel: "Mayor tasa de éxito en la primera semana" },
       { label: "36 a 45 años", sublabel: "Complemento de ingreso más buscado en esta franja" },
       { label: "46 a 55 años", sublabel: "Grupo de mayor crecimiento — +340% en 2024" },
