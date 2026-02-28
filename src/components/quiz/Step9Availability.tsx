@@ -23,7 +23,7 @@ const texts = {
   en: {
     title: (name: string) => `${name ? `${name}, if` : "If"} the AI only needed `,
     titleHL: "JUST 10 minutes",
-    titleEnd: " of your day to generate $20+, would you have those 10 minutes?",
+    titleEnd: " of your day to generate $100+, would you have those 10 minutes?",
     subtitle: "It can be during commute, lunch break, or before bed.",
     yes: "Yes, I have 10 minutes",
     yesSub: "I can fit that into my routine",
@@ -33,7 +33,7 @@ const texts = {
   es: {
     title: (name: string) => `${name ? `${name}, si` : "Si"} la IA necesitara `,
     titleHL: "SOLO 10 minutos",
-    titleEnd: " tuyos por día para generar $20+, ¿tendrías esos 10 minutos?",
+    titleEnd: " tuyos por día para generar $100+, ¿tendrías esos 10 minutos?",
     subtitle: "Puede ser en el transporte, en la pausa del almuerzo, antes de dormir.",
     yes: "Sí, tengo 10 minutos",
     yesSub: "Puedo encajarlo en mi rutina",
