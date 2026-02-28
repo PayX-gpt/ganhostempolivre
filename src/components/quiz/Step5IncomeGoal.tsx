@@ -28,10 +28,10 @@ const texts = {
     title2: " per day?",
     subtitle: "Choose the range that would make a real difference in your life today.",
     opts: [
-      { label: "$10 to $20 per day", sublabel: "= $300 to $600/month. Covers everyday essentials." },
-      { label: "$20 to $60 per day", sublabel: "= $600 to $1,800/month. Life-changing." },
-      { label: "$60 to $100 per day", sublabel: "= $1,800 to $3,000/month. Total freedom." },
-      { label: "More than $100 per day", sublabel: "= $3,000+/month. Next level." },
+      { label: "$50 to $100 per day", sublabel: "= $1,500 to $3,000/month. Covers rent, car, groceries." },
+      { label: "$100 to $300 per day", sublabel: "= $3,000 to $9,000/month. Life-changing." },
+      { label: "$300 to $500 per day", sublabel: "= $9,000 to $15,000/month. Total freedom." },
+      { label: "More than $500 per day", sublabel: "= $15,000+/month. Next level." },
     ],
   },
   es: {
@@ -40,10 +40,10 @@ const texts = {
     title2: " por día?",
     subtitle: "Elegí el rango que haría una diferencia real en tu vida hoy.",
     opts: [
-      { label: "$10 a $20 por día", sublabel: "= $300 a $600/mes. Cubre alquiler, auto, mercado." },
-      { label: "$20 a $60 por día", sublabel: "= $600 a $1.800/mes. Te cambia la vida." },
-      { label: "$60 a $100 por día", sublabel: "= $1.800 a $3.000/mes. Libertad total." },
-      { label: "Más de $100 por día", sublabel: "= +$3.000/mes. Otro nivel." },
+      { label: "$50 a $100 por día", sublabel: "= $1.500 a $3.000/mes. Cubre alquiler, auto, mercado." },
+      { label: "$100 a $300 por día", sublabel: "= $3.000 a $9.000/mes. Te cambia la vida." },
+      { label: "$300 a $500 por día", sublabel: "= $9.000 a $15.000/mes. Libertad total." },
+      { label: "Más de $500 por día", sublabel: "= +$15.000/mes. Otro nivel." },
     ],
   },
 } as const;

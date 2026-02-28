@@ -26,7 +26,7 @@ const texts = {
   },
   en: {
     mentorName: "Ricardo Almeida",
-    mentorRole: "Creator of the Free Time Method — $2.4M+ in results",
+    mentorRole: "Creator of the Free Time Method — $12M+ in results",
     title1: "A special message from our ",
     titleHL: "expert",
     title2: " for you",
@@ -39,7 +39,7 @@ const texts = {
   },
   es: {
     mentorName: "Ricardo Almeida",
-    mentorRole: "Creador del Método Tiempo Libre — +$2,4M en resultados",
+    mentorRole: "Creador del Método Tiempo Libre — +$12M en resultados",
     title1: "Un mensaje especial de nuestro ",
     titleHL: "especialista",
     title2: " para vos",

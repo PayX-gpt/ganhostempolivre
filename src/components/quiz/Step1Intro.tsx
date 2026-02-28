@@ -29,7 +29,7 @@ const texts = {
   },
   en: {
     counter: (n: string) => `${n} people are already using this`,
-    headline1: "$10 to $60 per day.",
+    headline1: "$50 to $300 per day.",
     headline2: "10 minutes.",
     headline3: "AI does the rest.",
     subheadline: "The rest of the day is yours. Real free time.",
@@ -42,12 +42,12 @@ const texts = {
     proof: "Take the 2-minute test.",
     proofBold: "See for yourself",
     proofEnd: " how much you can earn per day.",
-    cta: "I WANT MY $60 PER DAY →",
+    cta: "I WANT MY $300 PER DAY →",
     trust: "Free test • Instant results • No catch",
   },
   es: {
     counter: (n: string) => `${n} personas ya lo están usando`,
-    headline1: "$10 a $60 por día.",
+    headline1: "$50 a $300 por día.",
     headline2: "10 minutos.",
     headline3: "La IA hace el resto.",
     subheadline: "El resto del día es tuyo. Tiempo libre de verdad.",
@@ -60,7 +60,7 @@ const texts = {
     proof: "Hacé el test de 2 minutos.",
     proofBold: "Comprobalo con tus propios ojos",
     proofEnd: " cuánto podés generar por día.",
-    cta: "QUIERO MIS $60 POR DÍA →",
+    cta: "QUIERO MIS $300 POR DÍA →",
     trust: "Test gratuito • Resultado inmediato • Sin trampa",
   },
 } as const;
