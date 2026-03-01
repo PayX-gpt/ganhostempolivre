@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, L
 import { BarChart3, TrendingDown, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CampaignFilterState } from "./CampaignFilter";
-import { cleanCampaignName } from "./CampaignFilter";
+import { cleanCampaignName, deriveCampaignLabel } from "./CampaignFilter";
 
 interface StepData {
   step: string;
@@ -86,7 +86,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     const [pageLoadsRes, attributionRes, checkoutRes] = await Promise.all([
       supabase.from("funnel_audit_logs").select("page_id, session_id, created_at")
         .eq("event_type", "page_loaded").gte("created_at", todayISO),
-      supabase.from("session_attribution").select("session_id, utm_campaign")
+      supabase.from("session_attribution").select("session_id, utm_campaign, utm_source, ttclid, fbclid")
         .gte("created_at", todayISO),
       supabase.from("funnel_events").select("session_id")
         .eq("event_name", "checkout_click").gte("created_at", todayISO),
@@ -96,8 +96,8 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     if (!pageLoads) { setLoading(false); return; }
 
     const sessionCampaign: Record<string, string> = {};
-    (attributionRes.data || []).forEach(a => {
-      sessionCampaign[a.session_id] = a.utm_campaign ? cleanCampaignName(a.utm_campaign) : "Direto";
+    (attributionRes.data || []).forEach((a: any) => {
+      sessionCampaign[a.session_id] = deriveCampaignLabel(a);
     });
 
     const stepCounts: Record<string, Set<string>> = {};

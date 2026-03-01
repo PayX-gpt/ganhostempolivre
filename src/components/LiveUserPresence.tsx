@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CampaignFilterState } from "./CampaignFilter";
-import { cleanCampaignName } from "./CampaignFilter";
+import { cleanCampaignName, deriveCampaignLabel } from "./CampaignFilter";
 
 interface FunnelStep {
   id: string;
@@ -128,11 +128,11 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
     todayStart.setHours(0, 0, 0, 0);
     const { data } = await supabase
       .from("session_attribution")
-      .select("session_id, utm_campaign")
+      .select("session_id, utm_campaign, utm_source, ttclid, fbclid")
       .gte("created_at", todayStart.toISOString());
     const map: Record<string, string> = {};
-    (data || []).forEach(a => {
-      map[a.session_id] = a.utm_campaign ? cleanCampaignName(a.utm_campaign) : "Direto";
+    (data || []).forEach((a: any) => {
+      map[a.session_id] = deriveCampaignLabel(a);
     });
     setSessionCampaignMap(map);
   }, []);

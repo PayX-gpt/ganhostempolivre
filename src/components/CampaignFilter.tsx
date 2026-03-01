@@ -15,6 +15,28 @@ const cleanCampaignName = (name: string): string => {
   return clean.length > 25 ? clean.substring(0, 22) + "…" : clean;
 };
 
+/** Derive a campaign label from attribution data — only "Direto" when truly direct */
+const deriveCampaignLabel = (row: {
+  utm_campaign?: string | null;
+  utm_source?: string | null;
+  ttclid?: string | null;
+  fbclid?: string | null;
+}): string => {
+  if (row.utm_campaign) return cleanCampaignName(row.utm_campaign);
+  // Has source but no campaign name — label by source
+  if (row.utm_source) {
+    const src = row.utm_source.toLowerCase();
+    if (src.includes("tiktok")) return "TikTok (sem campanha)";
+    if (src.includes("facebook") || src.includes("fb") || src.includes("instagram") || src.includes("meta")) return "Meta (sem campanha)";
+    if (src.includes("google")) return "Google (sem campanha)";
+    return cleanCampaignName(row.utm_source);
+  }
+  // Has click IDs but no utm_source
+  if (row.ttclid) return "TikTok (sem campanha)";
+  if (row.fbclid) return "Meta (sem campanha)";
+  return "Direto";
+};
+
 export interface CampaignFilterState {
   selectedCampaigns: Set<string>;
   allCampaigns: string[];
@@ -35,15 +57,13 @@ export default function CampaignFilter({ onChange }: CampaignFilterProps) {
     todayStart.setHours(0, 0, 0, 0);
     const { data } = await supabase
       .from("session_attribution")
-      .select("utm_campaign")
+      .select("utm_campaign, utm_source, ttclid, fbclid")
       .gte("created_at", todayStart.toISOString());
     
     const campaignSet = new Set<string>();
-    (data || []).forEach(a => {
-      const camp = a.utm_campaign ? cleanCampaignName(a.utm_campaign) : "Direto";
-      campaignSet.add(camp);
+    (data || []).forEach((a: any) => {
+      campaignSet.add(deriveCampaignLabel(a));
     });
-    campaignSet.add("Direto");
     setAllCampaigns(Array.from(campaignSet).sort());
   }, []);
 
@@ -54,9 +74,7 @@ export default function CampaignFilter({ onChange }: CampaignFilterProps) {
   }, [fetchCampaigns]);
 
   const displayCampaigns = useMemo(() => {
-    const set = new Set(allCampaigns);
-    set.add("Direto");
-    return Array.from(set).sort();
+    return Array.from(new Set(allCampaigns)).sort();
   }, [allCampaigns]);
 
   const campaignColors = useMemo(() => {
@@ -148,4 +166,4 @@ export default function CampaignFilter({ onChange }: CampaignFilterProps) {
   );
 }
 
-export { CAMPAIGN_COLORS, cleanCampaignName };
+export { CAMPAIGN_COLORS, cleanCampaignName, deriveCampaignLabel };
