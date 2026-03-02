@@ -73,10 +73,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       .then(data => {
         const c = data?.country_code?.toUpperCase();
         if (!c) return;
-        const en = ["US","GB","AU","CA","NZ","IE","ZA","IN","PH","SG","MY","KE","NG","GH"];
+        const pt = ["BR","PT","AO","MZ","CV","GW","TL","ST"];
         const es = ["ES","MX","AR","CO","CL","PE","VE","EC","GT","CU","BO","DO","HN","PY","SV","NI","CR","PA","UY"];
-        if (en.includes(c)) setLang("en");
+        const en = ["US","GB","AU","CA","NZ","IE","ZA","IN","PH","SG","MY","KE","NG","GH"];
+        if (pt.includes(c)) setLang("pt");
         else if (es.includes(c)) setLang("es");
+        else if (en.includes(c)) setLang("en");
+        // Unknown country: keep browser-detected language
       })
       .catch(() => {});
     return () => controller.abort();
