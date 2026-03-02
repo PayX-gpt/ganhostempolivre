@@ -55,8 +55,8 @@ const STEP_NAMES: Record<string, string> = {
   "step-1": "intro", "step-2": "idade", "step-3": "nome", "step-4": "prova_social",
   "step-5": "tentou_online", "step-6": "meta_renda", "step-7": "obstaculo",
   "step-8": "video_mentor", "step-9": "saldo_conta", "step-10": "disponibilidade",
-  "step-11": "demo_plataforma", "step-12": "loading", "step-13": "prova_social_2",
-  "step-14": "whatsapp_proof", "step-15": "metodo_contato", "step-16": "input_contato",
+  "step-11": "demo_plataforma", "step-12": "whatsapp_proof", "step-13": "metodo_contato",
+  "step-14": "input_contato", "step-15": "loading", "step-16": "prova_social_2",
   "step-17": "oferta_final",
 };
 
@@ -197,14 +197,10 @@ const QuizFunnel = () => {
       case 11:
         return <StepPlatformDemo onNext={goNext} userName={answers.name} />;
       case 12:
-        return <Step10Loading onNext={goNext} userAge={answers.age} />;
-      case 13:
-        return <Step11SocialProof2 onNext={goNext} userAge={answers.age} />;
-      case 14:
         return <StepWhatsAppProof onNext={goNext} userAge={answers.age} />;
-      case 15:
+      case 13:
         return <StepContactMethod userName={answers.name} onNext={(v) => updateAndNext("contactMethod", v)} />;
-      case 16:
+      case 14:
         return (
           <StepContactInput
             method={answers.contactMethod || "email"}
@@ -238,6 +234,10 @@ const QuizFunnel = () => {
             }}
           />
         );
+      case 15:
+        return <Step10Loading onNext={goNext} userAge={answers.age} />;
+      case 16:
+        return <Step11SocialProof2 onNext={goNext} userAge={answers.age} />;
       case 17:
         return <Step13Offer userName={answers.name} answers={answers} />;
       default:
