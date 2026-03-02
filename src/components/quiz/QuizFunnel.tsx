@@ -131,6 +131,7 @@ const QuizFunnel = () => {
   const stepIndex = STEP_SLUGS.indexOf(currentSlug as any);
   const step = stepIndex >= 0 ? stepIndex + 1 : 1;
   const stepEnteredAt = useRef<number>(Date.now());
+  const isNavigatingRef = useRef(false);
 
   usePagePresence(`/${currentSlug}`);
 
@@ -188,14 +189,24 @@ const QuizFunnel = () => {
   }, [currentSlug, step]);
 
   const goNext = useCallback(() => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+
     trackStepComplete();
     const nextStep = Math.min(step + 1, TOTAL_STEPS);
     navigate(`/${STEP_SLUGS[nextStep - 1]}`);
     window.scrollTo({ top: 0 });
+
+    window.setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 500);
   }, [step, navigate, trackStepComplete]);
 
   const updateAndNext = useCallback(
     (key: keyof QuizAnswers, value: string) => {
+      if (isNavigatingRef.current) return;
+      isNavigatingRef.current = true;
+
       trackStepComplete({ key, value });
       setAnswers((prev) => {
         const updated = { ...prev, [key]: value };
@@ -210,6 +221,10 @@ const QuizFunnel = () => {
       const nextStep = Math.min(step + 1, TOTAL_STEPS);
       navigate(`/${STEP_SLUGS[nextStep - 1]}`);
       window.scrollTo({ top: 0 });
+
+      window.setTimeout(() => {
+        isNavigatingRef.current = false;
+      }, 500);
     },
     [step, navigate, trackStepComplete]
   );
