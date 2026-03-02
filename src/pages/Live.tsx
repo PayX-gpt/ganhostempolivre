@@ -244,13 +244,22 @@ export default function AdminFunnelAudit() {
     const interactingLeads = leadData?.filter(l => l.cta_clicks > 0).length || 0;
     setInteractionRateToday(tLeads > 0 ? (interactingLeads / tLeads) * 100 : 0);
 
-    // Count unique sessions (visitors) today from funnel_events
-    const { data: visitRows } = await supabase.from("funnel_events")
-      .select("session_id")
-      .eq("event_name", "step_viewed")
-      .gte("created_at", todayISO);
-    const uniqueVisits = new Set(visitRows?.map(r => r.session_id) || []).size;
-    setTotalVisitsToday(uniqueVisits);
+    // Count unique sessions (visitors) today from funnel_events — paginate to avoid 1000-row limit
+    const allVisitSessions = new Set<string>();
+    let visitPage = 0;
+    const PAGE_SIZE = 1000;
+    while (true) {
+      const { data: visitRows } = await supabase.from("funnel_events")
+        .select("session_id")
+        .eq("event_name", "step_viewed")
+        .gte("created_at", todayISO)
+        .range(visitPage * PAGE_SIZE, (visitPage + 1) * PAGE_SIZE - 1);
+      if (!visitRows || visitRows.length === 0) break;
+      visitRows.forEach(r => allVisitSessions.add(r.session_id));
+      if (visitRows.length < PAGE_SIZE) break;
+      visitPage++;
+    }
+    setTotalVisitsToday(allVisitSessions.size);
 
     setLastUpdated(new Date());
     setIsLoading(false);
