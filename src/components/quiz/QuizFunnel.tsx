@@ -342,11 +342,6 @@ const QuizFunnel = () => {
                 {lang === "pt" ? "Ganhos com Tempo Livre" : lang === "en" ? "Free Time Earnings" : "Ganancias Tiempo Libre"}
               </span>
             </h1>
-            {step >= 1 && step <= TOTAL_STEPS && (
-              <p className="text-[11px] sm:text-xs text-muted-foreground font-semibold mt-0.5">
-                {stepBadgeTexts[lang]} {step}/{TOTAL_STEPS}
-              </p>
-            )}
           </div>
           <LanguageSelector />
         </div>
