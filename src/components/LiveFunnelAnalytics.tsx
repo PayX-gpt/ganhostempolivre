@@ -71,6 +71,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
   const [totalCompleted, setTotalCompleted] = useState(0);
   const [offerViews, setOfferViews] = useState(0);
   const [checkoutClicks, setCheckoutClicks] = useState(0);
+  const [purchases, setPurchases] = useState(0);
 
   const selectedCampaigns = campaignFilter?.selectedCampaigns || new Set<string>();
   const campaignColors = campaignFilter?.campaignColors || {};
@@ -83,13 +84,16 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     todayStart.setHours(0, 0, 0, 0);
     const todayISO = todayStart.toISOString();
 
-    const [pageLoadsRes, attributionRes, checkoutRes] = await Promise.all([
+    const [pageLoadsRes, attributionRes, checkoutRes, purchaseRes] = await Promise.all([
       supabase.from("funnel_audit_logs").select("page_id, session_id, created_at")
         .eq("event_type", "page_loaded").gte("created_at", todayISO),
       supabase.from("session_attribution").select("session_id, utm_campaign, utm_source, ttclid, fbclid")
         .gte("created_at", todayISO),
       supabase.from("funnel_events").select("session_id")
         .eq("event_name", "checkout_click").gte("created_at", todayISO),
+      supabase.from("purchase_tracking").select("session_id, email")
+        .in("status", ["approved", "completed", "purchased", "redirected"])
+        .gte("created_at", todayISO),
     ]);
 
     const pageLoads = pageLoadsRes.data;
@@ -150,6 +154,8 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
     setOfferViews(stepCounts["/step-18"]?.size || 0);
     setCheckoutClicks(new Set(checkoutRes.data?.map(e => e.session_id) || []).size);
+    const uniqueBuyers = new Set(purchaseRes.data?.filter(r => r.email).map(r => (r.email as string).toLowerCase())).size;
+    setPurchases(uniqueBuyers);
     setLoading(false);
   }, [allCampaigns]);
 
@@ -190,7 +196,9 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
             { label: "Visualizações", value: totalViews, color: "text-sky-400" },
             { label: "Viram Oferta", value: offerViews, color: "text-violet-400" },
             { label: "Checkout", value: checkoutClicks, color: "text-amber-400" },
-            { label: "Completaram", value: totalCompleted, color: "text-emerald-400" },
+            { label: "Compras", value: purchases, color: "text-emerald-400" },
+            { label: "Oferta→Compra", value: offerViews > 0 ? `${((purchases / offerViews) * 100).toFixed(1)}%` : "0%", color: "text-cyan-400" },
+            { label: "IC→Compra", value: checkoutClicks > 0 ? `${((purchases / checkoutClicks) * 100).toFixed(1)}%` : "0%", color: "text-pink-400" },
           ].map((kpi, i) => (
             <div key={i} className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-2.5 min-w-[100px] w-[100px] flex-shrink-0">
               <p className="text-[9px] text-[#666] uppercase tracking-wider mb-1">{kpi.label}</p>
