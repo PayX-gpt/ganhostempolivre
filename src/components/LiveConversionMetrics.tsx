@@ -28,7 +28,7 @@ const LiveConversionMetrics = () => {
       const { data: purchaseData } = await supabase
         .from("purchase_tracking")
         .select("session_id, email")
-        .eq("status", "approved")
+        .in("status", ["approved", "completed", "purchased", "redirected"])
         .gte("created_at", new Date().toISOString().split("T")[0]);
 
       const totalICs = icData?.length || 0;
