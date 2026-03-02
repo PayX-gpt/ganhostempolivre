@@ -1683,14 +1683,16 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
 
       {/* ═══ VIDEO TESTIMONIALS (após acesso completo) ═══ */}
       <ScrollReveal>
-      <div className="w-full space-y-3">
-        <h3 className="font-display text-lg font-bold text-foreground text-center">
+      <div className="w-full space-y-4 -mx-2 px-2 sm:mx-0 sm:px-0">
+        <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground text-center">
           Depoimentos em <span className="text-gradient-green">vídeo</span>
         </h3>
-        <p className="text-sm text-muted-foreground text-center">
+        <p className="text-sm sm:text-base text-muted-foreground text-center">
           Assista quem já mudou de vida:
         </p>
-        <VideoTestimonialsSection />
+        <div className="w-[calc(100%+2rem)] -ml-4 sm:w-full sm:ml-0">
+          <VideoTestimonialsSection />
+        </div>
       </div>
       </ScrollReveal>
 
