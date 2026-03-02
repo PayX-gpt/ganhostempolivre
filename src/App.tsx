@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,14 +16,6 @@ import Upsell6Page from "./components/upsell/Upsell6Page";
 
 const queryClient = new QueryClient();
 
-const RootToStep1HardRedirect = () => {
-  useEffect(() => {
-    window.location.replace(`/step-1${window.location.search}${window.location.hash}`);
-  }, []);
-
-  return null;
-};
-
 const App = () => (
   <LanguageProvider>
     <QueryClientProvider client={queryClient}>
@@ -33,7 +24,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<RootToStep1HardRedirect />} />
+            <Route path="/" element={<Index />} />
             <Route path="/live" element={<Live />} />
             <Route path="/upsell1" element={<UpsellFunnel />} />
             <Route path="/upsell2" element={<Upsell2Page />} />
