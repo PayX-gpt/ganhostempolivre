@@ -169,6 +169,7 @@ const QuizFunnel = () => {
   // Track time spent when step changes
   useEffect(() => {
     stepEnteredAt.current = Date.now();
+    isNavigatingRef.current = false;
     saveFunnelEvent("step_viewed", {
       step: currentSlug,
       step_name: STEP_NAMES[currentSlug] || currentSlug,
@@ -269,20 +270,28 @@ const QuizFunnel = () => {
                 if (cleanPhone.length >= 10) {
                   const sessionId = sessionStorage.getItem("session_id") || localStorage.getItem("session_id") || "";
                   const sendAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-                  import("@/integrations/supabase/client").then(({ supabase }) => {
-                    supabase.from("whatsapp_welcome_queue").insert({
-                      phone: cleanPhone,
-                      lead_name: answers.name || null,
-                      session_id: sessionId || null,
-                      send_at: sendAt,
-                      lead_type: "unknown",
-                      purchased: false,
-                      sent: false,
-                    }).then(({ error }) => {
-                      if (error) console.warn("WhatsApp queue insert error:", error.message);
-                      else console.log("✅ Lead enqueued for WhatsApp welcome");
-                    });
-                  });
+                  (async () => {
+                    try {
+                      const { supabase } = await import("@/integrations/supabase/client");
+                      const { error } = await supabase.from("whatsapp_welcome_queue").insert({
+                        phone: cleanPhone,
+                        lead_name: answers.name || null,
+                        session_id: sessionId || null,
+                        send_at: sendAt,
+                        lead_type: "unknown",
+                        purchased: false,
+                        sent: false,
+                      });
+
+                      if (error) {
+                        console.warn("WhatsApp queue insert error:", error.message);
+                      } else {
+                        console.log("✅ Lead enqueued for WhatsApp welcome");
+                      }
+                    } catch (err) {
+                      console.error("Unexpected WhatsApp queue error:", err);
+                    }
+                  })();
                 }
               } else {
                 setAnswers((prev) => ({ ...prev, email: value }));
