@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { StepContainer, StepTitle } from "./QuizUI";
 import { CheckCircle } from "lucide-react";
 import avatarJose from "@/assets/avatar-jose.jpg";
@@ -7,6 +7,9 @@ import avatarRafael from "@/assets/avatar-rafael.jpg";
 import avatarCamila from "@/assets/avatar-camila.jpg";
 import { isYoungProfile } from "@/lib/agePersonalization";
 import { useLanguage, type Language } from "@/lib/i18n";
+import { saveFunnelEvent } from "@/lib/metricsClient";
+import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
+import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
 
 interface Step11Props {
   onNext: () => void;
@@ -81,6 +84,9 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
   const t = texts[lang];
   const young = isYoungProfile(userAge);
 
+  const icFiredRef = useRef(false);
+
+  // Load Vturb player script
   useEffect(() => {
     const scriptSelector = 'script[data-vturb-player="69a5dbeca414172eb5d48ed7"]';
     if (document.querySelector(scriptSelector)) return;
@@ -90,6 +96,45 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
     s.async = true;
     s.setAttribute("data-vturb-player", "69a5dbeca414172eb5d48ed7");
     document.head.appendChild(s);
+  }, []);
+
+  // Listen for Vturb CTA click (postMessage) and external navigation
+  useEffect(() => {
+    const handleVturbMessage = (event: MessageEvent) => {
+      if (icFiredRef.current) return;
+      // Vturb fires postMessage with various formats on CTA click
+      const data = typeof event.data === "string" ? event.data : JSON.stringify(event.data || "");
+      const isCtaClick = data.includes("cta") || data.includes("button") || data.includes("click") || data.includes("redirect");
+      if (isCtaClick) {
+        icFiredRef.current = true;
+        console.log("[Step17] ✅ Vturb CTA click detected via postMessage");
+        saveFunnelEvent("checkout_click", { context: "vturb_cta_step17", product: "chave_token_chatgpt", amount: 37 });
+        sendCAPIInitiateCheckout({ amount: 37 });
+        trackTikTokInitiateCheckout({ amount: 37 });
+      }
+    };
+
+    // Also detect when user leaves page (clicks external link in Vturb)
+    const handleVisibilityChange = () => {
+      if (document.hidden && !icFiredRef.current) {
+        // Check if Vturb player is on the page — user likely clicked the CTA
+        const player = document.querySelector('vturb-smartplayer[id="vid-69a5dbeca414172eb5d48ed7"]');
+        if (player) {
+          icFiredRef.current = true;
+          console.log("[Step17] ✅ IC fired on page hide (Vturb CTA presumed)");
+          saveFunnelEvent("checkout_click", { context: "vturb_cta_step17_pagehide", product: "chave_token_chatgpt", amount: 37 });
+          sendCAPIInitiateCheckout({ amount: 37 });
+          trackTikTokInitiateCheckout({ amount: 37 });
+        }
+      }
+    };
+
+    window.addEventListener("message", handleVturbMessage);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("message", handleVturbMessage);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const testimonials = young ? t.youngTestimonials : t.matureTestimonials;
