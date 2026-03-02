@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { StepContainer, StepTitle, CTAButton } from "./QuizUI";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { StepContainer, StepTitle } from "./QuizUI";
+import { CheckCircle } from "lucide-react";
 import avatarJose from "@/assets/avatar-jose.jpg";
 import avatarLucia from "@/assets/avatar-lucia.jpg";
 import avatarRafael from "@/assets/avatar-rafael.jpg";
@@ -79,17 +79,17 @@ const texts = {
 const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
-  const [showCTA, setShowCTA] = useState(false);
   const young = isYoungProfile(userAge);
 
-  useEffect(() => { const timer = setTimeout(() => setShowCTA(true), 30_000); return () => clearTimeout(timer); }, []);
-
   useEffect(() => {
+    const scriptSelector = 'script[data-vturb-player="69a5dbeca414172eb5d48ed7"]';
+    if (document.querySelector(scriptSelector)) return;
+
     const s = document.createElement("script");
     s.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/69a5dbeca414172eb5d48ed7/v4/player.js";
     s.async = true;
+    s.setAttribute("data-vturb-player", "69a5dbeca414172eb5d48ed7");
     document.head.appendChild(s);
-    return () => { try { document.head.removeChild(s); } catch {} };
   }, []);
 
   const testimonials = young ? t.youngTestimonials : t.matureTestimonials;
@@ -107,20 +107,11 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
       </div>
 
       <div
-        className="w-full rounded-2xl overflow-hidden border border-border shadow-xl"
+        className="w-full rounded-2xl border border-border shadow-xl overflow-visible mb-4"
         dangerouslySetInnerHTML={{
           __html: '<vturb-smartplayer id="vid-69a5dbeca414172eb5d48ed7" style="display:block;margin:0 auto;width:100%;max-width:400px;"></vturb-smartplayer>'
         }}
       />
-
-      {showCTA ? (
-        <CTAButton onClick={onNext} className="animate-fade-in">{t.cta}</CTAButton>
-      ) : (
-        <div className="flex items-center gap-2 justify-center">
-          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
-          <p className="text-sm text-muted-foreground animate-pulse">{t.watchToUnlock}</p>
-        </div>
-      )}
 
       <div className="w-full space-y-1.5">
         {testimonials.map((tm, i) => (
