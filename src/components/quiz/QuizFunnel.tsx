@@ -58,8 +58,8 @@ const STEP_NAMES: Record<string, string> = {
   "step-5": "tentou_online", "step-6": "meta_renda", "step-7": "obstaculo",
   "step-8": "video_mentor", "step-9": "saldo_conta", "step-10": "disponibilidade",
   "step-11": "demo_plataforma", "step-12": "whatsapp_proof", "step-13": "metodo_contato",
-  "step-14": "input_contato", "step-15": "loading", "step-16": "projecao_perfil",
-  "step-17": "prova_social_2", "step-18": "oferta_final",
+  "step-14": "input_contato", "step-15": "projecao_perfil", "step-16": "prova_social_2",
+  "step-17": "loading", "step-18": "oferta_final",
 };
 
 const STEP_ALIASES: Record<string, (typeof STEP_SLUGS)[number]> = {
@@ -301,11 +301,11 @@ const QuizFunnel = () => {
           />
         );
       case "step-15":
-        return <Step10Loading onNext={goNext} userAge={answers.age} />;
-      case "step-16":
         return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} />;
-      case "step-17":
+      case "step-16":
         return <Step11SocialProof2 onNext={goNext} userAge={answers.age} />;
+      case "step-17":
+        return <Step10Loading onNext={goNext} userAge={answers.age} />;
       case "step-18":
         return <Step13Offer userName={answers.name} answers={answers} />;
       default:
