@@ -16,8 +16,8 @@ const Step12Capture = ({ onNext }: Step12Props) => {
   return (
     <StepContainer>
       <div className="text-center space-y-2">
-        <div className="w-14 h-14 rounded-full bg-primary/15 flex items-center justify-center mx-auto">
-          <PartyPopper className="w-7 h-7 text-primary" />
+        <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center mx-auto">
+          <PartyPopper className="w-6 h-6 text-primary" />
         </div>
         <StepTitle>Parabéns! Você foi aprovado(a)!</StepTitle>
       </div>
@@ -28,34 +28,19 @@ const Step12Capture = ({ onNext }: Step12Props) => {
 
       <div className="w-full space-y-4 mt-2">
         <div>
-          <label className="text-sm text-muted-foreground font-medium mb-1.5 block">Seu nome</label>
-          <input
-            type="text"
-            placeholder="Digite seu nome completo"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-5 py-4 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-          />
+          <label className="text-[13px] text-muted-foreground font-medium mb-1 block">Seu nome</label>
+          <input type="text" placeholder="Digite seu nome completo" value={name} onChange={(e) => setName(e.target.value)}
+            className="w-full px-4 py-3 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" />
         </div>
         <div>
-          <label className="text-sm text-muted-foreground font-medium mb-1.5 block">Seu melhor e-mail</label>
-          <input
-            type="email"
-            placeholder="seuemail@exemplo.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-5 py-4 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-          />
+          <label className="text-[13px] text-muted-foreground font-medium mb-1 block">Seu melhor e-mail</label>
+          <input type="email" placeholder="seuemail@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-3 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" />
         </div>
         <div>
-          <label className="text-sm text-muted-foreground font-medium mb-1.5 block">Seu WhatsApp (com DDD)</label>
-          <input
-            type="tel"
-            placeholder="(11) 99999-9999"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full px-5 py-4 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-          />
+          <label className="text-[13px] text-muted-foreground font-medium mb-1 block">Seu WhatsApp (com DDD)</label>
+          <input type="tel" placeholder="(11) 99999-9999" value={phone} onChange={(e) => setPhone(e.target.value)}
+            className="w-full px-4 py-3 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" />
         </div>
       </div>
 

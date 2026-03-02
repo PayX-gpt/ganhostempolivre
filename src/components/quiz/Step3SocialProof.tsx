@@ -112,26 +112,26 @@ const Step3SocialProof = ({ onNext, userAge }: Step3Props) => {
         </div>
       )}
 
-      <div className="w-full funnel-card border-primary/25 bg-primary/5">
-        <div className="flex items-center gap-3 mb-3">
-          <img src={young ? avatarRafael : avatarRegina} alt={young ? t.youngName : t.matureName} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-primary/30 shrink-0" />
+      <div className="w-full funnel-card border-primary/25 bg-primary/5 py-2.5 px-3">
+        <div className="flex items-center gap-2.5 mb-2">
+          <img src={young ? avatarRafael : avatarRegina} alt={young ? t.youngName : t.matureName} className="w-10 h-10 rounded-full object-cover border-2 border-primary/30 shrink-0" />
           <div className="min-w-0">
-            <p className="font-bold text-foreground text-sm sm:text-base">{young ? t.youngName : t.matureName}</p>
+            <p className="font-bold text-foreground text-[13px] sm:text-base">{young ? t.youngName : t.matureName}</p>
             <div className="flex items-center gap-1">
-              <span className="text-xs sm:text-sm text-muted-foreground">{young ? t.youngLoc : t.matureLoc} • {t.verified}</span>
-              <CheckCircle className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[11px] sm:text-sm text-muted-foreground">{young ? t.youngLoc : t.matureLoc} • {t.verified}</span>
+              <CheckCircle className="w-3 h-3 text-primary" />
             </div>
           </div>
         </div>
-        <p className="text-sm sm:text-base text-foreground/90 italic leading-relaxed">
+        <p className="text-[13px] sm:text-base text-foreground/90 italic leading-relaxed">
           {young ? t.youngTestimonial : t.matureTestimonial}
         </p>
       </div>
 
-      <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center">
-        <div className="flex items-center justify-center gap-2">
-          <BarChart3 className="w-4 h-4 text-accent shrink-0" />
-          <p className="text-sm text-foreground/80 leading-relaxed">
+      <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center py-2 px-3">
+        <div className="flex items-center justify-center gap-1.5">
+          <BarChart3 className="w-3.5 h-3.5 text-accent shrink-0" />
+          <p className="text-[12px] sm:text-sm text-foreground/80 leading-relaxed">
             {young ? t.statYoung : t.statMature}
           </p>
         </div>

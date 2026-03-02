@@ -29,14 +29,14 @@ export const ProgressBar = ({ current, total }: ProgressBarProps) => {
   const percentage = Math.max(15, rawPercentage);
   const label = { pt: "completo", en: "complete", es: "completado" }[lang];
   return (
-    <div className="w-full px-4 py-2">
-      <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+    <div className="w-full px-4 py-1.5">
+      <div className="w-full h-1.5 sm:h-2 bg-secondary rounded-full overflow-hidden">
         <div
           className="h-full progress-bar-fill rounded-full transition-all duration-700 ease-out"
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <p className="text-xs text-muted-foreground mt-1.5 text-right font-medium">
+      <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 text-right font-medium">
         {percentage}% {label}
       </p>
     </div>
@@ -55,27 +55,27 @@ interface OptionCardProps {
 export const OptionCard = ({ label, sublabel, icon, selected, onClick, imageSrc }: OptionCardProps) => (
   <button
     onClick={onClick}
-    className={`funnel-card w-full text-left flex items-center gap-3 cursor-pointer min-h-[64px] p-3 sm:p-5 sm:gap-4 ${
+    className={`funnel-card w-full text-left flex items-center gap-2.5 cursor-pointer min-h-[56px] p-2.5 sm:p-4 sm:gap-3.5 ${
       selected ? "border-primary bg-primary/10" : ""
     }`}
   >
     {imageSrc && (
-      <img src={imageSrc} alt={label} className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl object-cover shrink-0" />
+      <img src={imageSrc} alt={label} className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl object-cover shrink-0" />
     )}
     {icon && !imageSrc && (
-      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
+      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
         {icon}
       </div>
     )}
     <div className="flex-1 min-w-0">
-      <p className="font-bold text-foreground text-sm sm:text-base leading-snug">{label}</p>
-      {sublabel && <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 leading-snug">{sublabel}</p>}
+      <p className="font-bold text-foreground text-[13px] sm:text-base leading-snug">{label}</p>
+      {sublabel && <p className="text-[11px] sm:text-sm text-muted-foreground mt-0.5 leading-snug">{sublabel}</p>}
     </div>
-    <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
+    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
       selected ? "border-foreground bg-foreground" : "border-muted-foreground/40"
     }`}>
       {selected && (
-        <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-background" fill="currentColor" viewBox="0 0 20 20">
+        <svg className="w-3 h-3 text-background" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
         </svg>
       )}
@@ -99,7 +99,7 @@ export const CTAButton = ({ children, onClick, variant = "primary", disabled, cl
       ref={ref}
       onClick={onClick}
       disabled={disabled}
-      className={`w-full py-4 sm:py-5 px-5 sm:px-6 rounded-2xl font-extrabold text-base sm:text-lg tracking-wide transition-all duration-300 ${
+      className={`w-full py-3.5 sm:py-5 px-5 sm:px-6 rounded-2xl font-extrabold text-[15px] sm:text-lg tracking-wide transition-all duration-300 ${
         variant === "primary"
           ? "bg-primary text-primary-foreground funnel-glow-button hover:brightness-110 active:scale-[0.98]"
           : "bg-accent text-accent-foreground hover:brightness-110 active:scale-[0.98]"
@@ -111,19 +111,19 @@ export const CTAButton = ({ children, onClick, variant = "primary", disabled, cl
 };
 
 export const StepContainer = ({ children }: { children: React.ReactNode }) => (
-  <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-4 sm:px-5 py-6 sm:py-8 gap-5 sm:gap-6 min-h-[calc(100dvh-120px)]">
+  <div className="animate-slide-up flex flex-col items-center w-full max-w-lg mx-auto px-4 sm:px-5 py-4 sm:py-8 gap-4 sm:gap-6 min-h-[calc(100dvh-120px)]">
     {children}
   </div>
 );
 
 export const StepTitle = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="font-display text-[1.4rem] sm:text-[1.7rem] font-bold text-foreground text-center leading-[1.3] tracking-tight">
+  <h2 className="font-display text-[1.25rem] sm:text-[1.7rem] font-bold text-foreground text-center leading-[1.25] tracking-tight">
     {children}
   </h2>
 );
 
 export const StepSubtitle = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-[0.95rem] sm:text-base text-muted-foreground text-center leading-relaxed max-w-md">
+  <p className="text-[0.85rem] sm:text-base text-muted-foreground text-center leading-relaxed max-w-md">
     {children}
   </p>
 );

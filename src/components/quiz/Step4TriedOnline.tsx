@@ -84,17 +84,17 @@ const Step4TriedOnline = ({ onNext, userName, userAge }: Step4Props) => {
   if (showFeedback && selected === "sim_falhou") {
     return (
       <StepContainer>
-        <div className="w-full flex flex-col items-center gap-5 py-4">
-          <div className="w-16 h-16 rounded-full bg-primary/15 flex items-center justify-center border-2 border-primary/30">
-            <CheckCircle className="w-8 h-8 text-primary" />
+        <div className="w-full flex flex-col items-center gap-4 py-3">
+          <div className="w-14 h-14 rounded-full bg-primary/15 flex items-center justify-center border-2 border-primary/30">
+            <CheckCircle className="w-7 h-7 text-primary" />
           </div>
-          <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground text-center leading-snug">
+          <h2 className="font-display text-lg sm:text-2xl font-bold text-foreground text-center leading-snug">
             {young ? t.feedbackTitleYoung(n) : t.feedbackTitleMature(n)}
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground text-center leading-relaxed max-w-md">
+          <p className="text-[14px] sm:text-lg text-muted-foreground text-center leading-relaxed max-w-md">
             {young ? t.feedbackBodyYoung : t.feedbackBodyMature}
           </p>
-          <div className="w-full mt-2">
+          <div className="w-full mt-1">
             <CTAButton onClick={() => onNext(selected)}>{t.feedbackCta}</CTAButton>
           </div>
         </div>
