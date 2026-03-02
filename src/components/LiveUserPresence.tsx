@@ -61,7 +61,7 @@ const STEPS: FunnelStep[] = [
   { id: "step9", route: "/step-9", label: "Saldo", icon: Eye, count: 0 },
   { id: "step10", route: "/step-10", label: "Disponibilidade", icon: Clock, count: 0 },
   { id: "step11", route: "/step-11", label: "Demo", icon: Eye, count: 0 },
-  { id: "step12", route: "/step-12", label: "Loading", icon: RefreshCw, count: 0 },
+  { id: "step12", route: "/step-12", label: "WhatsApp", icon: MessageCircle, count: 0 },
   { id: "step13", route: "/step-13", label: "Contato", icon: MessageCircle, count: 0 },
   { id: "step14", route: "/step-14", label: "Input", icon: Mail, count: 0 },
   { id: "step15", route: "/step-15", label: "Análise", icon: Clock, count: 0 },
@@ -95,7 +95,7 @@ const toStepId = (page: string): string | null => {
   if (p.includes("/upsell")) return "upsell1";
   if (p.includes("/thanks")) return "thanks";
   if (p.includes("/checkout") || p.includes("/processing")) return "checkout";
-  const OLD_STEP_MAP: Record<number, string> = { 18: "step16", 19: "step17" };
+  const OLD_STEP_MAP: Record<number, string> = { 19: "step18" };
   for (let i = 19; i >= 1; i--) {
     if (p.includes(`/step-${i}`)) return OLD_STEP_MAP[i] || `step${i}`;
   }
