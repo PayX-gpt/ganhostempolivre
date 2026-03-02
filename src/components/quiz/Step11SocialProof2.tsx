@@ -106,10 +106,12 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
         <p className="text-[12px] sm:text-sm text-foreground font-bold leading-snug">{young ? t.headlineYoung : t.headlineMature}</p>
       </div>
 
-      <div className="w-full rounded-2xl overflow-hidden border border-border shadow-xl">
-        {/* @ts-ignore */}
-        <vturb-smartplayer id="vid-69a5dbeca414172eb5d48ed7" style={{ display: "block", margin: "0 auto", width: "100%", maxWidth: "400px" }} />
-      </div>
+      <div
+        className="w-full rounded-2xl overflow-hidden border border-border shadow-xl"
+        dangerouslySetInnerHTML={{
+          __html: '<vturb-smartplayer id="vid-69a5dbeca414172eb5d48ed7" style="display:block;margin:0 auto;width:100%;max-width:400px;"></vturb-smartplayer>'
+        }}
+      />
 
       {showCTA ? (
         <CTAButton onClick={onNext} className="animate-fade-in">{t.cta}</CTAButton>
