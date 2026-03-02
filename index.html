@@ -58,6 +58,6 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <!-- MetricHub autoEnrich -->
-    <script>MetricHub.autoEnrichCheckoutLinks();</script>
+    <script>if(typeof MetricHub!=='undefined'){MetricHub.autoEnrichCheckoutLinks();}</script>
   </body>
 </html>
