@@ -21,7 +21,7 @@ const texts = {
     subtitleMature: "Pessoas com o mesmo perfil que o seu já estão tendo resultados reais.",
     headlineYoung: <>Prepare-se! Em apenas <span className="text-accent">30 SEGUNDOS</span>, vou te mostrar como gerar de <span className="text-gradient-green">R$200 a R$1.000</span> de renda extra, dedicando apenas <span className="text-accent">10 MINUTOS DO SEU DIA</span>!</>,
     headlineMature: <>Nos próximos <span className="text-accent">30 SEGUNDOS</span> vou te explicar como ganhar com apenas <span className="text-accent">10 MIN DO SEU TEMPO LIVRE</span> de <span className="text-gradient-green">R$200 a R$1.000</span> reais!</>,
-    cta: "PEGAR MEU ACESSO →",
+    cta: "QUERO MEU ACESSO →",
     watchToUnlock: "Assista o vídeo para continuar...",
     youngTestimonials: [
       { name: "Rafael, 29", loc: "SP", text: "Comecei dedicando 15 minutos por dia. No terceiro dia já tinha feito R$92. Hoje é parte da minha renda mensal." },
@@ -86,14 +86,10 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
 
   useEffect(() => {
     const s = document.createElement("script");
-    s.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
+    s.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/69a5dbeca414172eb5d48ed7/v4/player.js";
     s.async = true;
     document.head.appendChild(s);
-    const iframe = document.getElementById("ifr_690fc5f5da9cb48e0b5df28c") as HTMLIFrameElement;
-    if (iframe) {
-      iframe.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/690fc5f5da9cb48e0b5df28c/v4/embed.html" + (window.location.search || "?") + "&vl=" + encodeURIComponent(window.location.href);
-    }
-    return () => { document.head.removeChild(s); };
+    return () => { try { document.head.removeChild(s); } catch {} };
   }, []);
 
   const testimonials = young ? t.youngTestimonials : t.matureTestimonials;
@@ -111,11 +107,8 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
       </div>
 
       <div className="w-full rounded-2xl overflow-hidden border border-border shadow-xl">
-        <div id="ifr_690fc5f5da9cb48e0b5df28c_wrapper" style={{ margin: "0 auto", width: "100%", maxWidth: "400px" }}>
-          <div style={{ position: "relative", paddingTop: "177.78%" }} id="ifr_690fc5f5da9cb48e0b5df28c_aspect">
-            <iframe frameBorder="0" allowFullScreen src="about:blank" id="ifr_690fc5f5da9cb48e0b5df28c" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} referrerPolicy="origin" />
-          </div>
-        </div>
+        {/* @ts-ignore */}
+        <vturb-smartplayer id="vid-69a5dbeca414172eb5d48ed7" style={{ display: "block", margin: "0 auto", width: "100%", maxWidth: "400px" }} />
       </div>
 
       {showCTA ? (
