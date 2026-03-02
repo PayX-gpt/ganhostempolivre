@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp, Users, Shield, CheckCircle, Clock, Zap, Award,
-  ArrowRight, Star, ShieldCheck, Target, BarChart3, Lock
+  ArrowRight, Star, ShieldCheck, Target, BarChart3, Lock,
+  User, Smartphone, Laptop, Calendar, DollarSign, AlertTriangle,
+  Wallet, Brain, Flame
 } from "lucide-react";
 import type { QuizAnswers } from "./QuizUI";
 import { StepContainer } from "./QuizUI";
@@ -20,23 +22,30 @@ interface Props {
 }
 
 /* ─── Helpers ─── */
-const getGoalValues = (goal?: string) => {
-  const map: Record<string, { daily: number }> = {
-    "50-100": { daily: 75 }, "100-300": { daily: 200 },
-    "300-500": { daily: 400 }, "500+": { daily: 600 },
+const getGoalLabel = (goal?: string) => {
+  const map: Record<string, string> = {
+    "50-100": "R$50 a R$100/dia", "100-300": "R$100 a R$300/dia",
+    "300-500": "R$300 a R$500/dia", "500+": "R$500+/dia",
   };
-  return map[goal || ""] || { daily: 200 };
+  return map[goal || ""] || "R$100 a R$300/dia";
 };
 
-const getAgeGroup = (age?: string) => {
+const getGoalDaily = (goal?: string) => {
+  const map: Record<string, number> = {
+    "50-100": 75, "100-300": 200, "300-500": 400, "500+": 600,
+  };
+  return map[goal || ""] || 200;
+};
+
+const getAgeLabel = (age?: string) => {
   const map: Record<string, string> = {
     "18-25": "18 a 25 anos", "26-35": "26 a 35 anos", "36-45": "36 a 45 anos",
-    "46-55": "46 a 55 anos", "56+": "acima de 55 anos",
+    "46-55": "46 a 55 anos", "56+": "56+ anos",
     "18 a 25 anos": "18 a 25 anos", "26 a 35 anos": "26 a 35 anos",
     "36 a 45 anos": "36 a 45 anos", "46 a 55 anos": "46 a 55 anos",
-    "56 anos ou mais": "acima de 55 anos",
+    "56 anos ou mais": "56+ anos",
   };
-  return map[age || ""] || "perfil semelhante ao seu";
+  return map[age || ""] || "seu perfil";
 };
 
 const getAlumniCount = (age?: string) => {
@@ -52,18 +61,75 @@ const getAlumniCount = (age?: string) => {
 
 const getObstacleLabel = (o?: string) => {
   const map: Record<string, string> = {
-    medo: "medo de golpe", tempo: "falta de tempo",
-    inicio: "não saber por onde começar", dinheiro: "pouco capital",
+    medo: "Medo de golpe", tempo: "Falta de tempo",
+    inicio: "Não saber por onde começar", dinheiro: "Pouco capital inicial",
   };
-  return map[o || ""] || "desafios iniciais";
+  return map[o || ""] || "Desafios iniciais";
+};
+
+const getObstacleSolution = (o?: string) => {
+  const map: Record<string, string> = {
+    medo: "Plataforma 100% regulamentada com suporte humano 24h",
+    tempo: "Sistema automatizado — opera mesmo enquanto você dorme",
+    inicio: "Passo a passo guiado do zero, sem conhecimento prévio",
+    dinheiro: "Estratégia otimizada para começar com valores baixos",
+  };
+  return map[o || ""] || "Suporte personalizado para o seu caso";
+};
+
+const getBalanceLabel = (b?: string) => {
+  const map: Record<string, string> = {
+    "menos100": "Menos de R$100", "100-500": "R$100 a R$500",
+    "500-2000": "R$500 a R$2.000", "2000-10000": "R$2.000 a R$10.000",
+    "10000+": "Mais de R$10.000",
+  };
+  return map[b || ""] || "Não informado";
+};
+
+const getBalanceMultiplier = (b?: string) => {
+  const map: Record<string, number> = {
+    "menos100": 0.7, "100-500": 0.85, "500-2000": 1.0,
+    "2000-10000": 1.15, "10000+": 1.3,
+  };
+  return map[b || ""] || 1.0;
+};
+
+const getDeviceLabel = (d?: string) => {
+  const map: Record<string, string> = {
+    celular: "Celular", computador: "Computador", ambos: "Celular e Computador",
+  };
+  return map[d || ""] || "Celular";
+};
+
+const getDeviceIcon = (d?: string) => {
+  if (d === "computador") return Laptop;
+  return Smartphone;
+};
+
+const getAvailabilityLabel = (a?: string) => {
+  const map: Record<string, string> = {
+    "1-2h": "1 a 2 horas/dia", "2-4h": "2 a 4 horas/dia",
+    "4h+": "4+ horas/dia", integral: "Tempo integral",
+  };
+  return map[a || ""] || "Flexível";
 };
 
 const getSuccessRate = (age?: string) => {
   const map: Record<string, number> = {
     "18 a 25 anos": 89, "26 a 35 anos": 91, "36 a 45 anos": 93,
     "46 a 55 anos": 94, "56 anos ou mais": 92,
+    "18-25": 89, "26-35": 91, "36-45": 93, "46-55": 94, "56+": 92,
   };
   return map[age || ""] || 92;
+};
+
+const getCompatibilityScore = (answers?: QuizAnswers) => {
+  let score = 85;
+  if (answers?.availability === "4h+" || answers?.availability === "integral") score += 5;
+  if (answers?.accountBalance === "2000-10000" || answers?.accountBalance === "10000+") score += 4;
+  if (answers?.device === "ambos") score += 3;
+  if (answers?.obstacle === "inicio") score += 2;
+  return Math.min(score, 99);
 };
 
 /* ─── Animated Counter ─── */
@@ -90,19 +156,23 @@ const AnimatedNumber = ({ target, prefix = "", suffix = "", delay = 0 }: { targe
 /* ─── Main Component ─── */
 const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
   const firstName = userName?.split(" ")[0] || "";
-  const { daily } = getGoalValues(answers?.incomeGoal);
-  const ageGroup = getAgeGroup(answers?.age);
+  const daily = getGoalDaily(answers?.incomeGoal);
+  const balanceMult = getBalanceMultiplier(answers?.accountBalance);
+  const adjustedDaily = Math.round(daily * balanceMult);
+  const ageLabel = getAgeLabel(answers?.age);
   const alumniCount = getAlumniCount(answers?.age);
   const obstacleLabel = getObstacleLabel(answers?.obstacle);
+  const obstacleSolution = getObstacleSolution(answers?.obstacle);
   const successRate = getSuccessRate(answers?.age);
-  const monthly = daily * 30;
-  const nearGoal = Math.round(monthly * 1.05);
+  const compatScore = getCompatibilityScore(answers);
+  const DeviceIcon = getDeviceIcon(answers?.device);
 
-  const day3 = Math.round(daily * 0.15);
-  const day7 = Math.round(daily * 0.4);
-  const day14 = Math.round(daily * 0.65);
-  const day21 = Math.round(daily * 0.85);
-  const day30 = Math.round(daily * 1.05);
+  const day3 = Math.round(adjustedDaily * 0.15);
+  const day7 = Math.round(adjustedDaily * 0.4);
+  const day14 = Math.round(adjustedDaily * 0.65);
+  const day21 = Math.round(adjustedDaily * 0.85);
+  const day30 = Math.round(adjustedDaily * 1.05);
+  const monthly = day30 * 30;
 
   const projections = [
     { period: "Dia 3", value: day3, bar: 10, label: "Primeira operação configurada", icon: Target },
@@ -112,18 +182,16 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
     { period: "Dia 30", value: day30, bar: 100, label: "Meta diária atingida", icon: Award },
   ];
 
-  const comparativeStats = [
-    { label: "Alcançaram a meta em 30 dias", value: `${successRate}%`, icon: Target },
-    { label: "Tempo médio para primeiro ganho", value: "3 dias", icon: Clock },
-    { label: "Relataram superar " + obstacleLabel, value: "96%", icon: Shield },
-    { label: "Nota média de satisfação", value: "4.8/5", icon: Star },
-  ];
-
-  const guarantees = [
-    { title: "Garantia incondicional de 30 dias", desc: "Se não gostar, devolvemos 100% do valor. Sem perguntas, sem burocracia.", icon: ShieldCheck },
-    { title: "Suporte humano via WhatsApp", desc: "Mentora dedicada para tirar suas dúvidas em tempo real, do começo ao primeiro resultado.", icon: Users },
-    { title: "Método testado e validado", desc: `+${alumniCount} alunos com ${ageGroup} já comprovaram que funciona.`, icon: CheckCircle },
-  ];
+  /* Profile data points from quiz */
+  const profileItems = [
+    { icon: User, label: "Nome", value: firstName || "—" },
+    { icon: Calendar, label: "Faixa etária", value: ageLabel },
+    { icon: DollarSign, label: "Meta de ganhos", value: getGoalLabel(answers?.incomeGoal) },
+    { icon: Wallet, label: "Capital disponível", value: getBalanceLabel(answers?.accountBalance) },
+    { icon: DeviceIcon, label: "Dispositivo", value: getDeviceLabel(answers?.device) },
+    { icon: Clock, label: "Disponibilidade", value: getAvailabilityLabel(answers?.availability) },
+    { icon: AlertTriangle, label: "Maior desafio", value: obstacleLabel },
+  ].filter(item => item.value !== "—" && item.value !== "Não informado" || item.label === "Nome");
 
   return (
     <StepContainer>
@@ -139,31 +207,104 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
           transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
           className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5"
         >
-          <CheckCircle className="w-4 h-4 text-primary" />
-          <span className="text-xs font-bold text-primary uppercase tracking-wider">Análise completa</span>
+          <Brain className="w-4 h-4 text-primary" />
+          <span className="text-xs font-bold text-primary uppercase tracking-wider">Análise personalizada</span>
         </motion.div>
         <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground leading-tight">
-          {firstName ? <>{firstName}, sua <span className="text-gradient-green">projeção está pronta</span></> : <>Sua <span className="text-gradient-green">projeção está pronta</span></>}
+          {firstName ? <>{firstName}, seu <span className="text-gradient-green">plano exclusivo</span> está pronto</> : <>Seu <span className="text-gradient-green">plano exclusivo</span> está pronto</>}
         </h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Com base nas suas respostas e nos dados de{" "}
-          <span className="text-primary font-bold">+{alumniCount} alunos</span> com{" "}
-          <span className="font-semibold text-foreground">{ageGroup}</span>, a IA traçou o seu caminho.
+          A IA analisou cada uma das suas respostas e cruzou com dados de{" "}
+          <span className="text-primary font-bold">+{alumniCount} alunos</span> para criar uma estratégia sob medida.
         </p>
+      </motion.div>
+
+      {/* ── Profile Analysis Card ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="w-full rounded-2xl overflow-hidden border border-primary/15"
+        style={{ background: "linear-gradient(180deg, hsl(var(--card)), hsl(var(--primary) / 0.04))" }}
+      >
+        <div className="px-4 py-3 border-b border-primary/10 flex items-center justify-between" style={{ background: "hsl(var(--primary) / 0.06)" }}>
+          <div className="flex items-center gap-2">
+            <User className="w-4 h-4 text-primary" />
+            <span className="text-sm font-bold text-foreground">Seu Perfil Analisado</span>
+          </div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.6, type: "spring" }}
+            className="flex items-center gap-1.5 bg-primary/10 rounded-full px-3 py-1"
+          >
+            <Flame className="w-3.5 h-3.5 text-accent" />
+            <span className="text-xs font-bold text-primary">{compatScore}% compatível</span>
+          </motion.div>
+        </div>
+        <div className="p-4 space-y-2.5">
+          {profileItems.map((item, i) => {
+            const Icon = item.icon;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 + i * 0.08 }}
+                className="flex items-center justify-between py-1.5 border-b border-border/40 last:border-0"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center">
+                    <Icon className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{item.label}</span>
+                </div>
+                <span className="text-sm font-semibold text-foreground">{item.value}</span>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Obstacle solution highlight */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="mx-4 mb-4 p-3 rounded-xl border border-accent/20"
+          style={{ background: "hsl(var(--accent) / 0.08)" }}
+        >
+          <div className="flex items-start gap-2.5">
+            <CheckCircle className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-bold text-foreground">Solução para "{obstacleLabel.toLowerCase()}"</p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{obstacleSolution}</p>
+            </div>
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* ── Profit Projection Chart ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
+        transition={{ delay: 0.7 }}
         className="w-full rounded-2xl overflow-hidden border border-primary/15"
         style={{ background: "linear-gradient(180deg, hsl(var(--card)), hsl(var(--primary) / 0.03))" }}
       >
         <div className="px-4 py-3 border-b border-primary/10 flex items-center gap-2" style={{ background: "hsl(var(--primary) / 0.06)" }}>
           <TrendingUp className="w-4 h-4 text-primary" />
-          <span className="text-sm font-bold text-foreground">Projeção de Lucro — 30 Dias</span>
+          <span className="text-sm font-bold text-foreground">Projeção de Lucro — Baseada no Seu Perfil</span>
         </div>
+
+        {/* Personalization note */}
+        <div className="px-4 pt-3 pb-1">
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            📊 Calculado com base na sua meta de <span className="font-semibold text-foreground">{getGoalLabel(answers?.incomeGoal)}</span>, 
+            capital de <span className="font-semibold text-foreground">{getBalanceLabel(answers?.accountBalance)}</span> e 
+            disponibilidade de <span className="font-semibold text-foreground">{getAvailabilityLabel(answers?.availability)}</span>.
+          </p>
+        </div>
+
         <div className="p-4 space-y-3.5">
           {projections.map((p, i) => {
             const Icon = p.icon;
@@ -172,7 +313,7 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
                 key={i}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + i * 0.12, duration: 0.4 }}
+                transition={{ delay: 0.8 + i * 0.12, duration: 0.4 }}
                 className="space-y-1.5"
               >
                 <div className="flex justify-between items-center">
@@ -186,7 +327,7 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
                   <motion.span
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 + i * 0.12 }}
+                    transition={{ delay: 1.0 + i * 0.12 }}
                     className={`text-sm font-bold tabular-nums ${i === projections.length - 1 ? "text-primary text-base" : "text-foreground"}`}
                   >
                     R${p.value.toLocaleString("pt-BR")}/dia
@@ -196,7 +337,7 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${p.bar}%` }}
-                    transition={{ delay: 0.5 + i * 0.12, duration: 0.8, ease: "easeOut" }}
+                    transition={{ delay: 0.9 + i * 0.12, duration: 0.8, ease: "easeOut" }}
                     className="h-full rounded-full"
                     style={{ background: `linear-gradient(90deg, hsl(var(--primary) / 0.3), hsl(var(--primary) / ${0.35 + i * 0.15}))` }}
                   />
@@ -207,56 +348,61 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
           })}
         </div>
 
-        {/* Monthly total highlight */}
+        {/* Monthly total */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
+          transition={{ delay: 1.6 }}
           className="px-4 py-4 border-t border-primary/10"
           style={{ background: "hsl(var(--primary) / 0.08)" }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Award className="w-5 h-5 text-accent" />
-              <span className="text-sm font-bold text-foreground">Potencial mensal acumulado</span>
+              <span className="text-sm font-bold text-foreground">Potencial mensal</span>
             </div>
             <motion.span
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 1.4, type: "spring" }}
+              transition={{ delay: 1.8, type: "spring" }}
               className="text-xl sm:text-2xl font-display font-black text-primary"
             >
-              R$<AnimatedNumber target={nearGoal} delay={1400} />
+              R$<AnimatedNumber target={monthly} delay={1800} />
             </motion.span>
           </div>
           <p className="text-[11px] text-muted-foreground mt-1">
-            Equivalente a R${day30.toLocaleString("pt-BR")}/dia × 30 dias
+            R${day30.toLocaleString("pt-BR")}/dia × 30 dias — ajustado ao seu capital e meta
           </p>
         </motion.div>
       </motion.div>
 
-      {/* ── Comparative Data ── */}
+      {/* ── Comparative Stats ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
+        transition={{ delay: 1.2 }}
         className="w-full space-y-3"
       >
         <div className="flex items-center gap-2 justify-center">
           <Users className="w-4 h-4 text-primary" />
           <h3 className="text-base font-bold text-foreground">
-            Dados de <span className="text-primary">+{alumniCount}</span> alunos com perfil semelhante
+            Alunos com <span className="text-primary">{ageLabel}</span> como você
           </h3>
         </div>
         <div className="grid grid-cols-2 gap-2.5">
-          {comparativeStats.map((stat, i) => {
+          {[
+            { label: "Alcançaram a meta em 30 dias", value: `${successRate}%`, icon: Target },
+            { label: "Tempo médio pro primeiro ganho", value: "3 dias", icon: Clock },
+            { label: `Superaram "${obstacleLabel.toLowerCase()}"`, value: "96%", icon: Shield },
+            { label: "Nota de satisfação", value: "4.8/5", icon: Star },
+          ].map((stat, i) => {
             const Icon = stat.icon;
             return (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.0 + i * 0.1 }}
+                transition={{ delay: 1.4 + i * 0.1 }}
                 className="rounded-xl border border-border p-3 space-y-2 text-center"
                 style={{ background: "hsl(var(--card))" }}
               >
@@ -271,11 +417,11 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
         </div>
       </motion.div>
 
-      {/* ── Social Proof Avatars ── */}
+      {/* ── Social Proof ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.4 }}
+        transition={{ delay: 1.8 }}
         className="w-full flex items-center gap-3 rounded-xl p-3 border border-border bg-secondary/30"
       >
         <div className="flex -space-x-2 shrink-0">
@@ -284,7 +430,7 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
           ))}
         </div>
         <p className="text-[11px] text-muted-foreground leading-snug">
-          <span className="font-semibold text-foreground">+{alumniCount} alunos</span> com {ageGroup} já alcançaram resultados como esses.
+          <span className="font-semibold text-foreground">+{alumniCount} alunos</span> com {ageLabel} já alcançaram resultados como esses.
         </p>
       </motion.div>
 
@@ -292,21 +438,25 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2 }}
+        transition={{ delay: 1.6 }}
         className="w-full space-y-3"
       >
         <h3 className="text-base font-bold text-foreground text-center">
           Sua segurança é <span className="text-gradient-green">nossa prioridade</span>
         </h3>
         <div className="space-y-2.5">
-          {guarantees.map((g, i) => {
+          {[
+            { title: "Garantia incondicional de 30 dias", desc: "Se não gostar, devolvemos 100% do valor. Sem perguntas.", icon: ShieldCheck },
+            { title: "Suporte humano via WhatsApp", desc: "Mentora dedicada pra te guiar do zero ao primeiro resultado.", icon: Users },
+            { title: "Método validado para seu perfil", desc: `+${alumniCount} alunos com ${ageLabel} já comprovaram.`, icon: CheckCircle },
+          ].map((g, i) => {
             const Icon = g.icon;
             return (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, x: -15 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1.4 + i * 0.1 }}
+                transition={{ delay: 1.8 + i * 0.1 }}
                 className="flex items-start gap-3 rounded-xl border border-primary/15 p-3.5"
                 style={{ background: "hsl(var(--primary) / 0.03)" }}
               >
@@ -323,26 +473,26 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
         </div>
       </motion.div>
 
-      {/* ── Action Steps ── */}
+      {/* ── Steps ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.6 }}
+        transition={{ delay: 2.0 }}
         className="w-full space-y-3"
       >
         <h3 className="text-base font-bold text-foreground text-center">
           Como <span className="text-gradient-green">aplicar na prática</span>
         </h3>
         {[
-          { step: "1", title: "Ative sua Chave Token", desc: "Em menos de 2 minutos, você configura tudo direto do celular." },
-          { step: "2", title: "Siga o passo a passo", desc: "O suporte te guia pessoalmente. Zero dúvida, zero complicação." },
-          { step: "3", title: "Receba seus primeiros resultados", desc: `A maioria dos alunos com ${ageGroup} vê o primeiro resultado em até 3 dias.` },
+          { step: "1", title: "Ative sua Chave Token", desc: "Em menos de 2 minutos, direto do celular." },
+          { step: "2", title: "Siga o passo a passo", desc: "Suporte te guia pessoalmente. Zero complicação." },
+          { step: "3", title: "Receba seus resultados", desc: `A maioria dos alunos com ${ageLabel} vê o primeiro resultado em até 3 dias.` },
         ].map((item, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.8 + i * 0.1 }}
+            transition={{ delay: 2.2 + i * 0.1 }}
             className="flex items-start gap-3"
           >
             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-accent/15 text-accent font-bold text-sm shrink-0 mt-0.5">
@@ -360,7 +510,7 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 2 }}
+        transition={{ delay: 2.4 }}
         className="w-full space-y-3 pt-2"
       >
         <button
@@ -390,7 +540,6 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
         </div>
       </motion.div>
 
-      {/* Disclaimer */}
       <p className="text-[10px] text-muted-foreground/40 text-center pb-4">
         *Projeção baseada na média de resultados de alunos com perfil semelhante. Resultados individuais podem variar.
       </p>
