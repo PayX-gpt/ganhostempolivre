@@ -85,7 +85,7 @@ const STEP_ALIASES: Record<string, (typeof STEP_SLUGS)[number]> = {
 
 const normalizeSlug = (slug?: string) => {
   if (!slug) return "step-1";
-  const lower = slug.toLowerCase();
+  const lower = slug.toLowerCase().replace(/\/+$/, "");
   if (STEP_SLUGS.includes(lower as any)) return lower;
   return STEP_ALIASES[lower] ?? slug;
 };
@@ -123,7 +123,8 @@ const QuizFunnel = () => {
     }
   }, [slug, currentSlug, isValidQuizSlug, isNonQuizRoute, navigate]);
 
-  const step = Math.max(1, (STEP_SLUGS.indexOf(currentSlug as any) + 1) || 1);
+  const stepIndex = STEP_SLUGS.indexOf(currentSlug as any);
+  const step = stepIndex >= 0 ? stepIndex + 1 : 1;
   const stepEnteredAt = useRef<number>(Date.now());
 
   usePagePresence(`/${currentSlug}`);
@@ -209,34 +210,34 @@ const QuizFunnel = () => {
   );
 
   const renderStep = () => {
-    switch (step) {
-      case 1:
+    switch (currentSlug) {
+      case "step-1":
         return <Step1Intro onNext={goNext} />;
-      case 2:
+      case "step-2":
         return <Step2Age onNext={(v) => updateAndNext("age", v)} />;
-      case 3:
+      case "step-3":
         return <StepName onNext={(name) => updateAndNext("name", name)} />;
-      case 4:
+      case "step-4":
         return <Step3SocialProof onNext={goNext} userAge={answers.age} />;
-      case 5:
+      case "step-5":
         return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} userName={answers.name} userAge={answers.age} />;
-      case 6:
+      case "step-6":
         return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} userName={answers.name} userAge={answers.age} />;
-      case 7:
+      case "step-7":
         return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} userName={answers.name} userAge={answers.age} />;
-      case 8:
+      case "step-8":
         return <Step7MentorVideo onNext={goNext} userAge={answers.age} />;
-      case 9:
+      case "step-9":
         return <StepAccountBalance onNext={(v) => updateAndNext("accountBalance", v)} userName={answers.name} userAge={answers.age} />;
-      case 10:
+      case "step-10":
         return <Step9Availability onNext={(v) => updateAndNext("availability", v)} userName={answers.name} userAge={answers.age} />;
-      case 11:
+      case "step-11":
         return <StepPlatformDemo onNext={goNext} userName={answers.name} />;
-      case 12:
+      case "step-12":
         return <StepWhatsAppProof onNext={goNext} userAge={answers.age} />;
-      case 13:
+      case "step-13":
         return <StepContactMethod userName={answers.name} onNext={(v) => updateAndNext("contactMethod", v)} />;
-      case 14:
+      case "step-14":
         return (
           <StepContactInput
             method={answers.contactMethod || "email"}
@@ -270,13 +271,13 @@ const QuizFunnel = () => {
             }}
           />
         );
-      case 15:
+      case "step-15":
         return <Step10Loading onNext={goNext} userAge={answers.age} />;
-      case 16:
+      case "step-16":
         return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} />;
-      case 17:
+      case "step-17":
         return <Step11SocialProof2 onNext={goNext} userAge={answers.age} />;
-      case 18:
+      case "step-18":
         return <Step13Offer userName={answers.name} answers={answers} />;
       default:
         return null;
