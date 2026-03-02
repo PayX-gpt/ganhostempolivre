@@ -56,12 +56,12 @@ const StepContactMethod = ({ userName, onNext }: StepContactMethodProps) => {
 
   return (
     <StepContainer>
-      <div className="w-full funnel-card border-primary/25 bg-primary/5 text-center space-y-3">
-        <div className="w-14 h-14 rounded-full bg-primary/15 flex items-center justify-center mx-auto">
-          <PartyPopper className="w-7 h-7 text-primary" />
+      <div className="w-full funnel-card border-primary/25 bg-primary/5 text-center space-y-2.5 py-3 px-3">
+        <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center mx-auto">
+          <PartyPopper className="w-6 h-6 text-primary" />
         </div>
-        <p className="font-display text-lg font-bold text-foreground">{t.congrats(firstName)}</p>
-        <p className="text-sm text-primary font-semibold">{t.compatible}</p>
+        <p className="font-display text-base sm:text-lg font-bold text-foreground">{t.congrats(firstName)}</p>
+        <p className="text-[13px] text-primary font-semibold">{t.compatible}</p>
       </div>
 
       <StepTitle>{t.title}</StepTitle>

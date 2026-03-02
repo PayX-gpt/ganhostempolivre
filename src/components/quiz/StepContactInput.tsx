@@ -105,7 +105,7 @@ const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) =
       </div>
 
       <div className="w-full mt-1">
-        <label className="text-sm text-muted-foreground font-medium mb-1.5 block">
+        <label className="text-[13px] text-muted-foreground font-medium mb-1.5 block">
           {isEmail ? t.labelEmail : t.labelWhatsapp}
         </label>
         <input
@@ -114,7 +114,7 @@ const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) =
           value={value}
           onChange={(e) => setValue(isEmail ? e.target.value : formatPhone(e.target.value))}
           maxLength={isEmail ? 255 : 15}
-          className="w-full px-5 py-4 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          className="w-full px-4 py-3.5 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
           onKeyDown={(e) => { if (e.key === "Enter" && isValid) onNext(value.trim()); }}
         />
       </div>

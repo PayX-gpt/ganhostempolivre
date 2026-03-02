@@ -76,11 +76,11 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
 
   return (
     <StepContainer>
-      <div className="flex items-center gap-3 w-full">
-        <img src={mentorPhoto} alt={t.mentorName} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-primary/40 shrink-0" />
+      <div className="flex items-center gap-2.5 w-full">
+        <img src={mentorPhoto} alt={t.mentorName} className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-primary/40 shrink-0" />
         <div className="min-w-0">
-          <p className="font-bold text-foreground text-sm sm:text-base">{t.mentorName}</p>
-          <p className="text-xs sm:text-sm text-muted-foreground">{t.mentorRole}</p>
+          <p className="font-bold text-foreground text-[13px] sm:text-base">{t.mentorName}</p>
+          <p className="text-[11px] sm:text-sm text-muted-foreground">{t.mentorRole}</p>
         </div>
       </div>
 

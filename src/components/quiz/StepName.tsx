@@ -44,15 +44,15 @@ const StepName = ({ onNext }: StepNameProps) => {
       <StepTitle>{t.title}</StepTitle>
       <StepSubtitle>{t.subtitle}</StepSubtitle>
 
-      <div className="w-full mt-2">
-        <label className="text-sm text-muted-foreground font-medium mb-1.5 block">{t.label}</label>
+      <div className="w-full mt-1">
+        <label className="text-[13px] text-muted-foreground font-medium mb-1.5 block">{t.label}</label>
         <input
           type="text"
           placeholder={t.placeholder}
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={50}
-          className="w-full px-5 py-4 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          className="w-full px-4 py-3.5 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
           onKeyDown={(e) => { if (e.key === "Enter" && isValid) onNext(name.trim()); }}
         />
       </div>

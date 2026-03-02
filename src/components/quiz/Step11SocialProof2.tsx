@@ -104,10 +104,10 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
   return (
     <StepContainer>
       <StepTitle>{t.title1}<span className="text-gradient-green">{t.titleHL}</span></StepTitle>
-      <p className="text-xs sm:text-sm text-muted-foreground text-center -mt-1">{young ? t.subtitleYoung : t.subtitleMature}</p>
+      <p className="text-[11px] sm:text-sm text-muted-foreground text-center -mt-1">{young ? t.subtitleYoung : t.subtitleMature}</p>
 
-      <div className="w-full funnel-card border-accent/30 bg-accent/5 text-center py-2.5 px-3">
-        <p className="text-xs sm:text-sm text-foreground font-bold leading-snug">{young ? t.headlineYoung : t.headlineMature}</p>
+      <div className="w-full funnel-card border-accent/30 bg-accent/5 text-center py-2 px-2.5">
+        <p className="text-[12px] sm:text-sm text-foreground font-bold leading-snug">{young ? t.headlineYoung : t.headlineMature}</p>
       </div>
 
       <div className="w-full rounded-2xl overflow-hidden border border-border shadow-xl">
@@ -127,25 +127,25 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
         </div>
       )}
 
-      <div className="w-full space-y-2">
+      <div className="w-full space-y-1.5">
         {testimonials.map((tm, i) => (
-          <div key={i} className="funnel-card border-primary/25 bg-primary/5 py-2.5 px-3">
-            <div className="flex items-center gap-2.5">
-              <img src={avatars[i]} alt={tm.name} className="w-9 h-9 rounded-full object-cover border border-primary/30 shrink-0" />
+          <div key={i} className="funnel-card border-primary/25 bg-primary/5 py-2 px-2.5">
+            <div className="flex items-center gap-2">
+              <img src={avatars[i]} alt={tm.name} className="w-8 h-8 rounded-full object-cover border border-primary/30 shrink-0" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1">
-                  <p className="font-bold text-foreground text-xs">{tm.name} <span className="font-normal text-muted-foreground">• {tm.loc}</span></p>
+                  <p className="font-bold text-foreground text-[11px]">{tm.name} <span className="font-normal text-muted-foreground">• {tm.loc}</span></p>
                   <CheckCircle className="w-3 h-3 text-primary shrink-0" />
                 </div>
-                <p className="text-xs text-foreground/80 italic leading-snug mt-0.5">"{tm.text}"</p>
+                <p className="text-[11px] text-foreground/80 italic leading-snug mt-0.5">"{tm.text}"</p>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center py-2 px-3">
-        <p className="text-xs sm:text-sm text-foreground font-semibold leading-snug">
+      <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center py-1.5 px-2.5">
+        <p className="text-[11px] sm:text-sm text-foreground font-semibold leading-snug">
           {young ? t.emotionalYoung : t.emotionalMature}
         </p>
       </div>

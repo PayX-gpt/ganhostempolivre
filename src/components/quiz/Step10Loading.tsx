@@ -106,8 +106,8 @@ const Step10Loading = ({ onNext, userAge }: Step10Props) => {
   return (
     <StepContainer>
       <div className="relative mx-auto">
-        <div className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 ${showResult ? "border-primary" : "border-primary/30 border-t-primary animate-spin"} absolute inset-0`} />
-        <img src={mentorPhoto} alt="Especialista" className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover relative z-10 border-4 border-transparent" />
+        <div className={`w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 ${showResult ? "border-primary" : "border-primary/30 border-t-primary animate-spin"} absolute inset-0`} />
+        <img src={mentorPhoto} alt="Especialista" className="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover relative z-10 border-4 border-transparent" />
       </div>
 
       {showResult ? (

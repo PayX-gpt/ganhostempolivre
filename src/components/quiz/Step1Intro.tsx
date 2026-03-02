@@ -79,44 +79,44 @@ const Step1Intro = ({ onNext }: Step1Props) => {
 
   return (
     <StepContainer>
-      <div className="w-full funnel-card border-primary/30 bg-primary/5">
+      <div className="w-full funnel-card border-primary/30 bg-primary/5 py-2 px-3">
         <div className="flex items-center justify-center gap-2">
-          <Users className="w-4 h-4 text-primary animate-pulse" />
-          <p className="text-sm font-bold text-primary">
+          <Users className="w-3.5 h-3.5 text-primary animate-pulse" />
+          <p className="text-xs sm:text-sm font-bold text-primary">
             {t.counter(counter.toLocaleString(locale))}
           </p>
         </div>
       </div>
 
-      <div className="text-center space-y-4 mt-1">
-        <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-foreground leading-tight">
+      <div className="text-center space-y-2.5">
+        <h1 className="font-display text-[1.3rem] sm:text-3xl font-extrabold text-foreground leading-tight">
           <span className="text-gradient-green">{t.headline1}</span>{" "}
           {t.headline2}{" "}
           <span className="text-gradient-green">{t.headline3}</span>
         </h1>
-        <p className="text-sm sm:text-base font-semibold text-primary/90">
+        <p className="text-[13px] sm:text-base font-semibold text-primary/90">
           {t.subheadline}
         </p>
 
-        <div className="flex items-center justify-center gap-2 mt-1">
-          <img src={chatgptLogo} alt="ChatGPT" className="w-6 h-6 sm:w-7 sm:h-7" />
-          <p className="text-base sm:text-lg font-bold text-foreground/80">
+        <div className="flex items-center justify-center gap-1.5">
+          <img src={chatgptLogo} alt="ChatGPT" className="w-5 h-5 sm:w-7 sm:h-7" />
+          <p className="text-[13px] sm:text-lg font-bold text-foreground/80">
             {t.powered}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 w-full">
+      <div className="grid grid-cols-2 gap-1.5 w-full">
         {t.triggers.map((item) => (
-          <div key={item} className="flex items-center gap-2 funnel-card border-border/50 bg-card/50 py-2.5 px-3">
-            <Zap className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span className="text-sm font-semibold text-foreground">{item}</span>
+          <div key={item} className="flex items-center gap-1.5 funnel-card border-border/50 bg-card/50 py-2 px-2.5">
+            <Zap className="w-3 h-3 text-primary shrink-0" />
+            <span className="text-[12px] sm:text-sm font-semibold text-foreground">{item}</span>
           </div>
         ))}
       </div>
 
-      <div className="w-full funnel-card border-border/30 bg-card/30">
-        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed text-center">
+      <div className="w-full funnel-card border-border/30 bg-card/30 py-2.5 px-3">
+        <p className="text-[13px] sm:text-base text-muted-foreground leading-relaxed text-center">
           {t.body(
             `<strong class="text-foreground">${t.bodyBold1}</strong>`,
             `<strong class="text-foreground">${t.bodyBold2}</strong>`
@@ -130,20 +130,20 @@ const Step1Intro = ({ onNext }: Step1Props) => {
         </p>
       </div>
 
-      <div className="flex items-center gap-2 justify-center">
-        <TrendingUp className="w-4 h-4 text-primary" />
-        <p className="text-sm font-medium text-foreground/70">
+      <div className="flex items-center gap-1.5 justify-center">
+        <TrendingUp className="w-3.5 h-3.5 text-primary" />
+        <p className="text-[12px] sm:text-sm font-medium text-foreground/70">
           {t.proof} <span className="font-bold text-foreground">{t.proofBold}</span>{t.proofEnd}
         </p>
       </div>
 
-      <div className="w-full space-y-3">
-        <CTAButton onClick={onNext} className="animate-bounce-subtle text-lg sm:text-xl">
+      <div className="w-full space-y-2.5">
+        <CTAButton onClick={onNext} className="animate-bounce-subtle text-[15px] sm:text-xl">
           {t.cta}
         </CTAButton>
         <div className="flex items-center gap-2 justify-center">
-          <Lock className="w-3.5 h-3.5 text-primary shrink-0" />
-          <p className="text-xs text-muted-foreground text-center">
+          <Lock className="w-3 h-3 text-primary shrink-0" />
+          <p className="text-[11px] text-muted-foreground text-center">
             {t.trust}
           </p>
         </div>
