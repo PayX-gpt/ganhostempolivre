@@ -35,12 +35,13 @@ const FUNNEL_STEPS = [
   { route: "/step-9", label: "Saldo" },
   { route: "/step-10", label: "Tempo" },
   { route: "/step-11", label: "Demo" },
-  { route: "/step-12", label: "Loading" },
-  { route: "/step-13", label: "Prova 2" },
-  { route: "/step-14", label: "WhatsApp" },
-  { route: "/step-15", label: "Contato" },
-  { route: "/step-16", label: "Input" },
-  { route: "/step-17", label: "Oferta" },
+  { route: "/step-12", label: "WhatsApp" },
+  { route: "/step-13", label: "Contato" },
+  { route: "/step-14", label: "Input" },
+  { route: "/step-15", label: "Análise" },
+  { route: "/step-16", label: "Projeção" },
+  { route: "/step-17", label: "Vídeo Venda" },
+  { route: "/step-18", label: "Oferta" },
   { route: "/upsell1", label: "UP1 Acel." },
   { route: "/upsell2", label: "UP2 Multi." },
   { route: "/upsell3", label: "UP3 Blind." },
@@ -50,8 +51,7 @@ const FUNNEL_STEPS = [
 ];
 
 const ROUTE_ALIASES: Record<string, string> = {
-  "/step-18": "/step-16",
-  "/step-19": "/step-17",
+  "/step-19": "/step-18",
 };
 
 const tooltipStyle = {
@@ -148,7 +148,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     setHourlyData(Object.entries(hourCounts).map(([hour, visits]) => ({ hour, visits })));
     setTotalViews(steps[0]?.views || 0);
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
-    setOfferViews(stepCounts["/step-17"]?.size || 0);
+    setOfferViews(stepCounts["/step-18"]?.size || 0);
     setCheckoutClicks(new Set(checkoutRes.data?.map(e => e.session_id) || []).size);
     setLoading(false);
   }, [allCampaigns]);
