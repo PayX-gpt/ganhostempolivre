@@ -63,6 +63,27 @@ const tooltipStyle = {
   padding: "8px 12px",
 };
 
+// Paginated fetch to bypass 1000-row limit
+async function fetchAllRows(
+  table: string,
+  select: string,
+  filters: (q: any) => any,
+  pageSize = 1000
+): Promise<any[]> {
+  const all: any[] = [];
+  let from = 0;
+  while (true) {
+    let q = supabase.from(table as any).select(select).range(from, from + pageSize - 1);
+    q = filters(q);
+    const { data, error } = await q;
+    if (error || !data || data.length === 0) break;
+    all.push(...(data as any[]));
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return all;
+}
+
 const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
   const [funnelData, setFunnelData] = useState<StepData[]>([]);
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
@@ -84,23 +105,29 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     todayStart.setHours(0, 0, 0, 0);
     const todayISO = todayStart.toISOString();
 
-    const [pageLoadsRes, attributionRes, checkoutRes, purchaseRes] = await Promise.all([
-      supabase.from("funnel_audit_logs").select("page_id, session_id, created_at")
-        .eq("event_type", "page_loaded").gte("created_at", todayISO),
-      supabase.from("session_attribution").select("session_id, utm_campaign, utm_source, ttclid, fbclid")
-        .gte("created_at", todayISO),
-      supabase.from("funnel_events").select("session_id")
-        .eq("event_name", "checkout_click").gte("created_at", todayISO),
-      supabase.from("purchase_tracking").select("session_id, email")
-        .in("status", ["approved", "completed", "purchased", "redirected"])
-        .gte("created_at", todayISO),
+    const [pageLoads, attributionData, checkoutData, purchaseData] = await Promise.all([
+      fetchAllRows(
+        "funnel_audit_logs", "page_id, session_id, created_at",
+        (q: any) => q.eq("event_type", "page_loaded").gte("created_at", todayISO)
+      ),
+      fetchAllRows(
+        "session_attribution", "session_id, utm_campaign, utm_source, ttclid, fbclid",
+        (q: any) => q.gte("created_at", todayISO)
+      ),
+      fetchAllRows(
+        "funnel_events", "session_id",
+        (q: any) => q.eq("event_name", "checkout_click").gte("created_at", todayISO)
+      ),
+      fetchAllRows(
+        "purchase_tracking", "session_id, email",
+        (q: any) => q.in("status", ["approved", "completed", "purchased", "redirected"]).gte("created_at", todayISO)
+      ),
     ]);
 
-    const pageLoads = pageLoadsRes.data;
-    if (!pageLoads) { setLoading(false); return; }
+    if (!pageLoads.length) { setLoading(false); return; }
 
     const sessionCampaign: Record<string, string> = {};
-    (attributionRes.data || []).forEach((a: any) => {
+    (attributionData || []).forEach((a: any) => {
       sessionCampaign[a.session_id] = deriveCampaignLabel(a);
     });
 
@@ -153,8 +180,8 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     setTotalViews(steps[0]?.views || 0);
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
     setOfferViews(stepCounts["/step-18"]?.size || 0);
-    setCheckoutClicks(new Set(checkoutRes.data?.map(e => e.session_id) || []).size);
-    const uniqueBuyers = new Set(purchaseRes.data?.filter(r => r.email).map(r => (r.email as string).toLowerCase())).size;
+    setCheckoutClicks(new Set(checkoutData.map(e => e.session_id)).size);
+    const uniqueBuyers = new Set(purchaseData.filter(r => r.email).map(r => (r.email as string).toLowerCase())).size;
     setPurchases(uniqueBuyers);
     setLoading(false);
   }, [allCampaigns]);
