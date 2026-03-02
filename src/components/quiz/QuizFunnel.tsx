@@ -254,32 +254,14 @@ const QuizFunnel = () => {
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col">
       <header className="w-full bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-        <div className="max-w-lg mx-auto px-4 py-2.5 sm:py-3 flex items-center justify-between">
-          <h1 className="font-bold text-lg sm:text-xl text-foreground tracking-tight flex items-center gap-1.5">
-            {lang === "pt" && (<>
-              <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">G</span>
-              <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">anhos com</span>
-              <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">T</span>
-              <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">empo</span>
-              <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">L</span>
-              <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">ivre</span>
-            </>)}
-            {lang === "en" && (<>
-              <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">F</span>
-              <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">ree</span>
-              <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">T</span>
-              <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">ime</span>
-              <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">E</span>
-              <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">arnings</span>
-            </>)}
-            {lang === "es" && (<>
-              <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">G</span>
-              <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">anancias con</span>
-              <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">T</span>
-              <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">iempo</span>
-              <span className="text-gradient-green font-extrabold tracking-widest text-xl sm:text-2xl">L</span>
-              <span className="text-foreground/90 uppercase tracking-[0.15em] text-sm sm:text-base font-semibold">ibre</span>
-            </>)}
+        <div className="max-w-lg mx-auto px-3 py-2 sm:py-3 flex items-center justify-between gap-2">
+          <h1 className="font-bold text-foreground tracking-tight whitespace-nowrap text-sm sm:text-lg">
+            <span className="text-gradient-green font-extrabold">
+              {lang === "pt" ? "GTL" : lang === "en" ? "FTE" : "GTL"}
+            </span>
+            <span className="text-foreground/80 font-semibold ml-1.5 text-[11px] sm:text-sm uppercase tracking-wider">
+              {lang === "pt" ? "Ganhos com Tempo Livre" : lang === "en" ? "Free Time Earnings" : "Ganancias Tiempo Libre"}
+            </span>
           </h1>
           <LanguageSelector />
         </div>
