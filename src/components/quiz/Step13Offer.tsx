@@ -947,10 +947,10 @@ const WhatsAppWelcome = ({ firstName }: { firstName: string }) => {
 
 /* ─── Video Testimonials Section ─── */
 const VIDEO_TESTIMONIALS = [
-  { id: "6844c2bcefb07ec7d1f69f35", padding: "56.42633228840125%", sdk: "v1" },
-  { id: "681528f68fced9179fa2e1c3", padding: "56.25%", sdk: "v1" },
-  { id: "68152914abe4fd17b1dc4ad1", padding: "56.25%", sdk: "v1" },
-  { id: "692bc7a9eb5ec5285cecf25c", padding: "56.25%", sdk: "v4" },
+  { id: "6844c2bcefb07ec7d1f69f35", padding: "56.42633228840125%", sdk: "v1", thumb: "https://images.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/6844c2bcefb07ec7d1f69f35/thumbnail.jpg" },
+  { id: "681528f68fced9179fa2e1c3", padding: "56.25%", sdk: "v1", thumb: "https://images.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/681528f68fced9179fa2e1c3/thumbnail.jpg" },
+  { id: "68152914abe4fd17b1dc4ad1", padding: "56.25%", sdk: "v1", thumb: "https://images.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/68152914abe4fd17b1dc4ad1/thumbnail.jpg" },
+  { id: "692bc7a9eb5ec5285cecf25c", padding: "56.25%", sdk: "v4", thumb: "https://images.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/692bc7a9eb5ec5285cecf25c/thumbnail.jpg" },
 ];
 
 const loadVideoSrc = (v: typeof VIDEO_TESTIMONIALS[number]) => {
@@ -991,19 +991,30 @@ const VideoTestimonialItem = ({ v, autoplay }: { v: typeof VIDEO_TESTIMONIALS[nu
           />
         </div>
       </div>
-      {/* Play overlay for non-autoplay videos */}
+      {/* Play overlay with thumbnail for non-autoplay videos */}
       {!activated && (
         <button
           onClick={handleActivate}
-          className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-black/40 backdrop-blur-[2px] transition-opacity hover:bg-black/30"
+          className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer transition-opacity group"
           aria-label="Reproduzir vídeo"
         >
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/90 flex items-center justify-center shadow-lg transition-transform hover:scale-110">
+          {/* Thumbnail background */}
+          <img
+            src={v.thumb}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="lazy"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          />
+          {/* Dim overlay */}
+          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors" />
+          {/* Play button */}
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/90 flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
             <svg className="w-7 h-7 sm:w-9 sm:h-9 text-primary-foreground ml-1" fill="currentColor" viewBox="0 0 20 20">
               <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
             </svg>
           </div>
-          <span className="absolute bottom-4 text-xs text-white/80 font-medium">Toque para assistir</span>
+          <span className="absolute bottom-4 text-xs text-white/80 font-medium z-10">Toque para assistir</span>
         </button>
       )}
     </div>
