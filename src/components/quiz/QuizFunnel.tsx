@@ -30,6 +30,12 @@ const footerTexts: Record<Language, string> = {
   es: "© 2026 — Plataforma Ganancias con Tiempo Libre • Todos los derechos reservados",
 };
 
+const stepBadgeTexts: Record<Language, string> = {
+  pt: "Etapa",
+  en: "Step",
+  es: "Paso",
+};
+
 const STEP_SLUGS = [
   "step-1",  // 1: Intro
   "step-2",  // 2: Idade
@@ -45,9 +51,9 @@ const STEP_SLUGS = [
   "step-12", // 12: WhatsApp proof
   "step-13", // 13: Método contato
   "step-14", // 14: Input contato
-  "step-15", // 15: Loading (análise)
-  "step-16", // 16: Projeção de perfil e lucro
-  "step-17", // 17: Prova social 2 + vídeo venda
+  "step-15", // 15: Projeção de perfil e lucro
+  "step-16", // 16: Prova social 2 + vídeo venda
+  "step-17", // 17: Loading (análise)
   "step-18", // 18: Oferta final
 ] as const;
 
@@ -132,6 +138,10 @@ const QuizFunnel = () => {
   const step = stepIndex >= 0 ? stepIndex + 1 : 1;
   const stepEnteredAt = useRef<number>(Date.now());
   const isNavigatingRef = useRef(false);
+
+  useEffect(() => {
+    document.title = `GTL • ${stepBadgeTexts[lang]} ${step}/${TOTAL_STEPS}`;
+  }, [lang, step]);
 
   usePagePresence(`/${currentSlug}`);
 
@@ -323,14 +333,21 @@ const QuizFunnel = () => {
     <div className="min-h-[100dvh] bg-background flex flex-col">
       <header className="w-full bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-lg mx-auto px-3 py-2 sm:py-3 flex items-center justify-between gap-2">
-          <h1 className="font-bold text-foreground tracking-tight whitespace-nowrap text-sm sm:text-lg">
-            <span className="text-gradient-green font-extrabold">
-              {lang === "pt" ? "GTL" : lang === "en" ? "FTE" : "GTL"}
-            </span>
-            <span className="text-foreground/80 font-semibold ml-1.5 text-[11px] sm:text-sm uppercase tracking-wider">
-              {lang === "pt" ? "Ganhos com Tempo Livre" : lang === "en" ? "Free Time Earnings" : "Ganancias Tiempo Libre"}
-            </span>
-          </h1>
+          <div className="min-w-0">
+            <h1 className="font-bold text-foreground tracking-tight whitespace-nowrap text-sm sm:text-lg">
+              <span className="text-gradient-green font-extrabold">
+                {lang === "pt" ? "GTL" : lang === "en" ? "FTE" : "GTL"}
+              </span>
+              <span className="text-foreground/80 font-semibold ml-1.5 text-[11px] sm:text-sm uppercase tracking-wider">
+                {lang === "pt" ? "Ganhos com Tempo Livre" : lang === "en" ? "Free Time Earnings" : "Ganancias Tiempo Libre"}
+              </span>
+            </h1>
+            {step >= 1 && step <= TOTAL_STEPS && (
+              <p className="text-[11px] sm:text-xs text-muted-foreground font-semibold mt-0.5">
+                {stepBadgeTexts[lang]} {step}/{TOTAL_STEPS}
+              </p>
+            )}
+          </div>
           <LanguageSelector />
         </div>
         {step > 1 && step < TOTAL_STEPS && <ProgressBar current={progressCurrent} total={progressTotal} />}
