@@ -45,9 +45,9 @@ interface Step13Props {
 const PRICING_TIERS: Record<string, { price: number; installment: number; installments: number; checkoutUrl: string }> = {
   "menos100":  { price: 37.00,  installment: 3.88,  installments: 12, checkoutUrl: "https://pay.kirvano.com/4630333d-d5d1-4591-b767-2151f77c6b13" },
   "100-500":   { price: 47.00,  installment: 4.67,  installments: 12, checkoutUrl: "https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c" },
-  "500-2000":  { price: 47.00,  installment: 4.67,  installments: 12, checkoutUrl: "https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c" },
-  "2000-10000":{ price: 47.00,  installment: 4.67,  installments: 12, checkoutUrl: "https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c" },
-  "10000+":    { price: 47.00,  installment: 4.67,  installments: 12, checkoutUrl: "https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c" },
+  "500-2000":  { price: 66.83,  installment: 5.57,  installments: 12, checkoutUrl: "https://pay.kirvano.com/69208bd0-7fc5-4000-958c-948dc73b1f6b" },
+  "2000-10000":{ price: 66.83,  installment: 5.57,  installments: 12, checkoutUrl: "https://pay.kirvano.com/69208bd0-7fc5-4000-958c-948dc73b1f6b" },
+  "10000+":    { price: 66.83,  installment: 5.57,  installments: 12, checkoutUrl: "https://pay.kirvano.com/69208bd0-7fc5-4000-958c-948dc73b1f6b" },
 };
 
 const getPricing = (accountBalance?: string) => {

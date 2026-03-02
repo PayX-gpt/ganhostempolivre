@@ -39,9 +39,9 @@ export const getLeadPricePaid = (): number => {
   const priceMap: Record<string, number> = {
     "menos100": 37,
     "100-500": 47,
-    "500-2000": 47,
-    "2000-10000": 47,
-    "10000+": 47,
+    "500-2000": 66.83,
+    "2000-10000": 66.83,
+    "10000+": 66.83,
   };
   try {
     const raw = sessionStorage.getItem("quiz_answers");
