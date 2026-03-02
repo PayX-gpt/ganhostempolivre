@@ -523,7 +523,7 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
           <div className="relative flex items-center justify-center gap-3">
             <Zap className="w-6 h-6 shrink-0" />
-            <span>VER MINHA OFERTA EXCLUSIVA</span>
+            <span>QUERO MEU ACESSO</span>
             <ArrowRight className="w-5 h-5 shrink-0 group-hover:translate-x-1 transition-transform" />
           </div>
         </button>
