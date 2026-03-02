@@ -99,9 +99,9 @@ export const CTAButton = ({ children, onClick, variant = "primary", disabled, cl
       ref={ref}
       onClick={onClick}
       disabled={disabled}
-      className={`w-full py-3.5 sm:py-5 px-5 sm:px-6 rounded-2xl font-extrabold text-[15px] sm:text-lg tracking-wide transition-all duration-300 ${
+      className={`w-full py-3 sm:py-4 px-5 sm:px-6 rounded-xl font-extrabold text-[14px] sm:text-lg tracking-wide transition-all duration-300 ${
         variant === "primary"
-          ? "bg-primary text-primary-foreground funnel-glow-button hover:brightness-110 active:scale-[0.98]"
+          ? "bg-gradient-to-r from-accent to-amber-500 text-accent-foreground shadow-[0_0_20px_hsl(42_100%_55%/0.35),0_0_40px_hsl(42_100%_55%/0.15)] hover:brightness-110 active:scale-[0.98]"
           : "bg-accent text-accent-foreground hover:brightness-110 active:scale-[0.98]"
       } ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"} ${className}`}
     >
