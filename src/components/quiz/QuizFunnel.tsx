@@ -62,6 +62,34 @@ const STEP_NAMES: Record<string, string> = {
   "step-17": "prova_social_2", "step-18": "oferta_final",
 };
 
+const STEP_ALIASES: Record<string, (typeof STEP_SLUGS)[number]> = {
+  step1: "step-1",
+  step2: "step-2",
+  step3: "step-3",
+  step4: "step-4",
+  step5: "step-5",
+  step6: "step-6",
+  step7: "step-7",
+  step8: "step-8",
+  step9: "step-9",
+  step10: "step-10",
+  step11: "step-11",
+  step12: "step-12",
+  step13: "step-13",
+  step14: "step-14",
+  step15: "step-15",
+  step16: "step-16",
+  step17: "step-17",
+  step18: "step-18",
+};
+
+const normalizeSlug = (slug?: string) => {
+  if (!slug) return "step-1";
+  const lower = slug.toLowerCase();
+  if (STEP_SLUGS.includes(lower as any)) return lower;
+  return STEP_ALIASES[lower] ?? slug;
+};
+
 const QuizFunnel = () => {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
@@ -72,8 +100,8 @@ const QuizFunnel = () => {
       return saved ? JSON.parse(saved) : {};
     } catch { return {}; }
   });
-  const currentSlug = slug || "step-1";
-  const isValidQuizSlug = !slug || STEP_SLUGS.includes(slug as any);
+  const currentSlug = normalizeSlug(slug);
+  const isValidQuizSlug = STEP_SLUGS.includes(currentSlug as any);
 
   // Guard: if the slug belongs to a known non-quiz route, bail out immediately
   const NON_QUIZ_ROUTES = ["upsell1", "upsell2", "upsell3", "upsell4", "live"];
@@ -84,10 +112,16 @@ const QuizFunnel = () => {
       window.location.replace(`/${slug}${window.location.search}`);
       return;
     }
-    if (!isValidQuizSlug) {
-      navigate(`/${slug}`, { replace: true });
+
+    if (slug && currentSlug !== slug && STEP_SLUGS.includes(currentSlug as any)) {
+      navigate(`/${currentSlug}${window.location.search}${window.location.hash}`, { replace: true });
+      return;
     }
-  }, [slug, isValidQuizSlug, isNonQuizRoute, navigate]);
+
+    if (!isValidQuizSlug) {
+      navigate(`/step-1${window.location.search}${window.location.hash}`, { replace: true });
+    }
+  }, [slug, currentSlug, isValidQuizSlug, isNonQuizRoute, navigate]);
 
   const step = Math.max(1, (STEP_SLUGS.indexOf(currentSlug as any) + 1) || 1);
   const stepEnteredAt = useRef<number>(Date.now());
