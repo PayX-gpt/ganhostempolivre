@@ -45,9 +45,9 @@ function detectLanguage(): Language {
     if (stored && ["pt", "en", "es"].includes(stored)) return stored as Language;
   } catch {}
   const navLang = (navigator.language || navigator.languages?.[0] || "").toLowerCase();
+  if (navLang.startsWith("pt")) return "pt";
   if (navLang.startsWith("es")) return "es";
-  if (navLang.startsWith("en")) return "en";
-  return "pt";
+  return "en"; // Global fallback: English (for international ad campaigns)
 }
 
 const I18nContext = createContext<I18nContextType>({
@@ -78,8 +78,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         const en = ["US","GB","AU","CA","NZ","IE","ZA","IN","PH","SG","MY","KE","NG","GH"];
         if (pt.includes(c)) setLang("pt");
         else if (es.includes(c)) setLang("es");
-        else if (en.includes(c)) setLang("en");
-        // Unknown country: keep browser-detected language
+        else setLang("en"); // All other countries default to English (international campaigns)
       })
       .catch(() => {});
     return () => controller.abort();
