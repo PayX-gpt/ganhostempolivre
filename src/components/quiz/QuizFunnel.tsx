@@ -108,12 +108,17 @@ const QuizFunnel = () => {
   const isNonQuizRoute = slug && NON_QUIZ_ROUTES.includes(slug);
 
   useEffect(() => {
+    if (!slug) {
+      navigate(`/step-1${window.location.search}${window.location.hash}`, { replace: true });
+      return;
+    }
+
     if (isNonQuizRoute) {
       window.location.replace(`/${slug}${window.location.search}`);
       return;
     }
 
-    if (slug && currentSlug !== slug && STEP_SLUGS.includes(currentSlug as any)) {
+    if (currentSlug !== slug && STEP_SLUGS.includes(currentSlug as any)) {
       navigate(`/${currentSlug}${window.location.search}${window.location.hash}`, { replace: true });
       return;
     }
