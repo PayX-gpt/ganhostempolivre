@@ -41,11 +41,11 @@ const STEP_SLUGS = [
   "step-9",  // 9: Saldo na conta (preço dinâmico)
   "step-10", // 10: Disponibilidade (binário)
   "step-11", // 11: Demo plataforma
-  "step-14", // 12: WhatsApp proof
-  "step-15", // 13: Método contato
-  "step-16", // 14: Input contato
-  "step-12", // 15: Loading (análise)
-  "step-13", // 16: Prova social 2 + vídeo venda
+  "step-12", // 12: WhatsApp proof
+  "step-13", // 13: Método contato
+  "step-14", // 14: Input contato
+  "step-15", // 15: Loading (análise)
+  "step-16", // 16: Prova social 2 + vídeo venda
   "step-17", // 17: Oferta final
 ] as const;
 
@@ -55,8 +55,8 @@ const STEP_NAMES: Record<string, string> = {
   "step-1": "intro", "step-2": "idade", "step-3": "nome", "step-4": "prova_social",
   "step-5": "tentou_online", "step-6": "meta_renda", "step-7": "obstaculo",
   "step-8": "video_mentor", "step-9": "saldo_conta", "step-10": "disponibilidade",
-  "step-11": "demo_plataforma", "step-12": "loading", "step-13": "prova_social_2",
-  "step-14": "whatsapp_proof", "step-15": "metodo_contato", "step-16": "input_contato",
+  "step-11": "demo_plataforma", "step-12": "whatsapp_proof", "step-13": "metodo_contato",
+  "step-14": "input_contato", "step-15": "loading", "step-16": "prova_social_2",
   "step-17": "oferta_final",
 };
 
