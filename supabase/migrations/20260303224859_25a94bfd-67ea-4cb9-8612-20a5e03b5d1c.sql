@@ -1,0 +1,55 @@
+
+CREATE OR REPLACE FUNCTION public.get_campaign_stats_today()
+ RETURNS TABLE(campaign text, leads bigint, checkouts bigint, sales bigint, revenue numeric, refunds bigint, conv_rate numeric)
+ LANGUAGE sql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+WITH tz AS (
+  SELECT date_trunc('day', now() AT TIME ZONE 'America/Sao_Paulo') AT TIME ZONE 'America/Sao_Paulo' AS day_start
+),
+sa_campaigns AS (
+  SELECT sa.session_id,
+    TRIM(split_part(public.url_decode(sa.utm_campaign), '|', 1)) AS campaign_label
+  FROM public.session_attribution sa CROSS JOIN tz
+  WHERE sa.created_at >= tz.day_start AND sa.utm_campaign IS NOT NULL AND sa.utm_campaign != ''
+),
+leads_agg AS (SELECT campaign_label, COUNT(DISTINCT session_id) AS lead_count FROM sa_campaigns GROUP BY 1),
+-- FIX: Only count checkouts for sessions that have attribution (INNER JOIN instead of LEFT JOIN)
+checkout_agg AS (
+  SELECT sc.campaign_label, COUNT(DISTINCT fe.session_id) AS ck_count
+  FROM public.funnel_events fe
+  INNER JOIN sa_campaigns sc ON sc.session_id = fe.session_id
+  CROSS JOIN tz
+  WHERE fe.created_at >= tz.day_start AND fe.event_name IN ('checkout_click', 'capi_ic_sent')
+  GROUP BY 1
+),
+sale_details AS (
+  SELECT COALESCE(sc.campaign_label, NULLIF(TRIM(split_part(public.url_decode(p.utm_campaign), '|', 1)), ''), 'Direto') AS campaign_label,
+    p.amount, p.status, p.funnel_step
+  FROM public.purchase_tracking p LEFT JOIN sa_campaigns sc ON sc.session_id = p.session_id CROSS JOIN tz
+  WHERE p.created_at >= tz.day_start
+),
+sales_agg AS (
+  SELECT campaign_label,
+    COUNT(*) FILTER (WHERE status = 'approved' AND funnel_step LIKE 'front%') AS sale_count,
+    COALESCE(SUM(amount) FILTER (WHERE status = 'approved' AND funnel_step LIKE 'front%'), 0) AS front_revenue,
+    COALESCE(SUM(amount) FILTER (WHERE status = 'approved'), 0) AS total_revenue,
+    COUNT(*) FILTER (WHERE status IN ('refunded', 'canceled')) AS refund_count
+  FROM sale_details GROUP BY 1
+),
+all_labels AS (
+  SELECT campaign_label FROM leads_agg UNION SELECT campaign_label FROM checkout_agg UNION SELECT campaign_label FROM sales_agg
+)
+SELECT al.campaign_label AS campaign,
+  COALESCE(la.lead_count, 0) AS leads, COALESCE(ca.ck_count, 0) AS checkouts,
+  COALESCE(sa2.sale_count, 0) AS sales, COALESCE(sa2.total_revenue, 0) AS revenue,
+  COALESCE(sa2.refund_count, 0) AS refunds,
+  CASE WHEN COALESCE(la.lead_count, 0) > 0
+    THEN ROUND((COALESCE(sa2.sale_count, 0)::numeric / la.lead_count::numeric) * 100, 1) ELSE 0 END AS conv_rate
+FROM all_labels al
+LEFT JOIN leads_agg la ON la.campaign_label = al.campaign_label
+LEFT JOIN checkout_agg ca ON ca.campaign_label = al.campaign_label
+LEFT JOIN sales_agg sa2 ON sa2.campaign_label = al.campaign_label
+ORDER BY COALESCE(sa2.sale_count, 0) DESC, COALESCE(sa2.total_revenue, 0) DESC;
+$function$;
