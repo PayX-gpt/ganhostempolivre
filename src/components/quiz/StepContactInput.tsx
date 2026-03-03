@@ -137,6 +137,13 @@ const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) =
             supabase.from("phone_session_map" as any).insert({ phone: cleanPhone, session_id: sessionId }).then(() => {});
           }
         }
+        // Save email→session for webhook attribution
+        if (method === 'email' && contactValue) {
+          const sessionId = sessionStorage.getItem('funnel_session_id') || (window as any).trackingData?.session_id;
+          if (sessionId) {
+            supabase.from("email_session_map" as any).insert({ email: contactValue.toLowerCase().trim(), session_id: sessionId }).then(() => {});
+          }
+        }
         onNext(contactValue);
       }} disabled={!isValid}>
         {t.cta}
