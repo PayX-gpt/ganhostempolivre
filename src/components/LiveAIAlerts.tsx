@@ -213,9 +213,9 @@ export default function LiveAIAlerts() {
   }, []);
 
   useEffect(() => {
-    analyze();
-    const interval = setInterval(analyze, 60000);
-    return () => clearInterval(interval);
+    const timer = setTimeout(analyze, 3000); // Stagger: load 3s after mount
+    const interval = setInterval(analyze, 90000); // Refresh every 90s
+    return () => { clearTimeout(timer); clearInterval(interval); };
   }, [analyze]);
 
   const healthColor = health ? (health.score >= 70 ? "text-emerald-400" : health.score >= 40 ? "text-amber-400" : "text-red-400") : "text-[#888]";

@@ -87,9 +87,9 @@ export default function LiveFunnelVelocity() {
   }, []);
 
   useEffect(() => {
-    compute();
-    const interval = setInterval(compute, 60000);
-    return () => clearInterval(interval);
+    const timer = setTimeout(compute, 5000); // Stagger: load 5s after mount
+    const interval = setInterval(compute, 120000); // Refresh every 2min
+    return () => { clearTimeout(timer); clearInterval(interval); };
   }, [compute]);
 
   if (!data || data.sessionsAnalyzed === 0) return null;

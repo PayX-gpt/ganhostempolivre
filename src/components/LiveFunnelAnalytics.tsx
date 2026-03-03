@@ -244,13 +244,13 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
   }, [allCampaigns]);
 
   useEffect(() => {
-    fetchFunnelData();
-    const interval = setInterval(fetchFunnelData, 30000);
+    const timer = setTimeout(fetchFunnelData, 6000); // Stagger: load 6s after mount
+    const interval = setInterval(fetchFunnelData, 60000); // Refresh every 60s
     const channel = supabase.channel("funnel-analytics-realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "funnel_audit_logs", filter: "event_type=eq.page_loaded" },
         () => fetchFunnelData())
       .subscribe();
-    return () => { clearInterval(interval); supabase.removeChannel(channel); };
+    return () => { clearTimeout(timer); clearInterval(interval); supabase.removeChannel(channel); };
   }, [fetchFunnelData]);
 
   const activeCampaigns = campaignMode ? Array.from(selectedCampaigns) : [];
