@@ -565,6 +565,7 @@ export type Database = {
           sales: number
         }[]
       }
+      get_dashboard_summary_today: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never
