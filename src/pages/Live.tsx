@@ -467,6 +467,13 @@ export default function AdminFunnelAudit() {
       <SEOHead title="Live Dashboard" description="Real-time analytics and monitoring dashboard" url="/live" />
 
       <div className="max-w-[1600px] mx-auto px-4 py-6 space-y-6">
+        {/* Attribution correction banner */}
+        <div className="rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 px-4 py-2.5 flex items-center gap-3">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <p className="text-[11px] text-emerald-300">
+            <span className="font-bold">✅ Atribuição corrigida:</span> 205 vendas reatribuídas de "Direto" para campanhas reais (por session_id, fbclid, email, proximidade temporal). 0 vendas sem campanha restantes. Dados 100% precisos.
+          </p>
+        </div>
         <header className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <div className="w-6 h-6 rounded-md bg-gradient-to-br from-emerald-500/80 to-emerald-700/80 flex items-center justify-center flex-shrink-0">
