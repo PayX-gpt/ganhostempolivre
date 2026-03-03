@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { BarChart3, RefreshCw, DollarSign } from "lucide-react";
+import { BarChart3, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { deriveCampaignLabel } from "./CampaignFilter";
 
 interface CampaignRow {
   campaign: string;
@@ -15,22 +14,6 @@ interface CampaignRow {
   convRate: number;
 }
 
-// Paginated fetch
-async function fetchAllRows(table: string, select: string, filters: (q: any) => any, pageSize = 1000): Promise<any[]> {
-  const all: any[] = [];
-  let from = 0;
-  while (true) {
-    let q = supabase.from(table as any).select(select).range(from, from + pageSize - 1);
-    q = filters(q);
-    const { data, error } = await q;
-    if (error || !data || data.length === 0) break;
-    all.push(...(data as any[]));
-    if (data.length < pageSize) break;
-    from += pageSize;
-  }
-  return all;
-}
-
 export default function LiveCampaignTable() {
   const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
   const [adSpend, setAdSpend] = useState<Record<string, number>>({});
@@ -38,67 +21,22 @@ export default function LiveCampaignTable() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayISO = todayStart.toISOString();
-
-    const [attributions, purchases, checkoutEvents] = await Promise.all([
-      fetchAllRows("session_attribution", "session_id, utm_campaign, utm_source, ttclid, fbclid, referrer", (q: any) => q.gte("created_at", todayISO)),
-      fetchAllRows("purchase_tracking", "session_id, amount, status, email, utm_campaign, utm_source, fbclid", (q: any) => q.gte("created_at", todayISO)),
-      fetchAllRows("funnel_events", "session_id", (q: any) => q.in("event_name", ["checkout_click", "capi_ic_sent"]).gte("created_at", todayISO)),
-    ]);
-
-    const sessionToCampaign: Record<string, string> = {};
-    const campaignLeads: Record<string, Set<string>> = {};
-    attributions.forEach((a: any) => {
-      const camp = deriveCampaignLabel(a);
-      sessionToCampaign[a.session_id] = camp;
-      if (!campaignLeads[camp]) campaignLeads[camp] = new Set();
-      campaignLeads[camp].add(a.session_id);
-    });
-
-    const campaignCheckouts: Record<string, Set<string>> = {};
-    checkoutEvents.forEach((e: any) => {
-      const camp = sessionToCampaign[e.session_id] || "Direto";
-      if (!campaignCheckouts[camp]) campaignCheckouts[camp] = new Set();
-      campaignCheckouts[camp].add(e.session_id);
-    });
-
-    const campaignSales: Record<string, { sales: number; revenue: number; refunds: number }> = {};
-    purchases.forEach((p: any) => {
-      // Priority: session mapping → purchase's own utm_campaign → "Direto"
-      let camp = sessionToCampaign[p.session_id || ""];
-      if (!camp && p.utm_campaign) {
-        camp = deriveCampaignLabel({ utm_campaign: p.utm_campaign, utm_source: p.utm_source, fbclid: p.fbclid });
-      }
-      if (!camp) camp = "Direto";
-      if (!campaignSales[camp]) campaignSales[camp] = { sales: 0, revenue: 0, refunds: 0 };
-      if (["approved", "completed", "purchased", "redirected"].includes(p.status)) {
-        campaignSales[camp].sales++;
-        campaignSales[camp].revenue += Number(p.amount) || 0;
-      }
-      if (p.status === "refunded" || p.status === "canceled") {
-        campaignSales[camp].refunds++;
-      }
-    });
-
-    const allCamps = new Set([...Object.keys(campaignLeads), ...Object.keys(campaignSales)]);
-    const rows: CampaignRow[] = Array.from(allCamps).map(camp => {
-      const leads = campaignLeads[camp]?.size || 0;
-      const checkouts = campaignCheckouts[camp]?.size || 0;
-      const s = campaignSales[camp] || { sales: 0, revenue: 0, refunds: 0 };
-      return {
-        campaign: camp,
-        leads,
-        checkouts,
-        sales: s.sales,
-        revenue: s.revenue,
-        refunds: s.refunds,
-        convRate: leads > 0 ? (s.sales / leads) * 100 : 0,
-      };
-    }).sort((a, b) => b.revenue - a.revenue);
-
-    setCampaigns(rows);
+    try {
+      const { data, error } = await supabase.rpc("get_campaign_stats_today" as any);
+      if (error) throw error;
+      const rows: CampaignRow[] = ((data as any[]) || []).map((r: any) => ({
+        campaign: r.campaign || "Direto",
+        leads: Number(r.leads) || 0,
+        checkouts: Number(r.checkouts) || 0,
+        sales: Number(r.sales) || 0,
+        revenue: Number(r.revenue) || 0,
+        refunds: Number(r.refunds) || 0,
+        convRate: Number(r.conv_rate) || 0,
+      })).sort((a, b) => b.revenue - a.revenue);
+      setCampaigns(rows);
+    } catch (e) {
+      console.error("Campaign stats error:", e);
+    }
     setLoading(false);
   }, []);
 
@@ -120,7 +58,7 @@ export default function LiveCampaignTable() {
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-white text-sm">Campanhas — Comparativo</h3>
-          <p className="text-[10px] text-[#666]">{campaigns.length} campanhas hoje</p>
+          <p className="text-[10px] text-[#666]">{campaigns.length} campanhas hoje (via RPC)</p>
         </div>
         <button onClick={fetchData} className="w-7 h-7 rounded-lg bg-[#0d0d0d] border border-[#2a2a2a] flex items-center justify-center hover:bg-[#1a1a1a]">
           <RefreshCw className={cn("w-3 h-3 text-[#888]", loading && "animate-spin")} />
