@@ -86,7 +86,10 @@ export default function LiveComparisonMode() {
     setLoading(false);
   }, [mode]);
 
-  useEffect(() => { compute(); }, [compute]);
+  useEffect(() => {
+    const timer = setTimeout(compute, 12000); // Stagger: load 12s after mount
+    return () => clearTimeout(timer);
+  }, [compute]);
 
   if (!periodA || !periodB) return null;
 

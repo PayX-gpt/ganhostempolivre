@@ -196,9 +196,9 @@ export default function LiveAISuggestions() {
   }, []);
 
   useEffect(() => {
-    analyze();
-    const interval = setInterval(analyze, 120000);
-    return () => clearInterval(interval);
+    const timer = setTimeout(analyze, 15000); // Stagger: load 15s after mount
+    const interval = setInterval(analyze, 180000); // Refresh every 3min
+    return () => { clearTimeout(timer); clearInterval(interval); };
   }, [analyze]);
 
   if (suggestions.length === 0 && !loading) return null;

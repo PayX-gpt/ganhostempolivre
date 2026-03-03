@@ -107,9 +107,9 @@ export function usePeriodComparison(dateFilter: string) {
   }, [dateFilter]);
 
   useEffect(() => {
-    fetch();
-    const interval = setInterval(fetch, 30000);
-    return () => clearInterval(interval);
+    const timer = setTimeout(fetch, 2000); // Stagger: load 2s after mount
+    const interval = setInterval(fetch, 60000); // Refresh every 60s
+    return () => { clearTimeout(timer); clearInterval(interval); };
   }, [fetch]);
 
   return data;

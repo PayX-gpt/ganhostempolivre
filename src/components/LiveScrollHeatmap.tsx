@@ -87,9 +87,9 @@ export default function LiveScrollHeatmap() {
   }, []);
 
   useEffect(() => {
-    fetch();
-    const interval = setInterval(fetch, 60000);
-    return () => clearInterval(interval);
+    const timer = setTimeout(fetch, 8000); // Stagger: load 8s after mount
+    const interval = setInterval(fetch, 180000); // Refresh every 3min
+    return () => { clearTimeout(timer); clearInterval(interval); };
   }, [fetch]);
 
   if (scrollData.length === 0) return null;
