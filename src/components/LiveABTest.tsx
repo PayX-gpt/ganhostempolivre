@@ -53,7 +53,9 @@ export default function LiveABTest() {
       }
 
       const variants: VariantData[] = (summary.ab_sales as any[])
+        .filter((v: any) => ["A", "B", "C", "D"].includes(String(v.variant || "").toUpperCase()))
         .map((v: any) => {
+          const normalizedVariant = String(v.variant).toUpperCase();
           const visitors = Number(v.visitors) || 0;
           const ctaClicks = Number(v.cta_clicks) || 0;
           const quizComplete = Number(v.quiz_complete) || 0;
@@ -64,7 +66,7 @@ export default function LiveABTest() {
           const totalRevenue = Number(v.total_revenue) || 0;
 
           return {
-            variant: v.variant,
+            variant: normalizedVariant,
             visitors,
             ctaClicks,
             ctaRate: visitors > 0 ? (ctaClicks / visitors) * 100 : 0,
@@ -79,14 +81,7 @@ export default function LiveABTest() {
             revenuePerVisitor: visitors > 0 ? totalRevenue / visitors : 0,
           };
         })
-        .sort((a, b) => {
-          // Put A/B/C/D first sorted by frontSales, then sem_variante last
-          const aIsNamed = ["A", "B", "C", "D"].includes(a.variant);
-          const bIsNamed = ["A", "B", "C", "D"].includes(b.variant);
-          if (aIsNamed && !bIsNamed) return -1;
-          if (!aIsNamed && bIsNamed) return 1;
-          return b.frontSales - a.frontSales;
-        });
+        .sort((a, b) => b.frontSales - a.frontSales);
 
       setData(variants);
     } catch (err) {
@@ -177,12 +172,11 @@ export default function LiveABTest() {
                     <div className="flex items-center gap-1.5">
                       <span className={cn(
                         "font-bold",
-                        v.variant === "sem_variante" ? "text-[#666]" : isBest ? "text-emerald-400" : isWorst ? "text-red-400" : "text-white"
+                        isBest ? "text-emerald-400" : isWorst ? "text-red-400" : "text-white"
                       )}>
-                        {v.variant === "sem_variante" ? "Sem variante" : v.variant}
+                        {v.variant}
                       </span>
                       {v.variant === "A" && <Badge className="text-[8px] bg-sky-500/20 text-sky-400 border-0 px-1">Controle</Badge>}
-                      {v.variant === "sem_variante" && <Badge className="text-[8px] bg-[#333] text-[#888] border-0 px-1">Sem atribuicao</Badge>}
                       {isLeader && <Badge className="text-[8px] bg-emerald-500/20 text-emerald-400 border-0 px-1">Lider</Badge>}
                       {isBest && <Trophy className="w-3 h-3 text-amber-400" />}
                     </div>

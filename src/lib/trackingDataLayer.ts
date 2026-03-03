@@ -52,6 +52,27 @@ declare global {
 
 const STORAGE_KEY = "tracking_data_layer";
 
+type QuizVariant = "A" | "B" | "C" | "D";
+const QUIZ_VARIANTS: QuizVariant[] = ["A", "B", "C", "D"];
+
+const ensureSessionVariant = (): QuizVariant => {
+  const winner = localStorage.getItem("quiz_variant_winner");
+  if (winner && QUIZ_VARIANTS.includes(winner as QuizVariant)) {
+    const forced = winner as QuizVariant;
+    localStorage.setItem("quiz_variant", forced);
+    return forced;
+  }
+
+  const stored = localStorage.getItem("quiz_variant");
+  if (stored && QUIZ_VARIANTS.includes(stored as QuizVariant)) {
+    return stored as QuizVariant;
+  }
+
+  const assigned = QUIZ_VARIANTS[Math.floor(Math.random() * QUIZ_VARIANTS.length)];
+  localStorage.setItem("quiz_variant", assigned);
+  return assigned;
+};
+
 const generateSessionId = (): string => {
   return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 };
@@ -299,11 +320,13 @@ export const ensureUrlHasTrackingParams = (): void => {
  * Save session attribution to the database (once per session).
  * Called on funnel entry to create an independent source of truth.
  */
-export const saveSessionAttribution = async (): Promise<void> => {
+export const saveSessionAttribution = async (quizVariant?: QuizVariant): Promise<void> => {
   try {
     const data = getTrackingData();
     const sessionId = data.session_id;
     if (!sessionId || sessionStorage.getItem("attribution_saved")) return;
+
+    const resolvedVariant = quizVariant ?? ensureSessionVariant();
 
     // Also read early-captured UTMs as fallback
     const earlyUtm: Record<string, string> = (() => {
@@ -313,6 +336,7 @@ export const saveSessionAttribution = async (): Promise<void> => {
     const { supabase } = await import("@/integrations/supabase/client");
     await supabase.from("session_attribution" as any).upsert([{
       session_id: sessionId,
+      quiz_variant: resolvedVariant,
       utm_source: data.utm_source || earlyUtm.utm_source || null,
       utm_medium: data.utm_medium || earlyUtm.utm_medium || null,
       utm_campaign: data.utm_campaign || earlyUtm.utm_campaign || null,
@@ -329,7 +353,7 @@ export const saveSessionAttribution = async (): Promise<void> => {
     }] as any, { onConflict: "session_id" } as any);
 
     sessionStorage.setItem("attribution_saved", "1");
-    console.log("✅ Atribuição salva:", { sessionId, utm_source: data.utm_source, fbclid: data.fbclid, ttclid: data.ttclid });
+    console.log("✅ Atribuição salva:", { sessionId, quiz_variant: resolvedVariant, utm_source: data.utm_source, fbclid: data.fbclid, ttclid: data.ttclid });
   } catch (e) {
     console.warn("[Attribution] Failed to save:", e);
   }
