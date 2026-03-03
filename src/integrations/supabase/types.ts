@@ -532,7 +532,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_campaign_stats_today: {
+        Args: never
+        Returns: {
+          campaign: string
+          checkouts: number
+          conv_rate: number
+          leads: number
+          refunds: number
+          revenue: number
+          sales: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
