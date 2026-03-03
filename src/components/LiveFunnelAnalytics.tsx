@@ -11,6 +11,7 @@ interface StepData {
   label: string;
   views: number;
   dropOff: number;
+  avgTimeMs: number;
   [key: string]: string | number;
 }
 
@@ -105,11 +106,15 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     todayStart.setHours(0, 0, 0, 0);
     const todayISO = todayStart.toISOString();
 
-    // Fetch from funnel_events (step_viewed) for quiz steps + funnel_audit_logs for upsell pages
-    const [quizStepEvents, attributionData, checkoutData, purchaseData, upsellAuditLogs] = await Promise.all([
+    // Fetch from funnel_events (step_viewed + step_completed) for quiz steps + funnel_audit_logs for upsell pages
+    const [quizStepEvents, stepCompletedEvents, attributionData, checkoutData, purchaseData, upsellAuditLogs] = await Promise.all([
       fetchAllRows(
         "funnel_events", "session_id, event_data, created_at",
         (q: any) => q.eq("event_name", "step_viewed").gte("created_at", todayISO)
+      ),
+      fetchAllRows(
+        "funnel_events", "session_id, event_data, created_at",
+        (q: any) => q.eq("event_name", "step_completed").gte("created_at", todayISO)
       ),
       fetchAllRows(
         "session_attribution", "session_id, utm_campaign, utm_source, ttclid, fbclid",
@@ -128,6 +133,19 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
         (q: any) => q.eq("event_type", "page_loaded").gte("created_at", todayISO)
       ),
     ]);
+
+    // Build avg time per step from step_completed events
+    const stepTimes: Record<string, number[]> = {};
+    (stepCompletedEvents || []).forEach((evt: any) => {
+      const ed = evt.event_data as Record<string, unknown> | null;
+      const step = ed?.step as string | undefined;
+      const timeMs = ed?.time_spent_ms as number | undefined;
+      if (step && timeMs && timeMs > 0 && timeMs < 600000) {
+        const key = step.startsWith("/") ? step : `/${step}`;
+        if (!stepTimes[key]) stepTimes[key] = [];
+        stepTimes[key].push(timeMs);
+      }
+    });
 
     // Merge data: quiz steps from funnel_events, upsell from audit_logs
     const mergedPageLoads: { page_id: string; session_id: string; created_at: string }[] = [];
@@ -196,7 +214,9 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
       const views = stepCounts[s.route]?.size || 0;
       const prevViews = i > 0 ? (stepCounts[FUNNEL_STEPS[i - 1].route]?.size || 0) : views;
       const dropOff = prevViews > 0 ? Math.round(((prevViews - views) / prevViews) * 100) : 0;
-      const row: StepData = { step: s.route, label: s.label, views, dropOff: i === 0 ? 0 : dropOff };
+      const times = stepTimes[s.route] || [];
+      const avgTimeMs = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
+      const row: StepData = { step: s.route, label: s.label, views, dropOff: i === 0 ? 0 : dropOff, avgTimeMs };
       campaigns.forEach(camp => {
         row[camp] = stepCampaignCounts[s.route]?.[camp]?.size || 0;
       });
@@ -311,25 +331,47 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
         </div>
       </div>
 
-      {/* Drop-off Rates */}
+      {/* Drop-off + Tempo por Etapa */}
       <div className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3">
         <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-          <TrendingDown className="w-3.5 h-3.5 text-red-400" /> Taxa de Abandono
+          <TrendingDown className="w-3.5 h-3.5 text-red-400" /> Drop-off & Tempo por Etapa
         </h4>
-        <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
-          {funnelData.filter(s => s.dropOff > 0).map((s, i) => (
-            <div key={i} className="flex items-center gap-2 text-xs">
-              <span className="text-[#888] w-14 truncate">{s.label}</span>
-              <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
-                <div className={cn("h-full rounded-full transition-all", s.dropOff > 50 ? "bg-red-500" : s.dropOff > 30 ? "bg-amber-500" : "bg-emerald-500")}
-                  style={{ width: `${Math.min(s.dropOff, 100)}%` }} />
+        <div className="space-y-1 max-h-[320px] overflow-y-auto pr-1">
+          {funnelData.map((s, i) => {
+            const avgSec = s.avgTimeMs > 0 ? s.avgTimeMs / 1000 : 0;
+            const avgLabel = avgSec > 60 ? `${(avgSec / 60).toFixed(1)}min` : `${Math.round(avgSec)}s`;
+            const allTimes = funnelData.filter(f => f.avgTimeMs > 0).map(f => f.avgTimeMs);
+            const globalAvg = allTimes.length > 0 ? allTimes.reduce((a, b) => a + b, 0) / allTimes.length : 0;
+            const isSlowStep = s.avgTimeMs > globalAvg * 2 && s.avgTimeMs > 0;
+            
+            return (
+              <div key={i}>
+                <div className="flex items-center gap-1.5 text-[10px] py-0.5">
+                  <span className="text-[#888] w-16 truncate font-medium">{s.label}</span>
+                  <span className="text-[#666] w-8 text-right tabular-nums">{s.views}</span>
+                  <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+                    <div className={cn("h-full rounded-full transition-all",
+                      s.dropOff > 50 ? "bg-red-500" : s.dropOff > 30 ? "bg-amber-500" : s.dropOff > 15 ? "bg-yellow-500" : "bg-emerald-500"
+                    )} style={{ width: `${Math.min(s.dropOff, 100)}%` }} />
+                  </div>
+                  {s.dropOff > 0 && (
+                    <span className={cn("font-bold tabular-nums w-10 text-right text-[10px]",
+                      s.dropOff > 30 ? (s.dropOff > 50 ? "text-red-400 animate-pulse" : "text-red-400") :
+                      s.dropOff > 15 ? "text-amber-400" : "text-emerald-400"
+                    )}>-{s.dropOff}%</span>
+                  )}
+                  {s.dropOff === 0 && <span className="w-10" />}
+                  {avgSec > 0 && (
+                    <span className={cn("tabular-nums w-12 text-right text-[9px]",
+                      isSlowStep ? "text-amber-400 font-bold" : "text-[#555]"
+                    )}>~{avgLabel}</span>
+                  )}
+                  {avgSec === 0 && <span className="w-12" />}
+                </div>
               </div>
-              <span className={cn("font-bold tabular-nums w-10 text-right", s.dropOff > 50 ? "text-red-400" : s.dropOff > 30 ? "text-amber-400" : "text-emerald-400")}>
-                {s.dropOff}%
-              </span>
-            </div>
-          ))}
-          {funnelData.filter(s => s.dropOff > 0).length === 0 && (
+            );
+          })}
+          {funnelData.length === 0 && (
             <p className="text-[10px] text-[#666] py-4 text-center">Sem dados ainda</p>
           )}
         </div>
