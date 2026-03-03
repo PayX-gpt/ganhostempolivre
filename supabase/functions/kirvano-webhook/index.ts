@@ -9,6 +9,7 @@ const corsHeaders = {
 const OFFER_ID_MAP: Record<string, string> = {
   "4630333d-d5d1-4591-b767-2151f77c6b13": "front_37",
   "a404a378-2a59-4efd-86a8-dc57363c054c": "front_47",
+  "69208bd0-7fc5-4000-958c-948dc73b1f6b": "front_66",
   "863c8fe9-ca48-452f-9fa4-22e14df182cf": "acelerador_basico",
   "59a5cba3-f876-46a8-b0e4-6e2c72cf725a": "acelerador_duplo",
   "c7f4277f-ad68-4952-92ba-8e2ea9bea47f": "safety_pro",
@@ -20,6 +21,21 @@ const OFFER_ID_MAP: Record<string, string> = {
 function classifyByPrice(amount: number | null, offerName: string | null, productName: string | null): string {
   const name = (productName || "").toLowerCase();
   const offer = (offerName || "").toLowerCase();
+  const isFrontProduct =
+    name.includes("chatgpt") ||
+    name.includes("token") ||
+    offer.includes("chave") ||
+    offer.includes("token");
+
+  if (isFrontProduct) {
+    if (amount !== null) {
+      if (amount >= 60) return "front_66";
+      if (amount >= 42) return "front_47";
+      return "front_37";
+    }
+    return "front_47";
+  }
+
   if (name.includes("acelerador") || offer.includes("acelerador")) {
     if (amount && amount <= 25) return "acelerador_basico";
     if (amount && amount <= 35) return "acelerador_duplo";
@@ -37,8 +53,10 @@ function classifyByPrice(amount: number | null, offerName: string | null, produc
   if (name.includes("guia") || offer.includes("guia") || (amount && amount < 35 && amount > 25)) return "downsell_guia";
   if (amount === 37) return "front_37";
   if (amount === 47) return "front_47";
+  if (amount === 66.83) return "front_66";
   if (amount && amount <= 40) return "front_37";
-  if (amount && amount <= 50) return "front_47";
+  if (amount && amount <= 55) return "front_47";
+  if (amount && amount <= 90) return "front_66";
   return "purchase";
 }
 
@@ -50,43 +68,37 @@ function identifyFunnelStep(body: any, amount: number | null): string {
   return classifyByPrice(amount, offerName, productName);
 }
 
+function parseCurrency(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number") return value > 0 ? value : null;
+  if (typeof value !== "string") return null;
+  const cleaned = value.replace(/[^\d,.-]/g, "").replace(",", ".");
+  const parsed = parseFloat(cleaned);
+  return !isNaN(parsed) && parsed > 0 ? parsed : null;
+}
+
 function extractAmount(body: any): number | null {
-  if (body.total_price && typeof body.total_price === "string") {
-    const cleaned = body.total_price.replace(/[^\\d,.-]/g, "").replace(",", ".");
-    const val = parseFloat(cleaned);
-    if (!isNaN(val) && val > 0) return val;
+  const candidates: unknown[] = [
+    body.total_price,
+    body.total,
+    body.amount,
+    body.valor,
+    body.price,
+    body.preco,
+    body.value,
+    body.fiscal?.total_value,
+    body.fiscal?.original_value,
+    body.products?.[0]?.price,
+    body.products?.[0]?.total_price,
+    body.products?.[0]?.amount,
+    body.payment?.amount,
+  ];
+
+  for (const candidate of candidates) {
+    const parsed = parseCurrency(candidate);
+    if (parsed !== null) return parsed;
   }
-  if (body.fiscal?.total_value) {
-    const val = parseFloat(body.fiscal.total_value);
-    if (!isNaN(val) && val > 0) return val;
-  }
-  if (body.fiscal?.original_value) {
-    const val = parseFloat(body.fiscal.original_value);
-    if (!isNaN(val) && val > 0) return val;
-  }
-  if (body.products?.[0]?.price && typeof body.products[0].price === "string") {
-    const cleaned = body.products[0].price.replace(/[^\\d,.-]/g, "").replace(",", ".");
-    const val = parseFloat(cleaned);
-    if (!isNaN(val) && val > 0) return val;
-  }
-  if (body.products?.[0]?.offer_name) {
-    const val = parseFloat(body.products[0].offer_name);
-    if (!isNaN(val) && val > 0) return val;
-  }
-  const directFields = ["amount", "valor", "price", "preco", "value"];
-  for (const field of directFields) {
-    if (body[field]) {
-      const val = parseFloat(body[field]);
-      if (!isNaN(val) && val > 0) return val;
-    }
-  }
-  if (body.fiscal?.commission) {
-    const val = parseFloat(body.fiscal.commission);
-    if (!isNaN(val) && val > 0) return val;
-  }
-  if (body.products?.[0]?.name?.includes("CHATGPT") || body.products?.[0]?.name?.includes("TOKEN")) {
-    return 37;
-  }
+
   return null;
 }
 
@@ -290,7 +302,7 @@ Deno.serve(async (req) => {
     }
 
     // ====== WHATSAPP: COMPRA APROVADA → ENVIAR WELCOME IMEDIATO ======
-    if (normalizedStatus === "approved" && phone && (funnelStep === "front_37" || funnelStep === "front_47")) {
+    if (normalizedStatus === "approved" && phone && (funnelStep === "front_37" || funnelStep === "front_47" || funnelStep === "front_66")) {
       try {
         const cleanPhone = phone.replace(/\D/g, "");
         const firstName = buyerName ? buyerName.split(" ")[0] : "";

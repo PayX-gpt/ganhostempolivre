@@ -56,7 +56,7 @@ const isTiktokSource = (sale: Sale): boolean => {
 };
 
 const STEP_LABELS: Record<string, string> = {
-  front_37: "Produto Principal R$37",
+  front_66: "Produto Principal R$66,83",
   front_47: "Produto Principal R$47",
   acelerador_basico: "Acelerador Básico",
   acelerador_duplo: "Acelerador Duplo",

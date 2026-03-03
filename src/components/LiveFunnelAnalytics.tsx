@@ -119,7 +119,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
         (q: any) => q.eq("event_name", "checkout_click").gte("created_at", todayISO)
       ),
       fetchAllRows(
-        "purchase_tracking", "session_id, email",
+        "purchase_tracking", "session_id, email, transaction_id, id",
         (q: any) => q.in("status", ["approved", "completed", "purchased", "redirected"]).gte("created_at", todayISO)
       ),
     ]);
@@ -181,8 +181,15 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
     setOfferViews(stepCounts["/step-18"]?.size || 0);
     setCheckoutClicks(new Set(checkoutData.map(e => e.session_id)).size);
-    const uniqueBuyers = new Set(purchaseData.filter(r => r.email).map(r => (r.email as string).toLowerCase())).size;
-    setPurchases(uniqueBuyers);
+    const uniquePurchaseKeys = new Set(
+      purchaseData.map((r) => {
+        if (r.email) return `email:${(r.email as string).toLowerCase()}`;
+        if (r.transaction_id) return `tx:${r.transaction_id as string}`;
+        if (r.session_id) return `sess:${r.session_id as string}`;
+        return `row:${r.id as string}`;
+      })
+    ).size;
+    setPurchases(uniquePurchaseKeys);
     setLoading(false);
   }, [allCampaigns]);
 
