@@ -310,6 +310,7 @@ export type Database = {
       }
       session_attribution: {
         Row: {
+          attribution_method: string | null
           created_at: string
           fbc: string | null
           fbclid: string | null
@@ -329,6 +330,7 @@ export type Database = {
           utm_term: string | null
         }
         Insert: {
+          attribution_method?: string | null
           created_at?: string
           fbc?: string | null
           fbclid?: string | null
@@ -348,6 +350,7 @@ export type Database = {
           utm_term?: string | null
         }
         Update: {
+          attribution_method?: string | null
           created_at?: string
           fbc?: string | null
           fbclid?: string | null
