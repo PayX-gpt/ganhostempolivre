@@ -105,10 +105,11 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     todayStart.setHours(0, 0, 0, 0);
     const todayISO = todayStart.toISOString();
 
-    const [pageLoads, attributionData, checkoutData, purchaseData] = await Promise.all([
+    // Fetch from funnel_events (step_viewed) for quiz steps + funnel_audit_logs for upsell pages
+    const [quizStepEvents, attributionData, checkoutData, purchaseData, upsellAuditLogs] = await Promise.all([
       fetchAllRows(
-        "funnel_audit_logs", "page_id, session_id, created_at",
-        (q: any) => q.eq("event_type", "page_loaded").gte("created_at", todayISO)
+        "funnel_events", "session_id, event_data, created_at",
+        (q: any) => q.eq("event_name", "step_viewed").gte("created_at", todayISO)
       ),
       fetchAllRows(
         "session_attribution", "session_id, utm_campaign, utm_source, ttclid, fbclid",
@@ -122,9 +123,36 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
         "purchase_tracking", "session_id, email, transaction_id, id",
         (q: any) => q.in("status", ["approved", "completed", "purchased", "redirected"]).gte("created_at", todayISO)
       ),
+      fetchAllRows(
+        "funnel_audit_logs", "page_id, session_id, created_at",
+        (q: any) => q.eq("event_type", "page_loaded").gte("created_at", todayISO)
+      ),
     ]);
 
-    if (!pageLoads.length) { setLoading(false); return; }
+    // Merge data: quiz steps from funnel_events, upsell from audit_logs
+    const mergedPageLoads: { page_id: string; session_id: string; created_at: string }[] = [];
+
+    // Quiz step events: extract step from event_data
+    (quizStepEvents || []).forEach((evt: any) => {
+      const ed = evt.event_data as Record<string, unknown> | null;
+      const step = ed?.step as string | undefined;
+      if (step) {
+        mergedPageLoads.push({
+          page_id: step.startsWith("/") ? step : `/${step}`,
+          session_id: evt.session_id,
+          created_at: evt.created_at,
+        });
+      }
+    });
+
+    // Upsell page loads from audit_logs
+    (upsellAuditLogs || []).forEach((log: any) => {
+      if (log.page_id?.startsWith("/upsell")) {
+        mergedPageLoads.push(log);
+      }
+    });
+
+    if (!mergedPageLoads.length) { setLoading(false); return; }
 
     const sessionCampaign: Record<string, string> = {};
     (attributionData || []).forEach((a: any) => {
@@ -141,7 +169,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     const hourCounts: Record<string, number> = {};
     for (let i = 0; i < 24; i++) hourCounts[`${i.toString().padStart(2, "0")}h`] = 0;
 
-    pageLoads.forEach(log => {
+    mergedPageLoads.forEach(log => {
       let pid = log.page_id || "";
       if (pid.startsWith("/upsell")) {
         if (pid.startsWith("/upsell6") || pid.includes("forex")) pid = "/upsell6";

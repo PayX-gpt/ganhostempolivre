@@ -7,7 +7,7 @@ import avatarRafael from "@/assets/avatar-rafael.jpg";
 import avatarCamila from "@/assets/avatar-camila.jpg";
 import { isYoungProfile } from "@/lib/agePersonalization";
 import { useLanguage, type Language } from "@/lib/i18n";
-import { saveFunnelEvent } from "@/lib/metricsClient";
+import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
 
@@ -124,7 +124,7 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
       if (isCtaClick) {
         icFiredRef.current = true;
         console.log("[Step17] ✅ Vturb CTA click detected via postMessage");
-        saveFunnelEvent("checkout_click", { context: "vturb_cta_step17", product: "chave_token_chatgpt", amount: offerAmount });
+        saveFunnelEventReliable("checkout_click", { context: "vturb_cta_step17", product: "chave_token_chatgpt", amount: offerAmount });
         sendCAPIInitiateCheckout({ amount: offerAmount });
         trackTikTokInitiateCheckout({ amount: offerAmount });
       }
@@ -138,7 +138,7 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
         if (player) {
           icFiredRef.current = true;
           console.log("[Step17] ✅ IC fired on page hide (Vturb CTA presumed)");
-          saveFunnelEvent("checkout_click", { context: "vturb_cta_step17_pagehide", product: "chave_token_chatgpt", amount: offerAmount });
+          saveFunnelEventReliable("checkout_click", { context: "vturb_cta_step17_pagehide", product: "chave_token_chatgpt", amount: offerAmount });
           sendCAPIInitiateCheckout({ amount: offerAmount });
           trackTikTokInitiateCheckout({ amount: offerAmount });
         }
