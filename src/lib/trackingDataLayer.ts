@@ -326,7 +326,12 @@ export const saveSessionAttribution = async (quizVariant?: QuizVariant): Promise
     const sessionId = data.session_id;
     if (!sessionId || sessionStorage.getItem("attribution_saved")) return;
 
-    const resolvedVariant = quizVariant ?? ensureSessionVariant();
+    // GUARANTEE variant is never null
+    let resolvedVariant = quizVariant ?? ensureSessionVariant();
+    if (!resolvedVariant || !QUIZ_VARIANTS.includes(resolvedVariant)) {
+      resolvedVariant = QUIZ_VARIANTS[Math.floor(Math.random() * QUIZ_VARIANTS.length)];
+      localStorage.setItem("quiz_variant", resolvedVariant);
+    }
 
     // Also read early-captured UTMs as fallback
     const earlyUtm: Record<string, string> = (() => {
@@ -334,7 +339,7 @@ export const saveSessionAttribution = async (quizVariant?: QuizVariant): Promise
     })();
 
     const { supabase } = await import("@/integrations/supabase/client");
-    await supabase.from("session_attribution" as any).upsert([{
+    const { error } = await supabase.from("session_attribution" as any).upsert([{
       session_id: sessionId,
       quiz_variant: resolvedVariant,
       utm_source: data.utm_source || earlyUtm.utm_source || null,
@@ -351,6 +356,14 @@ export const saveSessionAttribution = async (quizVariant?: QuizVariant): Promise
       referrer: data.referrer || earlyUtm.referrer || earlyUtm.referrer_detected || null,
       landing_page: data.landing_page || earlyUtm.landing_url || null,
     }] as any, { onConflict: "session_id" } as any);
+
+    if (error) {
+      console.warn("[Attribution] Upsert failed, retrying variant save:", error);
+      // Retry just the variant update
+      await supabase.from("session_attribution" as any)
+        .update({ quiz_variant: resolvedVariant } as any)
+        .eq("session_id", sessionId);
+    }
 
     sessionStorage.setItem("attribution_saved", "1");
     console.log("✅ Atribuição salva:", { sessionId, quiz_variant: resolvedVariant, utm_source: data.utm_source, fbclid: data.fbclid, ttclid: data.ttclid });

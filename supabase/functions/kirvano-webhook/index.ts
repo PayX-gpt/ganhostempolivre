@@ -206,25 +206,35 @@ Deno.serve(async (req) => {
       ).then(() => {});
     }
 
-    // ====== SESSION-BASED UTM RESOLUTION ======  
-    let resolvedUtmCampaign = utmCampaign;
-    let resolvedUtmSource = utmSource;
-    let resolvedUtmMedium = utmMedium;
-    let resolvedUtmContent = utmContent;
-    let resolvedUtmTerm = utmTerm;
+    // ====== DECODE UTMs from Kirvano payload ======
+    const decodeUtm = (v: string | null): string | null => {
+      if (!v) return v;
+      try { return decodeURIComponent(v).replace(/\+/g, ' '); } catch { return v.replace(/\+/g, ' '); }
+    };
+
+    let resolvedUtmCampaign = decodeUtm(utmCampaign);
+    let resolvedUtmSource = decodeUtm(utmSource);
+    let resolvedUtmMedium = decodeUtm(utmMedium);
+    let resolvedUtmContent = decodeUtm(utmContent);
+    let resolvedUtmTerm = decodeUtm(utmTerm);
+    let resolvedVariant: string | null = null;
+
+    // ====== SESSION-BASED UTM RESOLUTION — ALWAYS prioritize session_attribution ======
     if (sessionId) {
       const { data: saData } = await supabase
         .from("session_attribution")
-        .select("utm_campaign, utm_source, utm_medium, utm_content, utm_term")
+        .select("utm_campaign, utm_source, utm_medium, utm_content, utm_term, quiz_variant")
         .eq("session_id", sessionId)
         .maybeSingle();
-      if (saData?.utm_campaign) {
-        resolvedUtmCampaign = saData.utm_campaign;
+      if (saData) {
+        // Always overwrite with session_attribution data when available
+        resolvedUtmCampaign = saData.utm_campaign || resolvedUtmCampaign;
         resolvedUtmSource = saData.utm_source || resolvedUtmSource;
         resolvedUtmMedium = saData.utm_medium || resolvedUtmMedium;
         resolvedUtmContent = saData.utm_content || resolvedUtmContent;
         resolvedUtmTerm = saData.utm_term || resolvedUtmTerm;
-        console.log(`🎯 [Kirvano] Resolved UTM from session_attribution: ${resolvedUtmCampaign}`);
+        resolvedVariant = saData.quiz_variant || null;
+        console.log(`🎯 [Kirvano] Resolved from session_attribution: campaign=${resolvedUtmCampaign}, variant=${resolvedVariant}`);
       }
     }
 
@@ -271,6 +281,7 @@ Deno.serve(async (req) => {
             utm_source: resolvedUtmSource, utm_medium: resolvedUtmMedium,
             utm_campaign: resolvedUtmCampaign, utm_content: resolvedUtmContent, utm_term: resolvedUtmTerm,
             fbclid, gclid, fbp,
+            vsl_variant: resolvedVariant,
           })
           .eq("transaction_id", transactionId)
           .select()
@@ -297,6 +308,7 @@ Deno.serve(async (req) => {
         utm_source: resolvedUtmSource, utm_medium: resolvedUtmMedium,
         utm_campaign: resolvedUtmCampaign, utm_content: resolvedUtmContent, utm_term: resolvedUtmTerm,
         fbclid, gclid, fbp,
+        vsl_variant: resolvedVariant,
         redirect_source: "kirvano_webhook",
         user_agent: req.headers.get("user-agent") || "kirvano-webhook",
       };
