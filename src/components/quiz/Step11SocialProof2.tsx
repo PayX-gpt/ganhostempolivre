@@ -86,6 +86,22 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
 
   const icFiredRef = useRef(false);
 
+  const getCurrentOfferAmount = () => {
+    try {
+      const rawAnswers = sessionStorage.getItem("quiz_answers");
+      const answers = rawAnswers ? JSON.parse(rawAnswers) : {};
+      const balance = answers?.accountBalance as string | undefined;
+
+      if (balance === "menos100") return 37;
+      if (["500-2000", "2000-10000", "10000+"].includes(balance || "")) return 66.83;
+      return 47;
+    } catch {
+      return 47;
+    }
+  };
+
+  const offerAmount = getCurrentOfferAmount();
+
   // Load Vturb player script
   useEffect(() => {
     const scriptSelector = 'script[data-vturb-player="69a5dbeca414172eb5d48ed7"]';
@@ -108,9 +124,9 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
       if (isCtaClick) {
         icFiredRef.current = true;
         console.log("[Step17] ✅ Vturb CTA click detected via postMessage");
-        saveFunnelEvent("checkout_click", { context: "vturb_cta_step17", product: "chave_token_chatgpt", amount: 37 });
-        sendCAPIInitiateCheckout({ amount: 37 });
-        trackTikTokInitiateCheckout({ amount: 37 });
+        saveFunnelEvent("checkout_click", { context: "vturb_cta_step17", product: "chave_token_chatgpt", amount: offerAmount });
+        sendCAPIInitiateCheckout({ amount: offerAmount });
+        trackTikTokInitiateCheckout({ amount: offerAmount });
       }
     };
 
@@ -122,9 +138,9 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
         if (player) {
           icFiredRef.current = true;
           console.log("[Step17] ✅ IC fired on page hide (Vturb CTA presumed)");
-          saveFunnelEvent("checkout_click", { context: "vturb_cta_step17_pagehide", product: "chave_token_chatgpt", amount: 37 });
-          sendCAPIInitiateCheckout({ amount: 37 });
-          trackTikTokInitiateCheckout({ amount: 37 });
+          saveFunnelEvent("checkout_click", { context: "vturb_cta_step17_pagehide", product: "chave_token_chatgpt", amount: offerAmount });
+          sendCAPIInitiateCheckout({ amount: offerAmount });
+          trackTikTokInitiateCheckout({ amount: offerAmount });
         }
       }
     };
