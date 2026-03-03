@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_pt_status_created ON public.purchase_tracking (status, created_at DESC);
