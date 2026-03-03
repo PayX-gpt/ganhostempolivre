@@ -80,7 +80,7 @@ const formatTime = (ms: number) => {
   return s > 60 ? `${(s / 60).toFixed(1)}min` : `${s}s`;
 };
 
-const LiveLeadsTable = () => {
+const LiveLeadsTable = ({ onLeadClick }: { onLeadClick?: (sessionId: string) => void }) => {
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -302,7 +302,7 @@ const LiveLeadsTable = () => {
                   return (
                     <tr key={lead.id}
                       className="border-b border-[#1a1a1a] hover:bg-[#1a1a1a]/50 transition-colors cursor-pointer"
-                      onClick={() => setExpandedId(expandedId === lead.id ? null : lead.id)}>
+                      onClick={() => onLeadClick ? onLeadClick(lead.session_id) : setExpandedId(expandedId === lead.id ? null : lead.id)}>
                       <td className="py-2 px-2 text-[#555] tabular-nums">{globalIdx + 1}</td>
                       <td className="py-2 px-2">
                         <code className="text-[#aaa] font-mono text-[10px]">{lead.session_id.slice(-6)}</code>
@@ -353,7 +353,7 @@ const LiveLeadsTable = () => {
                 <div key={lead.id}
                   className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] overflow-hidden transition-all hover:border-[#3a3a3a]">
                   <button
-                    onClick={() => setExpandedId(isExpanded ? null : lead.id)}
+                    onClick={() => onLeadClick ? onLeadClick(lead.session_id) : setExpandedId(isExpanded ? null : lead.id)}
                     className="w-full p-3 flex items-center gap-2 text-left">
                     {/* Score badge */}
                     <div className="flex-shrink-0">

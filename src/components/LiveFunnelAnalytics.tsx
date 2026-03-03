@@ -5,6 +5,7 @@ import { BarChart3, TrendingDown, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CampaignFilterState } from "./CampaignFilter";
 import { cleanCampaignName, deriveCampaignLabel } from "./CampaignFilter";
+import FunnelStepModal from "./LiveFunnelStepModal";
 
 interface StepData {
   step: string;
@@ -94,6 +95,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
   const [offerViews, setOfferViews] = useState(0);
   const [checkoutClicks, setCheckoutClicks] = useState(0);
   const [purchases, setPurchases] = useState(0);
+  const [selectedStep, setSelectedStep] = useState<{ route: string; label: string } | null>(null);
 
   const selectedCampaigns = campaignFilter?.selectedCampaigns || new Set<string>();
   const campaignColors = campaignFilter?.campaignColors || {};
@@ -346,7 +348,8 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
             
             return (
               <div key={i}>
-                <div className="flex items-center gap-1.5 text-[10px] py-0.5">
+                <div className="flex items-center gap-1.5 text-[10px] py-0.5 cursor-pointer hover:bg-[#1a1a1a] rounded px-1 -mx-1"
+                  onClick={() => setSelectedStep({ route: s.step, label: s.label })}>
                   <span className="text-[#888] w-16 truncate font-medium">{s.label}</span>
                   <span className="text-[#666] w-8 text-right tabular-nums">{s.views}</span>
                   <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
@@ -376,6 +379,10 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
           )}
         </div>
       </div>
+
+      {selectedStep && (
+        <FunnelStepModal stepRoute={selectedStep.route} stepLabel={selectedStep.label} onClose={() => setSelectedStep(null)} />
+      )}
     </div>
   );
 };
