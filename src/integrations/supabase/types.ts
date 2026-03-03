@@ -41,6 +41,27 @@ export type Database = {
         }
         Relationships: []
       }
+      email_session_map: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
       funnel_audit_logs: {
         Row: {
           conversion_id: string | null

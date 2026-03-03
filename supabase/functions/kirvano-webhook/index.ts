@@ -184,6 +184,28 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ====== EMAIL-BASED SESSION RESOLUTION ======
+    if (!sessionId && email) {
+      const { data: emailMatch } = await supabase
+        .from("email_session_map")
+        .select("session_id")
+        .eq("email", email.toLowerCase().trim())
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (emailMatch && emailMatch.length > 0) {
+        sessionId = emailMatch[0].session_id;
+        console.log(`📧 [Kirvano] Resolved session via email: ${email} → ${sessionId}`);
+      }
+    }
+
+    // ====== SAVE EMAIL→SESSION MAPPING (for future lookups) ======
+    if (sessionId && email) {
+      await supabase.from("email_session_map").upsert(
+        { email: email.toLowerCase().trim(), session_id: sessionId },
+        { onConflict: "email,session_id", ignoreDuplicates: true }
+      ).then(() => {});
+    }
+
     // ====== SESSION-BASED UTM RESOLUTION ======  
     let resolvedUtmCampaign = utmCampaign;
     let resolvedUtmSource = utmSource;
