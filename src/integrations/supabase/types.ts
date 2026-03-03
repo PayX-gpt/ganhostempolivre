@@ -317,6 +317,7 @@ export type Database = {
           gclid: string | null
           id: string
           landing_page: string | null
+          quiz_variant: string | null
           referrer: string | null
           session_id: string
           ttclid: string | null
@@ -335,6 +336,7 @@ export type Database = {
           gclid?: string | null
           id?: string
           landing_page?: string | null
+          quiz_variant?: string | null
           referrer?: string | null
           session_id: string
           ttclid?: string | null
@@ -353,6 +355,7 @@ export type Database = {
           gclid?: string | null
           id?: string
           landing_page?: string | null
+          quiz_variant?: string | null
           referrer?: string | null
           session_id?: string
           ttclid?: string | null
