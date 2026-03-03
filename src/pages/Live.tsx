@@ -31,6 +31,7 @@ import LiveFunnelVelocity from "@/components/LiveFunnelVelocity";
 import LiveScrollHeatmap from "@/components/LiveScrollHeatmap";
 import LiveComparisonMode from "@/components/LiveComparisonMode";
 import LiveAISuggestions from "@/components/LiveAISuggestions";
+import LiveABTest from "@/components/LiveABTest";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import SessionLogsDialog from "@/components/SessionLogsDialog";
@@ -638,6 +639,7 @@ export default function AdminFunnelAudit() {
           </div>
         </div>
 
+        <LiveABTest />
         <LiveAIAlerts />
         <LiveAISuggestions />
         <LiveFunnelVelocity />

@@ -6,6 +6,10 @@ import { saveFunnelEvent } from "@/lib/metricsClient";
 import { saveSessionAttribution } from "@/lib/trackingDataLayer";
 import { useLanguage, LanguageSelector, type Language } from "@/lib/i18n";
 import Step1Intro from "./Step1Intro";
+import Step1VariantB from "./Step1VariantB";
+import Step1VariantC from "./Step1VariantC";
+import Step1VariantD from "./Step1VariantD";
+import { getEffectiveVariant, saveVariantToAttribution, type QuizVariant } from "@/lib/abTestVariant";
 import Step2Age from "./Step2Age";
 import StepName from "./StepName";
 import Step3SocialProof from "./Step3SocialProof";
@@ -101,6 +105,7 @@ const QuizFunnel = () => {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const { lang } = useLanguage();
+  const [variant] = useState<QuizVariant>(() => getEffectiveVariant());
   const [answers, setAnswers] = useState<QuizAnswers>(() => {
     try {
       const saved = sessionStorage.getItem("quiz_answers");
@@ -174,8 +179,10 @@ const QuizFunnel = () => {
   useEffect(() => {
     if (step === 1) {
       saveSessionAttribution();
+      // Save A/B variant to attribution after a short delay to ensure session exists
+      setTimeout(() => saveVariantToAttribution(variant), 2000);
     }
-  }, [step]);
+  }, [step, variant]);
 
   // Track time spent when step changes
   useEffect(() => {
@@ -185,6 +192,7 @@ const QuizFunnel = () => {
       step: currentSlug,
       step_name: STEP_NAMES[currentSlug] || currentSlug,
       step_number: step,
+      variant,
     });
   }, [currentSlug, step]);
 
@@ -196,6 +204,7 @@ const QuizFunnel = () => {
       step_number: step,
       time_spent_ms: timeSpentMs,
       time_spent_seconds: Math.round(timeSpentMs / 1000),
+      variant,
       ...(answer ? { answer_key: answer.key, answer_value: answer.value } : {}),
     });
   }, [currentSlug, step]);
@@ -244,7 +253,12 @@ const QuizFunnel = () => {
   const renderStep = () => {
     switch (currentSlug) {
       case "step-1":
-        return <Step1Intro onNext={goNext} />;
+        switch (variant) {
+          case "B": return <Step1VariantB onNext={goNext} />;
+          case "C": return <Step1VariantC onNext={goNext} />;
+          case "D": return <Step1VariantD onNext={goNext} />;
+          default: return <Step1Intro onNext={goNext} />;
+        }
       case "step-2":
         return <Step2Age onNext={(v) => updateAndNext("age", v)} />;
       case "step-3":

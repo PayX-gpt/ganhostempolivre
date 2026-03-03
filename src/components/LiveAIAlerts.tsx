@@ -196,6 +196,55 @@ export default function LiveAIAlerts() {
       (Math.min(upsellRate, 50) / 50) * 20
     ));
 
+    // A/B Test Alerts
+    try {
+      const { data: abSessions } = await supabase
+        .from("session_attribution")
+        .select("session_id, quiz_variant")
+        .not("quiz_variant", "is", null)
+        .gte("created_at", todayISO);
+
+      if (abSessions && abSessions.length > 0) {
+        const variantSessions: Record<string, Set<string>> = { A: new Set(), B: new Set(), C: new Set(), D: new Set() };
+        abSessions.forEach((s: any) => {
+          if (s.quiz_variant && variantSessions[s.quiz_variant]) {
+            variantSessions[s.quiz_variant].add(s.session_id);
+          }
+        });
+
+        const variantRevenue: Record<string, number> = {};
+        const variantSales: Record<string, number> = {};
+        ["A", "B", "C", "D"].forEach((v) => {
+          const vSessions = variantSessions[v];
+          const vPurchases = approved.filter((p: any) => p.session_id && vSessions.has(p.session_id));
+          variantRevenue[v] = vPurchases.reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
+          variantSales[v] = vPurchases.length;
+        });
+
+        const rpvs = ["A", "B", "C", "D"].map((v) => ({
+          variant: v,
+          visitors: variantSessions[v].size,
+          rpv: variantSessions[v].size > 0 ? variantRevenue[v] / variantSessions[v].size : 0,
+        })).filter((v) => v.visitors > 0);
+
+        if (rpvs.length >= 2) {
+          const best = rpvs.reduce((a, b) => a.rpv > b.rpv ? a : b);
+          const control = rpvs.find((v) => v.variant === "A");
+          if (control && best.variant !== "A" && control.rpv > 0) {
+            const pctDiff = ((best.rpv - control.rpv) / control.rpv * 100).toFixed(0);
+            if (Number(pctDiff) > 20) {
+              newAlerts.push({
+                id: "ab-test-winner",
+                level: "opportunity",
+                message: `🧪 A/B TEST: Variação ${best.variant} está com ${pctDiff}% mais receita/visitante que o controle (R$${best.rpv.toFixed(2)} vs R$${control.rpv.toFixed(2)}).`,
+                detail: best.visitors >= 500 ? "Confiança atingida. Considere declarar vencedora." : `Mais ~${500 - best.visitors} visitantes para atingir 95% de confiança.`,
+              });
+            }
+          }
+        }
+      }
+    } catch { /* silent */ }
+
     setHealth({
       score: healthScore,
       quizCompletionRate,
