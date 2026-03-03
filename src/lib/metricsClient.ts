@@ -20,6 +20,45 @@ export const saveFunnelEvent = async (
   }
 };
 
+/**
+ * Reliable event saving using fetch with keepalive: true.
+ * Use for critical events fired just before page navigation (e.g., checkout_click).
+ * This ensures the request completes even if the page unloads.
+ */
+export const saveFunnelEventReliable = (
+  eventName: string,
+  eventData: Record<string, unknown> = {}
+): void => {
+  try {
+    const trackingData = getTrackingData();
+    const payload = {
+      session_id: trackingData.session_id || "unknown",
+      event_name: eventName,
+      event_data: JSON.parse(JSON.stringify(eventData)),
+      page_url: window.location.href,
+      user_agent: navigator.userAgent,
+    };
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    if (projectId && anonKey) {
+      const url = `https://${projectId}.supabase.co/rest/v1/funnel_events`;
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": anonKey,
+          "Authorization": `Bearer ${anonKey}`,
+          "Prefer": "return=minimal",
+        },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      }).catch(() => {});
+    }
+  } catch {
+    // Silent fail — don't block user flow
+  }
+};
+
 export const saveRedirectMetric = async (
   fromPage: string, toPage: string, redirectDurationMs: number
 ): Promise<void> => {

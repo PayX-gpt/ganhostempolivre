@@ -194,10 +194,22 @@ export default function AdminFunnelAudit() {
     todayStart.setHours(0, 0, 0, 0);
     const todayISO = todayStart.toISOString();
 
-    // IC = unique sessions that clicked checkout (fallback: capi_ic_sent)
-    const { data: checkoutClickEvents } = await supabase.from("funnel_events").select("session_id")
-      .in("event_name", ["checkout_click", "capi_ic_sent"]).gte("created_at", todayISO);
-    const icSessions = new Set(checkoutClickEvents?.map(r => r.session_id) || []);
+    // IC = unique sessions that clicked checkout (paginated for reliability)
+    const allICSessionIds = new Set<string>();
+    let icPage = 0;
+    const IC_PAGE_SIZE = 1000;
+    while (true) {
+      const { data: icRows } = await supabase.from("funnel_events")
+        .select("session_id")
+        .in("event_name", ["checkout_click", "capi_ic_sent"])
+        .gte("created_at", todayISO)
+        .range(icPage * IC_PAGE_SIZE, (icPage + 1) * IC_PAGE_SIZE - 1);
+      if (!icRows || icRows.length === 0) break;
+      icRows.forEach(r => allICSessionIds.add(r.session_id));
+      if (icRows.length < IC_PAGE_SIZE) break;
+      icPage++;
+    }
+    const icSessions = allICSessionIds;
     setFrontendICs(icSessions.size);
 
     const { data: purchaseData } = await supabase.from("purchase_tracking").select("amount, status, email").gte("created_at", todayISO);
@@ -219,7 +231,6 @@ export default function AdminFunnelAudit() {
     setHotmartRefused(refusedPurchases.length);
     setHotmartRefunded(refundedPurchases.length);
     
-    // Taxa de aprovação = pagos / (pagos + pendentes PIX + recusados cartão)
     const totalAttempts = approvedPurchases.length + pendingPurchases.length + refusedPurchases.length;
     setHotmartApprovalRate(totalAttempts > 0 ? (approvedPurchases.length / totalAttempts) * 100 : 0);
 
@@ -227,24 +238,23 @@ export default function AdminFunnelAudit() {
     setIcToSalesRate(rate);
     setIcToSalesRatio(uniqueBuyers > 0 ? `1:${Math.round(icSessions.size / uniqueBuyers)}` : "0:0");
 
-    // Leads = unique sessions that captured lead info (from funnel_events)
-    const { data: leadCapturedEvents } = await supabase.from("funnel_events")
-      .select("session_id")
-      .eq("event_name", "lead_captured")
-      .gte("created_at", todayISO);
-    const uniqueLeadSessions = new Set(leadCapturedEvents?.map(r => r.session_id) || []);
-    setTotalLeadsToday(uniqueLeadSessions.size);
+    // Leads = union of lead_captured events + lead_behavior entries (ensures consistency with leads table)
+    const [leadCapturedResult, leadBehaviorResult] = await Promise.all([
+      supabase.from("funnel_events").select("session_id").eq("event_name", "lead_captured").gte("created_at", todayISO),
+      supabase.from("lead_behavior").select("session_id").gte("created_at", todayISO),
+    ]);
+    const allLeadSessions = new Set<string>();
+    (leadCapturedResult.data || []).forEach(r => allLeadSessions.add(r.session_id));
+    (leadBehaviorResult.data || []).forEach(r => allLeadSessions.add(r.session_id));
+    setTotalLeadsToday(allLeadSessions.size);
 
-    // Qualified = leads with intent_score >= 50 (from lead_behavior)
+    // Qualified = leads with intent_score >= 50
     const { data: leadData } = await supabase.from("lead_behavior")
       .select("cta_clicks, intent_score, checkout_clicked")
       .gte("created_at", todayISO);
     setQualifiedLeadsToday(leadData?.filter(l => (l.intent_score || 0) >= 50).length || 0);
-    const tLeads = uniqueLeadSessions.size;
-    const interactingLeads = leadData?.filter(l => l.cta_clicks > 0).length || 0;
-    setInteractionRateToday(tLeads > 0 ? (interactingLeads / tLeads) * 100 : 0);
 
-    // Count unique sessions (visitors) today from funnel_events — paginate to avoid 1000-row limit
+    // Interaction rate = sessions that reached step-5+ / total visitors
     const allVisitSessions = new Set<string>();
     let visitPage = 0;
     const PAGE_SIZE = 1000;
@@ -260,6 +270,10 @@ export default function AdminFunnelAudit() {
       visitPage++;
     }
     setTotalVisitsToday(allVisitSessions.size);
+
+    // Interaction = leads who engaged (captured contact or had behavior tracked) / total visitors
+    const interactingCount = allLeadSessions.size;
+    setInteractionRateToday(allVisitSessions.size > 0 ? (interactingCount / allVisitSessions.size) * 100 : 0);
 
     setLastUpdated(new Date());
     setIsLoading(false);
