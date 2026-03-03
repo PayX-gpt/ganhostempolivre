@@ -24,6 +24,9 @@ import LiveUpsellMonitor from "@/components/LiveUpsellMonitor";
 import LiveSalesFeed from "@/components/LiveSalesFeed";
 import LiveAIAlerts from "@/components/LiveAIAlerts";
 import LiveCampaignTable from "@/components/LiveCampaignTable";
+import LiveChannelCreativeTable from "@/components/LiveChannelCreativeTable";
+import LeadTimeline from "@/components/LiveLeadTimeline";
+import { usePeriodComparison, getVariation } from "@/components/LivePeriodComparison";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import SessionLogsDialog from "@/components/SessionLogsDialog";
@@ -119,7 +122,7 @@ export default function AdminFunnelAudit() {
   const [isLivePaused, setIsLivePaused] = useState(false);
   const [activeUsers, setActiveUsers] = useState(0);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
-  
+  const [timelineSessionId, setTimelineSessionId] = useState<string | null>(null);
   const [frontendICs, setFrontendICs] = useState(0);
   const [hotmartSalesToday, setHotmartSalesToday] = useState(0);
   const [icToSalesRate, setIcToSalesRate] = useState(0);
@@ -138,7 +141,7 @@ export default function AdminFunnelAudit() {
   const [totalVisitsToday, setTotalVisitsToday] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [campaignFilterState, setCampaignFilterState] = useState<CampaignFilterState>({ selectedCampaigns: new Set(), allCampaigns: [], campaignColors: {} });
-  
+  const periodData = usePeriodComparison(dateFilter);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const saved = localStorage.getItem('live-sound-enabled');
     return saved !== null ? saved === 'true' : true;
@@ -353,6 +356,38 @@ export default function AdminFunnelAudit() {
     toast.success("Logs exported!");
   };
 
+  const exportReport = () => {
+    const now = new Date().toLocaleString("pt-BR");
+    const prevLabel = periodData ? (() => {
+      const v = getVariation;
+      return `(${v(periodData.current.revenue, periodData.previous.revenue).pct} vs anterior)`;
+    })() : "";
+
+    const report = [
+      `📊 RELATÓRIO DO FUNIL — ${now}`,
+      `═══════════════════════════════════════`,
+      ``,
+      `💰 Receita: R$ ${totalRevenueToday.toFixed(2)} ${prevLabel}`,
+      `🛒 Vendas: ${hotmartSalesToday}`,
+      `✅ Aprovação: ${hotmartApprovalRate.toFixed(1)}%`,
+      `🎯 IC → Venda: ${icToSalesRate.toFixed(1)}% (${frontendICs} ICs)`,
+      `👥 Leads: ${totalLeadsToday} (${qualifiedLeadsToday} qualificados)`,
+      `💵 Ticket Médio: R$ ${hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : "0"}`,
+      `📈 Interação: ${interactionRateToday.toFixed(1)}%`,
+      `🔄 Reembolsos: ${hotmartRefunded}`,
+      ``,
+      `═══════════════════════════════════════`,
+      `${activeUsers} usuários online · ${totalVisitsToday} visitas hoje`,
+    ].join("\n");
+
+    const blob = new Blob([report], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url;
+    a.download = `relatorio-funil-${new Date().toISOString().split("T")[0]}.txt`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    toast.success("Relatório exportado!");
+  };
+
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleString("pt-BR", {
     day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit",
   });
@@ -418,8 +453,8 @@ export default function AdminFunnelAudit() {
                   autoRefresh ? "text-emerald-400" : "text-[#555]")}>
                 <Radio className={cn("w-3 h-3", autoRefresh && "animate-pulse")} />
               </button>
-              <button onClick={exportLogs}
-                className="w-6 h-6 rounded flex items-center justify-center text-[#555] flex-shrink-0">
+              <button onClick={exportReport} title="Exportar relatório"
+                className="w-6 h-6 rounded flex items-center justify-center text-[#555] hover:text-emerald-400 flex-shrink-0">
                 <Download className="w-3 h-3" />
               </button>
             </div>
@@ -449,22 +484,37 @@ export default function AdminFunnelAudit() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <MetricCard title="Receita Hoje"
             value={`R$ ${totalRevenueToday.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-            icon={DollarSign} trend="up" trendLabel={`${hotmartSalesToday} vendas`} />
-          <MetricCard title="Vendas Hoje" value={hotmartSalesToday} subtitle={`${hotmartRefunded} reembolsos`} icon={ShoppingCart} />
+            icon={DollarSign}
+            trend={periodData ? getVariation(periodData.current.revenue, periodData.previous.revenue).trend : "neutral"}
+            trendLabel={periodData ? `${getVariation(periodData.current.revenue, periodData.previous.revenue).pct} vs anterior · ${hotmartSalesToday} vendas` : `${hotmartSalesToday} vendas`} />
+          <MetricCard title="Vendas Hoje" value={hotmartSalesToday}
+            subtitle={`${hotmartRefunded} reembolsos${hotmartSalesToday > 0 ? ` (${((hotmartRefunded / (hotmartSalesToday + hotmartRefunded)) * 100).toFixed(0)}%)` : ""}`}
+            icon={ShoppingCart}
+            trend={periodData ? getVariation(periodData.current.sales, periodData.previous.sales).trend : undefined}
+            trendLabel={periodData ? `${getVariation(periodData.current.sales, periodData.previous.sales).pct} vs anterior` : undefined} />
           <MetricCard title="Taxa de Aprovação" value={`${hotmartApprovalRate.toFixed(1)}%`}
-            subtitle={`${hotmartApproved} pagos · ${hotmartPending} pend. · ${hotmartRefused} recus.`} icon={CreditCard} />
+            subtitle={`${hotmartApproved} pagos · ${hotmartPending} pend. · ${hotmartRefused} recus.`} icon={CreditCard}
+            trend={periodData ? getVariation(periodData.current.approvalRate, periodData.previous.approvalRate).trend : undefined}
+            trendLabel={periodData ? `${getVariation(periodData.current.approvalRate, periodData.previous.approvalRate).pct} vs anterior` : undefined} />
           <MetricCard title="IC → Vendas" value={`${icToSalesRate.toFixed(1)}%`}
-            subtitle={`${frontendICs} ICs · ${icToSalesRatio}`} icon={Target} />
+            subtitle={`${frontendICs} ICs · ${icToSalesRatio}`} icon={Target}
+            trend={periodData && periodData.previous.ics > 0 ? getVariation(icToSalesRate, periodData.previous.ics > 0 ? (periodData.previous.sales / periodData.previous.ics) * 100 : 0).trend : undefined}
+            trendLabel={periodData && periodData.previous.ics > 0 ? `${getVariation(icToSalesRate, (periodData.previous.sales / periodData.previous.ics) * 100).pct} vs anterior` : undefined} />
         </div>
 
         <div className="grid grid-cols-3 lg:grid-cols-3 gap-3">
           <MetricCard title="Leads Hoje" value={totalLeadsToday} icon={Users}
-            subtitle={`${qualifiedLeadsToday} qualificados`} />
-          <MetricCard title="Qualificados" value={qualifiedLeadsToday}
-            subtitle={totalLeadsToday > 0 ? `${((qualifiedLeadsToday / totalLeadsToday) * 100).toFixed(1)}% dos leads` : "0%"}
-            icon={Eye} iconClassName="from-violet-500/20 to-violet-600/10 border-violet-500/20" valueClassName="text-violet-400" />
+            subtitle={`${qualifiedLeadsToday} qualificados`}
+            trend={periodData ? getVariation(periodData.current.leads, periodData.previous.leads).trend : undefined}
+            trendLabel={periodData ? `${getVariation(periodData.current.leads, periodData.previous.leads).pct} vs anterior` : undefined} />
+          <MetricCard title="Ticket Médio"
+            value={`R$ ${hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : '0'}`}
+            subtitle={periodData ? `LTV: R$ ${periodData.current.sales > 0 ? (periodData.current.revenue / periodData.current.sales).toFixed(0) : "0"}` : undefined}
+            icon={DollarSign} iconClassName="from-violet-500/20 to-violet-600/10 border-violet-500/20" valueClassName="text-violet-400"
+            trend={periodData ? getVariation(periodData.current.avgTicket, periodData.previous.avgTicket).trend : undefined}
+            trendLabel={periodData ? `${getVariation(periodData.current.avgTicket, periodData.previous.avgTicket).pct} vs anterior` : undefined} />
           <MetricCard title="Taxa Interação" value={`${interactionRateToday.toFixed(1)}%`}
-            subtitle={`${totalLeadsToday} visitantes`}
+            subtitle={`${totalVisitsToday} visitantes`}
             icon={Activity} iconClassName="from-amber-500/20 to-amber-600/10 border-amber-500/20" valueClassName="text-amber-400" />
         </div>
 
@@ -546,8 +596,8 @@ export default function AdminFunnelAudit() {
         <LiveFunnelAnalytics campaignFilter={campaignFilterState} />
         <LiveRevenueChart usdToBrl={1} />
         <LiveIntelligence />
-        <LiveLeadsTable />
-
+        <LiveChannelCreativeTable />
+        <LiveLeadsTable onLeadClick={(sessionId: string) => setTimelineSessionId(sessionId)} />
 
         <Tabs defaultValue="logs" className="space-y-4">
           <div className="overflow-x-auto -mx-4 px-4">
@@ -633,6 +683,9 @@ export default function AdminFunnelAudit() {
 
       {selectedSessionId && (
         <SessionLogsDialog sessionId={selectedSessionId} onClose={() => setSelectedSessionId(null)} realtimeLogs={allRealtimeLogs} />
+      )}
+      {timelineSessionId && (
+        <LeadTimeline sessionId={timelineSessionId} onClose={() => setTimelineSessionId(null)} />
       )}
     </div>
   );
