@@ -262,7 +262,7 @@ export default function LiveAIAlerts() {
           <p className="text-[9px] text-[#666] mt-1">Intro → Oferta Final</p>
         </div>
 
-        {/* Funnel Velocity */}
+        {/* Funnel Velocity (actual) */}
         <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a]">
           <div className="flex items-center gap-2 mb-2">
             <Brain className="w-4 h-4 text-amber-400" />

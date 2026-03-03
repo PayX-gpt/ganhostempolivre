@@ -27,6 +27,10 @@ import LiveCampaignTable from "@/components/LiveCampaignTable";
 import LiveChannelCreativeTable from "@/components/LiveChannelCreativeTable";
 import LeadTimeline from "@/components/LiveLeadTimeline";
 import { usePeriodComparison, getVariation } from "@/components/LivePeriodComparison";
+import LiveFunnelVelocity from "@/components/LiveFunnelVelocity";
+import LiveScrollHeatmap from "@/components/LiveScrollHeatmap";
+import LiveComparisonMode from "@/components/LiveComparisonMode";
+import LiveAISuggestions from "@/components/LiveAISuggestions";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import SessionLogsDialog from "@/components/SessionLogsDialog";
@@ -356,36 +360,83 @@ export default function AdminFunnelAudit() {
     toast.success("Logs exported!");
   };
 
-  const exportReport = () => {
-    const now = new Date().toLocaleString("pt-BR");
-    const prevLabel = periodData ? (() => {
-      const v = getVariation;
-      return `(${v(periodData.current.revenue, periodData.previous.revenue).pct} vs anterior)`;
-    })() : "";
-
-    const report = [
-      `📊 RELATÓRIO DO FUNIL — ${now}`,
-      `═══════════════════════════════════════`,
-      ``,
-      `💰 Receita: R$ ${totalRevenueToday.toFixed(2)} ${prevLabel}`,
-      `🛒 Vendas: ${hotmartSalesToday}`,
-      `✅ Aprovação: ${hotmartApprovalRate.toFixed(1)}%`,
-      `🎯 IC → Venda: ${icToSalesRate.toFixed(1)}% (${frontendICs} ICs)`,
-      `👥 Leads: ${totalLeadsToday} (${qualifiedLeadsToday} qualificados)`,
-      `💵 Ticket Médio: R$ ${hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : "0"}`,
-      `📈 Interação: ${interactionRateToday.toFixed(1)}%`,
-      `🔄 Reembolsos: ${hotmartRefunded}`,
-      ``,
-      `═══════════════════════════════════════`,
-      `${activeUsers} usuários online · ${totalVisitsToday} visitas hoje`,
-    ].join("\n");
-
-    const blob = new Blob([report], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url;
-    a.download = `relatorio-funil-${new Date().toISOString().split("T")[0]}.txt`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-    toast.success("Relatório exportado!");
+  const exportReport = async () => {
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      const { default: autoTable } = await import("jspdf-autotable");
+      
+      const doc = new jsPDF();
+      const now = new Date().toLocaleString("pt-BR");
+      
+      // Title
+      doc.setFontSize(18);
+      doc.setTextColor(16, 185, 129);
+      doc.text("RELATÓRIO DO FUNIL", 14, 20);
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(now, 14, 28);
+      
+      // KPIs table
+      doc.setFontSize(14);
+      doc.setTextColor(0);
+      doc.text("KPIs Principais", 14, 40);
+      
+      autoTable(doc, {
+        startY: 45,
+        head: [["Métrica", "Valor"]],
+        body: [
+          ["Receita Hoje", `R$ ${totalRevenueToday.toFixed(2)}`],
+          ["Vendas", String(hotmartSalesToday)],
+          ["Taxa Aprovação", `${hotmartApprovalRate.toFixed(1)}%`],
+          ["IC → Venda", `${icToSalesRate.toFixed(1)}% (${frontendICs} ICs)`],
+          ["Leads", `${totalLeadsToday} (${qualifiedLeadsToday} qualificados)`],
+          ["Ticket Médio", `R$ ${hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : "0"}`],
+          ["Taxa Interação", `${interactionRateToday.toFixed(1)}%`],
+          ["Reembolsos", String(hotmartRefunded)],
+          ["Visitas", String(totalVisitsToday)],
+          ["Usuários Online", String(activeUsers)],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [16, 185, 129] },
+      });
+      
+      // Status breakdown
+      const finalY = (doc as any).lastAutoTable?.finalY || 120;
+      doc.setFontSize(14);
+      doc.text("Status de Pagamentos", 14, finalY + 15);
+      
+      autoTable(doc, {
+        startY: finalY + 20,
+        head: [["Status", "Quantidade"]],
+        body: [
+          ["Aprovados", String(hotmartApproved)],
+          ["Pendentes", String(hotmartPending)],
+          ["Recusados", String(hotmartRefused)],
+          ["Reembolsados", String(hotmartRefunded)],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [139, 92, 246] },
+      });
+      
+      doc.save(`relatorio-funil-${new Date().toISOString().split("T")[0]}.pdf`);
+      toast.success("PDF exportado!");
+    } catch (error) {
+      // Fallback to TXT
+      const report = [
+        `📊 RELATÓRIO — ${new Date().toLocaleString("pt-BR")}`,
+        `💰 Receita: R$ ${totalRevenueToday.toFixed(2)}`,
+        `🛒 Vendas: ${hotmartSalesToday}`,
+        `✅ Aprovação: ${hotmartApprovalRate.toFixed(1)}%`,
+        `🎯 IC→Venda: ${icToSalesRate.toFixed(1)}%`,
+        `👥 Leads: ${totalLeadsToday}`,
+      ].join("\n");
+      const blob = new Blob([report], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url;
+      a.download = `relatorio-funil-${new Date().toISOString().split("T")[0]}.txt`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+      toast.success("Relatório TXT exportado!");
+    }
   };
 
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleString("pt-BR", {
@@ -588,13 +639,17 @@ export default function AdminFunnelAudit() {
         </div>
 
         <LiveAIAlerts />
+        <LiveAISuggestions />
+        <LiveFunnelVelocity />
         <CampaignFilter onChange={setCampaignFilterState} />
         <LiveCampaignTable />
         <LiveUserPresence onTotalChange={handlePresenceTotalChange} campaignFilter={campaignFilterState} />
         <LiveSalesFeed />
         <LiveUpsellMonitor />
         <LiveFunnelAnalytics campaignFilter={campaignFilterState} />
+        <LiveScrollHeatmap />
         <LiveRevenueChart usdToBrl={1} />
+        <LiveComparisonMode />
         <LiveIntelligence />
         <LiveChannelCreativeTable />
         <LiveLeadsTable onLeadClick={(sessionId: string) => setTimelineSessionId(sessionId)} />
