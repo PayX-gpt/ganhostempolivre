@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaign_costs: {
+        Row: {
+          campaign_name: string
+          cost_date: string
+          created_at: string
+          daily_spend: number
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_name: string
+          cost_date?: string
+          created_at?: string
+          daily_spend?: number
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_name?: string
+          cost_date?: string
+          created_at?: string
+          daily_spend?: number
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       funnel_audit_logs: {
         Row: {
           conversion_id: string | null
@@ -565,6 +592,7 @@ export type Database = {
           sales: number
         }[]
       }
+      get_dashboard_summary_today: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,8 @@ import {
   ShoppingCart, CreditCard, ArrowUpRight, CheckCircle2,
   XCircle, Database, Radio, Filter, Search,
   Bell, BellOff, Volume2, VolumeX,
-  Globe, TrendingDown
+  Globe, TrendingDown, LayoutDashboard, FlaskConical,
+  Megaphone, Palette, Receipt, ShieldCheck
 } from "lucide-react";
 import LiveRevenueChart from "@/components/LiveRevenueChart";
 import LiveUserPresence from "@/components/LiveUserPresence";
@@ -32,6 +33,8 @@ import LiveScrollHeatmap from "@/components/LiveScrollHeatmap";
 import LiveComparisonMode from "@/components/LiveComparisonMode";
 import LiveAISuggestions from "@/components/LiveAISuggestions";
 import LiveABTest from "@/components/LiveABTest";
+import LiveBuyerProfile from "@/components/LiveBuyerProfile";
+import LiveAuditTab from "@/components/LiveAuditTab";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import SessionLogsDialog from "@/components/SessionLogsDialog";
@@ -132,11 +135,11 @@ export default function AdminFunnelAudit() {
   const [hotmartSalesToday, setHotmartSalesToday] = useState(0);
   const [icToSalesRate, setIcToSalesRate] = useState(0);
   const [icToSalesRatio, setIcToSalesRatio] = useState("0:0");
-   const [hotmartApproved, setHotmartApproved] = useState(0);
-   const [hotmartRefunded, setHotmartRefunded] = useState(0);
-   const [hotmartPending, setHotmartPending] = useState(0);
-   const [hotmartRefused, setHotmartRefused] = useState(0);
-   const [hotmartApprovalRate, setHotmartApprovalRate] = useState(0);
+  const [hotmartApproved, setHotmartApproved] = useState(0);
+  const [hotmartRefunded, setHotmartRefunded] = useState(0);
+  const [hotmartPending, setHotmartPending] = useState(0);
+  const [hotmartRefused, setHotmartRefused] = useState(0);
+  const [hotmartApprovalRate, setHotmartApprovalRate] = useState(0);
   
   const USD_TO_BRL = 5.80;
   const [totalRevenueToday, setTotalRevenueToday] = useState(0);
@@ -155,6 +158,7 @@ export default function AdminFunnelAudit() {
     const saved = localStorage.getItem('live-notifications-enabled');
     return saved !== null ? saved === 'true' : true;
   });
+  const [activeTab, setActiveTab] = useState("overview");
   const logsContainerRef = useRef<HTMLDivElement>(null);
 
   const IMPORTANT_EVENT_TYPES = [
@@ -204,7 +208,6 @@ export default function AdminFunnelAudit() {
     todayStart.setHours(0, 0, 0, 0);
     const todayISO = todayStart.toISOString();
 
-    // IC = unique sessions that clicked checkout (paginated for reliability)
     const allICSessionIds = new Set<string>();
     let icPage = 0;
     const IC_PAGE_SIZE = 1000;
@@ -248,7 +251,6 @@ export default function AdminFunnelAudit() {
     setIcToSalesRate(rate);
     setIcToSalesRatio(uniqueBuyers > 0 ? `1:${Math.round(icSessions.size / uniqueBuyers)}` : "0:0");
 
-    // Leads = union of lead_captured events + lead_behavior entries (ensures consistency with leads table)
     const [leadCapturedResult, leadBehaviorResult] = await Promise.all([
       supabase.from("funnel_events").select("session_id").eq("event_name", "lead_captured").gte("created_at", todayISO),
       supabase.from("lead_behavior").select("session_id").gte("created_at", todayISO),
@@ -258,13 +260,11 @@ export default function AdminFunnelAudit() {
     (leadBehaviorResult.data || []).forEach(r => allLeadSessions.add(r.session_id));
     setTotalLeadsToday(allLeadSessions.size);
 
-    // Qualified = leads with intent_score >= 50
     const { data: leadData } = await supabase.from("lead_behavior")
       .select("cta_clicks, intent_score, checkout_clicked")
       .gte("created_at", todayISO);
     setQualifiedLeadsToday(leadData?.filter(l => (l.intent_score || 0) >= 50).length || 0);
 
-    // Interaction rate = sessions that reached step-5+ / total visitors
     const allVisitSessions = new Set<string>();
     let visitPage = 0;
     const PAGE_SIZE = 1000;
@@ -281,7 +281,6 @@ export default function AdminFunnelAudit() {
     }
     setTotalVisitsToday(allVisitSessions.size);
 
-    // Interaction = leads who engaged (captured contact or had behavior tracked) / total visitors
     const interactingCount = allLeadSessions.size;
     setInteractionRateToday(allVisitSessions.size > 0 ? (interactingCount / allVisitSessions.size) * 100 : 0);
 
@@ -335,8 +334,8 @@ export default function AdminFunnelAudit() {
   const toggleNotifications = useCallback(async () => {
     if (!notificationsEnabled && 'Notification' in window && Notification.permission === 'default') {
       const permission = await Notification.requestPermission();
-      if (permission === 'granted') { setNotificationsEnabled(true); toast.success('Notificações ativadas!'); }
-      else { toast.error('Permissão de notificação negada'); }
+      if (permission === 'granted') { setNotificationsEnabled(true); toast.success('Notificacoes ativadas'); }
+      else { toast.error('Permissao de notificacao negada'); }
     } else { setNotificationsEnabled(prev => !prev); }
   }, [notificationsEnabled]);
 
@@ -358,7 +357,7 @@ export default function AdminFunnelAudit() {
     const a = document.createElement("a"); a.href = url;
     a.download = `funnel-audit-logs-${new Date().toISOString().split("T")[0]}.json`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-    toast.success("Logs exported!");
+    toast.success("Logs exportados");
   };
 
   const exportReport = async () => {
@@ -369,39 +368,36 @@ export default function AdminFunnelAudit() {
       const doc = new jsPDF();
       const now = new Date().toLocaleString("pt-BR");
       
-      // Title
       doc.setFontSize(18);
       doc.setTextColor(16, 185, 129);
-      doc.text("RELATÓRIO DO FUNIL", 14, 20);
+      doc.text("RELATORIO DO FUNIL", 14, 20);
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.text(now, 14, 28);
       
-      // KPIs table
       doc.setFontSize(14);
       doc.setTextColor(0);
       doc.text("KPIs Principais", 14, 40);
       
       autoTable(doc, {
         startY: 45,
-        head: [["Métrica", "Valor"]],
+        head: [["Metrica", "Valor"]],
         body: [
           ["Receita Hoje", `R$ ${totalRevenueToday.toFixed(2)}`],
           ["Vendas", String(hotmartSalesToday)],
-          ["Taxa Aprovação", `${hotmartApprovalRate.toFixed(1)}%`],
-          ["IC → Venda", `${icToSalesRate.toFixed(1)}% (${frontendICs} ICs)`],
+          ["Taxa Aprovacao", `${hotmartApprovalRate.toFixed(1)}%`],
+          ["IC -> Venda", `${icToSalesRate.toFixed(1)}% (${frontendICs} ICs)`],
           ["Leads", `${totalLeadsToday} (${qualifiedLeadsToday} qualificados)`],
-          ["Ticket Médio", `R$ ${hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : "0"}`],
-          ["Taxa Interação", `${interactionRateToday.toFixed(1)}%`],
+          ["Ticket Medio", `R$ ${hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : "0"}`],
+          ["Taxa Interacao", `${interactionRateToday.toFixed(1)}%`],
           ["Reembolsos", String(hotmartRefunded)],
           ["Visitas", String(totalVisitsToday)],
-          ["Usuários Online", String(activeUsers)],
+          ["Usuarios Online", String(activeUsers)],
         ],
         theme: "grid",
         headStyles: { fillColor: [16, 185, 129] },
       });
       
-      // Status breakdown
       const finalY = (doc as any).lastAutoTable?.finalY || 120;
       doc.setFontSize(14);
       doc.text("Status de Pagamentos", 14, finalY + 15);
@@ -420,23 +416,22 @@ export default function AdminFunnelAudit() {
       });
       
       doc.save(`relatorio-funil-${new Date().toISOString().split("T")[0]}.pdf`);
-      toast.success("PDF exportado!");
+      toast.success("PDF exportado");
     } catch (error) {
-      // Fallback to TXT
       const report = [
-        `📊 RELATÓRIO — ${new Date().toLocaleString("pt-BR")}`,
-        `💰 Receita: R$ ${totalRevenueToday.toFixed(2)}`,
-        `🛒 Vendas: ${hotmartSalesToday}`,
-        `✅ Aprovação: ${hotmartApprovalRate.toFixed(1)}%`,
-        `🎯 IC→Venda: ${icToSalesRate.toFixed(1)}%`,
-        `👥 Leads: ${totalLeadsToday}`,
+        `RELATORIO -- ${new Date().toLocaleString("pt-BR")}`,
+        `Receita: R$ ${totalRevenueToday.toFixed(2)}`,
+        `Vendas: ${hotmartSalesToday}`,
+        `Aprovacao: ${hotmartApprovalRate.toFixed(1)}%`,
+        `IC->Venda: ${icToSalesRate.toFixed(1)}%`,
+        `Leads: ${totalLeadsToday}`,
       ].join("\n");
       const blob = new Blob([report], { type: "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a"); a.href = url;
       a.download = `relatorio-funil-${new Date().toISOString().split("T")[0]}.txt`;
       document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-      toast.success("Relatório TXT exportado!");
+      toast.success("Relatorio TXT exportado");
     }
   };
 
@@ -471,9 +466,10 @@ export default function AdminFunnelAudit() {
         <div className="rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 px-4 py-2.5 flex items-center gap-3">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
           <p className="text-[11px] text-emerald-300">
-            <span className="font-bold">✅ Atribuição corrigida:</span> 205 vendas reatribuídas de "Direto" para campanhas reais (por session_id, fbclid, email, proximidade temporal). 0 vendas sem campanha restantes. Dados 100% precisos.
+            <span className="font-bold">Atribuicao corrigida:</span> Vendas reatribuidas de "Direto" para campanhas reais (por session_id, fbclid, email, proximidade temporal). Dados precisos.
           </p>
         </div>
+
         <header className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <div className="w-6 h-6 rounded-md bg-gradient-to-br from-emerald-500/80 to-emerald-700/80 flex items-center justify-center flex-shrink-0">
@@ -512,7 +508,7 @@ export default function AdminFunnelAudit() {
                   autoRefresh ? "text-emerald-400" : "text-[#555]")}>
                 <Radio className={cn("w-3 h-3", autoRefresh && "animate-pulse")} />
               </button>
-              <button onClick={exportReport} title="Exportar relatório"
+              <button onClick={exportReport} title="Exportar relatorio"
                 className="w-6 h-6 rounded flex items-center justify-center text-[#555] hover:text-emerald-400 flex-shrink-0">
                 <Download className="w-3 h-3" />
               </button>
@@ -540,140 +536,197 @@ export default function AdminFunnelAudit() {
           </div>
         </header>
 
+        {/* KPI Cards - ALWAYS VISIBLE */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <MetricCard title="Receita Hoje"
             value={`R$ ${totalRevenueToday.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             icon={DollarSign}
             trend={periodData ? getVariation(periodData.current.revenue, periodData.previous.revenue).trend : "neutral"}
-            trendLabel={periodData ? `${getVariation(periodData.current.revenue, periodData.previous.revenue).pct} vs anterior · ${hotmartSalesToday} vendas` : `${hotmartSalesToday} vendas`} />
+            trendLabel={periodData ? `${getVariation(periodData.current.revenue, periodData.previous.revenue).pct} vs anterior` : undefined} />
           <MetricCard title="Vendas Hoje" value={hotmartSalesToday}
             subtitle={`${hotmartRefunded} reembolsos${hotmartSalesToday > 0 ? ` (${((hotmartRefunded / (hotmartSalesToday + hotmartRefunded)) * 100).toFixed(0)}%)` : ""}`}
             icon={ShoppingCart}
             trend={periodData ? getVariation(periodData.current.sales, periodData.previous.sales).trend : undefined}
             trendLabel={periodData ? `${getVariation(periodData.current.sales, periodData.previous.sales).pct} vs anterior` : undefined} />
-          <MetricCard title="Taxa de Aprovação" value={`${hotmartApprovalRate.toFixed(1)}%`}
-            subtitle={`${hotmartApproved} pagos · ${hotmartPending} pend. · ${hotmartRefused} recus.`} icon={CreditCard}
-            trend={periodData ? getVariation(periodData.current.approvalRate, periodData.previous.approvalRate).trend : undefined}
-            trendLabel={periodData ? `${getVariation(periodData.current.approvalRate, periodData.previous.approvalRate).pct} vs anterior` : undefined} />
-          <MetricCard title="IC → Vendas" value={`${icToSalesRate.toFixed(1)}%`}
-            subtitle={`${frontendICs} ICs · ${icToSalesRatio}`} icon={Target}
-            trend={periodData && periodData.previous.ics > 0 ? getVariation(icToSalesRate, periodData.previous.ics > 0 ? (periodData.previous.sales / periodData.previous.ics) * 100 : 0).trend : undefined}
-            trendLabel={periodData && periodData.previous.ics > 0 ? `${getVariation(icToSalesRate, (periodData.previous.sales / periodData.previous.ics) * 100).pct} vs anterior` : undefined} />
-        </div>
-
-        <div className="grid grid-cols-3 lg:grid-cols-3 gap-3">
           <MetricCard title="Leads Hoje" value={totalLeadsToday} icon={Users}
             subtitle={`${qualifiedLeadsToday} qualificados`}
             trend={periodData ? getVariation(periodData.current.leads, periodData.previous.leads).trend : undefined}
             trendLabel={periodData ? `${getVariation(periodData.current.leads, periodData.previous.leads).pct} vs anterior` : undefined} />
-          <MetricCard title="Ticket Médio"
-            value={`R$ ${hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : '0'}`}
-            subtitle={periodData ? `LTV: R$ ${periodData.current.sales > 0 ? (periodData.current.revenue / periodData.current.sales).toFixed(0) : "0"}` : undefined}
-            icon={DollarSign} iconClassName="from-violet-500/20 to-violet-600/10 border-violet-500/20" valueClassName="text-violet-400"
-            trend={periodData ? getVariation(periodData.current.avgTicket, periodData.previous.avgTicket).trend : undefined}
-            trendLabel={periodData ? `${getVariation(periodData.current.avgTicket, periodData.previous.avgTicket).pct} vs anterior` : undefined} />
-          <MetricCard title="Taxa Interação" value={`${interactionRateToday.toFixed(1)}%`}
-            subtitle={`${totalVisitsToday} visitantes`}
-            icon={Activity} iconClassName="from-amber-500/20 to-amber-600/10 border-amber-500/20" valueClassName="text-amber-400" />
+          <MetricCard title="IC para Vendas" value={`${icToSalesRate.toFixed(1)}%`}
+            subtitle={`${frontendICs} ICs | ${icToSalesRatio}`} icon={Target}
+            trend={periodData && periodData.previous.ics > 0 ? getVariation(icToSalesRate, (periodData.previous.sales / periodData.previous.ics) * 100).trend : undefined}
+            trendLabel={periodData && periodData.previous.ics > 0 ? `${getVariation(icToSalesRate, (periodData.previous.sales / periodData.previous.ics) * 100).pct} vs anterior` : undefined} />
         </div>
 
-        <div className="overflow-x-auto pb-2 -mx-4 px-4" style={{ maxWidth: 'calc(100% + 2rem)' }}>
-          <div className="flex gap-3 w-max">
-            {/* Aprovação Gateway */}
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <h3 className="text-xs font-medium text-[#888] truncate">Aprovação Gateway</h3>
-                <Globe className="w-4 h-4 text-orange-400 flex-shrink-0" />
-              </div>
-              <div className="flex items-center justify-around gap-2">
-                <ProgressRing value={hotmartApprovalRate} label="Aprovação" color="emerald" />
-                <div className="flex flex-col gap-2 min-w-0">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved} Pagos</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-yellow-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartPending} Pendentes</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartRefused} Recusados</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#666] flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved + hotmartPending + hotmartRefused} Total</span></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Funil IC → Venda */}
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <h3 className="text-xs font-medium text-[#888] truncate">Funil IC → Venda</h3>
-                <Target className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              </div>
-              <div className="flex items-center justify-around gap-2">
-                <ProgressRing value={icToSalesRate} label="Conversão" color="emerald" />
-                <div className="flex flex-col gap-2 min-w-0">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{frontendICs} ICs</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} Vendas</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">Ratio {icToSalesRatio}</span></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Sessões Únicas */}
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <h3 className="text-xs font-medium text-[#888] truncate">Sessões Únicas</h3>
-                <Eye className="w-4 h-4 text-sky-400 flex-shrink-0" />
-              </div>
-              <div className="flex items-center justify-around gap-2">
-                <ProgressRing value={frontendICs > 0 ? Math.min((activeUsers / frontendICs) * 100, 100) : 0} label="Ativas" color="violet" />
-                <div className="flex flex-col gap-2 min-w-0">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{activeUsers} Online</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{frontendICs} ICs hoje</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} Compraram</span></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Ticket Médio */}
-            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <h3 className="text-xs font-medium text-[#888] truncate">Ticket Médio</h3>
-                <DollarSign className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              </div>
-              <div className="flex items-center justify-around gap-2">
-                <ProgressRing value={Math.min(hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday / 200) * 100 : 0, 100)} label="Ticket" color="amber" />
-                <div className="flex flex-col gap-2 min-w-0">
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">R$ {hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : '0'}</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">R$ {totalRevenueToday.toFixed(0)} total</span></div>
-                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} vendas</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <LiveABTest />
-        <LiveAIAlerts />
-        <LiveAISuggestions />
-        <LiveFunnelVelocity />
-        <CampaignFilter onChange={setCampaignFilterState} />
-        <LiveCampaignTable />
-        <LiveUserPresence onTotalChange={handlePresenceTotalChange} campaignFilter={campaignFilterState} />
-        <LiveSalesFeed />
-        <LiveUpsellMonitor />
-        <LiveFunnelAnalytics campaignFilter={campaignFilterState} />
-        <LiveScrollHeatmap />
-        <LiveRevenueChart usdToBrl={1} />
-        <LiveComparisonMode />
-        <LiveIntelligence />
-        <LiveChannelCreativeTable />
-        <LiveLeadsTable onLeadClick={(sessionId: string) => setTimelineSessionId(sessionId)} />
-
-        <Tabs defaultValue="logs" className="space-y-4">
+        {/* TAB SYSTEM */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <div className="overflow-x-auto -mx-4 px-4">
             <TabsList className="bg-[#1a1a1a] border border-[#2a2a2a] p-1 rounded-xl inline-flex min-w-max">
-              <TabsTrigger value="logs" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 sm:px-4 whitespace-nowrap">
-                <Database className="w-4 h-4 mr-1.5" /><span className="text-sm">Logs</span>
+              <TabsTrigger value="overview" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
+                <LayoutDashboard className="w-3.5 h-3.5 mr-1.5" />Visao Geral
+              </TabsTrigger>
+              <TabsTrigger value="abtest" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
+                <FlaskConical className="w-3.5 h-3.5 mr-1.5" />Teste A/B
+              </TabsTrigger>
+              <TabsTrigger value="campaigns" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
+                <Megaphone className="w-3.5 h-3.5 mr-1.5" />Campanhas
+              </TabsTrigger>
+              <TabsTrigger value="creatives" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
+                <Palette className="w-3.5 h-3.5 mr-1.5" />Criativos
+              </TabsTrigger>
+              <TabsTrigger value="funnel" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
+                <Filter className="w-3.5 h-3.5 mr-1.5" />Funil
+              </TabsTrigger>
+              <TabsTrigger value="sales" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
+                <Receipt className="w-3.5 h-3.5 mr-1.5" />Vendas
+              </TabsTrigger>
+              <TabsTrigger value="audit" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
+                <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />Auditoria
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="logs" className="mt-4">
+          {/* TAB: VISAO GERAL */}
+          <TabsContent value="overview" className="space-y-4 mt-4">
+            <div className="grid grid-cols-3 gap-3">
+              <MetricCard title="Taxa de Aprovacao" value={`${hotmartApprovalRate.toFixed(1)}%`}
+                subtitle={`${hotmartApproved} pagos | ${hotmartPending} pend. | ${hotmartRefused} recus.`} icon={CreditCard}
+                trend={periodData ? getVariation(periodData.current.approvalRate, periodData.previous.approvalRate).trend : undefined}
+                trendLabel={periodData ? `${getVariation(periodData.current.approvalRate, periodData.previous.approvalRate).pct} vs anterior` : undefined} />
+              <MetricCard title="Ticket Medio"
+                value={`R$ ${hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : '0'}`}
+                subtitle={periodData ? `LTV: R$ ${periodData.current.sales > 0 ? (periodData.current.revenue / periodData.current.sales).toFixed(0) : "0"}` : undefined}
+                icon={DollarSign} iconClassName="from-violet-500/20 to-violet-600/10 border-violet-500/20" valueClassName="text-violet-400"
+                trend={periodData ? getVariation(periodData.current.avgTicket, periodData.previous.avgTicket).trend : undefined}
+                trendLabel={periodData ? `${getVariation(periodData.current.avgTicket, periodData.previous.avgTicket).pct} vs anterior` : undefined} />
+              <MetricCard title="Taxa Interacao" value={`${interactionRateToday.toFixed(1)}%`}
+                subtitle={`${totalVisitsToday} visitantes`}
+                icon={Activity} iconClassName="from-amber-500/20 to-amber-600/10 border-amber-500/20" valueClassName="text-amber-400" />
+            </div>
+
+            {/* Horizontal scrollable cards - KEPT AS-IS */}
+            <div className="overflow-x-auto pb-2 -mx-4 px-4" style={{ maxWidth: 'calc(100% + 2rem)' }}>
+              <div className="flex gap-3 w-max">
+                {/* Aprovacao Gateway */}
+                <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <h3 className="text-xs font-medium text-[#888] truncate">Aprovacao Gateway</h3>
+                    <Globe className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                  </div>
+                  <div className="flex items-center justify-around gap-2">
+                    <ProgressRing value={hotmartApprovalRate} label="Aprovacao" color="emerald" />
+                    <div className="flex flex-col gap-2 min-w-0">
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved} Pagos</span></div>
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-yellow-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartPending} Pendentes</span></div>
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartRefused} Recusados</span></div>
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#666] flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved + hotmartPending + hotmartRefused} Total</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Funil IC -> Venda */}
+                <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <h3 className="text-xs font-medium text-[#888] truncate">Funil IC para Venda</h3>
+                    <Target className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  </div>
+                  <div className="flex items-center justify-around gap-2">
+                    <ProgressRing value={icToSalesRate} label="Conversao" color="emerald" />
+                    <div className="flex flex-col gap-2 min-w-0">
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{frontendICs} ICs</span></div>
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} Vendas</span></div>
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">Ratio {icToSalesRatio}</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sessoes Unicas */}
+                <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <h3 className="text-xs font-medium text-[#888] truncate">Sessoes Unicas</h3>
+                    <Eye className="w-4 h-4 text-sky-400 flex-shrink-0" />
+                  </div>
+                  <div className="flex items-center justify-around gap-2">
+                    <ProgressRing value={frontendICs > 0 ? Math.min((activeUsers / frontendICs) * 100, 100) : 0} label="Ativas" color="violet" />
+                    <div className="flex flex-col gap-2 min-w-0">
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{activeUsers} Online</span></div>
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{frontendICs} ICs hoje</span></div>
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} Compraram</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ticket Medio */}
+                <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <h3 className="text-xs font-medium text-[#888] truncate">Ticket Medio</h3>
+                    <DollarSign className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  </div>
+                  <div className="flex items-center justify-around gap-2">
+                    <ProgressRing value={Math.min(hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday / 200) * 100 : 0, 100)} label="Ticket" color="amber" />
+                    <div className="flex flex-col gap-2 min-w-0">
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">R$ {hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : '0'}</span></div>
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">R$ {totalRevenueToday.toFixed(0)} total</span></div>
+                      <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} vendas</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <LiveBuyerProfile />
+            <LiveAIAlerts />
+            <LiveAISuggestions />
+            <LiveUserPresence onTotalChange={handlePresenceTotalChange} campaignFilter={campaignFilterState} />
+            <LiveRevenueChart usdToBrl={1} />
+            <LiveComparisonMode />
+            <LiveIntelligence />
+            <LiveLeadsTable onLeadClick={(sessionId: string) => setTimelineSessionId(sessionId)} />
+          </TabsContent>
+
+          {/* TAB: TESTE A/B */}
+          <TabsContent value="abtest" className="space-y-4 mt-4">
+            <LiveABTest />
+          </TabsContent>
+
+          {/* TAB: CAMPANHAS */}
+          <TabsContent value="campaigns" className="space-y-4 mt-4">
+            <CampaignFilter onChange={setCampaignFilterState} />
+            <LiveCampaignTable />
+          </TabsContent>
+
+          {/* TAB: CRIATIVOS */}
+          <TabsContent value="creatives" className="space-y-4 mt-4">
+            <LiveChannelCreativeTable />
+          </TabsContent>
+
+          {/* TAB: FUNIL */}
+          <TabsContent value="funnel" className="space-y-4 mt-4">
+            <LiveFunnelVelocity />
+            <LiveFunnelAnalytics campaignFilter={campaignFilterState} />
+            <LiveScrollHeatmap />
+          </TabsContent>
+
+          {/* TAB: VENDAS */}
+          <TabsContent value="sales" className="space-y-4 mt-4">
+            <LiveSalesFeed />
+            <LiveUpsellMonitor />
+          </TabsContent>
+
+          {/* TAB: AUDITORIA */}
+          <TabsContent value="audit" className="space-y-4 mt-4">
+            <LiveAuditTab />
+
+            {/* Logs section - KEPT */}
             <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-3 sm:p-4 overflow-hidden">
+              <div className="flex items-center gap-2 mb-3">
+                <Database className="w-4 h-4 text-sky-400" />
+                <h3 className="text-sm font-semibold text-white">Logs de Eventos</h3>
+                <button onClick={exportLogs} title="Exportar logs"
+                  className="ml-auto w-7 h-7 rounded-lg bg-[#0d0d0d] border border-[#2a2a2a] flex items-center justify-center hover:bg-[#1a1a1a]">
+                  <Download className="w-3 h-3 text-[#888]" />
+                </button>
+              </div>
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#666]" />

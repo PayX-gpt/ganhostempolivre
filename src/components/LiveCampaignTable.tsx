@@ -22,7 +22,10 @@ export default function LiveCampaignTable() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc("get_campaign_stats_today" as any);
+      const [{ data, error }, { data: costsData }] = await Promise.all([
+        supabase.rpc("get_campaign_stats_today" as any),
+        supabase.from("campaign_costs" as any).select("campaign_name, daily_spend").eq("cost_date", new Date().toISOString().split("T")[0]),
+      ]);
       if (error) throw error;
       const rows: CampaignRow[] = ((data as any[]) || []).map((r: any) => ({
         campaign: r.campaign || "Direto",
@@ -34,6 +37,13 @@ export default function LiveCampaignTable() {
         convRate: Number(r.conv_rate) || 0,
       })).sort((a, b) => b.revenue - a.revenue);
       setCampaigns(rows);
+
+      // Load persisted spend
+      const spendMap: Record<string, number> = {};
+      ((costsData as any[]) || []).forEach((c: any) => {
+        if (c.daily_spend > 0) spendMap[c.campaign_name] = Number(c.daily_spend);
+      });
+      setAdSpend(prev => ({ ...spendMap, ...prev }));
     } catch (e) {
       console.error("Campaign stats error:", e);
     }
@@ -46,8 +56,20 @@ export default function LiveCampaignTable() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const handleSpendChange = (camp: string, value: string) => {
-    setAdSpend(prev => ({ ...prev, [camp]: Number(value) || 0 }));
+  const handleSpendChange = async (camp: string, value: string) => {
+    const numValue = Number(value) || 0;
+    setAdSpend(prev => ({ ...prev, [camp]: numValue }));
+    
+    // Persist to database
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      await supabase.from("campaign_costs" as any).upsert(
+        { campaign_name: camp, cost_date: today, daily_spend: numValue, updated_at: new Date().toISOString() } as any,
+        { onConflict: "campaign_name,cost_date" } as any
+      );
+    } catch (e) {
+      console.error("Save spend error:", e);
+    }
   };
 
   return (
@@ -58,7 +80,7 @@ export default function LiveCampaignTable() {
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-white text-sm">Campanhas — Comparativo</h3>
-          <p className="text-[10px] text-[#666]">{campaigns.length} campanhas hoje (via RPC)</p>
+          <p className="text-[10px] text-[#666]">{campaigns.length} campanhas hoje (via RPC) — gastos persistidos</p>
         </div>
         <button onClick={fetchData} className="w-7 h-7 rounded-lg bg-[#0d0d0d] border border-[#2a2a2a] flex items-center justify-center hover:bg-[#1a1a1a]">
           <RefreshCw className={cn("w-3 h-3 text-[#888]", loading && "animate-spin")} />
@@ -99,6 +121,7 @@ export default function LiveCampaignTable() {
                   "border-b border-[#1a1a1a] hover:bg-[#1a1a1a]/50",
                   isTop && "bg-emerald-500/5",
                   isBottom && "bg-red-500/5",
+                  c.sales === 0 && "opacity-50",
                 )}>
                   <td className="py-1.5 px-2 text-white font-medium max-w-[140px] truncate">{c.campaign}</td>
                   <td className="py-1.5 px-1 text-right text-white tabular-nums">{c.leads}</td>
