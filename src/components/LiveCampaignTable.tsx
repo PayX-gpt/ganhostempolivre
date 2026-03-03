@@ -43,7 +43,7 @@ export default function LiveCampaignTable() {
     const todayISO = todayStart.toISOString();
 
     const [attributions, purchases, checkoutEvents] = await Promise.all([
-      fetchAllRows("session_attribution", "session_id, utm_campaign, utm_source, ttclid, fbclid", (q: any) => q.gte("created_at", todayISO)),
+      fetchAllRows("session_attribution", "session_id, utm_campaign, utm_source, ttclid, fbclid, referrer", (q: any) => q.gte("created_at", todayISO)),
       fetchAllRows("purchase_tracking", "session_id, amount, status, email", (q: any) => q.gte("created_at", todayISO)),
       fetchAllRows("funnel_events", "session_id", (q: any) => q.in("event_name", ["checkout_click", "capi_ic_sent"]).gte("created_at", todayISO)),
     ]);
