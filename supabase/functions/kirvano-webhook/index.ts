@@ -159,7 +159,52 @@ Deno.serve(async (req) => {
     const ttp = body.cookies?.ttp || body.ttp || null;
     const clientIp = body.ip || null;
 
-    const sessionId = (src && src.startsWith("sess_")) ? src : null;
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    let sessionId = (src && src.startsWith("sess_")) ? src : null;
+
+    // ====== PHONE-BASED SESSION RESOLUTION ======
+    if (!sessionId && phone) {
+      const cleanPhone = phone.replace(/\D/g, "");
+      const phoneSuffix = cleanPhone.slice(-9);
+      if (phoneSuffix.length >= 8) {
+        const { data: phoneMatch } = await supabase
+          .from("phone_session_map")
+          .select("session_id")
+          .ilike("phone", `%${phoneSuffix}`)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (phoneMatch && phoneMatch.length > 0) {
+          sessionId = phoneMatch[0].session_id;
+          console.log(`📱 [Kirvano] Resolved session via phone: ${phoneSuffix} → ${sessionId}`);
+        }
+      }
+    }
+
+    // ====== SESSION-BASED UTM RESOLUTION ======  
+    let resolvedUtmCampaign = utmCampaign;
+    let resolvedUtmSource = utmSource;
+    let resolvedUtmMedium = utmMedium;
+    let resolvedUtmContent = utmContent;
+    let resolvedUtmTerm = utmTerm;
+    if (sessionId) {
+      const { data: saData } = await supabase
+        .from("session_attribution")
+        .select("utm_campaign, utm_source, utm_medium, utm_content, utm_term")
+        .eq("session_id", sessionId)
+        .maybeSingle();
+      if (saData?.utm_campaign) {
+        resolvedUtmCampaign = saData.utm_campaign;
+        resolvedUtmSource = saData.utm_source || resolvedUtmSource;
+        resolvedUtmMedium = saData.utm_medium || resolvedUtmMedium;
+        resolvedUtmContent = saData.utm_content || resolvedUtmContent;
+        resolvedUtmTerm = saData.utm_term || resolvedUtmTerm;
+        console.log(`🎯 [Kirvano] Resolved UTM from session_attribution: ${resolvedUtmCampaign}`);
+      }
+    }
 
     const statusMap: Record<string, string> = {
       approved: "approved", aprovado: "approved", paid: "approved", pago: "approved",
@@ -175,11 +220,6 @@ Deno.serve(async (req) => {
     const normalizedStatus = statusMap[status.toLowerCase()] || status;
 
     console.log(`💰 [Kirvano] Amount: ${amount}, Status: ${normalizedStatus}, Step: ${funnelStep}, Email: ${email}, Product: ${productName}, OfferId: ${offerId}, OfferName: ${offerName}`);
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
     let matched = false;
     let recordId: string | null = null;
@@ -206,8 +246,8 @@ Deno.serve(async (req) => {
             funnel_step: funnelStep,
             whop_payment_id: paymentId,
             session_id: sessionId,
-            utm_source: utmSource, utm_medium: utmMedium,
-            utm_campaign: utmCampaign, utm_content: utmContent, utm_term: utmTerm,
+            utm_source: resolvedUtmSource, utm_medium: resolvedUtmMedium,
+            utm_campaign: resolvedUtmCampaign, utm_content: resolvedUtmContent, utm_term: resolvedUtmTerm,
             fbclid, gclid, fbp,
           })
           .eq("transaction_id", transactionId)
@@ -232,8 +272,8 @@ Deno.serve(async (req) => {
         status: normalizedStatus,
         funnel_step: funnelStep,
         session_id: sessionId,
-        utm_source: utmSource, utm_medium: utmMedium,
-        utm_campaign: utmCampaign, utm_content: utmContent, utm_term: utmTerm,
+        utm_source: resolvedUtmSource, utm_medium: resolvedUtmMedium,
+        utm_campaign: resolvedUtmCampaign, utm_content: resolvedUtmContent, utm_term: resolvedUtmTerm,
         fbclid, gclid, fbp,
         redirect_source: "kirvano_webhook",
         user_agent: req.headers.get("user-agent") || "kirvano-webhook",

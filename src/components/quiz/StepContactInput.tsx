@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton, TrustBadge } from "./QuizUI";
 import { saveFunnelEvent } from "@/lib/metricsClient";
+import { supabase } from "@/integrations/supabase/client";
 import { Clock, Users, MessageSquare } from "lucide-react";
 import { useLanguage, type Language } from "@/lib/i18n";
 
@@ -120,8 +121,23 @@ const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) =
       </div>
 
       <CTAButton onClick={() => {
-        saveFunnelEvent("lead_captured", { method, has_value: !!value.trim() });
-        onNext(value.trim());
+        const contactValue = value.trim();
+        const earlyUtm = (() => { try { return JSON.parse(localStorage.getItem('lead_utm') || '{}'); } catch { return {}; } })();
+        saveFunnelEvent("lead_captured", { 
+          method, has_value: !!contactValue,
+          utm_campaign: earlyUtm.utm_campaign || null,
+          utm_source: earlyUtm.utm_source || null,
+          fbclid: earlyUtm.fbclid || null,
+        });
+        // Save phone→session for webhook attribution
+        if (method === 'whatsapp' && contactValue) {
+          const sessionId = sessionStorage.getItem('funnel_session_id') || window.trackingData?.session_id;
+          if (sessionId) {
+            const cleanPhone = contactValue.replace(/\D/g, '');
+            supabase.from("phone_session_map" as any).insert({ phone: cleanPhone, session_id: sessionId }).then(() => {});
+          }
+        }
+        onNext(contactValue);
       }} disabled={!isValid}>
         {t.cta}
       </CTAButton>

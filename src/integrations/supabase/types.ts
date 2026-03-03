@@ -173,6 +173,27 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_session_map: {
+        Row: {
+          created_at: string
+          id: string
+          phone: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phone: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
       purchase_tracking: {
         Row: {
           amount: number | null
