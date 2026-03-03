@@ -487,6 +487,188 @@ export default function AdminFunnelAudit() {
             icon={Target} />
         </div>
 
+        {/* ===== SCROLL HORIZONTAL: KPIs DETALHADOS ===== */}
+        <div className="overflow-x-auto -mx-4 px-4 pb-2">
+          <div className="flex gap-3 w-max">
+            {/* Receita Hoje */}
+            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[200px]">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/20"><DollarSign className="w-3.5 h-3.5 text-emerald-400" /></div>
+                <span className="text-xs text-[#888]">Receita Hoje</span>
+              </div>
+              <p className="text-2xl font-bold text-white tabular-nums">R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-[10px] text-[#666] mt-1">{totalSales} vendas</p>
+              {periodData && (
+                <div className={cn("flex items-center gap-1 text-[10px] mt-1",
+                  getVariation(totalRevenue, periodData.previous.revenue).trend === 'up' ? "text-emerald-400" : "text-red-400"
+                )}>
+                  {getVariation(totalRevenue, periodData.previous.revenue).trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  {getVariation(totalRevenue, periodData.previous.revenue).pct} vs anterior
+                </div>
+              )}
+            </div>
+
+            {/* Vendas Hoje */}
+            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[200px]">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-violet-500/20 border border-violet-500/20"><ShoppingCart className="w-3.5 h-3.5 text-violet-400" /></div>
+                <span className="text-xs text-[#888]">Vendas Hoje</span>
+              </div>
+              <p className="text-2xl font-bold text-white tabular-nums">{frontSales}</p>
+              <p className="text-[10px] text-[#666] mt-1">{s?.refunds || 0} reembolsos ({totalSales > 0 ? ((s?.refunds || 0) / totalSales * 100).toFixed(0) : 0}%)</p>
+              {periodData && (
+                <div className={cn("flex items-center gap-1 text-[10px] mt-1",
+                  getVariation(frontSales, periodData.previous.sales).trend === 'up' ? "text-emerald-400" : "text-red-400"
+                )}>
+                  {getVariation(frontSales, periodData.previous.sales).trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  {getVariation(frontSales, periodData.previous.sales).pct} vs anterior
+                </div>
+              )}
+            </div>
+
+            {/* Taxa de Aprovação */}
+            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[200px]">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/20"><CreditCard className="w-3.5 h-3.5 text-emerald-400" /></div>
+                <span className="text-xs text-[#888]">Taxa de Aprovação</span>
+              </div>
+              <p className="text-2xl font-bold text-white tabular-nums">{approvalRate.toFixed(1)}%</p>
+              <p className="text-[10px] text-[#666] mt-1">{frontSales} pagos · {s?.pending || 0} pend. · {s?.refused || 0} recus.</p>
+              {periodData && (
+                <div className={cn("flex items-center gap-1 text-[10px] mt-1",
+                  getVariation(approvalRate, periodData.previous.approvalRate || 0).trend === 'up' ? "text-emerald-400" : "text-red-400"
+                )}>
+                  {getVariation(approvalRate, periodData.previous.approvalRate || 0).trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  {getVariation(approvalRate, periodData.previous.approvalRate || 0).pct} vs anterior
+                </div>
+              )}
+            </div>
+
+            {/* IC → Vendas */}
+            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[200px]">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/20"><Target className="w-3.5 h-3.5 text-cyan-400" /></div>
+                <span className="text-xs text-[#888]">IC → Vendas</span>
+              </div>
+              <p className="text-2xl font-bold text-white tabular-nums">{icToSalesRate.toFixed(1)}%</p>
+              <p className="text-[10px] text-[#666] mt-1">{frontendICs} ICs · 1:{frontSales > 0 ? Math.round(frontendICs / frontSales) : 0}</p>
+              {periodData && periodData.previous.ics > 0 && (() => {
+                const prevICRate = periodData.previous.sales > 0 ? (periodData.previous.sales / periodData.previous.ics) * 100 : 0;
+                return (
+                  <div className={cn("flex items-center gap-1 text-[10px] mt-1",
+                    getVariation(icToSalesRate, prevICRate).trend === 'up' ? "text-emerald-400" : "text-red-400"
+                  )}>
+                    {getVariation(icToSalesRate, prevICRate).trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                    {getVariation(icToSalesRate, prevICRate).pct} vs anterior
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Leads Hoje */}
+            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[180px]">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/20"><Users className="w-3.5 h-3.5 text-emerald-400" /></div>
+                <span className="text-xs text-[#888]">Leads Hoje</span>
+              </div>
+              <p className="text-2xl font-bold text-white tabular-nums">{totalLeadsToday}</p>
+              <p className="text-[10px] text-[#666] mt-1">{qualifiedLeadsToday} qualificados</p>
+              {periodData && (
+                <div className={cn("flex items-center gap-1 text-[10px] mt-1",
+                  getVariation(totalLeadsToday, periodData.previous.leads).trend === 'up' ? "text-emerald-400" : "text-red-400"
+                )}>
+                  {getVariation(totalLeadsToday, periodData.previous.leads).trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  {getVariation(totalLeadsToday, periodData.previous.leads).pct} vs anterior
+                </div>
+              )}
+            </div>
+
+            {/* Ticket Médio */}
+            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[180px]">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-violet-500/20 border border-violet-500/20"><DollarSign className="w-3.5 h-3.5 text-violet-400" /></div>
+                <span className="text-xs text-[#888]">Ticket Médio</span>
+              </div>
+              <p className="text-2xl font-bold text-violet-400 tabular-nums">R$ {(s?.total_ticket_avg || 0).toFixed(0)}</p>
+              <p className="text-[10px] text-[#666] mt-1">LTV: R$ {totalSales > 0 ? (totalRevenue / frontSales).toFixed(0) : '0'}</p>
+              {periodData && periodData.previous.avgTicket > 0 && (
+                <div className={cn("flex items-center gap-1 text-[10px] mt-1",
+                  getVariation(s?.total_ticket_avg || 0, periodData.previous.avgTicket).trend === 'up' ? "text-emerald-400" : "text-red-400"
+                )}>
+                  {getVariation(s?.total_ticket_avg || 0, periodData.previous.avgTicket).trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  {getVariation(s?.total_ticket_avg || 0, periodData.previous.avgTicket).pct} vs anterior
+                </div>
+              )}
+            </div>
+
+            {/* Taxa Interação */}
+            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[180px]">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-amber-500/20 border border-amber-500/20"><UserCheck className="w-3.5 h-3.5 text-amber-400" /></div>
+                <span className="text-xs text-[#888]">Taxa Interação</span>
+              </div>
+              <p className="text-2xl font-bold text-amber-400 tabular-nums">{interactionRateToday.toFixed(1)}%</p>
+              <p className="text-[10px] text-[#666] mt-1">{totalVisitsToday} visitantes</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ===== DONUT CHARTS: APROVAÇÃO + FUNIL IC ===== */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Aprovação Gateway Donut */}
+          <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a]">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-white">Aprovação Gateway</span>
+              <Globe className="w-4 h-4 text-amber-400" />
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="relative w-24 h-24 flex-shrink-0">
+                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#2a2a2a" strokeWidth="3" />
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#10b981" strokeWidth="3"
+                    strokeDasharray={`${approvalRate} ${100 - approvalRate}`} strokeLinecap="round" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-lg font-bold text-emerald-400 tabular-nums">{approvalRate.toFixed(0)}%</span>
+                </div>
+              </div>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-white">{frontSales} Pagos</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500" /><span className="text-white">{s?.pending || 0} Pendentes</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500" /><span className="text-white">{s?.refused || 0} Recusados</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#555]" /><span className="text-[#888]">{totalAttempts} Total</span></div>
+              </div>
+            </div>
+            <p className="text-[10px] text-[#666] mt-2 text-center">Aprovação</p>
+          </div>
+
+          {/* Funil IC → Venda Donut */}
+          <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a]">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-white">Funil IC → Venda</span>
+              <Target className="w-4 h-4 text-cyan-400" />
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="relative w-24 h-24 flex-shrink-0">
+                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#2a2a2a" strokeWidth="3" />
+                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#06b6d4" strokeWidth="3"
+                    strokeDasharray={`${icToSalesRate} ${100 - icToSalesRate}`} strokeLinecap="round" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-lg font-bold text-cyan-400 tabular-nums">{icToSalesRate.toFixed(0)}%</span>
+                </div>
+              </div>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500" /><span className="text-white">{frontendICs} ICs</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-white">{frontSales} Vendas</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-violet-500" /><span className="text-white">Ratio 1:{frontSales > 0 ? Math.round(frontendICs / frontSales) : 0}</span></div>
+              </div>
+            </div>
+            <p className="text-[10px] text-[#666] mt-2 text-center">Conversão</p>
+          </div>
+        </div>
+
         {/* ===== STATUS PAGAMENTO + UPSELL BREAKDOWN ===== */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {/* Payment status */}
