@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FlaskConical, Trophy, TrendingUp } from "lucide-react";
+import { FlaskConical, Trophy, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -15,19 +16,13 @@ interface VariantData {
   quizRate: number;
   offerViewed: number;
   checkouts: number;
-  frontSales: number;
-  frontRevenue: number;
-  totalSales: number;
-  totalRevenue: number;
+  sales: number;
   convRate: number;
+  revenue: number;
   revenuePerVisitor: number;
 }
 
-interface DashboardSummary {
-  ab_sales?: { variant: string; front_sales: number; front_revenue: number; total_sales: number; total_revenue: number }[];
-  [key: string]: any;
-}
-
+// Z-test for two proportions
 function zTest(p1: number, n1: number, p2: number, n2: number): number {
   if (n1 === 0 || n2 === 0) return 0;
   const p = (p1 * n1 + p2 * n2) / (n1 + n2);
@@ -43,18 +38,10 @@ function getConfidence(z: number): { label: string; color: string; level: string
   return { label: "Coletando dados", color: "text-[#888]", level: "low" };
 }
 
-export default function LiveABTest({ summary }: { summary?: DashboardSummary | null }) {
+export default function LiveABTest() {
   const [data, setData] = useState<VariantData[]>([]);
   const [period, setPeriod] = useState("24h");
   const [isLoading, setIsLoading] = useState(true);
-
-  // Build a map of front sales by variant from the RPC summary
-  const abSalesMap = new Map<string, { front_sales: number; front_revenue: number; total_sales: number; total_revenue: number }>();
-  if (summary?.ab_sales) {
-    for (const ab of summary.ab_sales) {
-      abSalesMap.set(ab.variant, ab);
-    }
-  }
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -70,6 +57,7 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
     const startISO = start.toISOString();
 
     try {
+      // Get all sessions with variant assignment
       const { data: sessions } = await supabase
         .from("session_attribution")
         .select("session_id, quiz_variant")
@@ -90,17 +78,17 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
 
       const allSessionIds = sessions.map((s: any) => s.session_id);
 
-      // Get funnel events
+      // Get funnel events for these sessions
       const { data: events } = await supabase
         .from("funnel_events")
         .select("session_id, event_name, event_data")
         .in("session_id", allSessionIds.slice(0, 500))
         .gte("created_at", startISO);
 
-      // Get purchases — ALL statuses to count front vs upsell
+      // Get purchases
       const { data: purchases } = await supabase
         .from("purchase_tracking")
-        .select("session_id, amount, status, email, funnel_step")
+        .select("session_id, amount, status, email")
         .in("session_id", allSessionIds.slice(0, 500))
         .gte("created_at", startISO);
 
@@ -131,13 +119,9 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
           e.event_name === "checkout_click" || e.event_name === "capi_ic_sent"
         ).map((e) => e.session_id)).size;
 
-        // Separate front from upsell
-        const frontPurchases = vPurchases.filter(p => (p.funnel_step || '').startsWith('front'));
-        const frontSales = new Set(frontPurchases.filter(p => p.email).map(p => (p.email as string).toLowerCase())).size || frontPurchases.length;
-        const frontRevenue = frontPurchases.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-        
-        const totalSales = new Set(vPurchases.filter(p => p.email).map(p => (p.email as string).toLowerCase())).size || vPurchases.length;
-        const totalRevenue = vPurchases.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        const uniqueBuyers = new Set(vPurchases.filter((p) => p.email).map((p) => p.email!.toLowerCase())).size;
+        const sales = uniqueBuyers || vPurchases.length;
+        const revenue = vPurchases.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
         return {
           variant: v,
@@ -148,12 +132,10 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
           quizRate: ctaClicks > 0 ? (quizComplete / ctaClicks) * 100 : 0,
           offerViewed,
           checkouts,
-          frontSales,
-          frontRevenue,
-          totalSales,
-          totalRevenue,
-          convRate: vSessions.size > 0 ? (frontSales / vSessions.size) * 100 : 0,
-          revenuePerVisitor: vSessions.size > 0 ? totalRevenue / vSessions.size : 0,
+          sales,
+          convRate: vSessions.size > 0 ? (sales / vSessions.size) * 100 : 0,
+          revenue,
+          revenuePerVisitor: vSessions.size > 0 ? revenue / vSessions.size : 0,
         };
       });
 
@@ -173,10 +155,8 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
   const bestVariant = data.length > 0 ? data.reduce((best, v) => v.revenuePerVisitor > best.revenuePerVisitor ? v : best) : null;
   const worstVariant = data.length > 0 ? data.reduce((worst, v) => v.revenuePerVisitor < worst.revenuePerVisitor ? v : worst) : null;
   const controlVariant = data.find((v) => v.variant === "A");
+
   const hasEnoughData = data.some((v) => v.visitors >= 100);
-  const totalFrontSalesTracked = data.reduce((s, v) => s + v.frontSales, 0);
-  const totalFrontSalesAll = summary?.ab_sales?.reduce((s: number, ab: any) => s + (ab.front_sales || 0), 0) || totalFrontSalesTracked;
-  const unattributed = totalFrontSalesAll - totalFrontSalesTracked;
 
   const declareWinner = (variant: string) => {
     localStorage.setItem("quiz_variant_winner", variant);
@@ -190,7 +170,7 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
           <FlaskConical className="w-4 h-4 text-violet-400" />
           <h3 className="text-sm font-semibold text-white">🧪 A/B Test — Tela Inicial</h3>
         </div>
-        <p className="text-xs text-[#888]">Aguardando dados.</p>
+        <p className="text-xs text-[#888]">Aguardando dados. As variações serão distribuídas automaticamente para novos visitantes.</p>
       </div>
     );
   }
@@ -200,35 +180,36 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <FlaskConical className="w-4 h-4 text-violet-400" />
-          <h3 className="text-sm font-semibold text-white">🧪 A/B Test — Vendas por Variante</h3>
+          <h3 className="text-sm font-semibold text-white">🧪 A/B Test — Tela Inicial</h3>
         </div>
-        {unattributed > 0 && (
-          <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-amber-500/30">{unattributed} vendas sem variante</Badge>
-        )}
         <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="h-7 w-auto bg-[#141414] border-[#222] text-white/80 rounded text-[10px] px-2 gap-1"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-7 w-auto bg-[#141414] border-[#222] text-white/80 rounded text-[10px] px-2 gap-1">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent className="bg-[#141414] border-[#222]">
-            <SelectItem value="1h">1h</SelectItem><SelectItem value="24h">24h</SelectItem>
-            <SelectItem value="7d">7d</SelectItem><SelectItem value="30d">30d</SelectItem>
+            <SelectItem value="1h">1h</SelectItem>
+            <SelectItem value="24h">24h</SelectItem>
+            <SelectItem value="7d">7d</SelectItem>
+            <SelectItem value="30d">30d</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto -mx-4 px-4">
-        <table className="w-full text-xs min-w-[800px]">
+        <table className="w-full text-xs min-w-[700px]">
           <thead>
             <tr className="text-[#888] border-b border-[#2a2a2a]">
               <th className="text-left py-2 px-2 font-medium">Variação</th>
               <th className="text-right py-2 px-2 font-medium">Visitantes</th>
-              <th className="text-right py-2 px-2 font-medium">CTA</th>
+              <th className="text-right py-2 px-2 font-medium">CTA Click</th>
               <th className="text-right py-2 px-2 font-medium">Taxa CTA</th>
               <th className="text-right py-2 px-2 font-medium">Quiz ✓</th>
               <th className="text-right py-2 px-2 font-medium">IC</th>
-              <th className="text-right py-2 px-2 font-medium text-emerald-400">Vendas Front</th>
-              <th className="text-right py-2 px-2 font-medium text-emerald-400">Conv%</th>
-              <th className="text-right py-2 px-2 font-medium">Receita Front</th>
-              <th className="text-right py-2 px-2 font-medium text-violet-400">+ Upsell</th>
-              <th className="text-right py-2 px-2 font-medium text-amber-400">R$/Visitante</th>
+              <th className="text-right py-2 px-2 font-medium">Vendas</th>
+              <th className="text-right py-2 px-2 font-medium">Conv%</th>
+              <th className="text-right py-2 px-2 font-medium">Receita</th>
+              <th className="text-right py-2 px-2 font-medium">R$/Visitante</th>
               <th className="text-center py-2 px-2 font-medium">Confiança</th>
             </tr>
           </thead>
@@ -241,11 +222,23 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
                 : { label: "Controle", color: "text-sky-400", level: "control" };
 
               return (
-                <tr key={v.variant} className={cn("border-b border-[#1a1a1a] transition-colors", isBest && "bg-emerald-500/5", isWorst && "bg-red-500/5")}>
+                <tr
+                  key={v.variant}
+                  className={cn(
+                    "border-b border-[#1a1a1a] transition-colors",
+                    isBest && "bg-emerald-500/5",
+                    isWorst && "bg-red-500/5"
+                  )}
+                >
                   <td className="py-2 px-2">
                     <div className="flex items-center gap-1.5">
-                      <span className={cn("font-bold", isBest ? "text-emerald-400" : isWorst ? "text-red-400" : "text-white")}>{v.variant}</span>
-                      {v.variant === "A" && <Badge className="text-[8px] bg-sky-500/20 text-sky-400 border-0 px-1">Ctrl</Badge>}
+                      <span className={cn(
+                        "font-bold",
+                        isBest ? "text-emerald-400" : isWorst ? "text-red-400" : "text-white"
+                      )}>
+                        {v.variant}
+                      </span>
+                      {v.variant === "A" && <Badge className="text-[8px] bg-sky-500/20 text-sky-400 border-0 px-1">Controle</Badge>}
                       {isBest && <Trophy className="w-3 h-3 text-amber-400" />}
                     </div>
                   </td>
@@ -254,11 +247,10 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
                   <td className="text-right py-2 px-2 text-white tabular-nums">{v.ctaRate.toFixed(1)}%</td>
                   <td className="text-right py-2 px-2 text-white tabular-nums">{v.quizComplete}</td>
                   <td className="text-right py-2 px-2 text-white tabular-nums">{v.checkouts}</td>
-                  <td className={cn("text-right py-2 px-2 font-bold tabular-nums", isBest ? "text-emerald-400" : "text-emerald-300")}>{v.frontSales}</td>
-                  <td className={cn("text-right py-2 px-2 font-bold tabular-nums", isBest ? "text-emerald-400" : "text-white")}>{v.convRate.toFixed(1)}%</td>
-                  <td className="text-right py-2 px-2 text-white tabular-nums">R$ {v.frontRevenue.toFixed(0)}</td>
-                  <td className="text-right py-2 px-2 text-violet-400 tabular-nums">R$ {(v.totalRevenue - v.frontRevenue).toFixed(0)}</td>
-                  <td className={cn("text-right py-2 px-2 font-bold tabular-nums", isBest ? "text-amber-400" : isWorst ? "text-red-400" : "text-white")}>
+                  <td className="text-right py-2 px-2 text-white tabular-nums">{v.sales}</td>
+                  <td className="text-right py-2 px-2 text-white tabular-nums">{v.convRate.toFixed(1)}%</td>
+                  <td className="text-right py-2 px-2 text-white tabular-nums">R$ {v.revenue.toFixed(0)}</td>
+                  <td className={cn("text-right py-2 px-2 font-bold tabular-nums", isBest ? "text-emerald-400" : isWorst ? "text-red-400" : "text-white")}>
                     R$ {v.revenuePerVisitor.toFixed(2)}
                   </td>
                   <td className="text-center py-2 px-2">
@@ -273,7 +265,7 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
         </table>
       </div>
 
-      {/* Funnel bars */}
+      {/* Funnel bars per variant */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {data.map((v) => {
           const steps = [
@@ -281,7 +273,7 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
             { label: "CTA", value: v.ctaClicks },
             { label: "Quiz ✓", value: v.quizComplete },
             { label: "IC", value: v.checkouts },
-            { label: "Vendas Front", value: v.frontSales },
+            { label: "Vendas", value: v.sales },
           ];
           const max = Math.max(...steps.map((s) => s.value), 1);
           return (
@@ -289,7 +281,6 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-bold text-white">Variação {v.variant}</span>
                 {bestVariant?.variant === v.variant && <Trophy className="w-3 h-3 text-amber-400" />}
-                <span className="text-[9px] text-emerald-400 ml-auto tabular-nums">{v.frontSales} vendas</span>
               </div>
               {steps.map((step) => (
                 <div key={step.label} className="space-y-0.5">
@@ -298,9 +289,13 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
                     <span className="text-white tabular-nums">{step.value}</span>
                   </div>
                   <div className="h-1.5 bg-[#2a2a2a] rounded-full overflow-hidden">
-                    <div className={cn("h-full rounded-full transition-all duration-700",
-                      bestVariant?.variant === v.variant ? "bg-emerald-500" : "bg-violet-500"
-                    )} style={{ width: `${(step.value / max) * 100}%` }} />
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-700",
+                        bestVariant?.variant === v.variant ? "bg-emerald-500" : "bg-violet-500"
+                      )}
+                      style={{ width: `${(step.value / max) * 100}%` }}
+                    />
                   </div>
                 </div>
               ))}
@@ -308,17 +303,6 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
           );
         })}
       </div>
-
-      {/* AI Insight */}
-      {bestVariant && worstVariant && bestVariant.variant !== worstVariant.variant && data.filter(d => d.frontSales > 0).length >= 2 && (
-        <div className="rounded-xl bg-gradient-to-r from-emerald-500/10 to-violet-500/10 border border-emerald-500/20 p-3">
-          <p className="text-xs text-emerald-300">
-            <span className="font-bold">⚡ INSIGHT:</span> Variação {bestVariant.variant} tem RPV de R$ {bestVariant.revenuePerVisitor.toFixed(2)} vs {worstVariant.variant} com R$ {worstVariant.revenuePerVisitor.toFixed(2)}.
-            {bestVariant.ctaRate < worstVariant.ctaRate && ` ${bestVariant.variant} tem CTA menor (${bestVariant.ctaRate.toFixed(0)}% vs ${worstVariant.ctaRate.toFixed(0)}%), mas converte ${((bestVariant.convRate / Math.max(worstVariant.convRate, 0.01)) * 100 - 100).toFixed(0)}% mais em vendas.`}
-            {bestVariant.frontSales > worstVariant.frontSales && ` RECOMENDAÇÃO: Escalar ${bestVariant.variant}.`}
-          </p>
-        </div>
-      )}
 
       {/* Winner button */}
       {bestVariant && controlVariant && bestVariant.variant !== "A" && bestVariant.visitors >= 500 && (() => {
@@ -329,7 +313,7 @@ export default function LiveABTest({ summary }: { summary?: DashboardSummary | n
               onClick={() => declareWinner(bestVariant.variant)}
               className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold text-sm hover:brightness-110 transition-all"
             >
-              🏆 Declarar Variação {bestVariant.variant} como vencedora — 100% do tráfego
+              🏆 Declarar Variação {bestVariant.variant} como vencedora — Enviar 100% do tráfego
             </button>
           );
         }

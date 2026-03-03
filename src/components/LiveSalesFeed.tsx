@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, ShoppingBag, Clock, Package } from "lucide-react";
+import { CheckCircle2, DollarSign, ShoppingBag, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Sale {
@@ -17,53 +17,58 @@ interface Sale {
   utm_campaign: string | null;
   utm_term: string | null;
   fbclid: string | null;
+  // From our own attribution (cross-referenced)
   own_source?: string | null;
   own_ttclid?: string | null;
   own_fbclid?: string | null;
 }
 
+/** Strip Facebook/Kirvano ad IDs from campaign names: "[OB LOVABLE]|12024..." → "[OB LOVABLE]" */
 const parseCampaignName = (raw: string | null): string | null => {
   if (!raw) return null;
   const pipeIdx = raw.indexOf("|");
   return pipeIdx > 0 ? raw.substring(0, pipeIdx).trim() : raw;
 };
 
+/** Detect if traffic is from Meta — prioritizes OUR attribution over Kirvano */
 const isMetaSource = (sale: Sale): boolean => {
   if (sale.own_fbclid) return true;
   if (sale.own_source) {
     const s = sale.own_source.toLowerCase();
     return s.startsWith("fb") || s.includes("facebook") || s.includes("instagram") || s.includes("meta");
   }
+  // Fallback to Kirvano data
   if (sale.fbclid) return true;
   const src = sale.utm_source?.toLowerCase() || "";
   return src.startsWith("fb") || src.includes("facebook") || src.includes("instagram") || src.includes("meta");
 };
 
+/** Detect if traffic is from TikTok — prioritizes OUR attribution over Kirvano */
 const isTiktokSource = (sale: Sale): boolean => {
   if (sale.own_ttclid) return true;
   if (sale.own_source) {
     const s = sale.own_source.toLowerCase();
     return s.includes("tiktok");
   }
+  // Fallback to Kirvano data
   const src = sale.utm_source?.toLowerCase() || "";
   return src.includes("tiktok") || src.includes("ttclid");
 };
 
-const STEP_LABELS: Record<string, { label: string; type: 'front' | 'upsell' | 'downsell'; color: string }> = {
-  front_37: { label: "Front R$37", type: "front", color: "emerald" },
-  front_47: { label: "Front R$47", type: "front", color: "emerald" },
-  front_66: { label: "Front R$66", type: "front", color: "emerald" },
-  acelerador_basico: { label: "Acel. Básico", type: "upsell", color: "violet" },
-  acelerador_duplo: { label: "Acel. Duplo", type: "upsell", color: "violet" },
-  acelerador_maximo: { label: "Acel. Máximo", type: "upsell", color: "violet" },
-  multiplicador_prata: { label: "Mult. Prata", type: "upsell", color: "blue" },
-  multiplicador_ouro: { label: "Mult. Ouro", type: "upsell", color: "blue" },
-  multiplicador_diamante: { label: "Mult. Diamante", type: "upsell", color: "blue" },
-  blindagem: { label: "Blindagem", type: "upsell", color: "cyan" },
-  circulo_interno: { label: "Círculo Interno", type: "upsell", color: "cyan" },
-  safety_pro: { label: "Safety Pro", type: "upsell", color: "amber" },
-  forex_mentoria: { label: "Forex Mentoria", type: "upsell", color: "amber" },
-  downsell_guia: { label: "Guia Downsell", type: "downsell", color: "orange" },
+const STEP_LABELS: Record<string, string> = {
+  front_66: "Produto Principal R$66,83",
+  front_47: "Produto Principal R$47",
+  acelerador_basico: "Acelerador Básico",
+  acelerador_duplo: "Acelerador Duplo",
+  acelerador_maximo: "Acelerador Máximo",
+  multiplicador_prata: "Multiplicador Prata",
+  multiplicador_ouro: "Multiplicador Ouro",
+  multiplicador_diamante: "Multiplicador Diamante",
+  blindagem: "Blindagem",
+  circulo_interno: "Círculo Interno",
+  safety_pro: "Safety Pro",
+  forex_mentoria: "FOREX Mentoria",
+  downsell_guia: "Guia Downsell",
 };
 
 const formatName = (buyer_name: string | null, email: string | null): string => {
@@ -79,12 +84,6 @@ const formatName = (buyer_name: string | null, email: string | null): string => 
   return "Comprador";
 };
 
-const TYPE_BADGES: Record<string, { label: string; className: string }> = {
-  front: { label: "FRONT", className: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
-  upsell: { label: "UPSELL", className: "bg-violet-500/20 text-violet-400 border-violet-500/30" },
-  downsell: { label: "DOWN", className: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
-};
-
 export default function LiveSalesfeed() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [newSaleId, setNewSaleId] = useState<string | null>(null);
@@ -98,10 +97,11 @@ export default function LiveSalesfeed() {
       .eq("status", "approved")
       .gte("created_at", todayUTC.toISOString())
       .order("created_at", { ascending: false })
-      .limit(30);
+      .limit(20);
     
     if (!data) return;
 
+    // Cross-reference with our own attribution data
     const sessionIds = data.map(s => s.session_id).filter(Boolean) as string[];
     let attributionMap: Record<string, { utm_source: string | null; ttclid: string | null; fbclid: string | null }> = {};
     
@@ -119,7 +119,12 @@ export default function LiveSalesfeed() {
 
     const enriched: Sale[] = data.map(sale => {
       const own = sale.session_id ? attributionMap[sale.session_id] : null;
-      return { ...sale, own_source: own?.utm_source || null, own_ttclid: own?.ttclid || null, own_fbclid: own?.fbclid || null } as Sale;
+      return {
+        ...sale,
+        own_source: own?.utm_source || null,
+        own_ttclid: own?.ttclid || null,
+        own_fbclid: own?.fbclid || null,
+      } as Sale;
     });
 
     setSales(enriched);
@@ -127,100 +132,119 @@ export default function LiveSalesfeed() {
 
   useEffect(() => {
     fetchSales();
+
+    // Realtime listener
     const channel = supabase
       .channel("live-sales-feed")
-      .on("postgres_changes", { event: "*", schema: "public", table: "purchase_tracking" }, (payload) => {
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "purchase_tracking",
+      }, (payload) => {
         const row = payload.new as Sale;
         if (row?.status === "approved") {
           setNewSaleId(row.id);
           setTimeout(() => setNewSaleId(null), 3000);
           setSales(prev => {
             const filtered = prev.filter(s => s.id !== row.id);
-            return [row, ...filtered].slice(0, 30);
+            return [row, ...filtered].slice(0, 20);
           });
         }
+        // Refetch on any change to ensure accuracy
         fetchSales();
-      }).subscribe();
+      })
+      .subscribe();
+
+    // Polling fallback every 15s for reliability
     const pollInterval = setInterval(fetchSales, 15000);
-    return () => { supabase.removeChannel(channel); clearInterval(pollInterval); };
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
+    };
   }, []);
 
   if (sales.length === 0) return null;
 
-  // Separate front and upsell
-  const frontSales = sales.filter(s => (s.funnel_step || '').startsWith('front'));
-  const upsellSales = sales.filter(s => !(s.funnel_step || '').startsWith('front'));
-
   return (
     <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-5">
+      {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/20 flex-shrink-0">
           <ShoppingBag className="w-5 h-5 text-emerald-400" />
         </div>
         <div>
-          <h3 className="font-semibold text-white text-sm">Vendas em Tempo Real</h3>
-          <p className="text-[10px] text-[#666]">🟢 {frontSales.length} front · 🟣 {upsellSales.length} upsell</p>
+          <h3 className="font-semibold text-white text-sm">Compras em Tempo Real</h3>
+          <p className="text-[10px] text-[#666]">Atualizações instantâneas do webhook</p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">
-          <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span></span>
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+          </span>
           <span className="text-[10px] text-emerald-400 font-medium">AO VIVO</span>
         </div>
       </div>
 
-      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+      {/* Sales list */}
+      <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
         {sales.map((sale) => {
           const isNew = sale.id === newSaleId;
-          const stepInfo = STEP_LABELS[sale.funnel_step || ""] || { label: sale.product_name || "Produto", type: "front" as const, color: "emerald" };
-          const typeBadge = TYPE_BADGES[stepInfo.type];
+          const label = STEP_LABELS[sale.funnel_step || ""] || sale.product_name || "Produto";
           const displayName = formatName(sale.buyer_name, sale.email);
           const isTiktok = isTiktokSource(sale);
           const isMeta = isMetaSource(sale);
           const campaign = parseCampaignName(sale.utm_campaign);
+          const placement = sale.utm_term || null;
 
           return (
-            <div key={sale.id}
+            <div
+              key={sale.id}
               className={cn(
                 "flex items-center gap-3 p-3 rounded-xl border transition-all duration-500",
                 isNew
                   ? isTiktok ? "bg-red-500/10 border-red-500/40 scale-[1.01]" : "bg-emerald-500/10 border-emerald-500/40 scale-[1.01]"
                   : "bg-[#0d0d0d] border-[#2a2a2a]"
-              )}>
+              )}
+            >
               <div className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold",
-                stepInfo.type === 'upsell' ? "bg-violet-500/20 text-violet-300" :
                 isNew ? (isTiktok ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300") : "bg-[#1a1a1a] text-[#888]"
               )}>
-                {stepInfo.type === 'upsell' ? <Package className="w-4 h-4" /> : displayName[0].toUpperCase()}
+                {displayName[0].toUpperCase()}
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="flex items-center gap-1.5">
                   <span className="text-white font-semibold text-sm truncate">{displayName}</span>
-                  {/* Type badge */}
-                  <span className={cn("text-[8px] px-1.5 py-0.5 rounded-full border font-bold flex-shrink-0", typeBadge.className)}>
-                    {typeBadge.label}
-                  </span>
                   {isNew && (
-                    <span className="text-[8px] px-1.5 py-0.5 rounded-full border font-medium flex-shrink-0 bg-emerald-500/20 text-emerald-400 border-emerald-500/30">NOVO</span>
+                    <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full border font-medium flex-shrink-0",
+                      isTiktok ? "bg-red-500/20 text-red-400 border-red-500/30" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    )}>
+                      NOVO
+                    </span>
                   )}
+                  {/* Source badge */}
                   {isTiktok && (
-                    <span className="text-[8px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full border border-red-500/30 font-bold flex-shrink-0">TikTok</span>
+                    <span className="text-[8px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full border border-red-500/30 font-bold flex-shrink-0 shadow-[0_0_6px_rgba(239,68,68,0.3)]">
+                      TikTok
+                    </span>
                   )}
                   {isMeta && (
-                    <span className="text-[8px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/30 font-bold flex-shrink-0">Meta</span>
+                    <span className="text-[8px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/30 font-bold flex-shrink-0">
+                      Meta
+                    </span>
                   )}
                 </div>
                 <p className="text-[10px] text-[#888] truncate">
-                  {stepInfo.label}
+                  {label}
                   {campaign && <span className="text-[#555] ml-1">· {campaign}</span>}
+                  {placement && <span className="text-[#444] ml-1">· {placement}</span>}
                 </p>
               </div>
 
               <div className="flex flex-col items-end flex-shrink-0 gap-0.5">
-                <span className={cn("font-bold text-sm tabular-nums",
-                  stepInfo.type === 'upsell' ? "text-violet-400" :
-                  isTiktok ? "text-red-400" : "text-emerald-400"
-                )}>
+                <span className={cn("font-bold text-sm tabular-nums", isTiktok ? "text-red-400" : "text-emerald-400")}>
                   R$ {Number(sale.amount || 0).toFixed(0)}
                 </span>
                 <span className="text-[9px] text-[#666] flex items-center gap-0.5">
@@ -229,10 +253,7 @@ export default function LiveSalesfeed() {
                 </span>
               </div>
 
-              <CheckCircle2 className={cn("w-4 h-4 flex-shrink-0",
-                stepInfo.type === 'upsell' ? "text-violet-400" :
-                isTiktok ? "text-red-400" : "text-emerald-400"
-              )} />
+              <CheckCircle2 className={cn("w-4 h-4 flex-shrink-0", isTiktok ? "text-red-400" : "text-emerald-400")} />
             </div>
           );
         })}

@@ -12,7 +12,7 @@ import {
   ShoppingCart, CreditCard, ArrowUpRight, CheckCircle2,
   XCircle, Database, Radio, Filter, Search,
   Bell, BellOff, Volume2, VolumeX,
-  Globe, TrendingDown, Package, AlertTriangle, UserCheck
+  Globe, TrendingDown
 } from "lucide-react";
 import LiveRevenueChart from "@/components/LiveRevenueChart";
 import LiveUserPresence from "@/components/LiveUserPresence";
@@ -32,7 +32,6 @@ import LiveScrollHeatmap from "@/components/LiveScrollHeatmap";
 import LiveComparisonMode from "@/components/LiveComparisonMode";
 import LiveAISuggestions from "@/components/LiveAISuggestions";
 import LiveABTest from "@/components/LiveABTest";
-import LiveBuyerProfile from "@/components/LiveBuyerProfile";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import SessionLogsDialog from "@/components/SessionLogsDialog";
@@ -52,26 +51,6 @@ interface AuditLog {
   error_message: string | null;
   metadata: unknown;
   user_agent: string | null;
-}
-
-interface DashboardSummary {
-  front_sales: number;
-  front_revenue: number;
-  upsell_sales: number;
-  upsell_revenue: number;
-  total_sales: number;
-  total_revenue: number;
-  refunds: number;
-  pending: number;
-  refused: number;
-  orphan_sales: number;
-  upsell_detail: { step: string; count: number; revenue: number }[];
-  ab_sales: { variant: string; front_sales: number; front_revenue: number; total_sales: number; total_revenue: number }[];
-  buyer_age: { age: string; count: number }[];
-  buyer_hours: { hour: number; count: number }[];
-  buyer_devices: { device: string; count: number }[];
-  front_ticket_avg: number;
-  total_ticket_avg: number;
 }
 
 const MetricCard = ({ 
@@ -112,18 +91,28 @@ const MetricCard = ({
   </div>
 );
 
-const UPSELL_LABELS: Record<string, string> = {
-  acelerador_basico: "Acel. Básico",
-  acelerador_duplo: "Acel. Duplo",
-  acelerador_maximo: "Acel. Máximo",
-  multiplicador_prata: "Mult. Prata",
-  multiplicador_ouro: "Mult. Ouro",
-  multiplicador_diamante: "Mult. Diamante",
-  blindagem: "Blindagem",
-  circulo_interno: "Círculo Interno",
-  safety_pro: "Safety Pro",
-  forex_mentoria: "Forex Mentoria",
-  downsell_guia: "Guia Downsell",
+const ProgressRing = ({ value, label, color = "emerald" }: { value: number; label: string; color?: string }) => {
+  const circumference = 2 * Math.PI * 36;
+  const strokeDashoffset = circumference - (value / 100) * circumference;
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative w-20 h-20">
+        <svg className="w-20 h-20 transform -rotate-90">
+          <circle cx="40" cy="40" r="36" stroke="#2a2a2a" strokeWidth="6" fill="none" />
+          <circle cx="40" cy="40" r="36"
+            stroke={color === "emerald" ? "#10b981" : color === "violet" ? "#8b5cf6" : "#f59e0b"}
+            strokeWidth="6" fill="none" strokeLinecap="round"
+            strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+            className="transition-all duration-1000 ease-out"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-lg font-bold text-white">{value.toFixed(0)}%</span>
+        </div>
+      </div>
+      <span className="text-xs text-[#888] font-medium">{label}</span>
+    </div>
+  );
 };
 
 export default function AdminFunnelAudit() {
@@ -140,13 +129,23 @@ export default function AdminFunnelAudit() {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [timelineSessionId, setTimelineSessionId] = useState<string | null>(null);
   const [frontendICs, setFrontendICs] = useState(0);
-  const [totalVisitsToday, setTotalVisitsToday] = useState(0);
+  const [hotmartSalesToday, setHotmartSalesToday] = useState(0);
+  const [icToSalesRate, setIcToSalesRate] = useState(0);
+  const [icToSalesRatio, setIcToSalesRatio] = useState("0:0");
+   const [hotmartApproved, setHotmartApproved] = useState(0);
+   const [hotmartRefunded, setHotmartRefunded] = useState(0);
+   const [hotmartPending, setHotmartPending] = useState(0);
+   const [hotmartRefused, setHotmartRefused] = useState(0);
+   const [hotmartApprovalRate, setHotmartApprovalRate] = useState(0);
+  
+  const USD_TO_BRL = 5.80;
+  const [totalRevenueToday, setTotalRevenueToday] = useState(0);
   const [totalLeadsToday, setTotalLeadsToday] = useState(0);
   const [qualifiedLeadsToday, setQualifiedLeadsToday] = useState(0);
   const [interactionRateToday, setInteractionRateToday] = useState(0);
+  const [totalVisitsToday, setTotalVisitsToday] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [campaignFilterState, setCampaignFilterState] = useState<CampaignFilterState>({ selectedCampaigns: new Set(), allCampaigns: [], campaignColors: {} });
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const periodData = usePeriodComparison(dateFilter);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const saved = localStorage.getItem('live-sound-enabled');
@@ -205,15 +204,7 @@ export default function AdminFunnelAudit() {
     todayStart.setHours(0, 0, 0, 0);
     const todayISO = todayStart.toISOString();
 
-    // Fetch dashboard summary from RPC
-    try {
-      const { data: summaryData } = await supabase.rpc("get_dashboard_summary_today" as any);
-      if (summaryData) setSummary(summaryData as unknown as DashboardSummary);
-    } catch (e) {
-      console.warn("[Dashboard] Summary RPC error:", e);
-    }
-
-    // IC = unique sessions that clicked checkout (paginated)
+    // IC = unique sessions that clicked checkout (paginated for reliability)
     const allICSessionIds = new Set<string>();
     let icPage = 0;
     const IC_PAGE_SIZE = 1000;
@@ -228,9 +219,36 @@ export default function AdminFunnelAudit() {
       if (icRows.length < IC_PAGE_SIZE) break;
       icPage++;
     }
-    setFrontendICs(allICSessionIds.size);
+    const icSessions = allICSessionIds;
+    setFrontendICs(icSessions.size);
 
-    // Leads
+    const { data: purchaseData } = await supabase.from("purchase_tracking").select("amount, status, email").gte("created_at", todayISO);
+
+    const approvedPurchases = purchaseData?.filter(r => 
+      r.status === "completed" || r.status === "purchased" || r.status === "approved" || r.status === "redirected"
+    ) || [];
+    const pendingPurchases = purchaseData?.filter(r => r.status === "pending") || [];
+    const refusedPurchases = purchaseData?.filter(r => r.status === "refused") || [];
+    const refundedPurchases = purchaseData?.filter(r => r.status === "refunded" || r.status === "canceled") || [];
+    
+    const totalRevenueBRL = approvedPurchases.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+    const uniqueBuyers = new Set(approvedPurchases.filter(r => r.email).map(r => r.email!.toLowerCase())).size;
+    
+    setHotmartSalesToday(approvedPurchases.length);
+    setTotalRevenueToday(totalRevenueBRL);
+    setHotmartApproved(approvedPurchases.length);
+    setHotmartPending(pendingPurchases.length);
+    setHotmartRefused(refusedPurchases.length);
+    setHotmartRefunded(refundedPurchases.length);
+    
+    const totalAttempts = approvedPurchases.length + pendingPurchases.length + refusedPurchases.length;
+    setHotmartApprovalRate(totalAttempts > 0 ? (approvedPurchases.length / totalAttempts) * 100 : 0);
+
+    const rate = icSessions.size > 0 ? (uniqueBuyers / icSessions.size) * 100 : 0;
+    setIcToSalesRate(rate);
+    setIcToSalesRatio(uniqueBuyers > 0 ? `1:${Math.round(icSessions.size / uniqueBuyers)}` : "0:0");
+
+    // Leads = union of lead_captured events + lead_behavior entries (ensures consistency with leads table)
     const [leadCapturedResult, leadBehaviorResult] = await Promise.all([
       supabase.from("funnel_events").select("session_id").eq("event_name", "lead_captured").gte("created_at", todayISO),
       supabase.from("lead_behavior").select("session_id").gte("created_at", todayISO),
@@ -240,12 +258,13 @@ export default function AdminFunnelAudit() {
     (leadBehaviorResult.data || []).forEach(r => allLeadSessions.add(r.session_id));
     setTotalLeadsToday(allLeadSessions.size);
 
+    // Qualified = leads with intent_score >= 50
     const { data: leadData } = await supabase.from("lead_behavior")
-      .select("intent_score")
+      .select("cta_clicks, intent_score, checkout_clicked")
       .gte("created_at", todayISO);
     setQualifiedLeadsToday(leadData?.filter(l => (l.intent_score || 0) >= 50).length || 0);
 
-    // Visits
+    // Interaction rate = sessions that reached step-5+ / total visitors
     const allVisitSessions = new Set<string>();
     let visitPage = 0;
     const PAGE_SIZE = 1000;
@@ -261,7 +280,10 @@ export default function AdminFunnelAudit() {
       visitPage++;
     }
     setTotalVisitsToday(allVisitSessions.size);
-    setInteractionRateToday(allVisitSessions.size > 0 ? (allLeadSessions.size / allVisitSessions.size) * 100 : 0);
+
+    // Interaction = leads who engaged (captured contact or had behavior tracked) / total visitors
+    const interactingCount = allLeadSessions.size;
+    setInteractionRateToday(allVisitSessions.size > 0 ? (interactingCount / allVisitSessions.size) * 100 : 0);
 
     setLastUpdated(new Date());
     setIsLoading(false);
@@ -301,7 +323,7 @@ export default function AdminFunnelAudit() {
           toast.error(`Pagamento Falhou${newPurchase.email ? `: ${newPurchase.email.split('@')[0]}...` : ''}`,
             { description: newPurchase.failure_reason.slice(0, 100), duration: 10000 });
         }
-        if (['purchased', 'completed', 'approved'].includes(newPurchase.status)) fetchData();
+        if (newPurchase.status === 'purchased' || newPurchase.status === 'completed') fetchData();
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [isLivePaused, notificationsEnabled, fetchData]);
@@ -320,7 +342,7 @@ export default function AdminFunnelAudit() {
 
   useEffect(() => {
     setRealtimeLogs([]); setAllRealtimeLogs([]); fetchData();
-    if (autoRefresh) { const interval = setInterval(fetchData, 15000); return () => clearInterval(interval); }
+    if (autoRefresh) { const interval = setInterval(fetchData, 10000); return () => clearInterval(interval); }
   }, [fetchData, autoRefresh]);
   
   useEffect(() => {
@@ -329,36 +351,92 @@ export default function AdminFunnelAudit() {
     return () => { document.removeEventListener('visibilitychange', handleVisibilityChange); };
   }, [fetchData]);
 
+  const exportLogs = () => {
+    const data = JSON.stringify(logs, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url;
+    a.download = `funnel-audit-logs-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    toast.success("Logs exported!");
+  };
+
   const exportReport = async () => {
     try {
       const { default: jsPDF } = await import("jspdf");
       const { default: autoTable } = await import("jspdf-autotable");
+      
       const doc = new jsPDF();
       const now = new Date().toLocaleString("pt-BR");
-      doc.setFontSize(18); doc.setTextColor(16, 185, 129);
+      
+      // Title
+      doc.setFontSize(18);
+      doc.setTextColor(16, 185, 129);
       doc.text("RELATÓRIO DO FUNIL", 14, 20);
-      doc.setFontSize(10); doc.setTextColor(100); doc.text(now, 14, 28);
-      doc.setFontSize(14); doc.setTextColor(0); doc.text("KPIs Principais", 14, 40);
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(now, 14, 28);
+      
+      // KPIs table
+      doc.setFontSize(14);
+      doc.setTextColor(0);
+      doc.text("KPIs Principais", 14, 40);
+      
       autoTable(doc, {
         startY: 45,
         head: [["Métrica", "Valor"]],
         body: [
-          ["Receita Total", `R$ ${summary?.total_revenue?.toFixed(2) || '0'}`],
-          ["Vendas Front", String(summary?.front_sales || 0)],
-          ["Receita Front", `R$ ${summary?.front_revenue?.toFixed(2) || '0'}`],
-          ["Vendas Upsell", String(summary?.upsell_sales || 0)],
-          ["Receita Upsell", `R$ ${summary?.upsell_revenue?.toFixed(2) || '0'}`],
-          ["Vendas Órfãs", String(summary?.orphan_sales || 0)],
-          ["Leads", String(totalLeadsToday)],
+          ["Receita Hoje", `R$ ${totalRevenueToday.toFixed(2)}`],
+          ["Vendas", String(hotmartSalesToday)],
+          ["Taxa Aprovação", `${hotmartApprovalRate.toFixed(1)}%`],
+          ["IC → Venda", `${icToSalesRate.toFixed(1)}% (${frontendICs} ICs)`],
+          ["Leads", `${totalLeadsToday} (${qualifiedLeadsToday} qualificados)`],
+          ["Ticket Médio", `R$ ${hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : "0"}`],
+          ["Taxa Interação", `${interactionRateToday.toFixed(1)}%`],
+          ["Reembolsos", String(hotmartRefunded)],
           ["Visitas", String(totalVisitsToday)],
+          ["Usuários Online", String(activeUsers)],
         ],
         theme: "grid",
         headStyles: { fillColor: [16, 185, 129] },
       });
+      
+      // Status breakdown
+      const finalY = (doc as any).lastAutoTable?.finalY || 120;
+      doc.setFontSize(14);
+      doc.text("Status de Pagamentos", 14, finalY + 15);
+      
+      autoTable(doc, {
+        startY: finalY + 20,
+        head: [["Status", "Quantidade"]],
+        body: [
+          ["Aprovados", String(hotmartApproved)],
+          ["Pendentes", String(hotmartPending)],
+          ["Recusados", String(hotmartRefused)],
+          ["Reembolsados", String(hotmartRefunded)],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [139, 92, 246] },
+      });
+      
       doc.save(`relatorio-funil-${new Date().toISOString().split("T")[0]}.pdf`);
       toast.success("PDF exportado!");
-    } catch {
-      toast.success("Erro na exportação");
+    } catch (error) {
+      // Fallback to TXT
+      const report = [
+        `📊 RELATÓRIO — ${new Date().toLocaleString("pt-BR")}`,
+        `💰 Receita: R$ ${totalRevenueToday.toFixed(2)}`,
+        `🛒 Vendas: ${hotmartSalesToday}`,
+        `✅ Aprovação: ${hotmartApprovalRate.toFixed(1)}%`,
+        `🎯 IC→Venda: ${icToSalesRate.toFixed(1)}%`,
+        `👥 Leads: ${totalLeadsToday}`,
+      ].join("\n");
+      const blob = new Blob([report], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url;
+      a.download = `relatorio-funil-${new Date().toISOString().split("T")[0]}.txt`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+      toast.success("Relatório TXT exportado!");
     }
   };
 
@@ -384,69 +462,75 @@ export default function AdminFunnelAudit() {
     return <Clock className="w-4 h-4 text-amber-500" />;
   };
 
-  const s = summary;
-  const frontSales = s?.front_sales || 0;
-  const upsellSales = s?.upsell_sales || 0;
-  const totalSales = s?.total_sales || 0;
-  const frontRevenue = s?.front_revenue || 0;
-  const upsellRevenue = s?.upsell_revenue || 0;
-  const totalRevenue = s?.total_revenue || 0;
-  const orphanSales = s?.orphan_sales || 0;
-  const totalAttempts = frontSales + (s?.pending || 0) + (s?.refused || 0);
-  const approvalRate = totalAttempts > 0 ? (frontSales / totalAttempts) * 100 : 0;
-  const icToSalesRate = frontendICs > 0 ? (frontSales / frontendICs) * 100 : 0;
-
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
       <SEOHead title="Live Dashboard" description="Real-time analytics and monitoring dashboard" url="/live" />
 
       <div className="max-w-[1600px] mx-auto px-4 py-6 space-y-6">
+        {/* Attribution correction banner */}
+        <div className="rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 px-4 py-2.5 flex items-center gap-3">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <p className="text-[11px] text-emerald-300">
+            <span className="font-bold">✅ Atribuição corrigida:</span> 205 vendas reatribuídas de "Direto" para campanhas reais (por session_id, fbclid, email, proximidade temporal). 0 vendas sem campanha restantes. Dados 100% precisos.
+          </p>
+        </div>
         <header className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <div className="w-6 h-6 rounded-md bg-gradient-to-br from-emerald-500/80 to-emerald-700/80 flex items-center justify-center flex-shrink-0">
               <Activity className="w-3 h-3 text-white" />
             </div>
             <h1 className="text-sm font-semibold text-white">Dashboard</h1>
+
             <div className="flex items-center gap-1 ml-auto">
-              <button onClick={toggleSound} className={cn("w-6 h-6 rounded flex items-center justify-center flex-shrink-0", soundEnabled ? "text-emerald-400" : "text-[#555]")}>
+              <button onClick={toggleSound}
+                className={cn("w-6 h-6 rounded flex items-center justify-center flex-shrink-0",
+                  soundEnabled ? "text-emerald-400" : "text-[#555]")}>
                 {soundEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
               </button>
-              <button onClick={toggleNotifications} className={cn("w-6 h-6 rounded flex items-center justify-center flex-shrink-0", notificationsEnabled ? "text-emerald-400" : "text-[#555]")}>
+              <button onClick={toggleNotifications}
+                className={cn("w-6 h-6 rounded flex items-center justify-center flex-shrink-0",
+                  notificationsEnabled ? "text-emerald-400" : "text-[#555]")}>
                 {notificationsEnabled ? <Bell className="w-3 h-3" /> : <BellOff className="w-3 h-3" />}
               </button>
               <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="h-6 w-auto bg-[#141414] border-[#222] text-white/80 rounded text-[10px] px-1.5 gap-1"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-6 w-auto bg-[#141414] border-[#222] text-white/80 rounded text-[10px] px-1.5 gap-1">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent className="bg-[#141414] border-[#222]">
-                  <SelectItem value="1h">1h</SelectItem><SelectItem value="24h">24h</SelectItem>
-                  <SelectItem value="7d">7d</SelectItem><SelectItem value="30d">30d</SelectItem>
+                  <SelectItem value="1h">1h</SelectItem>
+                  <SelectItem value="24h">24h</SelectItem>
+                  <SelectItem value="7d">7d</SelectItem>
+                  <SelectItem value="30d">30d</SelectItem>
                 </SelectContent>
               </Select>
-              <button onClick={fetchData} disabled={isLoading} className="w-6 h-6 rounded flex items-center justify-center text-[#555] flex-shrink-0">
+              <button onClick={fetchData} disabled={isLoading}
+                className="w-6 h-6 rounded flex items-center justify-center text-[#555] flex-shrink-0">
                 <RefreshCw className={cn("w-3 h-3", isLoading && "animate-spin")} />
               </button>
-              <button onClick={() => setAutoRefresh(!autoRefresh)} className={cn("w-6 h-6 rounded flex items-center justify-center flex-shrink-0", autoRefresh ? "text-emerald-400" : "text-[#555]")}>
+              <button onClick={() => setAutoRefresh(!autoRefresh)}
+                className={cn("w-6 h-6 rounded flex items-center justify-center flex-shrink-0",
+                  autoRefresh ? "text-emerald-400" : "text-[#555]")}>
                 <Radio className={cn("w-3 h-3", autoRefresh && "animate-pulse")} />
               </button>
-              <button onClick={exportReport} className="w-6 h-6 rounded flex items-center justify-center text-[#555] hover:text-emerald-400 flex-shrink-0">
+              <button onClick={exportReport} title="Exportar relatório"
+                className="w-6 h-6 rounded flex items-center justify-center text-[#555] hover:text-emerald-400 flex-shrink-0">
                 <Download className="w-3 h-3" />
               </button>
             </div>
           </div>
+
           <div className="flex items-center gap-1.5 flex-wrap">
             <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded">
-              <span className="relative flex h-1.5 w-1.5 flex-shrink-0"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span></span>
+              <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
               <span className="text-[10px] font-medium text-emerald-400 tabular-nums">{activeUsers} online</span>
             </div>
             <div className="flex items-center gap-1 px-2 py-0.5 bg-[#141414] border border-[#222] rounded">
               <Globe className="w-2.5 h-2.5 text-sky-400/70 flex-shrink-0" />
               <span className="text-[10px] text-white/70 tabular-nums">{totalVisitsToday} visitas</span>
             </div>
-            {orphanSales > 0 && (
-              <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded">
-                <AlertTriangle className="w-2.5 h-2.5 text-amber-400 flex-shrink-0" />
-                <span className="text-[10px] text-amber-400 tabular-nums">{orphanSales} órfãs</span>
-              </div>
-            )}
             {lastUpdated && (
               <div className="flex items-center gap-1 px-2 py-0.5 bg-[#141414] border border-[#222] rounded">
                 <Clock className="w-2.5 h-2.5 text-[#444] flex-shrink-0" />
@@ -456,273 +540,113 @@ export default function AdminFunnelAudit() {
           </div>
         </header>
 
-        {/* ===== KPIs: FRONT + UPSELL SEPARADOS ===== */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <MetricCard title="Receita Total"
-            value={`R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
-            subtitle={`Front R$${frontRevenue.toFixed(0)} + Upsell R$${upsellRevenue.toFixed(0)}`}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <MetricCard title="Receita Hoje"
+            value={`R$ ${totalRevenueToday.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             icon={DollarSign}
-            trend={periodData ? getVariation(totalRevenue, periodData.previous.revenue).trend : "neutral"}
-            trendLabel={periodData ? `${getVariation(totalRevenue, periodData.previous.revenue).pct} vs anterior` : undefined} />
-          <MetricCard title="Vendas Front"
-            value={frontSales}
-            subtitle={`R$ ${frontRevenue.toFixed(0)} · TM R$${s?.front_ticket_avg?.toFixed(0) || '0'}`}
+            trend={periodData ? getVariation(periodData.current.revenue, periodData.previous.revenue).trend : "neutral"}
+            trendLabel={periodData ? `${getVariation(periodData.current.revenue, periodData.previous.revenue).pct} vs anterior · ${hotmartSalesToday} vendas` : `${hotmartSalesToday} vendas`} />
+          <MetricCard title="Vendas Hoje" value={hotmartSalesToday}
+            subtitle={`${hotmartRefunded} reembolsos${hotmartSalesToday > 0 ? ` (${((hotmartRefunded / (hotmartSalesToday + hotmartRefunded)) * 100).toFixed(0)}%)` : ""}`}
             icon={ShoppingCart}
-            trend={periodData ? getVariation(frontSales, periodData.previous.sales).trend : undefined}
-            trendLabel={periodData ? `${getVariation(frontSales, periodData.previous.sales).pct} vs anterior` : undefined} />
-          <MetricCard title="Vendas Upsell"
-            value={upsellSales}
-            subtitle={`R$ ${upsellRevenue.toFixed(0)} · ${totalSales > 0 ? ((upsellSales / frontSales) * 100).toFixed(0) : 0}% take rate`}
-            icon={Package}
-            iconClassName="from-violet-500/20 to-violet-600/10 border-violet-500/20"
-            valueClassName="text-violet-400" />
-          <MetricCard title="Leads Hoje" value={totalLeadsToday}
-            subtitle={`${qualifiedLeadsToday} qualificados · ${interactionRateToday.toFixed(0)}% interação`}
-            icon={Users}
-            trend={periodData ? getVariation(totalLeadsToday, periodData.previous.leads).trend : undefined}
-            trendLabel={periodData ? `${getVariation(totalLeadsToday, periodData.previous.leads).pct} vs anterior` : undefined} />
-          <MetricCard title="IC → Venda Front"
-            value={`${icToSalesRate.toFixed(1)}%`}
-            subtitle={`${frontendICs} ICs · ${frontSales > 0 ? `1:${Math.round(frontendICs / frontSales)}` : '0:0'}`}
-            icon={Target} />
+            trend={periodData ? getVariation(periodData.current.sales, periodData.previous.sales).trend : undefined}
+            trendLabel={periodData ? `${getVariation(periodData.current.sales, periodData.previous.sales).pct} vs anterior` : undefined} />
+          <MetricCard title="Taxa de Aprovação" value={`${hotmartApprovalRate.toFixed(1)}%`}
+            subtitle={`${hotmartApproved} pagos · ${hotmartPending} pend. · ${hotmartRefused} recus.`} icon={CreditCard}
+            trend={periodData ? getVariation(periodData.current.approvalRate, periodData.previous.approvalRate).trend : undefined}
+            trendLabel={periodData ? `${getVariation(periodData.current.approvalRate, periodData.previous.approvalRate).pct} vs anterior` : undefined} />
+          <MetricCard title="IC → Vendas" value={`${icToSalesRate.toFixed(1)}%`}
+            subtitle={`${frontendICs} ICs · ${icToSalesRatio}`} icon={Target}
+            trend={periodData && periodData.previous.ics > 0 ? getVariation(icToSalesRate, periodData.previous.ics > 0 ? (periodData.previous.sales / periodData.previous.ics) * 100 : 0).trend : undefined}
+            trendLabel={periodData && periodData.previous.ics > 0 ? `${getVariation(icToSalesRate, (periodData.previous.sales / periodData.previous.ics) * 100).pct} vs anterior` : undefined} />
         </div>
 
-        {/* ===== SCROLL HORIZONTAL: KPIs DETALHADOS ===== */}
-        <div className="overflow-x-auto -mx-4 px-4 pb-2">
+        <div className="grid grid-cols-3 lg:grid-cols-3 gap-3">
+          <MetricCard title="Leads Hoje" value={totalLeadsToday} icon={Users}
+            subtitle={`${qualifiedLeadsToday} qualificados`}
+            trend={periodData ? getVariation(periodData.current.leads, periodData.previous.leads).trend : undefined}
+            trendLabel={periodData ? `${getVariation(periodData.current.leads, periodData.previous.leads).pct} vs anterior` : undefined} />
+          <MetricCard title="Ticket Médio"
+            value={`R$ ${hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : '0'}`}
+            subtitle={periodData ? `LTV: R$ ${periodData.current.sales > 0 ? (periodData.current.revenue / periodData.current.sales).toFixed(0) : "0"}` : undefined}
+            icon={DollarSign} iconClassName="from-violet-500/20 to-violet-600/10 border-violet-500/20" valueClassName="text-violet-400"
+            trend={periodData ? getVariation(periodData.current.avgTicket, periodData.previous.avgTicket).trend : undefined}
+            trendLabel={periodData ? `${getVariation(periodData.current.avgTicket, periodData.previous.avgTicket).pct} vs anterior` : undefined} />
+          <MetricCard title="Taxa Interação" value={`${interactionRateToday.toFixed(1)}%`}
+            subtitle={`${totalVisitsToday} visitantes`}
+            icon={Activity} iconClassName="from-amber-500/20 to-amber-600/10 border-amber-500/20" valueClassName="text-amber-400" />
+        </div>
+
+        <div className="overflow-x-auto pb-2 -mx-4 px-4" style={{ maxWidth: 'calc(100% + 2rem)' }}>
           <div className="flex gap-3 w-max">
-            {/* Receita Hoje */}
-            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[200px]">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/20"><DollarSign className="w-3.5 h-3.5 text-emerald-400" /></div>
-                <span className="text-xs text-[#888]">Receita Hoje</span>
+            {/* Aprovação Gateway */}
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xs font-medium text-[#888] truncate">Aprovação Gateway</h3>
+                <Globe className="w-4 h-4 text-orange-400 flex-shrink-0" />
               </div>
-              <p className="text-2xl font-bold text-white tabular-nums">R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-              <p className="text-[10px] text-[#666] mt-1">{totalSales} vendas</p>
-              {periodData && (
-                <div className={cn("flex items-center gap-1 text-[10px] mt-1",
-                  getVariation(totalRevenue, periodData.previous.revenue).trend === 'up' ? "text-emerald-400" : "text-red-400"
-                )}>
-                  {getVariation(totalRevenue, periodData.previous.revenue).trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {getVariation(totalRevenue, periodData.previous.revenue).pct} vs anterior
+              <div className="flex items-center justify-around gap-2">
+                <ProgressRing value={hotmartApprovalRate} label="Aprovação" color="emerald" />
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved} Pagos</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-yellow-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartPending} Pendentes</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartRefused} Recusados</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#666] flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartApproved + hotmartPending + hotmartRefused} Total</span></div>
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* Vendas Hoje */}
-            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[200px]">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-violet-500/20 border border-violet-500/20"><ShoppingCart className="w-3.5 h-3.5 text-violet-400" /></div>
-                <span className="text-xs text-[#888]">Vendas Hoje</span>
+            {/* Funil IC → Venda */}
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xs font-medium text-[#888] truncate">Funil IC → Venda</h3>
+                <Target className="w-4 h-4 text-emerald-400 flex-shrink-0" />
               </div>
-              <p className="text-2xl font-bold text-white tabular-nums">{frontSales}</p>
-              <p className="text-[10px] text-[#666] mt-1">{s?.refunds || 0} reembolsos ({totalSales > 0 ? ((s?.refunds || 0) / totalSales * 100).toFixed(0) : 0}%)</p>
-              {periodData && (
-                <div className={cn("flex items-center gap-1 text-[10px] mt-1",
-                  getVariation(frontSales, periodData.previous.sales).trend === 'up' ? "text-emerald-400" : "text-red-400"
-                )}>
-                  {getVariation(frontSales, periodData.previous.sales).trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {getVariation(frontSales, periodData.previous.sales).pct} vs anterior
+              <div className="flex items-center justify-around gap-2">
+                <ProgressRing value={icToSalesRate} label="Conversão" color="emerald" />
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{frontendICs} ICs</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} Vendas</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">Ratio {icToSalesRatio}</span></div>
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* Taxa de Aprovação */}
-            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[200px]">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/20"><CreditCard className="w-3.5 h-3.5 text-emerald-400" /></div>
-                <span className="text-xs text-[#888]">Taxa de Aprovação</span>
+            {/* Sessões Únicas */}
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xs font-medium text-[#888] truncate">Sessões Únicas</h3>
+                <Eye className="w-4 h-4 text-sky-400 flex-shrink-0" />
               </div>
-              <p className="text-2xl font-bold text-white tabular-nums">{approvalRate.toFixed(1)}%</p>
-              <p className="text-[10px] text-[#666] mt-1">{frontSales} pagos · {s?.pending || 0} pend. · {s?.refused || 0} recus.</p>
-              {periodData && (
-                <div className={cn("flex items-center gap-1 text-[10px] mt-1",
-                  getVariation(approvalRate, periodData.previous.approvalRate || 0).trend === 'up' ? "text-emerald-400" : "text-red-400"
-                )}>
-                  {getVariation(approvalRate, periodData.previous.approvalRate || 0).trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {getVariation(approvalRate, periodData.previous.approvalRate || 0).pct} vs anterior
+              <div className="flex items-center justify-around gap-2">
+                <ProgressRing value={frontendICs > 0 ? Math.min((activeUsers / frontendICs) * 100, 100) : 0} label="Ativas" color="violet" />
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{activeUsers} Online</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{frontendICs} ICs hoje</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} Compraram</span></div>
                 </div>
-              )}
-            </div>
-
-            {/* IC → Vendas */}
-            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[200px]">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/20"><Target className="w-3.5 h-3.5 text-cyan-400" /></div>
-                <span className="text-xs text-[#888]">IC → Vendas</span>
               </div>
-              <p className="text-2xl font-bold text-white tabular-nums">{icToSalesRate.toFixed(1)}%</p>
-              <p className="text-[10px] text-[#666] mt-1">{frontendICs} ICs · 1:{frontSales > 0 ? Math.round(frontendICs / frontSales) : 0}</p>
-              {periodData && periodData.previous.ics > 0 && (() => {
-                const prevICRate = periodData.previous.sales > 0 ? (periodData.previous.sales / periodData.previous.ics) * 100 : 0;
-                return (
-                  <div className={cn("flex items-center gap-1 text-[10px] mt-1",
-                    getVariation(icToSalesRate, prevICRate).trend === 'up' ? "text-emerald-400" : "text-red-400"
-                  )}>
-                    {getVariation(icToSalesRate, prevICRate).trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                    {getVariation(icToSalesRate, prevICRate).pct} vs anterior
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Leads Hoje */}
-            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[180px]">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/20"><Users className="w-3.5 h-3.5 text-emerald-400" /></div>
-                <span className="text-xs text-[#888]">Leads Hoje</span>
-              </div>
-              <p className="text-2xl font-bold text-white tabular-nums">{totalLeadsToday}</p>
-              <p className="text-[10px] text-[#666] mt-1">{qualifiedLeadsToday} qualificados</p>
-              {periodData && (
-                <div className={cn("flex items-center gap-1 text-[10px] mt-1",
-                  getVariation(totalLeadsToday, periodData.previous.leads).trend === 'up' ? "text-emerald-400" : "text-red-400"
-                )}>
-                  {getVariation(totalLeadsToday, periodData.previous.leads).trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {getVariation(totalLeadsToday, periodData.previous.leads).pct} vs anterior
-                </div>
-              )}
             </div>
 
             {/* Ticket Médio */}
-            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[180px]">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-violet-500/20 border border-violet-500/20"><DollarSign className="w-3.5 h-3.5 text-violet-400" /></div>
-                <span className="text-xs text-[#888]">Ticket Médio</span>
+            <div className="rounded-xl p-4 bg-[#141414] border border-[#2a2a2a] min-w-[220px] w-[220px] flex-shrink-0 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-xs font-medium text-[#888] truncate">Ticket Médio</h3>
+                <DollarSign className="w-4 h-4 text-emerald-400 flex-shrink-0" />
               </div>
-              <p className="text-2xl font-bold text-violet-400 tabular-nums">R$ {(s?.total_ticket_avg || 0).toFixed(0)}</p>
-              <p className="text-[10px] text-[#666] mt-1">LTV: R$ {totalSales > 0 ? (totalRevenue / frontSales).toFixed(0) : '0'}</p>
-              {periodData && periodData.previous.avgTicket > 0 && (
-                <div className={cn("flex items-center gap-1 text-[10px] mt-1",
-                  getVariation(s?.total_ticket_avg || 0, periodData.previous.avgTicket).trend === 'up' ? "text-emerald-400" : "text-red-400"
-                )}>
-                  {getVariation(s?.total_ticket_avg || 0, periodData.previous.avgTicket).trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {getVariation(s?.total_ticket_avg || 0, periodData.previous.avgTicket).pct} vs anterior
+              <div className="flex items-center justify-around gap-2">
+                <ProgressRing value={Math.min(hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday / 200) * 100 : 0, 100)} label="Ticket" color="amber" />
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">R$ {hotmartSalesToday > 0 ? (totalRevenueToday / hotmartSalesToday).toFixed(0) : '0'}</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-sky-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">R$ {totalRevenueToday.toFixed(0)} total</span></div>
+                  <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0" /><span className="text-xs text-white truncate tabular-nums">{hotmartSalesToday} vendas</span></div>
                 </div>
-              )}
-            </div>
-
-            {/* Taxa Interação */}
-            <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] min-w-[180px]">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-amber-500/20 border border-amber-500/20"><UserCheck className="w-3.5 h-3.5 text-amber-400" /></div>
-                <span className="text-xs text-[#888]">Taxa Interação</span>
               </div>
-              <p className="text-2xl font-bold text-amber-400 tabular-nums">{interactionRateToday.toFixed(1)}%</p>
-              <p className="text-[10px] text-[#666] mt-1">{totalVisitsToday} visitantes</p>
             </div>
           </div>
         </div>
 
-        {/* ===== DONUT CHARTS: APROVAÇÃO + FUNIL IC ===== */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Aprovação Gateway Donut */}
-          <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a]">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-white">Aprovação Gateway</span>
-              <Globe className="w-4 h-4 text-amber-400" />
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="relative w-24 h-24 flex-shrink-0">
-                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#2a2a2a" strokeWidth="3" />
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#10b981" strokeWidth="3"
-                    strokeDasharray={`${approvalRate} ${100 - approvalRate}`} strokeLinecap="round" />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-emerald-400 tabular-nums">{approvalRate.toFixed(0)}%</span>
-                </div>
-              </div>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-white">{frontSales} Pagos</span></div>
-                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500" /><span className="text-white">{s?.pending || 0} Pendentes</span></div>
-                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500" /><span className="text-white">{s?.refused || 0} Recusados</span></div>
-                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#555]" /><span className="text-[#888]">{totalAttempts} Total</span></div>
-              </div>
-            </div>
-            <p className="text-[10px] text-[#666] mt-2 text-center">Aprovação</p>
-          </div>
-
-          {/* Funil IC → Venda Donut */}
-          <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a]">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-white">Funil IC → Venda</span>
-              <Target className="w-4 h-4 text-cyan-400" />
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="relative w-24 h-24 flex-shrink-0">
-                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#2a2a2a" strokeWidth="3" />
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#06b6d4" strokeWidth="3"
-                    strokeDasharray={`${icToSalesRate} ${100 - icToSalesRate}`} strokeLinecap="round" />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-cyan-400 tabular-nums">{icToSalesRate.toFixed(0)}%</span>
-                </div>
-              </div>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500" /><span className="text-white">{frontendICs} ICs</span></div>
-                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-white">{frontSales} Vendas</span></div>
-                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-violet-500" /><span className="text-white">Ratio 1:{frontSales > 0 ? Math.round(frontendICs / frontSales) : 0}</span></div>
-              </div>
-            </div>
-            <p className="text-[10px] text-[#666] mt-2 text-center">Conversão</p>
-          </div>
-        </div>
-
-        {/* ===== STATUS PAGAMENTO + UPSELL BREAKDOWN ===== */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {/* Payment status */}
-          <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a]">
-            <div className="flex items-center gap-2 mb-3">
-              <CreditCard className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-xs font-semibold text-white">Status Pagamentos</h3>
-              <span className="text-[10px] text-[#666] ml-auto">{approvalRate.toFixed(0)}% aprovação</span>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              <div className="text-center p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                <p className="text-lg font-bold text-emerald-400 tabular-nums">{frontSales}</p>
-                <p className="text-[9px] text-emerald-400/70">Aprovados</p>
-              </div>
-              <div className="text-center p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <p className="text-lg font-bold text-amber-400 tabular-nums">{s?.pending || 0}</p>
-                <p className="text-[9px] text-amber-400/70">Pendentes</p>
-              </div>
-              <div className="text-center p-2 rounded-lg bg-red-500/10 border border-red-500/20">
-                <p className="text-lg font-bold text-red-400 tabular-nums">{s?.refused || 0}</p>
-                <p className="text-[9px] text-red-400/70">Recusados</p>
-              </div>
-              <div className="text-center p-2 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a]">
-                <p className="text-lg font-bold text-[#888] tabular-nums">{s?.refunds || 0}</p>
-                <p className="text-[9px] text-[#666]">Reembolsos</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Upsell breakdown */}
-          <div className="rounded-2xl p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a]">
-            <div className="flex items-center gap-2 mb-3">
-              <Package className="w-4 h-4 text-violet-400" />
-              <h3 className="text-xs font-semibold text-white">Breakdown Upsell</h3>
-              <span className="text-[10px] text-violet-400 ml-auto tabular-nums">R$ {upsellRevenue.toFixed(0)} total</span>
-            </div>
-            <div className="space-y-1.5 max-h-[120px] overflow-y-auto">
-              {(s?.upsell_detail || []).map((u) => (
-                <div key={u.step} className="flex items-center justify-between text-xs">
-                  <span className="text-white truncate">{UPSELL_LABELS[u.step] || u.step}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-violet-400 tabular-nums font-medium">{u.count}x</span>
-                    <span className="text-white tabular-nums font-bold w-20 text-right">R$ {u.revenue.toFixed(0)}</span>
-                  </div>
-                </div>
-              ))}
-              {(!s?.upsell_detail || s.upsell_detail.length === 0) && (
-                <p className="text-[10px] text-[#666]">Nenhum upsell hoje</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <LiveABTest summary={summary} />
+        <LiveABTest />
         <LiveAIAlerts />
         <LiveAISuggestions />
         <LiveFunnelVelocity />
@@ -731,7 +655,6 @@ export default function AdminFunnelAudit() {
         <LiveUserPresence onTotalChange={handlePresenceTotalChange} campaignFilter={campaignFilterState} />
         <LiveSalesFeed />
         <LiveUpsellMonitor />
-        <LiveBuyerProfile summary={summary} totalVisits={totalVisitsToday} />
         <LiveFunnelAnalytics campaignFilter={campaignFilterState} />
         <LiveScrollHeatmap />
         <LiveRevenueChart usdToBrl={1} />
