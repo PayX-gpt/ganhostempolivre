@@ -44,7 +44,7 @@ export default function LiveCampaignTable() {
 
     const [attributions, purchases, checkoutEvents] = await Promise.all([
       fetchAllRows("session_attribution", "session_id, utm_campaign, utm_source, ttclid, fbclid, referrer", (q: any) => q.gte("created_at", todayISO)),
-      fetchAllRows("purchase_tracking", "session_id, amount, status, email", (q: any) => q.gte("created_at", todayISO)),
+      fetchAllRows("purchase_tracking", "session_id, amount, status, email, utm_campaign, utm_source, fbclid", (q: any) => q.gte("created_at", todayISO)),
       fetchAllRows("funnel_events", "session_id", (q: any) => q.in("event_name", ["checkout_click", "capi_ic_sent"]).gte("created_at", todayISO)),
     ]);
 
@@ -66,7 +66,12 @@ export default function LiveCampaignTable() {
 
     const campaignSales: Record<string, { sales: number; revenue: number; refunds: number }> = {};
     purchases.forEach((p: any) => {
-      const camp = sessionToCampaign[p.session_id || ""] || "Direto";
+      // Priority: session mapping → purchase's own utm_campaign → "Direto"
+      let camp = sessionToCampaign[p.session_id || ""];
+      if (!camp && p.utm_campaign) {
+        camp = deriveCampaignLabel({ utm_campaign: p.utm_campaign, utm_source: p.utm_source, fbclid: p.fbclid });
+      }
+      if (!camp) camp = "Direto";
       if (!campaignSales[camp]) campaignSales[camp] = { sales: 0, revenue: 0, refunds: 0 };
       if (["approved", "completed", "purchased", "redirected"].includes(p.status)) {
         campaignSales[camp].sales++;
