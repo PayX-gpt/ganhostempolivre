@@ -53,8 +53,7 @@ const STEP_SLUGS = [
   "step-14", // 14: Input contato
   "step-15", // 15: Loading (análise)
   "step-16", // 16: Projeção de perfil e lucro
-  "step-17", // 17: Prova social 2 + vídeo venda
-  "step-18", // 18: Oferta final
+  "step-17", // 17: Prova social 2 + vídeo venda (OFERTA FINAL via Vturb CTA)
 ] as const;
 
 const TOTAL_STEPS = STEP_SLUGS.length;
@@ -65,7 +64,7 @@ const STEP_NAMES: Record<string, string> = {
   "step-8": "video_mentor", "step-9": "saldo_conta", "step-10": "disponibilidade",
   "step-11": "demo_plataforma", "step-12": "whatsapp_proof", "step-13": "metodo_contato",
   "step-14": "input_contato", "step-15": "loading", "step-16": "projecao_perfil",
-  "step-17": "prova_social_2", "step-18": "oferta_final",
+  "step-17": "oferta_vturb",
 };
 
 const STEP_ALIASES: Record<string, (typeof STEP_SLUGS)[number]> = {
@@ -86,7 +85,9 @@ const STEP_ALIASES: Record<string, (typeof STEP_SLUGS)[number]> = {
   step15: "step-15",
   step16: "step-16",
   step17: "step-17",
-  step18: "step-18",
+  // Legacy: redirect step-18 to step-17 (offer is now on Vturb CTA)
+  "step-18": "step-17",
+  step18: "step-17",
 };
 
 const normalizeSlug = (slug?: string) => {
@@ -315,9 +316,7 @@ const QuizFunnel = () => {
       case "step-16":
         return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} />;
       case "step-17":
-        return <Step11SocialProof2 onNext={goNext} userAge={answers.age} />;
-      case "step-18":
-        return <Step13Offer userName={answers.name} answers={answers} />;
+        return <Step11SocialProof2 onNext={() => {}} userAge={answers.age} />;
       default:
         return null;
     }

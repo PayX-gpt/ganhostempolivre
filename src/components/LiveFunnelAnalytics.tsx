@@ -40,8 +40,7 @@ const FUNNEL_STEPS = [
   { route: "/step-14", label: "Input" },
   { route: "/step-15", label: "Análise" },
   { route: "/step-16", label: "Projeção" },
-  { route: "/step-17", label: "Vídeo Venda" },
-  { route: "/step-18", label: "Oferta" },
+  { route: "/step-17", label: "Oferta (Vturb)" },
   { route: "/upsell1", label: "UP1 Acel." },
   { route: "/upsell2", label: "UP2 Multi." },
   { route: "/upsell3", label: "UP3 Blind." },
@@ -51,7 +50,8 @@ const FUNNEL_STEPS = [
 ];
 
 const ROUTE_ALIASES: Record<string, string> = {
-  "/step-19": "/step-18",
+  "/step-18": "/step-17",
+  "/step-19": "/step-17",
 };
 
 const tooltipStyle = {
@@ -179,7 +179,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     setHourlyData(Object.entries(hourCounts).map(([hour, visits]) => ({ hour, visits })));
     setTotalViews(steps[0]?.views || 0);
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
-    setOfferViews(stepCounts["/step-18"]?.size || 0);
+    setOfferViews(stepCounts["/step-17"]?.size || 0);
     setCheckoutClicks(new Set(checkoutData.map(e => e.session_id)).size);
     const uniquePurchaseKeys = new Set(
       purchaseData.map((r) => {
