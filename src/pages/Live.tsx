@@ -599,8 +599,9 @@ export default function AdminFunnelAudit() {
                 icon={DollarSign} iconClassName="from-violet-500/20 to-violet-600/10 border-violet-500/20" valueClassName="text-violet-400"
                 trend={periodData ? getVariation(periodData.current.avgTicket, periodData.previous.avgTicket).trend : undefined}
                 trendLabel={periodData ? `${getVariation(periodData.current.avgTicket, periodData.previous.avgTicket).pct} vs anterior` : undefined} />
-              <MetricCard title="Taxa Interacao" value={`${interactionRateToday.toFixed(1)}%`}
-                subtitle={`${totalVisitsToday} visitantes`}
+              <MetricCard title="Taxa Interacao" 
+                value={isLoading ? "..." : `${interactionRateToday.toFixed(1)}%`}
+                subtitle={isLoading ? "Carregando..." : `${totalVisitsToday} visitantes`}
                 icon={Activity} iconClassName="from-amber-500/20 to-amber-600/10 border-amber-500/20" valueClassName="text-amber-400" />
             </div>
 

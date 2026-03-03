@@ -53,7 +53,6 @@ export default function LiveABTest() {
       }
 
       const variants: VariantData[] = (summary.ab_sales as any[])
-        .filter((v: any) => ["A", "B", "C", "D"].includes(v.variant))
         .map((v: any) => {
           const visitors = Number(v.visitors) || 0;
           const ctaClicks = Number(v.cta_clicks) || 0;
@@ -80,7 +79,14 @@ export default function LiveABTest() {
             revenuePerVisitor: visitors > 0 ? totalRevenue / visitors : 0,
           };
         })
-        .sort((a, b) => b.frontSales - a.frontSales);
+        .sort((a, b) => {
+          // Put A/B/C/D first sorted by frontSales, then sem_variante last
+          const aIsNamed = ["A", "B", "C", "D"].includes(a.variant);
+          const bIsNamed = ["A", "B", "C", "D"].includes(b.variant);
+          if (aIsNamed && !bIsNamed) return -1;
+          if (!aIsNamed && bIsNamed) return 1;
+          return b.frontSales - a.frontSales;
+        });
 
       setData(variants);
     } catch (err) {
@@ -95,10 +101,12 @@ export default function LiveABTest() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const bestVariant = data.length > 0 ? data.reduce((best, v) => v.revenuePerVisitor > best.revenuePerVisitor ? v : best) : null;
-  const worstVariant = data.length > 0 ? data.reduce((worst, v) => v.revenuePerVisitor < worst.revenuePerVisitor ? v : worst) : null;
+  const namedVariants = data.filter(v => ["A", "B", "C", "D"].includes(v.variant));
+  const bestVariant = namedVariants.length > 0 ? namedVariants.reduce((best, v) => v.revenuePerVisitor > best.revenuePerVisitor ? v : best) : null;
+  const worstVariant = namedVariants.length > 0 ? namedVariants.reduce((worst, v) => v.revenuePerVisitor < worst.revenuePerVisitor ? v : worst) : null;
   const controlVariant = data.find((v) => v.variant === "A");
-  const leaderVariant = data.length > 0 ? data.reduce((best, v) => v.frontSales > best.frontSales ? v : best) : null;
+  const leaderVariant = namedVariants.length > 0 ? namedVariants.reduce((best, v) => v.frontSales > best.frontSales ? v : best) : null;
+  const totalABSales = data.reduce((sum, v) => sum + v.frontSales, 0);
 
   const hasEnoughData = data.some((v) => v.visitors >= 100);
 
@@ -169,11 +177,12 @@ export default function LiveABTest() {
                     <div className="flex items-center gap-1.5">
                       <span className={cn(
                         "font-bold",
-                        isBest ? "text-emerald-400" : isWorst ? "text-red-400" : "text-white"
+                        v.variant === "sem_variante" ? "text-[#666]" : isBest ? "text-emerald-400" : isWorst ? "text-red-400" : "text-white"
                       )}>
-                        {v.variant}
+                        {v.variant === "sem_variante" ? "Sem variante" : v.variant}
                       </span>
                       {v.variant === "A" && <Badge className="text-[8px] bg-sky-500/20 text-sky-400 border-0 px-1">Controle</Badge>}
+                      {v.variant === "sem_variante" && <Badge className="text-[8px] bg-[#333] text-[#888] border-0 px-1">Sem atribuicao</Badge>}
                       {isLeader && <Badge className="text-[8px] bg-emerald-500/20 text-emerald-400 border-0 px-1">Lider</Badge>}
                       {isBest && <Trophy className="w-3 h-3 text-amber-400" />}
                     </div>
