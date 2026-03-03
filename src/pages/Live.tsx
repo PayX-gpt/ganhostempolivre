@@ -194,9 +194,9 @@ export default function AdminFunnelAudit() {
     todayStart.setHours(0, 0, 0, 0);
     const todayISO = todayStart.toISOString();
 
-    // IC = unique sessions that clicked checkout (from funnel_events)
+    // IC = unique sessions that clicked checkout (fallback: capi_ic_sent)
     const { data: checkoutClickEvents } = await supabase.from("funnel_events").select("session_id")
-      .eq("event_name", "checkout_click").gte("created_at", todayISO);
+      .in("event_name", ["checkout_click", "capi_ic_sent"]).gte("created_at", todayISO);
     const icSessions = new Set(checkoutClickEvents?.map(r => r.session_id) || []);
     setFrontendICs(icSessions.size);
 

@@ -116,7 +116,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
       ),
       fetchAllRows(
         "funnel_events", "session_id",
-        (q: any) => q.eq("event_name", "checkout_click").gte("created_at", todayISO)
+        (q: any) => q.in("event_name", ["checkout_click", "capi_ic_sent"]).gte("created_at", todayISO)
       ),
       fetchAllRows(
         "purchase_tracking", "session_id, email, transaction_id, id",
