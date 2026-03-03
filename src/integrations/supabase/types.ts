@@ -613,6 +613,18 @@ export type Database = {
           sales: number
         }[]
       }
+      get_creative_stats_today: {
+        Args: never
+        Returns: {
+          channel: string
+          checkouts: number
+          conv_rate: number
+          creative: string
+          leads: number
+          revenue: number
+          sales: number
+        }[]
+      }
       get_dashboard_summary_today: { Args: never; Returns: Json }
       url_decode: { Args: { input: string }; Returns: string }
     }

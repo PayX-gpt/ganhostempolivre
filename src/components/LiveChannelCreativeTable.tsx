@@ -13,51 +13,6 @@ interface RowData {
   convRate: number;
 }
 
-async function fetchAllRows(table: string, select: string, filters: (q: any) => any, pageSize = 1000): Promise<any[]> {
-  const all: any[] = [];
-  let from = 0;
-  while (true) {
-    let q = supabase.from(table as any).select(select).range(from, from + pageSize - 1);
-    q = filters(q);
-    const { data, error } = await q;
-    if (error || !data || data.length === 0) break;
-    all.push(...(data as any[]));
-    if (data.length < pageSize) break;
-    from += pageSize;
-  }
-  return all;
-}
-
-/** Extract creative name from utm_content or utm_campaign brackets, e.g. [CT AG] */
-function extractCreative(row: { utm_content?: string | null; utm_campaign?: string | null }): string {
-  const decode = (s: string) => { try { return decodeURIComponent(s); } catch { return s; } };
-  if (row.utm_content) {
-    const decoded = decode(row.utm_content);
-    return decoded.length > 30 ? decoded.slice(0, 27) + "…" : decoded;
-  }
-  if (row.utm_campaign) {
-    const decoded = decode(row.utm_campaign);
-    const match = decoded.match(/\[([^\]]+)\]/g);
-    if (match) return match.map(m => m.replace(/[\[\]]/g, "")).join(" | ");
-  }
-  return "Sem criativo";
-}
-
-/** Extract placement/channel from utm_source + utm_medium */
-function extractChannel(row: { utm_source?: string | null; utm_medium?: string | null }): string {
-  const src = (row.utm_source || "").toLowerCase();
-  const med = (row.utm_medium || "").toLowerCase();
-  if (!src && !med) return "Direto";
-  const parts: string[] = [];
-  if (src.includes("facebook") || src.includes("fb") || src.includes("meta")) parts.push("Meta");
-  else if (src.includes("tiktok")) parts.push("TikTok");
-  else if (src.includes("google")) parts.push("Google");
-  else if (src) parts.push(src);
-  if (med && med !== "cpc" && med !== "paid") parts.push(med);
-  else if (med) parts.push(med);
-  return parts.join(" / ") || "Orgânico";
-}
-
 export default function LiveChannelCreativeTable() {
   const [channelRows, setChannelRows] = useState<RowData[]>([]);
   const [creativeRows, setCreativeRows] = useState<RowData[]>([]);
@@ -65,58 +20,39 @@ export default function LiveChannelCreativeTable() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayISO = todayStart.toISOString();
+    try {
+      const { data, error } = await supabase.rpc("get_creative_stats_today" as any);
+      if (error || !data) {
+        console.warn("[CreativeTable] RPC error:", error);
+        setLoading(false);
+        return;
+      }
 
-    const [attributions, purchases, checkoutEvents] = await Promise.all([
-      fetchAllRows("session_attribution", "session_id, utm_source, utm_medium, utm_content, utm_campaign", (q: any) => q.gte("created_at", todayISO)),
-      fetchAllRows("purchase_tracking", "session_id, amount, status", (q: any) => q.gte("created_at", todayISO)),
-      fetchAllRows("funnel_events", "session_id", (q: any) => q.in("event_name", ["checkout_click", "capi_ic_sent"]).gte("created_at", todayISO)),
-    ]);
+      const rows = data as any[];
+      const channels: RowData[] = [];
+      const creatives: RowData[] = [];
 
-    const sessionChannel: Record<string, string> = {};
-    const sessionCreative: Record<string, string> = {};
-    attributions.forEach((a: any) => {
-      sessionChannel[a.session_id] = extractChannel(a);
-      sessionCreative[a.session_id] = extractCreative(a);
-    });
-
-    const buildRows = (sessionGroupFn: (sid: string) => string) => {
-      const groups: Record<string, { leads: Set<string>; checkouts: Set<string>; sales: number; revenue: number }> = {};
-      const getGroup = (g: string) => {
-        if (!groups[g]) groups[g] = { leads: new Set(), checkouts: new Set(), sales: 0, revenue: 0 };
-        return groups[g];
-      };
-
-      attributions.forEach((a: any) => getGroup(sessionGroupFn(a.session_id)).leads.add(a.session_id));
-      checkoutEvents.forEach((e: any) => {
-        const g = sessionGroupFn(e.session_id);
-        getGroup(g).checkouts.add(e.session_id);
-      });
-      purchases.forEach((p: any) => {
-        // Fix Divergence 2: Only count sales that have a matching session in attributions
-        // Don't dump unmatched sales into "Sem criativo" / "Direto"
-        if (!p.session_id || !sessionChannel[p.session_id]) return;
-        const g = sessionGroupFn(p.session_id);
-        if (["approved", "completed", "purchased", "redirected"].includes(p.status)) {
-          getGroup(g).sales++;
-          getGroup(g).revenue += Number(p.amount) || 0;
+      rows.forEach((r: any) => {
+        const row: RowData = {
+          name: r.channel || r.creative || "—",
+          leads: Number(r.leads) || 0,
+          checkouts: Number(r.checkouts) || 0,
+          sales: Number(r.sales) || 0,
+          revenue: Number(r.revenue) || 0,
+          convRate: Number(r.conv_rate) || 0,
+        };
+        if (r.channel && r.channel !== "") {
+          channels.push(row);
+        } else if (r.creative && r.creative !== "") {
+          creatives.push(row);
         }
       });
 
-      return Object.entries(groups).map(([name, d]) => ({
-        name,
-        leads: d.leads.size,
-        checkouts: d.checkouts.size,
-        sales: d.sales,
-        revenue: d.revenue,
-        convRate: d.leads.size > 0 ? (d.sales / d.leads.size) * 100 : 0,
-      })).sort((a, b) => b.revenue - a.revenue);
-    };
-
-    setChannelRows(buildRows(sid => sessionChannel[sid] || "Direto"));
-    setCreativeRows(buildRows(sid => sessionCreative[sid] || "Sem criativo"));
+      setChannelRows(channels.sort((a, b) => b.revenue - a.revenue));
+      setCreativeRows(creatives.sort((a, b) => b.revenue - a.revenue));
+    } catch (err) {
+      console.warn("[CreativeTable] fetch error:", err);
+    }
     setLoading(false);
   }, []);
 
