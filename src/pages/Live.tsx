@@ -22,6 +22,8 @@ import CampaignFilter, { type CampaignFilterState } from "@/components/CampaignF
 import LiveLeadsTable from "@/components/LiveLeadsTable";
 import LiveUpsellMonitor from "@/components/LiveUpsellMonitor";
 import LiveSalesFeed from "@/components/LiveSalesFeed";
+import LiveAIAlerts from "@/components/LiveAIAlerts";
+import LiveCampaignTable from "@/components/LiveCampaignTable";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import SessionLogsDialog from "@/components/SessionLogsDialog";
@@ -535,7 +537,9 @@ export default function AdminFunnelAudit() {
           </div>
         </div>
 
+        <LiveAIAlerts />
         <CampaignFilter onChange={setCampaignFilterState} />
+        <LiveCampaignTable />
         <LiveUserPresence onTotalChange={handlePresenceTotalChange} campaignFilter={campaignFilterState} />
         <LiveSalesFeed />
         <LiveUpsellMonitor />
