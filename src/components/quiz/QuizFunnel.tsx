@@ -178,9 +178,8 @@ const QuizFunnel = () => {
   // Save attribution on funnel entry (step 1)
   useEffect(() => {
     if (step === 1) {
-      saveSessionAttribution();
-      // Save A/B variant to attribution after a short delay to ensure session exists
-      setTimeout(() => saveVariantToAttribution(variant), 2000);
+      void saveSessionAttribution(variant);
+      void saveVariantToAttribution(variant);
     }
   }, [step, variant]);
 
