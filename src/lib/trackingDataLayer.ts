@@ -125,25 +125,34 @@ const extractUrlParams = (): Record<string, string | null> => {
   return result;
 };
 
+/** Read early-captured UTMs from the inline head script */
+const getEarlyUtm = (): Record<string, string | null> => {
+  try {
+    const raw = localStorage.getItem('lead_utm');
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+};
+
 export const initializeTrackingDataLayer = (): TrackingData => {
   const urlParams = extractUrlParams();
   const storedData = loadFromStorage();
   const fbCookies = extractFacebookCookies();
   const ttCookies = extractTikTokCookies();
+  const earlyUtm = getEarlyUtm();
   const now = new Date().toISOString();
   const currentPath = window.location.pathname;
 
   const trackingData: TrackingData = {
-    utm_source: urlParams.utm_source || storedData?.utm_source || null,
-    utm_medium: urlParams.utm_medium || storedData?.utm_medium || null,
-    utm_campaign: urlParams.utm_campaign || storedData?.utm_campaign || null,
-    utm_content: urlParams.utm_content || storedData?.utm_content || null,
-    utm_term: urlParams.utm_term || storedData?.utm_term || null,
-    fbclid: urlParams.fbclid || storedData?.fbclid || null,
-    gclid: urlParams.gclid || storedData?.gclid || null,
+    utm_source: urlParams.utm_source || storedData?.utm_source || earlyUtm.utm_source || null,
+    utm_medium: urlParams.utm_medium || storedData?.utm_medium || earlyUtm.utm_medium || null,
+    utm_campaign: urlParams.utm_campaign || storedData?.utm_campaign || earlyUtm.utm_campaign || null,
+    utm_content: urlParams.utm_content || storedData?.utm_content || earlyUtm.utm_content || null,
+    utm_term: urlParams.utm_term || storedData?.utm_term || earlyUtm.utm_term || null,
+    fbclid: urlParams.fbclid || storedData?.fbclid || earlyUtm.fbclid || null,
+    gclid: urlParams.gclid || storedData?.gclid || earlyUtm.gclid || null,
     fbp: fbCookies.fbp || storedData?.fbp || null,
     fbc: fbCookies.fbc || storedData?.fbc || null,
-    ttclid: urlParams.ttclid || storedData?.ttclid || null,
+    ttclid: urlParams.ttclid || storedData?.ttclid || earlyUtm.ttclid || null,
     ttp: ttCookies.ttp || storedData?.ttp || null,
     xcod: urlParams.xcod || storedData?.xcod || null,
     cwr: urlParams.cwr || storedData?.cwr || null,
@@ -296,22 +305,27 @@ export const saveSessionAttribution = async (): Promise<void> => {
     const sessionId = data.session_id;
     if (!sessionId || sessionStorage.getItem("attribution_saved")) return;
 
+    // Also read early-captured UTMs as fallback
+    const earlyUtm: Record<string, string> = (() => {
+      try { return JSON.parse(localStorage.getItem('lead_utm') || '{}'); } catch { return {}; }
+    })();
+
     const { supabase } = await import("@/integrations/supabase/client");
     await supabase.from("session_attribution" as any).upsert([{
       session_id: sessionId,
-      utm_source: data.utm_source,
-      utm_medium: data.utm_medium,
-      utm_campaign: data.utm_campaign,
-      utm_content: data.utm_content,
-      utm_term: data.utm_term,
-      fbclid: data.fbclid,
-      ttclid: data.ttclid,
-      fbp: data.fbp,
-      fbc: data.fbc,
-      ttp: data.ttp,
-      gclid: data.gclid,
-      referrer: data.referrer || null,
-      landing_page: data.landing_page || null,
+      utm_source: data.utm_source || earlyUtm.utm_source || null,
+      utm_medium: data.utm_medium || earlyUtm.utm_medium || null,
+      utm_campaign: data.utm_campaign || earlyUtm.utm_campaign || null,
+      utm_content: data.utm_content || earlyUtm.utm_content || null,
+      utm_term: data.utm_term || earlyUtm.utm_term || null,
+      fbclid: data.fbclid || earlyUtm.fbclid || null,
+      ttclid: data.ttclid || earlyUtm.ttclid || null,
+      fbp: data.fbp || null,
+      fbc: data.fbc || null,
+      ttp: data.ttp || null,
+      gclid: data.gclid || earlyUtm.gclid || null,
+      referrer: data.referrer || earlyUtm.referrer || earlyUtm.referrer_detected || null,
+      landing_page: data.landing_page || earlyUtm.landing_url || null,
     }] as any, { onConflict: "session_id" } as any);
 
     sessionStorage.setItem("attribution_saved", "1");

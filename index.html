@@ -27,6 +27,65 @@
   <meta property="og:description" content="Tenha acesso a plataforma de ganhos com tempo livre verificando seu teste">
   <meta name="twitter:description" content="Tenha acesso a plataforma de ganhos com tempo livre verificando seu teste">
 
+  <!-- Early UTM Capture — MUST run before any other script -->
+  <script>
+  (function(){
+    try{
+      var params=new URLSearchParams(window.location.search);
+      var utmKeys=['utm_source','utm_medium','utm_campaign','utm_content','utm_term','fbclid','gclid','ttclid','ad_id','adset_id','campaign_id','placement','site_source_name','xcod','src','sck'];
+      var stored=JSON.parse(localStorage.getItem('lead_utm')||'{}');
+      var hasNew=false;
+      utmKeys.forEach(function(key){
+        var val=params.get(key);
+        if(val&&val.length>0){stored[key]=val;hasNew=true;}
+      });
+      if(hasNew){
+        stored.landing_url=window.location.href;
+        stored.landing_time=new Date().toISOString();
+        stored.referrer=document.referrer||'direct';
+        localStorage.setItem('lead_utm',JSON.stringify(stored));
+        sessionStorage.setItem('lead_utm',JSON.stringify(stored));
+      }
+      // Fallback: referrer from Meta domains
+      if(!stored.utm_source&&document.referrer){
+        var ref=document.referrer.toLowerCase();
+        if(ref.indexOf('facebook.com')!==-1||ref.indexOf('fb.com')!==-1||ref.indexOf('instagram.com')!==-1||ref.indexOf('l.facebook.com')!==-1||ref.indexOf('lm.facebook.com')!==-1){
+          stored.utm_source=stored.utm_source||'facebook';
+          stored.utm_medium=stored.utm_medium||'paid';
+          stored.referrer_detected=ref;
+          localStorage.setItem('lead_utm',JSON.stringify(stored));
+          sessionStorage.setItem('lead_utm',JSON.stringify(stored));
+        }
+      }
+      // Fallback: fbclid present but no utm_source
+      if(!stored.utm_source&&(params.get('fbclid')||stored.fbclid)){
+        stored.utm_source='facebook';
+        stored.utm_medium='paid';
+        stored.fbclid=stored.fbclid||params.get('fbclid');
+        localStorage.setItem('lead_utm',JSON.stringify(stored));
+        sessionStorage.setItem('lead_utm',JSON.stringify(stored));
+      }
+      // Fallback: ttclid present but no utm_source
+      if(!stored.utm_source&&(params.get('ttclid')||stored.ttclid)){
+        stored.utm_source='tiktok';
+        stored.utm_medium='paid';
+        stored.ttclid=stored.ttclid||params.get('ttclid');
+        localStorage.setItem('lead_utm',JSON.stringify(stored));
+        sessionStorage.setItem('lead_utm',JSON.stringify(stored));
+      }
+      // Fallback: gclid
+      if(!stored.utm_source&&(params.get('gclid')||stored.gclid)){
+        stored.utm_source='google';
+        stored.utm_medium='cpc';
+        stored.gclid=stored.gclid||params.get('gclid');
+        localStorage.setItem('lead_utm',JSON.stringify(stored));
+        sessionStorage.setItem('lead_utm',JSON.stringify(stored));
+      }
+      window.__lead_utm=stored;
+    }catch(e){}
+  })();
+  </script>
+
   <!-- UTMify -->
   <script src="https://cdn.utmify.com.br/scripts/utms/latest.js" data-utmify-prevent-xcod-sck data-utmify-prevent-subids async defer></script>
   <script>

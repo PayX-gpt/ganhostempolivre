@@ -21,6 +21,7 @@ const deriveCampaignLabel = (row: {
   utm_source?: string | null;
   ttclid?: string | null;
   fbclid?: string | null;
+  referrer?: string | null;
 }): string => {
   if (row.utm_campaign) return cleanCampaignName(row.utm_campaign);
   // Has source but no campaign name — label by source
@@ -32,8 +33,14 @@ const deriveCampaignLabel = (row: {
     return cleanCampaignName(row.utm_source);
   }
   // Has click IDs but no utm_source
-  if (row.ttclid) return "TikTok (sem campanha)";
-  if (row.fbclid) return "Meta (sem campanha)";
+  if (row.ttclid) return "TikTok (fbclid)";
+  if (row.fbclid) return "Meta (fbclid)";
+  // Has referrer from Meta/TikTok domains
+  if (row.referrer) {
+    const ref = row.referrer.toLowerCase();
+    if (ref.includes("facebook.com") || ref.includes("fb.com") || ref.includes("instagram.com") || ref.includes("l.facebook.com") || ref.includes("lm.facebook.com")) return "Meta (referrer)";
+    if (ref.includes("tiktok.com")) return "TikTok (referrer)";
+  }
   return "Direto";
 };
 
@@ -57,7 +64,7 @@ export default function CampaignFilter({ onChange }: CampaignFilterProps) {
     todayStart.setHours(0, 0, 0, 0);
     const { data } = await supabase
       .from("session_attribution")
-      .select("utm_campaign, utm_source, ttclid, fbclid")
+      .select("utm_campaign, utm_source, ttclid, fbclid, referrer")
       .gte("created_at", todayStart.toISOString());
     
     const campaignSet = new Set<string>();
