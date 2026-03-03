@@ -30,11 +30,14 @@ async function fetchAllRows(table: string, select: string, filters: (q: any) => 
 
 /** Extract creative name from utm_content or utm_campaign brackets, e.g. [CT AG] */
 function extractCreative(row: { utm_content?: string | null; utm_campaign?: string | null }): string {
-  // Try utm_content first
-  if (row.utm_content) return row.utm_content.length > 30 ? row.utm_content.slice(0, 27) + "…" : row.utm_content;
-  // Try bracket extraction from campaign
+  const decode = (s: string) => { try { return decodeURIComponent(s); } catch { return s; } };
+  if (row.utm_content) {
+    const decoded = decode(row.utm_content);
+    return decoded.length > 30 ? decoded.slice(0, 27) + "…" : decoded;
+  }
   if (row.utm_campaign) {
-    const match = row.utm_campaign.match(/\[([^\]]+)\]/g);
+    const decoded = decode(row.utm_campaign);
+    const match = decoded.match(/\[([^\]]+)\]/g);
     if (match) return match.map(m => m.replace(/[\[\]]/g, "")).join(" | ");
   }
   return "Sem criativo";
@@ -92,7 +95,10 @@ export default function LiveChannelCreativeTable() {
         getGroup(g).checkouts.add(e.session_id);
       });
       purchases.forEach((p: any) => {
-        const g = sessionGroupFn(p.session_id || "");
+        // Fix Divergence 2: Only count sales that have a matching session in attributions
+        // Don't dump unmatched sales into "Sem criativo" / "Direto"
+        if (!p.session_id || !sessionChannel[p.session_id]) return;
+        const g = sessionGroupFn(p.session_id);
         if (["approved", "completed", "purchased", "redirected"].includes(p.status)) {
           getGroup(g).sales++;
           getGroup(g).revenue += Number(p.amount) || 0;

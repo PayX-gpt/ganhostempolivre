@@ -231,15 +231,9 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
     setOfferViews(stepCounts["/step-17"]?.size || 0);
     setCheckoutClicks(new Set(checkoutData.map(e => e.session_id)).size);
-    const uniquePurchaseKeys = new Set(
-      purchaseData.map((r) => {
-        if (r.email) return `email:${(r.email as string).toLowerCase()}`;
-        if (r.transaction_id) return `tx:${r.transaction_id as string}`;
-        if (r.session_id) return `sess:${r.session_id as string}`;
-        return `row:${r.id as string}`;
-      })
-    ).size;
-    setPurchases(uniquePurchaseKeys);
+    // Fix Divergence 4: Count each purchase row individually (by unique id)
+    // Don't dedup by email which merges front + upsell from same buyer
+    setPurchases(purchaseData.length);
     setLoading(false);
   }, [allCampaigns]);
 

@@ -593,6 +593,7 @@ export type Database = {
         }[]
       }
       get_dashboard_summary_today: { Args: never; Returns: Json }
+      url_decode: { Args: { input: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
