@@ -229,8 +229,8 @@ async function handleFullFunnelAnalysis(supabase: any, lovableKey: string) {
           content: `Você é o diretor de growth de um funil de vendas digital no Brasil. Faça uma análise COMPLETA e estratégica.
 
 ESTRUTURA DO FUNIL:
-- 19 etapas de quiz (step-1 a step-19): qualificação do lead
-- Página de oferta (step-19): onde o lead vê o preço personalizado e decide comprar
+- 17 etapas de quiz (step-1 a step-17): qualificação do lead
+- Step-17 (Vídeo de Vendas): onde o lead assiste o VSL e clica no CTA do Vturb para ir ao checkout
 - Checkout: processamento do pagamento
 - Upsell 1 (Acelerador): primeira oferta pós-compra
 - Upsell 2 (Multiplicador): planos Prata/Ouro/Diamante
@@ -355,7 +355,7 @@ async function getFunnelFlowData(supabase: any, since: string) {
   const STEPS = [
     "/step-1", "/step-2", "/step-3", "/step-4", "/step-5", "/step-6", "/step-7",
     "/step-8", "/step-9", "/step-10", "/step-11", "/step-12", "/step-13",
-    "/step-14", "/step-15", "/step-16", "/step-17", "/step-18", "/step-19",
+    "/step-14", "/step-15", "/step-16", "/step-17",
     "/upsell1", "/upsell2", "/upsell3", "/upsell4",
   ];
 
