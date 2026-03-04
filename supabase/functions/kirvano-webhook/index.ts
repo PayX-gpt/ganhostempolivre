@@ -209,7 +209,7 @@ Deno.serve(async (req) => {
     // ====== DECODE UTMs from Kirvano payload ======
     const decodeUtm = (v: string | null): string | null => {
       if (!v) return v;
-      try { return decodeURIComponent(v).replace(/\+/g, ' '); } catch { return v.replace(/\+/g, ' '); }
+      try { return decodeURIComponent(v); } catch { return v; }
     };
 
     let resolvedUtmCampaign = decodeUtm(utmCampaign);
