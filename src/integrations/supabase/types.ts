@@ -601,6 +601,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_ab_summary_by_date: { Args: { target_date?: string }; Returns: Json }
       get_campaign_stats_today: {
         Args: never
         Returns: {
