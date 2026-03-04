@@ -67,7 +67,7 @@ const STEPS: FunnelStep[] = [
   { id: "step15", route: "/step-15", label: "Análise", icon: Clock, count: 0 },
   { id: "step16", route: "/step-16", label: "Projeção", icon: UserCheck, count: 0 },
   { id: "step17", route: "/step-17", label: "Vídeo Venda", icon: Star, count: 0 },
-  { id: "step18", route: "/step-18", label: "Oferta Final", icon: ShoppingCart, count: 0 },
+  
   { id: "checkout", route: "/checkout", label: "Checkout", icon: Gift, count: 0 },
   { id: "thanks", route: "/thanks", label: "Thanks", icon: CheckCircle2, count: 0 },
   { id: "upsell1", route: "/upsell1", label: "UP1 Acel.", icon: Rocket, count: 0 },
@@ -95,9 +95,10 @@ const toStepId = (page: string): string | null => {
   if (p.includes("/upsell")) return "upsell1";
   if (p.includes("/thanks")) return "thanks";
   if (p.includes("/checkout") || p.includes("/processing")) return "checkout";
-  const OLD_STEP_MAP: Record<number, string> = { 19: "step18" };
+  // step-18 and step-19 are legacy — map to step17
+  const LEGACY_STEP_MAP: Record<number, string> = { 18: "step17", 19: "step17" };
   for (let i = 19; i >= 1; i--) {
-    if (p.includes(`/step-${i}`)) return OLD_STEP_MAP[i] || `step${i}`;
+    if (p.includes(`/step-${i}`)) return LEGACY_STEP_MAP[i] || `step${i}`;
   }
   if (p === "/") return "step1";
   return null;
