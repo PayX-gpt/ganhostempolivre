@@ -204,9 +204,12 @@ export default function AdminFunnelAudit() {
     const { data: logsData } = await query;
     setLogs(logsData || []);
 
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayISO = todayStart.toISOString();
+    // Fix 3: Timezone São Paulo consistente
+    const spNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const spYear = spNow.getFullYear();
+    const spMonth = String(spNow.getMonth() + 1).padStart(2, "0");
+    const spDay = String(spNow.getDate()).padStart(2, "0");
+    const todayISO = `${spYear}-${spMonth}-${spDay}T00:00:00-03:00`;
 
     const allICSessionIds = new Set<string>();
     let icPage = 0;
@@ -225,11 +228,12 @@ export default function AdminFunnelAudit() {
     const icSessions = allICSessionIds;
     setFrontendICs(icSessions.size);
 
-    const { data: purchaseData } = await supabase.from("purchase_tracking").select("amount, status, email").gte("created_at", todayISO);
+    const { data: purchaseData } = await supabase.from("purchase_tracking").select("amount, status, email, funnel_step").gte("created_at", todayISO);
 
-    const approvedPurchases = purchaseData?.filter(r => 
-      r.status === "completed" || r.status === "purchased" || r.status === "approved" || r.status === "redirected"
-    ) || [];
+    // Fix 2: Apenas 'approved' = venda confirmada
+    const approvedPurchases = purchaseData?.filter(r => r.status === "approved") || [];
+    const frontPurchases = approvedPurchases.filter(r => r.funnel_step?.startsWith("front"));
+    const upsellPurchases = approvedPurchases.filter(r => !r.funnel_step?.startsWith("front"));
     const pendingPurchases = purchaseData?.filter(r => r.status === "pending") || [];
     const refusedPurchases = purchaseData?.filter(r => r.status === "refused") || [];
     const refundedPurchases = purchaseData?.filter(r => r.status === "refunded" || r.status === "canceled") || [];
@@ -251,19 +255,46 @@ export default function AdminFunnelAudit() {
     setIcToSalesRate(rate);
     setIcToSalesRatio(uniqueBuyers > 0 ? `1:${Math.round(icSessions.size / uniqueBuyers)}` : "0:0");
 
-    const [leadCapturedResult, leadBehaviorResult] = await Promise.all([
-      supabase.from("funnel_events").select("session_id").eq("event_name", "lead_captured").gte("created_at", todayISO),
-      supabase.from("lead_behavior").select("session_id").gte("created_at", todayISO),
-    ]);
+    // Fix 4: Paginar queries de leads para evitar limite de 1000
     const allLeadSessions = new Set<string>();
-    (leadCapturedResult.data || []).forEach(r => allLeadSessions.add(r.session_id));
-    (leadBehaviorResult.data || []).forEach(r => allLeadSessions.add(r.session_id));
+    let leadPage = 0;
+    while (true) {
+      const { data: lcRows } = await supabase.from("funnel_events")
+        .select("session_id").eq("event_name", "lead_captured")
+        .gte("created_at", todayISO)
+        .range(leadPage * 1000, (leadPage + 1) * 1000 - 1);
+      if (!lcRows || lcRows.length === 0) break;
+      lcRows.forEach(r => allLeadSessions.add(r.session_id));
+      if (lcRows.length < 1000) break;
+      leadPage++;
+    }
+    let lbPage = 0;
+    while (true) {
+      const { data: lbRows } = await supabase.from("lead_behavior")
+        .select("session_id").gte("created_at", todayISO)
+        .range(lbPage * 1000, (lbPage + 1) * 1000 - 1);
+      if (!lbRows || lbRows.length === 0) break;
+      lbRows.forEach(r => allLeadSessions.add(r.session_id));
+      if (lbRows.length < 1000) break;
+      lbPage++;
+    }
     setTotalLeadsToday(allLeadSessions.size);
 
-    const { data: leadData } = await supabase.from("lead_behavior")
-      .select("cta_clicks, intent_score, checkout_clicked")
-      .gte("created_at", todayISO);
-    setQualifiedLeadsToday(leadData?.filter(l => (l.intent_score || 0) >= 50).length || 0);
+    // Fix 1: "Leads Qualificados" = sessões que completaram o quiz (step-15/16/17)
+    const qualifiedSessions = new Set<string>();
+    let qPage = 0;
+    while (true) {
+      const { data: qRows } = await supabase.from("funnel_events")
+        .select("session_id").eq("event_name", "step_viewed")
+        .in("event_data->>step", ["step-15", "step-16", "step-17"])
+        .gte("created_at", todayISO)
+        .range(qPage * 1000, (qPage + 1) * 1000 - 1);
+      if (!qRows || qRows.length === 0) break;
+      qRows.forEach(r => qualifiedSessions.add(r.session_id));
+      if (qRows.length < 1000) break;
+      qPage++;
+    }
+    setQualifiedLeadsToday(qualifiedSessions.size);
 
     const allVisitSessions = new Set<string>();
     let visitPage = 0;
@@ -544,12 +575,12 @@ export default function AdminFunnelAudit() {
             trend={periodData ? getVariation(periodData.current.revenue, periodData.previous.revenue).trend : "neutral"}
             trendLabel={periodData ? `${getVariation(periodData.current.revenue, periodData.previous.revenue).pct} vs anterior` : undefined} />
           <MetricCard title="Vendas Hoje" value={hotmartSalesToday}
-            subtitle={`${hotmartRefunded} reembolsos${hotmartSalesToday > 0 ? ` (${((hotmartRefunded / (hotmartSalesToday + hotmartRefunded)) * 100).toFixed(0)}%)` : ""}`}
+            subtitle={`${hotmartRefunded} reemb. | ${hotmartSalesToday} aprovadas`}
             icon={ShoppingCart}
             trend={periodData ? getVariation(periodData.current.sales, periodData.previous.sales).trend : undefined}
             trendLabel={periodData ? `${getVariation(periodData.current.sales, periodData.previous.sales).pct} vs anterior` : undefined} />
           <MetricCard title="Leads Hoje" value={totalLeadsToday} icon={Users}
-            subtitle={`${qualifiedLeadsToday} qualificados`}
+            subtitle={`${qualifiedLeadsToday} completaram quiz`}
             trend={periodData ? getVariation(periodData.current.leads, periodData.previous.leads).trend : undefined}
             trendLabel={periodData ? `${getVariation(periodData.current.leads, periodData.previous.leads).pct} vs anterior` : undefined} />
           <MetricCard title="IC para Vendas" value={`${icToSalesRate.toFixed(1)}%`}
