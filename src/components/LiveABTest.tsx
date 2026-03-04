@@ -271,56 +271,51 @@ export default function LiveABTest() {
     return parseVariants((rpc as any)?.ab_sales || []);
   }, []);
 
+  // Get today's date in São Paulo timezone
+  const getSaoPauloToday = useCallback(() => {
+    const now = new Date();
+    const spDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const y = spDate.getFullYear();
+    const m = String(spDate.getMonth() + 1).padStart(2, "0");
+    const d = String(spDate.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, []);
+
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const today = new Date();
-      const fmt = (d: Date) => d.toISOString().split("T")[0];
+      const todayStr = getSaoPauloToday();
+
+      const offsetDate = (dateStr: string, days: number) => {
+        const [y, m, d] = dateStr.split("-").map(Number);
+        const dt = new Date(y, m - 1, d);
+        dt.setDate(dt.getDate() + days);
+        const ny = dt.getFullYear();
+        const nm = String(dt.getMonth() + 1).padStart(2, "0");
+        const nd = String(dt.getDate()).padStart(2, "0");
+        return `${ny}-${nm}-${nd}`;
+      };
 
       if (period === "today") {
-        // Use the main RPC for today (more accurate, uses NOW())
-        const { data: todayRpc } = await supabase.rpc("get_dashboard_summary_today" as any);
-        const summary = todayRpc as any;
-        // Parse with upsell fallback
-        const rawAb = (summary?.ab_sales || []).map((v: any) => ({
-          ...v,
-          upsell_sales: Number(v.upsell_sales) || (Number(v.total_sales || 0) - Number(v.front_sales || 0)),
-          upsell_revenue: Number(v.upsell_revenue) || (Number(v.total_revenue || 0) - Number(v.front_revenue || 0)),
-        }));
-        setData(parseVariants(rawAb));
-
-        // Compare with yesterday
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        setCompareData(await fetchForDate(fmt(yesterday)));
+        setData(await fetchForDate(todayStr));
+        setCompareData(await fetchForDate(offsetDate(todayStr, -1)));
       } else if (period === "yesterday") {
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        setData(await fetchForDate(fmt(yesterday)));
-
-        // Compare with day before yesterday
-        const dayBefore = new Date(today);
-        dayBefore.setDate(dayBefore.getDate() - 2);
-        setCompareData(await fetchForDate(fmt(dayBefore)));
+        const yesterdayStr = offsetDate(todayStr, -1);
+        setData(await fetchForDate(yesterdayStr));
+        setCompareData(await fetchForDate(offsetDate(todayStr, -2)));
       } else {
-        // Multi-day: fetch each day and aggregate
         const days = period === "7d" ? 7 : 30;
-        const allDays: VariantData[][] = [];
-        const compareDays: VariantData[][] = [];
-
         const fetchPromises = [];
         for (let i = 0; i < days; i++) {
-          const d = new Date(today);
-          d.setDate(d.getDate() - i);
-          fetchPromises.push(fetchForDate(fmt(d)));
+          fetchPromises.push(fetchForDate(offsetDate(todayStr, -i)));
         }
         for (let i = days; i < days * 2; i++) {
-          const d = new Date(today);
-          d.setDate(d.getDate() - i);
-          fetchPromises.push(fetchForDate(fmt(d)));
+          fetchPromises.push(fetchForDate(offsetDate(todayStr, -i)));
         }
 
         const results = await Promise.all(fetchPromises);
+        const allDays: VariantData[][] = [];
+        const compareDays: VariantData[][] = [];
         for (let i = 0; i < days; i++) allDays.push(results[i]);
         for (let i = days; i < days * 2; i++) compareDays.push(results[i]);
 
@@ -331,7 +326,7 @@ export default function LiveABTest() {
       console.warn("[ABTest] fetch error:", err);
     }
     setIsLoading(false);
-  }, [period, fetchForDate]);
+  }, [period, fetchForDate, getSaoPauloToday]);
 
   useEffect(() => {
     fetchData();
