@@ -267,7 +267,10 @@ export default function LiveABTest() {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchForDate = useCallback(async (dateStr: string) => {
-    const { data: rpc } = await supabase.rpc("get_ab_summary_by_date" as any, { target_date: dateStr });
+    console.log("[ABTest] fetchForDate:", dateStr);
+    const { data: rpc, error } = await supabase.rpc("get_ab_summary_by_date" as any, { target_date: dateStr });
+    if (error) console.error("[ABTest] RPC error:", error);
+    console.log("[ABTest] RPC result for", dateStr, ":", JSON.stringify(rpc));
     return parseVariants((rpc as any)?.ab_sales || []);
   }, []);
 
@@ -285,6 +288,7 @@ export default function LiveABTest() {
     setIsLoading(true);
     try {
       const todayStr = getSaoPauloToday();
+      console.log("[ABTest] todayStr (SP):", todayStr, "period:", period);
 
       const offsetDate = (dateStr: string, days: number) => {
         const [y, m, d] = dateStr.split("-").map(Number);
@@ -345,6 +349,18 @@ export default function LiveABTest() {
     toast.success(`Variação ${variant} declarada vencedora! 100% do tráfego será direcionado.`);
   };
 
+  if (isLoading && data.length === 0) {
+    return (
+      <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <FlaskConical className="w-4 h-4 text-violet-400" />
+          <h3 className="text-sm font-semibold text-white">A/B Test — Tela Inicial</h3>
+        </div>
+        <p className="text-xs text-[#888] animate-pulse">Carregando dados do teste A/B...</p>
+      </div>
+    );
+  }
+
   if (data.length === 0) {
     return (
       <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-4">
@@ -352,7 +368,23 @@ export default function LiveABTest() {
           <FlaskConical className="w-4 h-4 text-violet-400" />
           <h3 className="text-sm font-semibold text-white">A/B Test — Tela Inicial</h3>
         </div>
-        <p className="text-xs text-[#888]">Aguardando dados.</p>
+        <p className="text-xs text-[#888]">Nenhum dado encontrado para o período selecionado.</p>
+        <div className="flex items-center gap-1.5 mt-3">
+          {PERIODS.map(p => (
+            <button
+              key={p.value}
+              onClick={() => setPeriod(p.value)}
+              className={cn(
+                "text-[10px] px-2.5 py-1 rounded-lg border transition-all",
+                period === p.value
+                  ? "bg-violet-500/10 border-violet-500/30 text-violet-300"
+                  : "bg-[#1a1a1a] border-[#2a2a2a] text-[#888] hover:text-[#ccc]"
+              )}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
     );
   }
