@@ -396,6 +396,9 @@ export default function LiveABTest() {
         <div className="flex items-center gap-2">
           <FlaskConical className="w-4 h-4 text-violet-400" />
           <h3 className="text-sm font-semibold text-white">A/B Test — Tela Inicial</h3>
+          <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px] px-1.5 py-0">
+            Ativas: A + C (50/50)
+          </Badge>
         </div>
         <div className="flex items-center gap-1.5">
           {PERIODS.map(p => (
