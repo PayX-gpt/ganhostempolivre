@@ -58,7 +58,7 @@ export function declareWinner(variant: QuizVariant): void {
  */
 export function getEffectiveVariant(): QuizVariant {
   const winner = localStorage.getItem("quiz_variant_winner");
-  if (winner && ALL_VARIANTS.includes(winner as QuizVariant)) {
+  if (winner && ACTIVE_VARIANTS.includes(winner as QuizVariant)) {
     return winner as QuizVariant;
   }
   return getOrAssignVariant();
