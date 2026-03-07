@@ -4,7 +4,13 @@ import { getTrackingData } from "./trackingDataLayer";
 export type QuizVariant = "A" | "B" | "C" | "D";
 
 const VARIANT_KEY = "quiz_variant";
-const VARIANTS: QuizVariant[] = ["A", "B", "C", "D"];
+const ALL_VARIANTS: QuizVariant[] = ["A", "B", "C", "D"];
+
+/**
+ * Active variants for the current test.
+ * Change this array to control traffic split (equal weight).
+ */
+const ACTIVE_VARIANTS: QuizVariant[] = ["A", "C"];
 
 /**
  * Get or assign a variant for the current visitor.
@@ -12,10 +18,12 @@ const VARIANTS: QuizVariant[] = ["A", "B", "C", "D"];
  */
 export function getOrAssignVariant(): QuizVariant {
   const stored = localStorage.getItem(VARIANT_KEY);
-  if (stored && VARIANTS.includes(stored as QuizVariant)) {
+  // If stored variant is still active, keep it
+  if (stored && ACTIVE_VARIANTS.includes(stored as QuizVariant)) {
     return stored as QuizVariant;
   }
-  const variant = VARIANTS[Math.floor(Math.random() * VARIANTS.length)];
+  // Re-assign to an active variant (handles old B/D users too)
+  const variant = ACTIVE_VARIANTS[Math.floor(Math.random() * ACTIVE_VARIANTS.length)];
   localStorage.setItem(VARIANT_KEY, variant);
   return variant;
 }
@@ -50,7 +58,7 @@ export function declareWinner(variant: QuizVariant): void {
  */
 export function getEffectiveVariant(): QuizVariant {
   const winner = localStorage.getItem("quiz_variant_winner");
-  if (winner && VARIANTS.includes(winner as QuizVariant)) {
+  if (winner && ALL_VARIANTS.includes(winner as QuizVariant)) {
     return winner as QuizVariant;
   }
   return getOrAssignVariant();
