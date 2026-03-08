@@ -10,7 +10,7 @@ const ALL_VARIANTS: QuizVariant[] = ["A", "B", "C", "D"];
  * Active variants for the current test.
  * Change this array to control traffic split (equal weight).
  */
-const ACTIVE_VARIANTS: QuizVariant[] = ["A", "C"];
+const ACTIVE_VARIANTS: QuizVariant[] = ["A"];
 
 /**
  * Get or assign a variant for the current visitor.
