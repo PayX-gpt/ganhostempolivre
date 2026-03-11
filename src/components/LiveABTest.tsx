@@ -397,7 +397,7 @@ export default function LiveABTest() {
           <FlaskConical className="w-4 h-4 text-violet-400" />
           <h3 className="text-sm font-semibold text-white">A/B Test — Tela Inicial</h3>
           <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px] px-1.5 py-0">
-            Ativa: A (100%)
+            Ativas: A + B + C + D (25% cada)
           </Badge>
         </div>
         <div className="flex items-center gap-1.5">
