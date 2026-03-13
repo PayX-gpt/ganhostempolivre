@@ -2,9 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { FlaskConical, Trophy, Medal, TrendingUp, TrendingDown, Eye, Calendar, AlertTriangle, Target, Zap, Shield } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { FlaskConical, Trophy, Medal, TrendingUp, TrendingDown, Eye, Calendar as CalendarIcon, AlertTriangle, Target, Zap, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 /* ── Types ── */
 interface VariantRaw {
@@ -135,20 +139,17 @@ function parseVariants(raw: any[]): VariantData[] {
       };
     });
 
-  // Calculate weighted scores
   return calculateScores(parsed);
 }
 
 function calculateScores(variants: VariantData[]): VariantData[] {
   if (variants.length === 0) return variants;
 
-  // For each criterion, find max value
   const maxValues: Record<string, number> = {};
   CRITERIA_KEYS.forEach(key => {
     maxValues[key] = Math.max(...variants.map(v => v[key] as number), 0.001);
   });
 
-  // Normalize each criterion to 0-100 and apply weights
   return variants.map(v => {
     let nota = 0;
     CRITERIA_KEYS.forEach(key => {
@@ -249,12 +250,33 @@ function DeltaBadge({ curr, prev }: { curr: number; prev: number }) {
   );
 }
 
+/* ── São Paulo date helpers ── */
+function getSaoPauloDate(offset = 0): string {
+  const now = new Date();
+  const spDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  spDate.setDate(spDate.getDate() + offset);
+  const y = spDate.getFullYear();
+  const m = String(spDate.getMonth() + 1).padStart(2, "0");
+  const d = String(spDate.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function dateToStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 /* ── Period options ── */
 const PERIODS = [
   { value: "today", label: "Hoje" },
   { value: "yesterday", label: "Ontem" },
+  { value: "3d", label: "3 dias" },
   { value: "7d", label: "7 dias" },
+  { value: "14d", label: "14 dias" },
   { value: "30d", label: "30 dias" },
+  { value: "custom", label: "Personalizado" },
 ];
 
 /* ── Main Component ── */
@@ -265,78 +287,125 @@ export default function LiveABTest() {
   const [showCompare, setShowCompare] = useState(true);
   const [previewVariant, setPreviewVariant] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [customRange, setCustomRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [periodLabel, setPeriodLabel] = useState("");
 
-  const fetchForDate = useCallback(async (dateStr: string) => {
-    console.log("[ABTest] fetchForDate:", dateStr);
-    const { data: rpc, error } = await supabase.rpc("get_ab_summary_by_date" as any, { target_date: dateStr });
-    if (error) console.error("[ABTest] RPC error:", error);
-    console.log("[ABTest] RPC result for", dateStr, ":", JSON.stringify(rpc));
+  // Fetch using range-based RPC (single call, no N+1)
+  const fetchRange = useCallback(async (startDate: string, endDate: string): Promise<VariantData[]> => {
+    console.log("[ABTest] fetchRange:", startDate, "→", endDate);
+    const { data: rpc, error } = await supabase.rpc("get_ab_summary_range" as any, { start_date: startDate, end_date: endDate });
+    if (error) {
+      console.error("[ABTest] RPC range error:", error);
+      // Fallback to single-day RPC if range function doesn't exist yet
+      if (startDate === endDate) {
+        const { data: fallback } = await supabase.rpc("get_ab_summary_by_date" as any, { target_date: startDate });
+        return parseVariants((fallback as any)?.ab_sales || []);
+      }
+      return [];
+    }
     return parseVariants((rpc as any)?.ab_sales || []);
-  }, []);
-
-  // Get today's date in São Paulo timezone
-  const getSaoPauloToday = useCallback(() => {
-    const now = new Date();
-    const spDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-    const y = spDate.getFullYear();
-    const m = String(spDate.getMonth() + 1).padStart(2, "0");
-    const d = String(spDate.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
   }, []);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const todayStr = getSaoPauloToday();
-      console.log("[ABTest] todayStr (SP):", todayStr, "period:", period);
+      const todayStr = getSaoPauloDate(0);
 
-      const offsetDate = (dateStr: string, days: number) => {
-        const [y, m, d] = dateStr.split("-").map(Number);
-        const dt = new Date(y, m - 1, d);
-        dt.setDate(dt.getDate() + days);
-        const ny = dt.getFullYear();
-        const nm = String(dt.getMonth() + 1).padStart(2, "0");
-        const nd = String(dt.getDate()).padStart(2, "0");
-        return `${ny}-${nm}-${nd}`;
-      };
+      let startDate: string, endDate: string;
+      let compareStart: string, compareEnd: string;
+      let label = "";
 
-      if (period === "today") {
-        setData(await fetchForDate(todayStr));
-        setCompareData(await fetchForDate(offsetDate(todayStr, -1)));
-      } else if (period === "yesterday") {
-        const yesterdayStr = offsetDate(todayStr, -1);
-        setData(await fetchForDate(yesterdayStr));
-        setCompareData(await fetchForDate(offsetDate(todayStr, -2)));
-      } else {
-        const days = period === "7d" ? 7 : 30;
-        const fetchPromises = [];
-        for (let i = 0; i < days; i++) {
-          fetchPromises.push(fetchForDate(offsetDate(todayStr, -i)));
-        }
-        for (let i = days; i < days * 2; i++) {
-          fetchPromises.push(fetchForDate(offsetDate(todayStr, -i)));
-        }
-
-        const results = await Promise.all(fetchPromises);
-        const allDays: VariantData[][] = [];
-        const compareDays: VariantData[][] = [];
-        for (let i = 0; i < days; i++) allDays.push(results[i]);
-        for (let i = days; i < days * 2; i++) compareDays.push(results[i]);
-
-        setData(aggregateMultiDay(allDays));
-        setCompareData(aggregateMultiDay(compareDays));
+      switch (period) {
+        case "today":
+          startDate = endDate = todayStr;
+          compareStart = compareEnd = getSaoPauloDate(-1);
+          label = `Hoje (${todayStr})`;
+          break;
+        case "yesterday":
+          startDate = endDate = getSaoPauloDate(-1);
+          compareStart = compareEnd = getSaoPauloDate(-2);
+          label = `Ontem (${startDate})`;
+          break;
+        case "3d":
+          startDate = getSaoPauloDate(-2);
+          endDate = todayStr;
+          compareStart = getSaoPauloDate(-5);
+          compareEnd = getSaoPauloDate(-3);
+          label = `${startDate} → ${endDate}`;
+          break;
+        case "7d":
+          startDate = getSaoPauloDate(-6);
+          endDate = todayStr;
+          compareStart = getSaoPauloDate(-13);
+          compareEnd = getSaoPauloDate(-7);
+          label = `${startDate} → ${endDate}`;
+          break;
+        case "14d":
+          startDate = getSaoPauloDate(-13);
+          endDate = todayStr;
+          compareStart = getSaoPauloDate(-27);
+          compareEnd = getSaoPauloDate(-14);
+          label = `${startDate} → ${endDate}`;
+          break;
+        case "30d":
+          startDate = getSaoPauloDate(-29);
+          endDate = todayStr;
+          compareStart = getSaoPauloDate(-59);
+          compareEnd = getSaoPauloDate(-30);
+          label = `${startDate} → ${endDate}`;
+          break;
+        case "custom":
+          if (!customRange.from || !customRange.to) {
+            setIsLoading(false);
+            return;
+          }
+          startDate = dateToStr(customRange.from);
+          endDate = dateToStr(customRange.to);
+          const rangeDays = Math.ceil((customRange.to.getTime() - customRange.from.getTime()) / 86400000) + 1;
+          const compareFrom = new Date(customRange.from);
+          compareFrom.setDate(compareFrom.getDate() - rangeDays);
+          const compareTo = new Date(customRange.from);
+          compareTo.setDate(compareTo.getDate() - 1);
+          compareStart = dateToStr(compareFrom);
+          compareEnd = dateToStr(compareTo);
+          label = `${startDate} → ${endDate}`;
+          break;
+        default:
+          startDate = endDate = todayStr;
+          compareStart = compareEnd = getSaoPauloDate(-1);
+          label = `Hoje (${todayStr})`;
       }
+
+      setPeriodLabel(label);
+
+      const [mainData, compData] = await Promise.all([
+        fetchRange(startDate, endDate),
+        fetchRange(compareStart, compareEnd),
+      ]);
+
+      setData(mainData);
+      setCompareData(compData);
     } catch (err) {
       console.warn("[ABTest] fetch error:", err);
     }
     setIsLoading(false);
-  }, [period, fetchForDate, getSaoPauloToday]);
+  }, [period, customRange, fetchRange]);
 
   useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 120000);
     return () => clearInterval(interval);
   }, [fetchData]);
+
+  // When custom range is selected via calendar, trigger fetch
+  const handleCustomRangeSelect = (range: { from: Date | undefined; to: Date | undefined }) => {
+    setCustomRange(range);
+    if (range.from && range.to) {
+      setPeriod("custom");
+      setCalendarOpen(false);
+    }
+  };
 
   const cMap = new Map(compareData.map(v => [v.variant, v]));
   const ranked = [...data].sort((a, b) => b.notaFinal - a.notaFinal);
@@ -361,34 +430,6 @@ export default function LiveABTest() {
     );
   }
 
-  if (data.length === 0) {
-    return (
-      <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <FlaskConical className="w-4 h-4 text-violet-400" />
-          <h3 className="text-sm font-semibold text-white">A/B Test — Tela Inicial</h3>
-        </div>
-        <p className="text-xs text-[#888]">Nenhum dado encontrado para o período selecionado.</p>
-        <div className="flex items-center gap-1.5 mt-3">
-          {PERIODS.map(p => (
-            <button
-              key={p.value}
-              onClick={() => setPeriod(p.value)}
-              className={cn(
-                "text-[10px] px-2.5 py-1 rounded-lg border transition-all",
-                period === p.value
-                  ? "bg-violet-500/10 border-violet-500/30 text-violet-300"
-                  : "bg-[#1a1a1a] border-[#2a2a2a] text-[#888] hover:text-[#ccc]"
-              )}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-4 space-y-4">
       {/* Header with period filter */}
@@ -400,13 +441,13 @@ export default function LiveABTest() {
             Ativas: A + B + C + D (25% cada)
           </Badge>
         </div>
-        <div className="flex items-center gap-1.5">
-          {PERIODS.map(p => (
+        <div className="flex items-center gap-1 flex-wrap">
+          {PERIODS.filter(p => p.value !== "custom").map(p => (
             <button
               key={p.value}
               onClick={() => setPeriod(p.value)}
               className={cn(
-                "text-[10px] px-2.5 py-1 rounded-lg border transition-all",
+                "text-[10px] px-2 py-1 rounded-lg border transition-all",
                 period === p.value
                   ? "bg-violet-500/10 border-violet-500/30 text-violet-300"
                   : "bg-[#1a1a1a] border-[#2a2a2a] text-[#888] hover:text-[#ccc]"
@@ -415,265 +456,313 @@ export default function LiveABTest() {
               {p.label}
             </button>
           ))}
+          {/* Custom date picker */}
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border transition-all",
+                  period === "custom"
+                    ? "bg-violet-500/10 border-violet-500/30 text-violet-300"
+                    : "bg-[#1a1a1a] border-[#2a2a2a] text-[#888] hover:text-[#ccc]"
+                )}
+              >
+                <CalendarIcon className="w-3 h-3" />
+                {period === "custom" && customRange.from && customRange.to
+                  ? `${format(customRange.from, "dd/MM")} — ${format(customRange.to, "dd/MM")}`
+                  : "Personalizado"
+                }
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-[#111] border-[#2a2a2a]" align="end">
+              <Calendar
+                mode="range"
+                selected={customRange.from && customRange.to ? { from: customRange.from, to: customRange.to } : undefined}
+                onSelect={(range: any) => handleCustomRangeSelect({ from: range?.from, to: range?.to })}
+                numberOfMonths={1}
+                disabled={(date) => date > new Date()}
+                className="p-3 pointer-events-auto"
+                locale={ptBR}
+              />
+            </PopoverContent>
+          </Popover>
+          {/* Compare toggle */}
           <button
             onClick={() => setShowCompare(!showCompare)}
             className={cn(
-              "flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-lg border transition-all ml-1",
+              "flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border transition-all ml-0.5",
               showCompare ? "bg-sky-500/10 border-sky-500/30 text-sky-300" : "bg-[#1a1a1a] border-[#2a2a2a] text-[#888]"
             )}
           >
-            <Calendar className="w-3 h-3" />
-            Δ
+            Δ Comparar
           </button>
         </div>
       </div>
 
-      {/* ─── FULL TABLE with 8 criteria ─── */}
-      <div className="overflow-x-auto -mx-4 px-4">
-        <table className="w-full text-xs min-w-[1100px]">
-          <thead>
-            <tr className="text-[#888] border-b border-[#2a2a2a]">
-              <th className="text-left py-2 px-1.5 font-medium">Var.</th>
-              <th className="text-right py-2 px-1.5 font-medium">Visitantes</th>
-              <th className="text-right py-2 px-1.5 font-medium">CTA%</th>
-              <th className="text-right py-2 px-1.5 font-medium">Quiz%</th>
-              <th className="text-right py-2 px-1.5 font-medium">IC%</th>
-              <th className="text-right py-2 px-1.5 font-medium">Conv%</th>
-              <th className="text-right py-2 px-1.5 font-medium">V.Front</th>
-              <th className="text-right py-2 px-1.5 font-medium">V.Total</th>
-              <th className="text-right py-2 px-1.5 font-medium">Upsell%</th>
-              <th className="text-right py-2 px-1.5 font-medium">R$ Front</th>
-              <th className="text-right py-2 px-1.5 font-medium">R$ Upsell</th>
-              <th className="text-right py-2 px-1.5 font-medium">R$ Total</th>
-              <th className="text-right py-2 px-1.5 font-medium">RPV</th>
-              <th className="text-right py-2 px-1.5 font-medium">Ticket</th>
-              <th className="text-center py-2 px-1.5 font-medium">NOTA</th>
-              <th className="text-center py-2 px-1.5 font-medium">
-                <Eye className="w-3 h-3 mx-auto" />
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {ranked.map((v, i) => {
-              const isBest = i === 0 && v.notaFinal > 0;
-              const isSecond = i === 1 && v.notaFinal > 0;
-              const cv = cMap.get(v.variant);
+      {/* Period label */}
+      {periodLabel && (
+        <p className="text-[10px] text-[#666] -mt-2">Período: {periodLabel}</p>
+      )}
 
-              return (
-                <tr
-                  key={v.variant}
-                  className={cn(
-                    "border-b border-[#1a1a1a] transition-colors hover:bg-white/[0.02]",
-                    isBest && "bg-emerald-500/[0.06]",
-                    isSecond && "bg-sky-500/[0.04]"
-                  )}
-                >
-                  <td className="py-2 px-1.5">
-                    <div className="flex items-center gap-1">
-                      <span className={cn("font-bold", isBest ? "text-emerald-400" : isSecond ? "text-sky-400" : "text-white")}>
-                        {v.variant}
-                      </span>
-                      {isBest && <Trophy className="w-3 h-3 text-amber-400" />}
-                      {isSecond && <Medal className="w-3 h-3 text-sky-400" />}
-                    </div>
-                  </td>
-                  <td className="text-right py-2 px-1.5 text-white tabular-nums">
-                    {v.visitors}
-                    {showCompare && cv && <DeltaBadge curr={v.visitors} prev={cv.visitors} />}
-                  </td>
-                  <td className="text-right py-2 px-1.5 text-white tabular-nums">
-                    {v.taxaCta.toFixed(1)}%
-                    {showCompare && cv && <DeltaBadge curr={v.taxaCta} prev={cv.taxaCta} />}
-                  </td>
-                  <td className="text-right py-2 px-1.5 text-white tabular-nums">{v.taxaQuiz.toFixed(1)}%</td>
-                  <td className="text-right py-2 px-1.5 text-white tabular-nums">{v.taxaIc.toFixed(1)}%</td>
-                  <td className="text-right py-2 px-1.5 text-white tabular-nums">
-                    {v.taxaConvFront.toFixed(1)}%
-                    {showCompare && cv && <DeltaBadge curr={v.taxaConvFront} prev={cv.taxaConvFront} />}
-                  </td>
-                  <td className="text-right py-2 px-1.5 text-emerald-400 tabular-nums font-bold">
-                    {v.frontSales}
-                    {showCompare && cv && <DeltaBadge curr={v.frontSales} prev={cv.frontSales} />}
-                  </td>
-                  <td className="text-right py-2 px-1.5 text-white tabular-nums">{v.totalSales}</td>
-                  <td className="text-right py-2 px-1.5 text-white tabular-nums">{v.taxaUpsell.toFixed(1)}%</td>
-                  <td className="text-right py-2 px-1.5 text-white tabular-nums">R${v.frontRevenue.toFixed(0)}</td>
-                  <td className="text-right py-2 px-1.5 text-white tabular-nums">R${v.upsellRevenue.toFixed(0)}</td>
-                  <td className="text-right py-2 px-1.5 text-white tabular-nums font-semibold">
-                    R${v.totalRevenue.toFixed(0)}
-                    {showCompare && cv && <DeltaBadge curr={v.totalRevenue} prev={cv.totalRevenue} />}
-                  </td>
-                  <td className={cn("text-right py-2 px-1.5 font-bold tabular-nums", isBest ? "text-emerald-400" : isSecond ? "text-sky-400" : "text-white")}>
-                    R${v.rpv.toFixed(2)}
-                    {showCompare && cv && <DeltaBadge curr={v.rpv} prev={cv.rpv} />}
-                  </td>
-                  <td className="text-right py-2 px-1.5 text-white tabular-nums">R${v.ticketMedio.toFixed(0)}</td>
-                  <td className="text-center py-2 px-1.5">
-                    <span className={cn(
-                      "inline-block min-w-[28px] px-1.5 py-0.5 rounded-md text-[10px] font-bold",
-                      isBest ? "bg-emerald-500/20 text-emerald-400" :
-                      isSecond ? "bg-sky-500/20 text-sky-400" :
-                      "bg-[#2a2a2a] text-[#888]"
-                    )}>
-                      {v.notaFinal}
-                    </span>
-                  </td>
-                  <td className="text-center py-2 px-1.5">
-                    <button
-                      onClick={() => setPreviewVariant(v.variant)}
-                      className="text-[#666] hover:text-violet-400 transition-colors"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* ─── ANÁLISE INTELIGENTE — VEREDITO ─── */}
-      {best && best.notaFinal > 0 && (
-        <div className="rounded-xl bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-[#2a2a2a] p-4 space-y-4">
-          <div className="flex items-center gap-2 border-b border-[#2a2a2a] pb-3">
-            <Target className="w-4 h-4 text-amber-400" />
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-              Análise Inteligente — Teste A/B de Tela Inicial
-            </h4>
-          </div>
-
-          {/* MELHOR TELA */}
-          <div className="rounded-lg bg-emerald-500/[0.05] border border-emerald-500/20 p-3 space-y-2">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="text-xs font-bold text-emerald-400">
-                MELHOR TELA: Variante {best.variant} — Nota {best.notaFinal}/100
-              </span>
-            </div>
-            <p className="text-[11px] text-[#ccc] leading-relaxed pl-6">
-              <strong className="text-white">Por quê:</strong> {generateMotivo(best, ranked)}
-            </p>
-            <div className="flex flex-wrap gap-3 pl-6">
-              <div>
-                <span className="text-[9px] text-emerald-400 font-semibold uppercase">Pontos fortes: </span>
-                <span className="text-[10px] text-[#ccc]">{getStrongestCriteria(best, ranked).join(", ") || "equilibrado"}</span>
-              </div>
-              <div>
-                <span className="text-[9px] text-red-400 font-semibold uppercase">Ponto fraco: </span>
-                <span className="text-[10px] text-[#ccc]">{getWeakestCriterion(best, ranked)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* SEGUNDA MELHOR */}
-          {second && second.notaFinal > 0 && (
-            <div className="rounded-lg bg-sky-500/[0.05] border border-sky-500/20 p-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <Medal className="w-4 h-4 text-sky-400 shrink-0" />
-                <span className="text-xs font-bold text-sky-400">
-                  SEGUNDA MELHOR: Variante {second.variant} — Nota {second.notaFinal}/100
-                </span>
-              </div>
-              <p className="text-[11px] text-[#ccc] leading-relaxed pl-6">
-                <strong className="text-white">Por quê:</strong> {generateMotivo(second, ranked)}
-              </p>
-              <div className="flex flex-wrap gap-3 pl-6">
-                <div>
-                  <span className="text-[9px] text-sky-400 font-semibold uppercase">Pontos fortes: </span>
-                  <span className="text-[10px] text-[#ccc]">{getStrongestCriteria(second, ranked).join(", ") || "equilibrado"}</span>
-                </div>
-                <div>
-                  <span className="text-[9px] text-red-400 font-semibold uppercase">Ponto fraco: </span>
-                  <span className="text-[10px] text-[#ccc]">{getWeakestCriterion(second, ranked)}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* RECOMENDAÇÃO */}
-          <div className="rounded-lg bg-[#0d0d0d] border border-[#222] p-3 space-y-2">
-            <div className="flex items-center gap-2">
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-[10px] font-bold text-amber-400 uppercase">Recomendação</span>
-            </div>
-            <p className="text-[11px] text-[#ccc] leading-relaxed pl-5.5">
-              {generateRecomendacao(ranked)}
-            </p>
-          </div>
-
-          {/* CONFIANÇA */}
-          {confianca && (
-            <div className="flex items-center gap-2 px-1">
-              <Shield className={cn("w-3.5 h-3.5 shrink-0", {
-                "text-red-400": confianca.level === "low",
-                "text-yellow-400": confianca.level === "moderate",
-                "text-emerald-400": confianca.level === "high",
-                "text-emerald-300": confianca.level === "very_high",
-              })} />
-              <span className="text-[10px] text-[#888]">{confianca.text}</span>
-            </div>
-          )}
+      {/* Empty state */}
+      {data.length === 0 && !isLoading && (
+        <div className="text-center py-6">
+          <AlertTriangle className="w-5 h-5 text-amber-400 mx-auto mb-2" />
+          <p className="text-xs text-[#888]">Nenhum dado de teste A/B para o período selecionado.</p>
+          <p className="text-[10px] text-[#666] mt-1">Tente selecionar um período com tráfego ativo.</p>
         </div>
       )}
 
-      {/* Declare Winner button */}
-      {best && confianca && (confianca.level === "high" || confianca.level === "very_high") && best.notaFinal >= 70 && (
-        <button
-          onClick={() => declareWinner(best.variant)}
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold text-sm hover:brightness-110 transition-all"
-        >
-          <Trophy className="w-4 h-4 inline mr-2" />
-          Declarar Variação {best.variant} como vencedora — Enviar 100% do tráfego
-        </button>
-      )}
+      {data.length > 0 && (
+        <>
+          {/* ─── FULL TABLE with 8 criteria ─── */}
+          <div className="overflow-x-auto -mx-4 px-4">
+            <table className="w-full text-xs min-w-[1100px]">
+              <thead>
+                <tr className="text-[#888] border-b border-[#2a2a2a]">
+                  <th className="text-left py-2 px-1.5 font-medium">Var.</th>
+                  <th className="text-right py-2 px-1.5 font-medium">Visitantes</th>
+                  <th className="text-right py-2 px-1.5 font-medium">CTA%</th>
+                  <th className="text-right py-2 px-1.5 font-medium">Quiz%</th>
+                  <th className="text-right py-2 px-1.5 font-medium">IC%</th>
+                  <th className="text-right py-2 px-1.5 font-medium">Conv%</th>
+                  <th className="text-right py-2 px-1.5 font-medium">V.Front</th>
+                  <th className="text-right py-2 px-1.5 font-medium">V.Total</th>
+                  <th className="text-right py-2 px-1.5 font-medium">Upsell%</th>
+                  <th className="text-right py-2 px-1.5 font-medium">R$ Front</th>
+                  <th className="text-right py-2 px-1.5 font-medium">R$ Upsell</th>
+                  <th className="text-right py-2 px-1.5 font-medium">R$ Total</th>
+                  <th className="text-right py-2 px-1.5 font-medium">RPV</th>
+                  <th className="text-right py-2 px-1.5 font-medium">Ticket</th>
+                  <th className="text-center py-2 px-1.5 font-medium">NOTA</th>
+                  <th className="text-center py-2 px-1.5 font-medium">
+                    <Eye className="w-3 h-3 mx-auto" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {ranked.map((v, i) => {
+                  const isBest = i === 0 && v.notaFinal > 0;
+                  const isSecond = i === 1 && v.notaFinal > 0;
+                  const cv = cMap.get(v.variant);
 
-      {/* Funnel bars per variant */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {ranked.map((v) => {
-          const steps = [
-            { label: "Visitantes", value: v.visitors },
-            { label: "CTA", value: v.ctaClicks },
-            { label: "Quiz OK", value: v.quizComplete },
-            { label: "IC", value: v.checkouts },
-            { label: "Vendas", value: v.frontSales },
-          ];
-          const max = Math.max(...steps.map((s) => s.value), 1);
-          const isBest = ranked[0]?.variant === v.variant;
-          return (
-            <div
-              key={v.variant}
-              className={cn(
-                "rounded-xl border p-3 space-y-2 cursor-pointer hover:border-violet-500/30 transition-colors",
-                isBest ? "bg-emerald-500/[0.04] border-emerald-500/20" : "bg-[#141414] border-[#2a2a2a]"
-              )}
-              onClick={() => setPreviewVariant(v.variant)}
-            >
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-white">Var. {v.variant}</span>
-                <Badge className={cn("text-[8px] border-0 px-1.5", isBest ? "bg-emerald-500/20 text-emerald-400" : "bg-[#2a2a2a] text-[#888]")}>
-                  {v.notaFinal}pts
-                </Badge>
-                <Eye className="w-3 h-3 text-[#555] ml-auto" />
+                  return (
+                    <tr
+                      key={v.variant}
+                      className={cn(
+                        "border-b border-[#1a1a1a] transition-colors hover:bg-white/[0.02]",
+                        isBest && "bg-emerald-500/[0.06]",
+                        isSecond && "bg-sky-500/[0.04]"
+                      )}
+                    >
+                      <td className="py-2 px-1.5">
+                        <div className="flex items-center gap-1">
+                          <span className={cn("font-bold", isBest ? "text-emerald-400" : isSecond ? "text-sky-400" : "text-white")}>
+                            {v.variant}
+                          </span>
+                          {isBest && <Trophy className="w-3 h-3 text-amber-400" />}
+                          {isSecond && <Medal className="w-3 h-3 text-sky-400" />}
+                        </div>
+                      </td>
+                      <td className="text-right py-2 px-1.5 text-white tabular-nums">
+                        {v.visitors}
+                        {showCompare && cv && <DeltaBadge curr={v.visitors} prev={cv.visitors} />}
+                      </td>
+                      <td className="text-right py-2 px-1.5 text-white tabular-nums">
+                        {v.taxaCta.toFixed(1)}%
+                        {showCompare && cv && <DeltaBadge curr={v.taxaCta} prev={cv.taxaCta} />}
+                      </td>
+                      <td className="text-right py-2 px-1.5 text-white tabular-nums">{v.taxaQuiz.toFixed(1)}%</td>
+                      <td className="text-right py-2 px-1.5 text-white tabular-nums">{v.taxaIc.toFixed(1)}%</td>
+                      <td className="text-right py-2 px-1.5 text-white tabular-nums">
+                        {v.taxaConvFront.toFixed(1)}%
+                        {showCompare && cv && <DeltaBadge curr={v.taxaConvFront} prev={cv.taxaConvFront} />}
+                      </td>
+                      <td className="text-right py-2 px-1.5 text-emerald-400 tabular-nums font-bold">
+                        {v.frontSales}
+                        {showCompare && cv && <DeltaBadge curr={v.frontSales} prev={cv.frontSales} />}
+                      </td>
+                      <td className="text-right py-2 px-1.5 text-white tabular-nums">{v.totalSales}</td>
+                      <td className="text-right py-2 px-1.5 text-white tabular-nums">{v.taxaUpsell.toFixed(1)}%</td>
+                      <td className="text-right py-2 px-1.5 text-white tabular-nums">R${v.frontRevenue.toFixed(0)}</td>
+                      <td className="text-right py-2 px-1.5 text-white tabular-nums">R${v.upsellRevenue.toFixed(0)}</td>
+                      <td className="text-right py-2 px-1.5 text-white tabular-nums font-semibold">
+                        R${v.totalRevenue.toFixed(0)}
+                        {showCompare && cv && <DeltaBadge curr={v.totalRevenue} prev={cv.totalRevenue} />}
+                      </td>
+                      <td className={cn("text-right py-2 px-1.5 font-bold tabular-nums", isBest ? "text-emerald-400" : isSecond ? "text-sky-400" : "text-white")}>
+                        R${v.rpv.toFixed(2)}
+                        {showCompare && cv && <DeltaBadge curr={v.rpv} prev={cv.rpv} />}
+                      </td>
+                      <td className="text-right py-2 px-1.5 text-white tabular-nums">R${v.ticketMedio.toFixed(0)}</td>
+                      <td className="text-center py-2 px-1.5">
+                        <span className={cn(
+                          "inline-block min-w-[28px] px-1.5 py-0.5 rounded-md text-[10px] font-bold",
+                          isBest ? "bg-emerald-500/20 text-emerald-400" :
+                          isSecond ? "bg-sky-500/20 text-sky-400" :
+                          "bg-[#2a2a2a] text-[#888]"
+                        )}>
+                          {v.notaFinal}
+                        </span>
+                      </td>
+                      <td className="text-center py-2 px-1.5">
+                        <button
+                          onClick={() => setPreviewVariant(v.variant)}
+                          className="text-[#666] hover:text-violet-400 transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ─── ANÁLISE INTELIGENTE — VEREDITO ─── */}
+          {best && best.notaFinal > 0 && (
+            <div className="rounded-xl bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-[#2a2a2a] p-4 space-y-4">
+              <div className="flex items-center gap-2 border-b border-[#2a2a2a] pb-3">
+                <Target className="w-4 h-4 text-amber-400" />
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                  Análise Inteligente — Teste A/B de Tela Inicial
+                </h4>
               </div>
-              {steps.map((step) => (
-                <div key={step.label} className="space-y-0.5">
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-[#888]">{step.label}</span>
-                    <span className="text-white tabular-nums">{step.value}</span>
+
+              {/* MELHOR TELA */}
+              <div className="rounded-lg bg-emerald-500/[0.05] border border-emerald-500/20 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="text-xs font-bold text-emerald-400">
+                    MELHOR TELA: Variante {best.variant} — Nota {best.notaFinal}/100
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#ccc] leading-relaxed pl-6">
+                  <strong className="text-white">Por quê:</strong> {generateMotivo(best, ranked)}
+                </p>
+                <div className="flex flex-wrap gap-3 pl-6">
+                  <div>
+                    <span className="text-[9px] text-emerald-400 font-semibold uppercase">Pontos fortes: </span>
+                    <span className="text-[10px] text-[#ccc]">{getStrongestCriteria(best, ranked).join(", ") || "equilibrado"}</span>
                   </div>
-                  <div className="h-1.5 bg-[#2a2a2a] rounded-full overflow-hidden">
-                    <div
-                      className={cn("h-full rounded-full transition-all duration-700", isBest ? "bg-emerald-500" : "bg-violet-500")}
-                      style={{ width: `${(step.value / max) * 100}%` }}
-                    />
+                  <div>
+                    <span className="text-[9px] text-red-400 font-semibold uppercase">Ponto fraco: </span>
+                    <span className="text-[10px] text-[#ccc]">{getWeakestCriterion(best, ranked)}</span>
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* SEGUNDA MELHOR */}
+              {second && second.notaFinal > 0 && (
+                <div className="rounded-lg bg-sky-500/[0.05] border border-sky-500/20 p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Medal className="w-4 h-4 text-sky-400 shrink-0" />
+                    <span className="text-xs font-bold text-sky-400">
+                      SEGUNDA MELHOR: Variante {second.variant} — Nota {second.notaFinal}/100
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#ccc] leading-relaxed pl-6">
+                    <strong className="text-white">Por quê:</strong> {generateMotivo(second, ranked)}
+                  </p>
+                  <div className="flex flex-wrap gap-3 pl-6">
+                    <div>
+                      <span className="text-[9px] text-sky-400 font-semibold uppercase">Pontos fortes: </span>
+                      <span className="text-[10px] text-[#ccc]">{getStrongestCriteria(second, ranked).join(", ") || "equilibrado"}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-red-400 font-semibold uppercase">Ponto fraco: </span>
+                      <span className="text-[10px] text-[#ccc]">{getWeakestCriterion(second, ranked)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* RECOMENDAÇÃO */}
+              <div className="rounded-lg bg-[#0d0d0d] border border-[#222] p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-[10px] font-bold text-amber-400 uppercase">Recomendação</span>
+                </div>
+                <p className="text-[11px] text-[#ccc] leading-relaxed pl-5.5">
+                  {generateRecomendacao(ranked)}
+                </p>
+              </div>
+
+              {/* CONFIANÇA */}
+              {confianca && (
+                <div className="flex items-center gap-2 px-1">
+                  <Shield className={cn("w-3.5 h-3.5 shrink-0", {
+                    "text-red-400": confianca.level === "low",
+                    "text-yellow-400": confianca.level === "moderate",
+                    "text-emerald-400": confianca.level === "high",
+                    "text-emerald-300": confianca.level === "very_high",
+                  })} />
+                  <span className="text-[10px] text-[#888]">{confianca.text}</span>
+                </div>
+              )}
             </div>
-          );
-        })}
-      </div>
+          )}
+
+          {/* Declare Winner button */}
+          {best && confianca && (confianca.level === "high" || confianca.level === "very_high") && best.notaFinal >= 70 && (
+            <button
+              onClick={() => declareWinner(best.variant)}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold text-sm hover:brightness-110 transition-all"
+            >
+              <Trophy className="w-4 h-4 inline mr-2" />
+              Declarar Variação {best.variant} como vencedora — Enviar 100% do tráfego
+            </button>
+          )}
+
+          {/* Funnel bars per variant */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {ranked.map((v) => {
+              const steps = [
+                { label: "Visitantes", value: v.visitors },
+                { label: "CTA", value: v.ctaClicks },
+                { label: "Quiz OK", value: v.quizComplete },
+                { label: "IC", value: v.checkouts },
+                { label: "Vendas", value: v.frontSales },
+              ];
+              const max = Math.max(...steps.map((s) => s.value), 1);
+              const isBest = ranked[0]?.variant === v.variant;
+              return (
+                <div
+                  key={v.variant}
+                  className={cn(
+                    "rounded-xl border p-3 space-y-2 cursor-pointer hover:border-violet-500/30 transition-colors",
+                    isBest ? "bg-emerald-500/[0.04] border-emerald-500/20" : "bg-[#141414] border-[#2a2a2a]"
+                  )}
+                  onClick={() => setPreviewVariant(v.variant)}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-white">Var. {v.variant}</span>
+                    <Badge className={cn("text-[8px] border-0 px-1.5", isBest ? "bg-emerald-500/20 text-emerald-400" : "bg-[#2a2a2a] text-[#888]")}>
+                      {v.notaFinal}pts
+                    </Badge>
+                    <Eye className="w-3 h-3 text-[#555] ml-auto" />
+                  </div>
+                  {steps.map((step) => (
+                    <div key={step.label} className="space-y-0.5">
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-[#888]">{step.label}</span>
+                        <span className="text-white tabular-nums">{step.value}</span>
+                      </div>
+                      <div className="h-1.5 bg-[#2a2a2a] rounded-full overflow-hidden">
+                        <div
+                          className={cn("h-full rounded-full transition-all duration-700", isBest ? "bg-emerald-500" : "bg-violet-500")}
+                          style={{ width: `${(step.value / max) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       {/* Preview Dialog */}
       <Dialog open={!!previewVariant} onOpenChange={(open) => !open && setPreviewVariant(null)}>
@@ -753,52 +842,4 @@ export default function LiveABTest() {
       </Dialog>
     </div>
   );
-}
-
-/* ── Multi-day aggregation ── */
-function aggregateMultiDay(days: VariantData[][]): VariantData[] {
-  const map = new Map<string, {
-    visitors: number; ctaClicks: number; quizComplete: number; checkouts: number;
-    frontSales: number; upsellSales: number; frontRevenue: number; upsellRevenue: number;
-    totalSales: number; totalRevenue: number;
-  }>();
-
-  ["A", "B", "C", "D"].forEach(v => map.set(v, {
-    visitors: 0, ctaClicks: 0, quizComplete: 0, checkouts: 0,
-    frontSales: 0, upsellSales: 0, frontRevenue: 0, upsellRevenue: 0,
-    totalSales: 0, totalRevenue: 0,
-  }));
-
-  days.forEach(dayData => {
-    dayData.forEach(v => {
-      const acc = map.get(v.variant);
-      if (!acc) return;
-      acc.visitors += v.visitors;
-      acc.ctaClicks += v.ctaClicks;
-      acc.quizComplete += v.quizComplete;
-      acc.checkouts += v.checkouts;
-      acc.frontSales += v.frontSales;
-      acc.upsellSales += v.upsellSales;
-      acc.frontRevenue += v.frontRevenue;
-      acc.upsellRevenue += v.upsellRevenue;
-      acc.totalSales += v.totalSales;
-      acc.totalRevenue += v.totalRevenue;
-    });
-  });
-
-  const raw = [...map.entries()].map(([variant, acc]) => ({
-    variant,
-    visitors: acc.visitors,
-    cta_clicks: acc.ctaClicks,
-    quiz_complete: acc.quizComplete,
-    checkouts: acc.checkouts,
-    front_sales: acc.frontSales,
-    front_revenue: acc.frontRevenue,
-    upsell_sales: acc.upsellSales,
-    upsell_revenue: acc.upsellRevenue,
-    total_sales: acc.totalSales,
-    total_revenue: acc.totalRevenue,
-  }));
-
-  return parseVariants(raw);
 }

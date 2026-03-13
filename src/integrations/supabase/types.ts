@@ -602,6 +602,10 @@ export type Database = {
     }
     Functions: {
       get_ab_summary_by_date: { Args: { target_date?: string }; Returns: Json }
+      get_ab_summary_range: {
+        Args: { end_date: string; start_date: string }
+        Returns: Json
+      }
       get_campaign_stats_today: {
         Args: never
         Returns: {
