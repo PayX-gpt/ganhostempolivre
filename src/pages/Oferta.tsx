@@ -391,7 +391,7 @@ const Oferta = () => {
           transition={{ delay: 0.1 }}
           className="flex flex-col items-center gap-3 mb-2"
         >
-          <img src={chatgptLogo} alt="ChatGPT" className="w-12 h-12 rounded-xl shadow-md" />
+          <img src={chatgptLogo} alt="ChatGPT" className="w-12 h-12 object-contain" />
           <h1
             className="text-xl sm:text-2xl font-bold text-foreground text-center leading-tight"
             style={{ fontFamily: "'Merriweather', serif" }}
