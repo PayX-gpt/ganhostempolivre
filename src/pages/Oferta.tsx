@@ -111,7 +111,7 @@ const texts = {
   en: {
     brand: "ChatGPT",
     title: "Pricing",
-    subtitle: "Check the AI access plans that power the free time earnings platform.",
+    subtitle: "Activate your AI access key that powers the Free Time Platform.",
     plans: [
       {
         name: "Starter",
