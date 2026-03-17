@@ -5,6 +5,7 @@ import { useLanguage, LanguageSelector } from "@/lib/i18n";
 import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
+import chatgptLogo from "@/assets/chatgpt-logo.webp";
 
 const PLANS = [
   {
