@@ -5,6 +5,7 @@ import { useLanguage, LanguageSelector } from "@/lib/i18n";
 import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
+import chatgptLogo from "@/assets/chatgpt-logo.webp";
 
 const PLANS = [
   {
@@ -383,16 +384,21 @@ const Oferta = () => {
           </span>
         </motion.div>
 
-        {/* Title */}
-        <motion.h1
+        {/* ChatGPT Logo + Title */}
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-xl sm:text-2xl font-bold text-foreground text-center leading-tight mb-2"
-          style={{ fontFamily: "'Merriweather', serif" }}
+          className="flex flex-col items-center gap-3 mb-2"
         >
-          {t.title}
-        </motion.h1>
+          <img src={chatgptLogo} alt="ChatGPT" className="w-12 h-12 rounded-xl shadow-md" />
+          <h1
+            className="text-xl sm:text-2xl font-bold text-foreground text-center leading-tight"
+            style={{ fontFamily: "'Merriweather', serif" }}
+          >
+            {t.title}
+          </h1>
+        </motion.div>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
