@@ -46,7 +46,7 @@ const texts = {
   pt: {
     brand: "ChatGPT",
     title: "Preços",
-    subtitle: "Confira os planos de acesso à inteligência artificial que faz a plataforma funcionar.",
+    subtitle: "Ative sua chave de acesso à IA que faz a Plataforma de Tempo Livre funcionar.",
     plans: [
       {
         name: "Starter",
@@ -111,7 +111,7 @@ const texts = {
   en: {
     brand: "ChatGPT",
     title: "Pricing",
-    subtitle: "Check the AI access plans that power the free time earnings platform.",
+    subtitle: "Activate your AI access key that powers the Free Time Platform.",
     plans: [
       {
         name: "Starter",
@@ -176,7 +176,7 @@ const texts = {
   es: {
     brand: "ChatGPT",
     title: "Precios",
-    subtitle: "Consultá los planes de acceso a la inteligencia artificial que hace funcionar la plataforma.",
+    subtitle: "Activá tu clave de acceso a la IA que hace funcionar la Plataforma de Tiempo Libre.",
     plans: [
       {
         name: "Starter",
@@ -245,16 +245,20 @@ type Feature = { text: string; info: string; highlight: boolean };
 const InfoTooltip = ({ info }: { info: string }) => {
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
-  // Close on outside tap (mobile)
   useEffect(() => {
     if (!open) return;
+    // Calculate position based on button
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({
+        top: rect.bottom + 8,
+        left: Math.max(16, Math.min(rect.left - 100, window.innerWidth - 280)),
+      });
+    }
     const handler = (e: MouseEvent | TouchEvent) => {
-      if (
-        btnRef.current && !btnRef.current.contains(e.target as Node) &&
-        tooltipRef.current && !tooltipRef.current.contains(e.target as Node)
-      ) {
+      if (btnRef.current && !btnRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
@@ -267,7 +271,7 @@ const InfoTooltip = ({ info }: { info: string }) => {
   }, [open]);
 
   return (
-    <span className="relative inline-flex align-middle">
+    <span className="inline-flex align-middle">
       <button
         ref={btnRef}
         type="button"
@@ -278,20 +282,19 @@ const InfoTooltip = ({ info }: { info: string }) => {
         <Info className="w-4 h-4" />
       </button>
       <AnimatePresence>
-        {open && (
+        {open && pos && (
           <motion.div
-            ref={tooltipRef}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="fixed sm:absolute inset-x-4 sm:inset-x-auto bottom-auto sm:bottom-full sm:left-0 sm:right-auto top-auto z-50 sm:mb-2 w-auto sm:w-64 bg-black text-white text-sm leading-relaxed rounded-xl px-4 py-3 shadow-2xl"
-            style={{ maxWidth: "calc(100vw - 2rem)" }}
+            className="fixed z-[100] w-64 bg-black text-white text-sm leading-relaxed rounded-xl px-4 py-3 shadow-2xl"
+            style={{ top: pos.top, left: pos.left, maxWidth: "calc(100vw - 2rem)" }}
           >
             {info}
             <button
               onClick={() => setOpen(false)}
-              className="sm:hidden absolute top-2 right-3 text-white/50 text-xs font-medium"
+              className="absolute top-2 right-3 text-white/50 text-lg leading-none"
             >
               ✕
             </button>
@@ -399,7 +402,26 @@ const Oferta = () => {
             {t.title}
           </h1>
           <p className="text-base sm:text-lg text-black/50 max-w-lg leading-relaxed mt-1">
-            {t.subtitle}
+            {t.subtitle.split("Plataforma de Tempo Livre").length > 1
+              ? <>
+                  {t.subtitle.split("Plataforma de Tempo Livre")[0]}
+                  <span className="font-semibold text-black">Plataforma de Tempo Livre</span>
+                  {t.subtitle.split("Plataforma de Tempo Livre")[1]}
+                </>
+              : t.subtitle.split("Free Time Platform").length > 1
+              ? <>
+                  {t.subtitle.split("Free Time Platform")[0]}
+                  <span className="font-semibold text-black">Free Time Platform</span>
+                  {t.subtitle.split("Free Time Platform")[1]}
+                </>
+              : t.subtitle.split("Plataforma de Tiempo Libre").length > 1
+              ? <>
+                  {t.subtitle.split("Plataforma de Tiempo Libre")[0]}
+                  <span className="font-semibold text-black">Plataforma de Tiempo Libre</span>
+                  {t.subtitle.split("Plataforma de Tiempo Libre")[1]}
+                </>
+              : t.subtitle
+            }
           </p>
         </motion.div>
       </header>
