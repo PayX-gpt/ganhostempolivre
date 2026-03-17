@@ -10,7 +10,7 @@ import chatgptLogo from "@/assets/chatgpt-logo.webp";
 const PLANS = [
   {
     id: "starter",
-    kirvanoSlug: "chave-token-chatgpt-starter",
+    checkoutUrl: "https://pay.kirvano.com/4630333d-d5d1-4591-b767-2151f77c6b13",
     price: 37,
     originalPrice: 97,
     icon: BookOpen,
@@ -19,7 +19,7 @@ const PLANS = [
   },
   {
     id: "essencial",
-    kirvanoSlug: "chave-token-chatgpt",
+    checkoutUrl: "https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c",
     price: 47,
     originalPrice: 197,
     icon: Zap,
@@ -28,7 +28,7 @@ const PLANS = [
   },
   {
     id: "profissional",
-    kirvanoSlug: "chave-token-chatgpt-pro",
+    checkoutUrl: "https://pay.kirvano.com/b9bbad45-8e94-40c0-b910-73e814b03c8c",
     price: 97,
     originalPrice: 397,
     icon: Crown,
@@ -37,7 +37,7 @@ const PLANS = [
   },
   {
     id: "vip",
-    kirvanoSlug: "chave-token-chatgpt-vip",
+    checkoutUrl: "https://pay.kirvano.com/4feda4e1-966a-400c-9b34-a68e9ca0fbb1",
     price: 197,
     originalPrice: 697,
     icon: Star,
@@ -315,7 +315,7 @@ const Oferta = () => {
     checkoutParams.set("plan", plan.id);
 
     const qs = checkoutParams.toString();
-    return `https://pay.kirvano.com/${plan.kirvanoSlug}${qs ? `?${qs}` : ""}`;
+    return `${plan.checkoutUrl}${qs ? `?${qs}` : ""}`;
   };
 
   const handlePlanClick = (plan: typeof PLANS[0]) => {
@@ -325,7 +325,7 @@ const Oferta = () => {
         context: "oferta_page",
         plan: plan.id,
         amount: plan.price,
-        product: plan.kirvanoSlug,
+        product: plan.id,
       });
       sendCAPIInitiateCheckout({ amount: plan.price });
       trackTikTokInitiateCheckout({ amount: plan.price });
