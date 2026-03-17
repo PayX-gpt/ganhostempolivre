@@ -244,29 +244,57 @@ type Feature = { text: string; info: string; highlight: boolean };
 
 const InfoTooltip = ({ info }: { info: string }) => {
   const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside tap (mobile)
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (
+        btnRef.current && !btnRef.current.contains(e.target as Node) &&
+        tooltipRef.current && !tooltipRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
+  }, [open]);
+
   return (
-    <span className="relative inline-flex">
+    <span className="relative inline-flex align-middle">
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen(!open)}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        className="ml-1 mt-0.5 text-black/25 hover:text-black/50 transition-colors"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className="ml-1 text-black/25 hover:text-black/50 transition-colors p-1 -m-1"
         aria-label="Mais informações"
       >
-        <Info className="w-3.5 h-3.5" />
+        <Info className="w-4 h-4" />
       </button>
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
+            ref={tooltipRef}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 w-56 bg-black text-white text-xs leading-relaxed rounded-lg px-3 py-2.5 shadow-lg pointer-events-none"
+            className="fixed sm:absolute inset-x-4 sm:inset-x-auto bottom-auto sm:bottom-full sm:left-0 sm:right-auto top-auto z-50 sm:mb-2 w-auto sm:w-64 bg-black text-white text-sm leading-relaxed rounded-xl px-4 py-3 shadow-2xl"
+            style={{ maxWidth: "calc(100vw - 2rem)" }}
           >
             {info}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-black" />
+            <button
+              onClick={() => setOpen(false)}
+              className="sm:hidden absolute top-2 right-3 text-white/50 text-xs font-medium"
+            >
+              ✕
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
