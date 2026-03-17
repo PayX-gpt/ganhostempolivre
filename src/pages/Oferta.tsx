@@ -336,33 +336,41 @@ const Oferta = () => {
 
   return (
     <div className="min-h-screen bg-background" style={{ fontFamily: "'Source Sans 3', 'Inter', system-ui, sans-serif" }}>
-      {/* Fixed top bar */}
-      <div className="fixed top-0 left-0 right-0 z-50">
-        {/* Header */}
-        <header className="flex items-center justify-between px-4 py-2.5 backdrop-blur-md bg-background/95 border-b border-border">
-          <span className="text-[11px] tracking-[3px] font-semibold text-foreground/90 whitespace-nowrap">
-            <span className="text-primary font-bold">G</span>{t.header.slice(1)}
-          </span>
-          <LanguageSelector />
-        </header>
+      {/* Fixed top panel */}
+      <div className="fixed top-0 left-0 right-0 z-50 px-2 pt-2 sm:px-4 sm:pt-3">
+        <div className="mx-auto w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-background/95 shadow-lg backdrop-blur-md">
+          {/* Header */}
+          <header className="flex items-center justify-between gap-3 px-3 py-3 sm:px-4">
+            <div className="min-w-0 flex-1">
+              <span className="block truncate text-[10px] font-semibold tracking-[0.28em] text-foreground/90 sm:text-[11px]">
+                <span className="text-primary font-bold">G</span>{t.header.slice(1)}
+              </span>
+            </div>
+            <LanguageSelector className="shrink-0" />
+          </header>
 
-        {/* Urgency bar */}
-        <div className="bg-accent/10 border-b border-accent/20 py-1.5 px-4 backdrop-blur-md">
-          <div className="max-w-lg mx-auto flex items-center justify-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-accent shrink-0" />
-            <span className="text-[11px] font-semibold text-accent whitespace-nowrap">
-              {t.urgencyTitle}: <span className="font-bold text-sm tabular-nums">{formatTime(timeLeft)}</span>
-            </span>
-            <span className="text-[10px] text-muted-foreground">|</span>
-            <span className="text-[11px] text-accent/80 font-medium whitespace-nowrap">
-              {spots} {t.spots}
-            </span>
+          {/* Urgency bar */}
+          <div className="border-t border-border bg-accent/10 px-3 py-2 sm:px-4">
+            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-center sm:gap-3">
+              <div className="flex items-center justify-center gap-1.5 text-center">
+                <Clock className="h-3.5 w-3.5 shrink-0 text-accent" />
+                <span className="text-[11px] font-semibold text-accent sm:text-xs">
+                  {t.urgencyTitle}: <span className="text-sm font-bold tabular-nums">{formatTime(timeLeft)}</span>
+                </span>
+              </div>
+              <div className="flex items-center justify-center gap-1.5 text-center">
+                <Users className="h-3.5 w-3.5 shrink-0 text-accent/80" />
+                <span className="text-[11px] font-medium text-accent/80 sm:text-xs">
+                  {spots} {t.spots}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Content — offset for fixed header (~82px) */}
-      <main className="pt-[90px] pb-16 px-4 mx-auto" style={{ maxWidth: 520 }}>
+      {/* Content — offset for fixed top panel */}
+      <main className="pt-32 pb-16 px-4 mx-auto sm:pt-28" style={{ maxWidth: 520 }}>
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
