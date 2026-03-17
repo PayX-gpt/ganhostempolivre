@@ -8,12 +8,22 @@ import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
 
 const PLANS = [
   {
+    id: "starter",
+    kirvanoSlug: "chave-token-chatgpt-starter",
+    price: 37,
+    originalPrice: 97,
+    icon: BookOpen,
+    popular: false,
+    isLimited: true,
+  },
+  {
     id: "essencial",
     kirvanoSlug: "chave-token-chatgpt",
     price: 47,
     originalPrice: 197,
     icon: Zap,
     popular: false,
+    isLimited: false,
   },
   {
     id: "profissional",
@@ -22,6 +32,7 @@ const PLANS = [
     originalPrice: 397,
     icon: Crown,
     popular: true,
+    isLimited: false,
   },
   {
     id: "vip",
@@ -30,6 +41,7 @@ const PLANS = [
     originalPrice: 697,
     icon: Star,
     popular: false,
+    isLimited: false,
   },
 ];
 
@@ -40,6 +52,16 @@ const texts = {
     title: "Escolha o Plano Ideal Para Você",
     subtitle: "Garanta seu acesso vitalício agora com condição exclusiva de lançamento.",
     plans: [
+      {
+        name: "Starter",
+        tagline: "Experimente Sem Compromisso",
+        features: [
+          "Acesso por 3 meses à plataforma",
+          "Módulo básico de treinamento",
+          "Suporte por e-mail",
+          "Comunidade de membros",
+        ],
+      },
       {
         name: "Essencial",
         tagline: "Comece a Lucrar Hoje",
@@ -80,11 +102,13 @@ const texts = {
       },
     ],
     lifetime: "Acesso Vitalício",
+    limited3mo: "Acesso por 3 Meses",
     from: "De",
     to: "por apenas",
     cta: "GARANTIR MEU ACESSO",
     mostPopular: "MAIS ESCOLHIDO",
     bestValue: "MELHOR CUSTO-BENEFÍCIO",
+    lowestPrice: "MENOR PREÇO",
     urgencyTitle: "Oferta por tempo limitado",
     urgencyText: "Esse valor promocional pode ser encerrado a qualquer momento.",
     guarantee: "Garantia incondicional de 30 dias. Se não gostar, devolvemos 100% do seu dinheiro.",
@@ -98,6 +122,16 @@ const texts = {
     title: "Choose the Perfect Plan For You",
     subtitle: "Lock in your lifetime access now with our exclusive launch pricing.",
     plans: [
+      {
+        name: "Starter",
+        tagline: "Try Without Commitment",
+        features: [
+          "3-month platform access",
+          "Basic training module",
+          "Email support",
+          "Members community",
+        ],
+      },
       {
         name: "Essential",
         tagline: "Start Earning Today",
@@ -138,11 +172,13 @@ const texts = {
       },
     ],
     lifetime: "Lifetime Access",
+    limited3mo: "3-Month Access",
     from: "From",
     to: "for only",
     cta: "LOCK IN MY ACCESS",
     mostPopular: "MOST POPULAR",
     bestValue: "BEST VALUE",
+    lowestPrice: "LOWEST PRICE",
     urgencyTitle: "Limited time offer",
     urgencyText: "This promotional price may end at any moment.",
     guarantee: "Unconditional 30-day guarantee. If you don't like it, we refund 100% of your money.",
@@ -156,6 +192,16 @@ const texts = {
     title: "Elegí el Plan Ideal Para Vos",
     subtitle: "Asegurá tu acceso vitalicio ahora con precio exclusivo de lanzamiento.",
     plans: [
+      {
+        name: "Starter",
+        tagline: "Probá Sin Compromiso",
+        features: [
+          "Acceso por 3 meses a la plataforma",
+          "Módulo básico de entrenamiento",
+          "Soporte por email",
+          "Comunidad de miembros",
+        ],
+      },
       {
         name: "Esencial",
         tagline: "Empezá a Ganar Hoy",
@@ -196,11 +242,13 @@ const texts = {
       },
     ],
     lifetime: "Acceso Vitalicio",
+    limited3mo: "Acceso por 3 Meses",
     from: "De",
     to: "por solo",
     cta: "ASEGURAR MI ACCESO",
     mostPopular: "MÁS ELEGIDO",
     bestValue: "MEJOR COSTO-BENEFICIO",
+    lowestPrice: "MENOR PRECIO",
     urgencyTitle: "Oferta por tiempo limitado",
     urgencyText: "Este valor promocional puede finalizar en cualquier momento.",
     guarantee: "Garantía incondicional de 30 días. Si no te gusta, te devolvemos el 100% de tu dinero.",
@@ -284,7 +332,7 @@ const Oferta = () => {
     window.open(buildCheckoutURL(plan), "_blank");
   };
 
-  const planIcons = [Zap, Crown, Star];
+  const planIcons = [BookOpen, Zap, Crown, Star];
 
   return (
     <div className="min-h-screen bg-background" style={{ fontFamily: "'Source Sans 3', 'Inter', system-ui, sans-serif" }}>
@@ -362,13 +410,18 @@ const Oferta = () => {
                     : "border-border bg-card/80 hover:border-primary/40"
                 }`}
               >
-                {/* Popular badge */}
+                {/* Badges */}
+                {i === 0 && (
+                  <div className="bg-muted text-muted-foreground text-[10px] font-bold tracking-widest text-center py-1.5 uppercase">
+                    {t.lowestPrice}
+                  </div>
+                )}
                 {isPopular && (
                   <div className="bg-accent text-accent-foreground text-[10px] font-bold tracking-widest text-center py-1.5 uppercase">
                     {t.mostPopular}
                   </div>
                 )}
-                {i === 2 && (
+                {i === 3 && (
                   <div className="bg-primary/20 text-primary text-[10px] font-bold tracking-widest text-center py-1.5 uppercase">
                     {t.bestValue}
                   </div>
@@ -378,10 +431,10 @@ const Oferta = () => {
                   {/* Plan header */}
                   <div className="flex items-center gap-3 mb-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      isPopular ? "bg-accent/20" : i === 2 ? "bg-primary/15" : "bg-secondary"
+                      isPopular ? "bg-accent/20" : i === 3 ? "bg-primary/15" : i === 0 ? "bg-muted" : "bg-secondary"
                     }`}>
                       <PlanIcon className={`w-5 h-5 ${
-                        isPopular ? "text-accent" : i === 2 ? "text-primary" : "text-muted-foreground"
+                        isPopular ? "text-accent" : i === 3 ? "text-primary" : "text-muted-foreground"
                       }`} />
                     </div>
                     <div>
@@ -401,8 +454,12 @@ const Oferta = () => {
                         R${plan.price}
                       </span>
                     </div>
-                    <span className="inline-block mt-1 text-[10px] font-semibold text-primary bg-primary/10 rounded-full px-2 py-0.5 uppercase tracking-wide">
-                      {t.lifetime}
+                    <span className={`inline-block mt-1 text-[10px] font-semibold rounded-full px-2 py-0.5 uppercase tracking-wide ${
+                      plan.isLimited
+                        ? "text-muted-foreground bg-muted border border-border"
+                        : "text-primary bg-primary/10"
+                    }`}>
+                      {plan.isLimited ? t.limited3mo : t.lifetime}
                     </span>
                   </div>
 
@@ -424,7 +481,7 @@ const Oferta = () => {
                     className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all active:scale-[0.98] ${
                       isPopular
                         ? "bg-accent text-accent-foreground shadow-lg shadow-accent/25 hover:brightness-110"
-                        : i === 2
+                        : i === 3
                         ? "bg-primary text-primary-foreground hover:brightness-110"
                         : "bg-secondary text-secondary-foreground border border-border hover:bg-secondary/80"
                     }`}
