@@ -8,12 +8,22 @@ import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
 
 const PLANS = [
   {
+    id: "starter",
+    kirvanoSlug: "chave-token-chatgpt-starter",
+    price: 37,
+    originalPrice: 97,
+    icon: BookOpen,
+    popular: false,
+    isLimited: true,
+  },
+  {
     id: "essencial",
     kirvanoSlug: "chave-token-chatgpt",
     price: 47,
     originalPrice: 197,
     icon: Zap,
     popular: false,
+    isLimited: false,
   },
   {
     id: "profissional",
@@ -22,6 +32,7 @@ const PLANS = [
     originalPrice: 397,
     icon: Crown,
     popular: true,
+    isLimited: false,
   },
   {
     id: "vip",
@@ -30,6 +41,7 @@ const PLANS = [
     originalPrice: 697,
     icon: Star,
     popular: false,
+    isLimited: false,
   },
 ];
 
