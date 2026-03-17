@@ -13,6 +13,7 @@ import Upsell3Page from "./components/upsell/Upsell3Page";
 import Upsell4Page from "./components/upsell/Upsell4Page";
 import Upsell5Page from "./components/upsell/Upsell5Page";
 import Upsell6Page from "./components/upsell/Upsell6Page";
+import Oferta from "./pages/Oferta";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/live" element={<Live />} />
+            <Route path="/oferta" element={<Oferta />} />
             <Route path="/upsell1" element={<UpsellFunnel />} />
             <Route path="/upsell2" element={<Upsell2Page />} />
             <Route path="/upsell3" element={<Upsell3Page />} />
