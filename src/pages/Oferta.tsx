@@ -123,6 +123,16 @@ const texts = {
     subtitle: "Lock in your lifetime access now with our exclusive launch pricing.",
     plans: [
       {
+        name: "Starter",
+        tagline: "Try Without Commitment",
+        features: [
+          "3-month platform access",
+          "Basic training module",
+          "Email support",
+          "Members community",
+        ],
+      },
+      {
         name: "Essential",
         tagline: "Start Earning Today",
         features: [
@@ -162,11 +172,13 @@ const texts = {
       },
     ],
     lifetime: "Lifetime Access",
+    limited3mo: "3-Month Access",
     from: "From",
     to: "for only",
     cta: "LOCK IN MY ACCESS",
     mostPopular: "MOST POPULAR",
     bestValue: "BEST VALUE",
+    lowestPrice: "LOWEST PRICE",
     urgencyTitle: "Limited time offer",
     urgencyText: "This promotional price may end at any moment.",
     guarantee: "Unconditional 30-day guarantee. If you don't like it, we refund 100% of your money.",
