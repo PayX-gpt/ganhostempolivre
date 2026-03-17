@@ -53,6 +53,16 @@ const texts = {
     subtitle: "Garanta seu acesso vitalício agora com condição exclusiva de lançamento.",
     plans: [
       {
+        name: "Starter",
+        tagline: "Experimente Sem Compromisso",
+        features: [
+          "Acesso por 3 meses à plataforma",
+          "Módulo básico de treinamento",
+          "Suporte por e-mail",
+          "Comunidade de membros",
+        ],
+      },
+      {
         name: "Essencial",
         tagline: "Comece a Lucrar Hoje",
         features: [
@@ -92,11 +102,13 @@ const texts = {
       },
     ],
     lifetime: "Acesso Vitalício",
+    limited3mo: "Acesso por 3 Meses",
     from: "De",
     to: "por apenas",
     cta: "GARANTIR MEU ACESSO",
     mostPopular: "MAIS ESCOLHIDO",
     bestValue: "MELHOR CUSTO-BENEFÍCIO",
+    lowestPrice: "MENOR PREÇO",
     urgencyTitle: "Oferta por tempo limitado",
     urgencyText: "Esse valor promocional pode ser encerrado a qualquer momento.",
     guarantee: "Garantia incondicional de 30 dias. Se não gostar, devolvemos 100% do seu dinheiro.",
