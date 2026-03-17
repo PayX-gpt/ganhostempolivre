@@ -336,30 +336,33 @@ const Oferta = () => {
 
   return (
     <div className="min-h-screen bg-background" style={{ fontFamily: "'Source Sans 3', 'Inter', system-ui, sans-serif" }}>
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 backdrop-blur-sm bg-background/95 border-b border-border">
-        <span className="text-xs tracking-[3px] font-semibold text-foreground/90">
-          <span className="text-primary font-bold">G</span>{t.header.slice(1)}
-        </span>
-        <LanguageSelector />
-      </header>
+      {/* Fixed top bar */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        {/* Header */}
+        <header className="flex items-center justify-between px-4 py-2.5 backdrop-blur-md bg-background/95 border-b border-border">
+          <span className="text-[11px] tracking-[3px] font-semibold text-foreground/90 whitespace-nowrap">
+            <span className="text-primary font-bold">G</span>{t.header.slice(1)}
+          </span>
+          <LanguageSelector />
+        </header>
 
-      {/* Urgency bar */}
-      <div className="fixed top-[49px] left-0 right-0 z-50 bg-accent/10 border-b border-accent/20 py-1.5 px-4">
-        <div className="max-w-lg mx-auto flex items-center justify-center gap-3">
-          <Clock className="w-4 h-4 text-accent shrink-0" />
-          <span className="text-xs font-semibold text-accent">
-            {t.urgencyTitle}: <span className="font-bold text-sm tabular-nums">{formatTime(timeLeft)}</span>
-          </span>
-          <span className="text-xs text-muted-foreground">|</span>
-          <span className="text-xs text-accent/80 font-medium">
-            {spots} {t.spots}
-          </span>
+        {/* Urgency bar */}
+        <div className="bg-accent/10 border-b border-accent/20 py-1.5 px-4 backdrop-blur-md">
+          <div className="max-w-lg mx-auto flex items-center justify-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-accent shrink-0" />
+            <span className="text-[11px] font-semibold text-accent whitespace-nowrap">
+              {t.urgencyTitle}: <span className="font-bold text-sm tabular-nums">{formatTime(timeLeft)}</span>
+            </span>
+            <span className="text-[10px] text-muted-foreground">|</span>
+            <span className="text-[11px] text-accent/80 font-medium whitespace-nowrap">
+              {spots} {t.spots}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      <main className="pt-24 pb-16 px-4 mx-auto" style={{ maxWidth: 520 }}>
+      {/* Content — offset for fixed header (~82px) */}
+      <main className="pt-[90px] pb-16 px-4 mx-auto" style={{ maxWidth: 520 }}>
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
