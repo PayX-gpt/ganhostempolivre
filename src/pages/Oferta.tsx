@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { Check, Clock, Users, Shield, Lock, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, Clock, Users, Shield, Lock, Sparkles, Info } from "lucide-react";
 import { useLanguage, LanguageSelector } from "@/lib/i18n";
 import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
