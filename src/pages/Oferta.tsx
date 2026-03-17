@@ -435,10 +435,13 @@ const Oferta = () => {
                       <span className="text-xs font-semibold text-black/50">{planText.prefix}</span>
                     </div>
                   )}
-                  {planText.features.map((feat, fi) => (
+                  {planText.features.map((feat: Feature, fi: number) => (
                     <div key={fi} className="flex items-start gap-2.5">
-                      <Check className="w-4 h-4 mt-0.5 shrink-0 text-black/40" />
-                      <span className="text-sm text-black/70 leading-snug">{feat}</span>
+                      <Check className={`w-4 h-4 mt-0.5 shrink-0 ${feat.highlight ? "text-black" : "text-black/40"}`} />
+                      <span className={`text-sm leading-snug ${feat.highlight ? "text-black font-semibold" : "text-black/70"}`}>
+                        {feat.text}
+                        <InfoTooltip info={feat.info} />
+                      </span>
                     </div>
                   ))}
                 </div>
