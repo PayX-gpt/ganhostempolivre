@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Check, Clock, Users, Shield, Lock, Sparkles, Star, Zap, Crown } from "lucide-react";
+import { Check, Clock, Users, Shield, Lock, Sparkles } from "lucide-react";
 import { useLanguage, LanguageSelector } from "@/lib/i18n";
 import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
@@ -15,11 +15,6 @@ const PLANS = [
     originalPrice: 97,
     popular: false,
     isLimited: true,
-    accent: "from-white/5 to-white/[0.02]",
-    border: "border-white/10",
-    iconBg: "bg-white/10",
-    checkColor: "text-white/40",
-    btnClass: "bg-white/10 text-white border border-white/15 hover:bg-white/20",
   },
   {
     id: "essencial",
@@ -28,11 +23,6 @@ const PLANS = [
     originalPrice: 197,
     popular: false,
     isLimited: false,
-    accent: "from-blue-500/10 to-blue-600/5",
-    border: "border-blue-500/20",
-    iconBg: "bg-blue-500/15",
-    checkColor: "text-blue-400",
-    btnClass: "bg-blue-600 text-white hover:bg-blue-500",
   },
   {
     id: "profissional",
@@ -41,11 +31,6 @@ const PLANS = [
     originalPrice: 397,
     popular: true,
     isLimited: false,
-    accent: "from-emerald-500/15 to-emerald-600/5",
-    border: "border-emerald-500/30",
-    iconBg: "bg-emerald-500/15",
-    checkColor: "text-emerald-400",
-    btnClass: "bg-emerald-500 text-white hover:bg-emerald-400 shadow-lg shadow-emerald-500/25",
   },
   {
     id: "vip",
@@ -54,21 +39,14 @@ const PLANS = [
     originalPrice: 697,
     popular: false,
     isLimited: false,
-    accent: "from-amber-500/15 to-amber-600/5",
-    border: "border-amber-500/25",
-    iconBg: "bg-amber-500/15",
-    checkColor: "text-amber-400",
-    btnClass: "bg-gradient-to-r from-amber-500 to-amber-400 text-black font-semibold hover:from-amber-400 hover:to-amber-300 shadow-lg shadow-amber-500/20",
   },
 ];
-
-const PLAN_ICONS = [Star, Zap, Sparkles, Crown];
 
 const texts = {
   pt: {
     brand: "ChatGPT",
-    title: "Escolha seu plano de acesso",
-    subtitle: "Ative sua chave de inteligência artificial e comece a usar a plataforma hoje mesmo.",
+    title: "Preços",
+    subtitle: "Confira os planos de acesso à inteligência artificial que faz a plataforma funcionar.",
     plans: [
       {
         name: "Starter",
@@ -121,7 +99,7 @@ const texts = {
         ],
       },
     ],
-    cta: "Ativar Chave de Acesso",
+    cta: ["Ativar Starter", "Ativar Essencial", "Ativar Profissional", "Ativar VIP"],
     mostPopular: "Mais escolhido",
     urgencyTitle: "Oferta por tempo limitado",
     spots: "chaves restantes neste valor",
@@ -129,12 +107,11 @@ const texts = {
     footer: "© 2026 — Plataforma de Ganhos com Tempo Livre • Todos os direitos reservados",
     secureCheckout: "Checkout 100% seguro",
     perAccess: "acesso único",
-    discount: "desconto",
   },
   en: {
     brand: "ChatGPT",
-    title: "Choose your access plan",
-    subtitle: "Activate your AI key and start using the platform today.",
+    title: "Pricing",
+    subtitle: "Check the AI access plans that power the free time earnings platform.",
     plans: [
       {
         name: "Starter",
@@ -187,7 +164,7 @@ const texts = {
         ],
       },
     ],
-    cta: "Activate Access Key",
+    cta: ["Get Starter", "Get Essential", "Get Professional", "Get VIP"],
     mostPopular: "Most popular",
     urgencyTitle: "Limited time offer",
     spots: "keys left at this price",
@@ -195,12 +172,11 @@ const texts = {
     footer: "© 2026 — Free Time Earnings Platform • All rights reserved",
     secureCheckout: "100% secure checkout",
     perAccess: "one-time access",
-    discount: "off",
   },
   es: {
     brand: "ChatGPT",
-    title: "Elegí tu plan de acceso",
-    subtitle: "Activá tu clave de inteligencia artificial y empezá a usar la plataforma hoy.",
+    title: "Precios",
+    subtitle: "Consultá los planes de acceso a la inteligencia artificial que hace funcionar la plataforma.",
     plans: [
       {
         name: "Starter",
@@ -253,7 +229,7 @@ const texts = {
         ],
       },
     ],
-    cta: "Activar Clave de Acceso",
+    cta: ["Activar Starter", "Activar Esencial", "Activar Profesional", "Activar VIP"],
     mostPopular: "Más elegido",
     urgencyTitle: "Oferta por tiempo limitado",
     spots: "claves restantes a este precio",
@@ -261,7 +237,6 @@ const texts = {
     footer: "© 2026 — Plataforma Ganancias con Tiempo Libre • Todos los derechos reservados",
     secureCheckout: "Checkout 100% seguro",
     perAccess: "acceso único",
-    discount: "descuento",
   },
 };
 
@@ -325,157 +300,139 @@ const Oferta = () => {
     window.open(buildCheckoutURL(plan), "_blank");
   };
 
-  const getDiscount = (original: number, price: number) => Math.round(((original - price) / original) * 100);
-
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-primary/30">
-      {/* Top bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/[0.06]">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-2.5">
-          <div className="flex items-center gap-3">
-            <img src={chatgptIcon} alt="ChatGPT" className="w-6 h-6 object-contain" />
-            <span className="text-sm font-semibold text-white/80 hidden sm:inline">{t.brand}</span>
+    <div className="min-h-screen bg-white text-black" style={{ fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
+      {/* Urgency bar — only subtle addition */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black text-white">
+        <div className="max-w-6xl mx-auto flex items-center justify-center gap-4 px-4 py-2">
+          <div className="flex items-center gap-2">
+            <Clock className="h-3.5 w-3.5 opacity-60" />
+            <span className="text-xs opacity-70">{t.urgencyTitle}</span>
+            <span className="text-sm font-bold tabular-nums">{formatTime(timeLeft)}</span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-white/[0.06] rounded-full px-3 py-1">
-              <Clock className="h-3.5 w-3.5 text-red-400" />
-              <span className="text-xs font-bold tabular-nums text-red-400">{formatTime(timeLeft)}</span>
-            </div>
-            <div className="hidden sm:flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-white/40" />
-              <span className="text-xs text-white/40">{spots} {t.spots}</span>
-            </div>
+          <span className="hidden sm:inline opacity-20">|</span>
+          <div className="hidden sm:flex items-center gap-1.5">
+            <Users className="h-3.5 w-3.5 opacity-50" />
+            <span className="text-xs opacity-60">{spots} {t.spots}</span>
+          </div>
+          <div className="ml-auto">
             <LanguageSelector className="shrink-0" />
           </div>
         </div>
       </div>
 
-      {/* Hero */}
-      <header className="pt-24 pb-12 sm:pt-28 sm:pb-16 text-center px-4">
+      {/* Header — ChatGPT style */}
+      <header className="pt-24 pb-10 sm:pt-28 sm:pb-14 text-center px-4">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col items-center gap-5"
+          className="flex flex-col items-center gap-3"
         >
-          <div className="flex items-center gap-3">
-            <img src={chatgptIcon} alt="ChatGPT" className="w-10 h-10 object-contain" />
-            <span className="text-lg font-bold text-white/70">{t.brand}</span>
+          <div className="flex items-center gap-2">
+            <img src={chatgptIcon} alt="ChatGPT" className="w-6 h-6 object-contain" />
+            <span className="text-sm text-black/50 font-medium">{t.brand}</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-bold text-white tracking-tight max-w-2xl leading-tight">
+          <h1 className="text-5xl sm:text-6xl font-bold text-black tracking-tight" style={{ fontFamily: "'Source Sans 3', system-ui, sans-serif" }}>
             {t.title}
           </h1>
-          <p className="text-base sm:text-lg text-white/45 max-w-md leading-relaxed">
+          <p className="text-base sm:text-lg text-black/50 max-w-lg leading-relaxed mt-1">
             {t.subtitle}
           </p>
         </motion.div>
       </header>
 
-      {/* Plans */}
+      {/* Plans grid — ChatGPT style: white bg, thin borders, black buttons */}
       <main className="max-w-6xl mx-auto px-4 pb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
           {PLANS.map((plan, i) => {
             const planText = t.plans[i];
             const isPopular = plan.popular;
-            const Icon = PLAN_ICONS[i];
-            const discount = getDiscount(plan.originalPrice, plan.price);
 
             return (
               <motion.div
                 key={plan.id}
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.1, duration: 0.45 }}
-                className={`relative flex flex-col rounded-2xl border ${plan.border} bg-gradient-to-b ${plan.accent} backdrop-blur-sm overflow-hidden ${
-                  isPopular ? "ring-2 ring-emerald-500/40 scale-[1.02] xl:scale-105" : ""
+                transition={{ delay: 0.1 + i * 0.08, duration: 0.4 }}
+                className={`relative flex flex-col rounded-2xl border p-6 ${
+                  isPopular
+                    ? "border-black bg-white shadow-lg"
+                    : "border-black/10 bg-white"
                 }`}
               >
-                {/* Popular badge */}
-                {isPopular && (
-                  <div className="bg-emerald-500 text-white text-xs font-bold text-center py-1.5 tracking-wide uppercase">
-                    {t.mostPopular}
-                  </div>
-                )}
+                {/* Plan name + tagline */}
+                <h3 className="text-2xl font-bold text-black">{planText.name}</h3>
+                <p className="text-sm text-black/50 mt-1 min-h-[2.5rem] leading-relaxed">
+                  {planText.tagline}
+                </p>
 
-                <div className="p-6 flex flex-col flex-1">
-                  {/* Icon + Name */}
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className={`w-9 h-9 rounded-xl ${plan.iconBg} flex items-center justify-center`}>
-                      <Icon className={`w-4.5 h-4.5 ${plan.checkColor}`} />
+                {/* Price */}
+                <div className="mt-6 mb-6">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-5xl font-bold text-black tracking-tight">
+                      R${plan.price}
+                    </span>
+                    <span className="text-sm text-black/40">/{t.perAccess}</span>
+                  </div>
+                  <span className="text-sm text-black/30 line-through mt-1 inline-block">
+                    R${plan.originalPrice}
+                  </span>
+                </div>
+
+                {/* CTA — black pill button like ChatGPT */}
+                <button
+                  onClick={() => handlePlanClick(plan)}
+                  className={`w-full py-3 rounded-full font-medium text-sm transition-all active:scale-[0.97] mb-8 ${
+                    isPopular
+                      ? "bg-black text-white hover:bg-black/85"
+                      : "bg-black text-white hover:bg-black/85"
+                  }`}
+                >
+                  {t.cta[i]} <span className="inline-block ml-0.5">↗</span>
+                </button>
+
+                {/* Features */}
+                <div className="space-y-3.5 flex-1">
+                  {planText.prefix && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <Sparkles className="w-3.5 h-3.5 text-black/30" />
+                      <span className="text-xs font-semibold text-black/50">{planText.prefix}</span>
                     </div>
-                    <h3 className="text-xl font-bold text-white">{planText.name}</h3>
-                  </div>
-                  <p className="text-sm text-white/40 mt-1 mb-5 min-h-[2rem]">{planText.tagline}</p>
-
-                  {/* Price block */}
-                  <div className="mb-6">
-                    <div className="flex items-end gap-2">
-                      <span className="text-4xl font-extrabold text-white tracking-tight">
-                        R${plan.price}
-                      </span>
-                      <span className="text-sm text-white/30 mb-1">/ {t.perAccess}</span>
+                  )}
+                  {planText.features.map((feat, fi) => (
+                    <div key={fi} className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 mt-0.5 shrink-0 text-black/40" />
+                      <span className="text-sm text-black/70 leading-snug">{feat}</span>
                     </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-sm text-white/25 line-through">R${plan.originalPrice}</span>
-                      <span className="text-xs font-semibold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">
-                        -{discount}% {t.discount}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* CTA */}
-                  <button
-                    onClick={() => handlePlanClick(plan)}
-                    className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.97] mb-6 ${plan.btnClass}`}
-                  >
-                    {t.cta}
-                  </button>
-
-                  {/* Divider */}
-                  <div className="border-t border-white/[0.06] mb-5" />
-
-                  {/* Features */}
-                  <div className="space-y-3 flex-1">
-                    {planText.prefix && (
-                      <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className={`w-3.5 h-3.5 ${plan.checkColor}`} />
-                        <span className="text-xs font-semibold text-white/50 uppercase tracking-wide">{planText.prefix}</span>
-                      </div>
-                    )}
-                    {planText.features.map((feat, fi) => (
-                      <div key={fi} className="flex items-start gap-2.5">
-                        <Check className={`w-4 h-4 mt-0.5 shrink-0 ${plan.checkColor}`} />
-                        <span className="text-sm text-white/65 leading-snug">{feat}</span>
-                      </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </motion.div>
             );
           })}
         </div>
 
-        {/* Guarantee + Secure */}
+        {/* Guarantee */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.6 }}
           className="mt-14 flex flex-col items-center gap-3"
         >
-          <div className="flex items-center gap-3 bg-white/[0.04] border border-white/[0.08] rounded-2xl px-6 py-4 max-w-lg text-center">
-            <Shield className="w-8 h-8 text-emerald-500/60 shrink-0" />
-            <p className="text-sm text-white/50 leading-relaxed">{t.guarantee}</p>
+          <div className="flex items-center gap-3 max-w-md text-center">
+            <Shield className="w-5 h-5 text-black/25 shrink-0" />
+            <p className="text-sm text-black/40 leading-relaxed">{t.guarantee}</p>
           </div>
-          <div className="flex items-center gap-2 mt-2">
-            <Lock className="w-3.5 h-3.5 text-white/20" />
-            <span className="text-xs text-white/25 font-medium">{t.secureCheckout}</span>
+          <div className="flex items-center gap-1.5 mt-1">
+            <Lock className="w-3 h-3 text-black/20" />
+            <span className="text-xs text-black/25">{t.secureCheckout}</span>
           </div>
         </motion.div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.04] py-6">
-        <p className="text-xs text-white/20 text-center">{t.footer}</p>
+      <footer className="border-t border-black/5 py-6">
+        <p className="text-xs text-black/25 text-center">{t.footer}</p>
       </footer>
     </div>
   );
