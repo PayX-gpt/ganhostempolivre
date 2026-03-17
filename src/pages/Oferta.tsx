@@ -325,7 +325,7 @@ const Oferta = () => {
         context: "oferta_page",
         plan: plan.id,
         amount: plan.price,
-        product: plan.kirvanoSlug,
+        product: plan.id,
       });
       sendCAPIInitiateCheckout({ amount: plan.price });
       trackTikTokInitiateCheckout({ amount: plan.price });
