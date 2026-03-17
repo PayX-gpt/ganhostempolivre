@@ -410,13 +410,18 @@ const Oferta = () => {
                     : "border-border bg-card/80 hover:border-primary/40"
                 }`}
               >
-                {/* Popular badge */}
+                {/* Badges */}
+                {i === 0 && (
+                  <div className="bg-muted text-muted-foreground text-[10px] font-bold tracking-widest text-center py-1.5 uppercase">
+                    {t.lowestPrice}
+                  </div>
+                )}
                 {isPopular && (
                   <div className="bg-accent text-accent-foreground text-[10px] font-bold tracking-widest text-center py-1.5 uppercase">
                     {t.mostPopular}
                   </div>
                 )}
-                {i === 2 && (
+                {i === 3 && (
                   <div className="bg-primary/20 text-primary text-[10px] font-bold tracking-widest text-center py-1.5 uppercase">
                     {t.bestValue}
                   </div>
@@ -426,10 +431,10 @@ const Oferta = () => {
                   {/* Plan header */}
                   <div className="flex items-center gap-3 mb-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      isPopular ? "bg-accent/20" : i === 2 ? "bg-primary/15" : "bg-secondary"
+                      isPopular ? "bg-accent/20" : i === 3 ? "bg-primary/15" : i === 0 ? "bg-muted" : "bg-secondary"
                     }`}>
                       <PlanIcon className={`w-5 h-5 ${
-                        isPopular ? "text-accent" : i === 2 ? "text-primary" : "text-muted-foreground"
+                        isPopular ? "text-accent" : i === 3 ? "text-primary" : "text-muted-foreground"
                       }`} />
                     </div>
                     <div>
@@ -449,8 +454,12 @@ const Oferta = () => {
                         R${plan.price}
                       </span>
                     </div>
-                    <span className="inline-block mt-1 text-[10px] font-semibold text-primary bg-primary/10 rounded-full px-2 py-0.5 uppercase tracking-wide">
-                      {t.lifetime}
+                    <span className={`inline-block mt-1 text-[10px] font-semibold rounded-full px-2 py-0.5 uppercase tracking-wide ${
+                      plan.isLimited
+                        ? "text-muted-foreground bg-muted border border-border"
+                        : "text-primary bg-primary/10"
+                    }`}>
+                      {plan.isLimited ? t.limited3mo : t.lifetime}
                     </span>
                   </div>
 
