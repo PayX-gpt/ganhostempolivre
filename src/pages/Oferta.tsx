@@ -332,7 +332,7 @@ const Oferta = () => {
     window.open(buildCheckoutURL(plan), "_blank");
   };
 
-  const planIcons = [Zap, Crown, Star];
+  const planIcons = [BookOpen, Zap, Crown, Star];
 
   return (
     <div className="min-h-screen bg-background" style={{ fontFamily: "'Source Sans 3', 'Inter', system-ui, sans-serif" }}>
