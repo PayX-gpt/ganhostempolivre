@@ -240,6 +240,40 @@ const texts = {
   },
 };
 
+type Feature = { text: string; info: string; highlight: boolean };
+
+const InfoTooltip = ({ info }: { info: string }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        className="ml-1 mt-0.5 text-black/25 hover:text-black/50 transition-colors"
+        aria-label="Mais informações"
+      >
+        <Info className="w-3.5 h-3.5" />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.15 }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 w-56 bg-black text-white text-xs leading-relaxed rounded-lg px-3 py-2.5 shadow-lg pointer-events-none"
+          >
+            {info}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-black" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </span>
+  );
+};
+
 const Oferta = () => {
   const { lang } = useLanguage();
   const t = texts[lang];
