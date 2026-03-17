@@ -176,7 +176,7 @@ const texts = {
   es: {
     brand: "ChatGPT",
     title: "Precios",
-    subtitle: "Consultá los planes de acceso a la inteligencia artificial que hace funcionar la plataforma.",
+    subtitle: "Activá tu clave de acceso a la IA que hace funcionar la Plataforma de Tiempo Libre.",
     plans: [
       {
         name: "Starter",
