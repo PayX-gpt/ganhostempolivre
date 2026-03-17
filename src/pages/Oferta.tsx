@@ -315,7 +315,7 @@ const Oferta = () => {
     checkoutParams.set("plan", plan.id);
 
     const qs = checkoutParams.toString();
-    return `https://pay.kirvano.com/${plan.kirvanoSlug}${qs ? `?${qs}` : ""}`;
+    return `${plan.checkoutUrl}${qs ? `?${qs}` : ""}`;
   };
 
   const handlePlanClick = (plan: typeof PLANS[0]) => {
