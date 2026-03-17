@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { Check, Clock, Users, Shield, Lock, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, Clock, Users, Shield, Lock, Sparkles, Info } from "lucide-react";
 import { useLanguage, LanguageSelector } from "@/lib/i18n";
 import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
@@ -53,10 +53,10 @@ const texts = {
         tagline: "Teste a IA por 3 meses",
         prefix: "",
         features: [
-          "Token de acesso ao ChatGPT por 3 meses",
-          "Treinamento básico de uso da IA",
-          "Suporte por e-mail",
-          "Comunidade de membros",
+          { text: "Token de acesso ao ChatGPT por 3 meses", info: "Você recebe uma chave válida por 90 dias para usar todas as funções da IA.", highlight: false },
+          { text: "Treinamento básico de uso da IA", info: "Aulas em vídeo simples e diretas, feitas para iniciantes.", highlight: false },
+          { text: "Suporte por e-mail", info: "Tire dúvidas enviando um e-mail para nossa equipe.", highlight: false },
+          { text: "Comunidade de membros", info: "Grupo exclusivo para trocar experiências com outros alunos.", highlight: false },
         ],
       },
       {
@@ -64,11 +64,11 @@ const texts = {
         tagline: "Sua chave vitalícia da IA",
         prefix: "",
         features: [
-          "Token de acesso vitalício ao ChatGPT",
-          "Treinamento completo da plataforma",
-          "Suporte por e-mail",
-          "Atualizações gratuitas do sistema",
-          "Comunidade de membros",
+          { text: "Token de acesso VITALÍCIO ao ChatGPT", info: "Sua chave nunca expira. Pague uma vez e use para sempre, sem mensalidades.", highlight: true },
+          { text: "Treinamento completo da plataforma", info: "Todas as aulas do básico ao avançado, com passo a passo detalhado.", highlight: false },
+          { text: "Suporte por e-mail", info: "Tire dúvidas enviando um e-mail para nossa equipe.", highlight: false },
+          { text: "Atualizações gratuitas do sistema", info: "Sempre que a plataforma melhorar, você recebe a atualização sem pagar nada.", highlight: false },
+          { text: "Comunidade de membros", info: "Grupo exclusivo para trocar experiências com outros alunos.", highlight: false },
         ],
       },
       {
@@ -76,12 +76,12 @@ const texts = {
         tagline: "IA turbinada + acompanhamento",
         prefix: "Tudo do Essencial, mais:",
         features: [
-          "Chave com acesso a 3 projetos simultâneos",
-          "Acompanhamento individual por 30 dias",
-          "Mentoria em grupo semanal",
-          "Templates prontos de comandos para a IA",
-          "Suporte prioritário via WhatsApp",
-          "Bônus: Guia de Escala Rápida com IA",
+          { text: "Chave com acesso a 3 projetos simultâneos", info: "Use a IA em até 3 projetos ao mesmo tempo para ganhar mais.", highlight: false },
+          { text: "Acompanhamento individual por 30 dias", info: "Um especialista acompanha seu progresso pessoalmente durante 1 mês.", highlight: true },
+          { text: "Mentoria em grupo semanal", info: "Toda semana, uma aula ao vivo para tirar dúvidas e ver estratégias.", highlight: false },
+          { text: "Templates prontos de comandos para a IA", info: "Modelos prontos para copiar e colar na IA e já começar a ganhar.", highlight: false },
+          { text: "Suporte prioritário via WhatsApp", info: "Respostas rápidas direto no seu WhatsApp, sem espera.", highlight: false },
+          { text: "Bônus: Guia de Escala Rápida com IA", info: "E-book exclusivo com estratégias para aumentar seus ganhos rapidamente.", highlight: false },
         ],
       },
       {
@@ -89,13 +89,13 @@ const texts = {
         tagline: "Acesso máximo + mentoria exclusiva",
         prefix: "Tudo do Profissional, mais:",
         features: [
-          "Chave com projetos ilimitados na IA",
-          "Mentoria 1-a-1 por 60 dias",
-          "Acesso antecipado a novas funcionalidades",
-          "Grupo VIP exclusivo",
-          "Consultoria personalizada de estratégia com IA",
-          "Bônus: Kit Completo de Automação com ChatGPT",
-          "Garantia estendida de 60 dias",
+          { text: "Chave com projetos ILIMITADOS na IA", info: "Sem limite de projetos. Use a IA em quantos quiser, para sempre.", highlight: true },
+          { text: "Mentoria 1-a-1 por 60 dias", info: "Acompanhamento individual e exclusivo com um mentor por 2 meses.", highlight: true },
+          { text: "Acesso antecipado a novas funcionalidades", info: "Seja o primeiro a testar novos recursos antes de todo mundo.", highlight: false },
+          { text: "Grupo VIP exclusivo", info: "Comunidade restrita com os alunos mais avançados e resultados.", highlight: false },
+          { text: "Consultoria personalizada de estratégia com IA", info: "Plano de ação feito sob medida para o seu perfil e objetivos.", highlight: false },
+          { text: "Bônus: Kit Completo de Automação com ChatGPT", info: "Pacote completo com templates, scripts e automações prontas.", highlight: false },
+          { text: "Garantia estendida de 60 dias", info: "O dobro do prazo padrão para testar sem risco nenhum.", highlight: false },
         ],
       },
     ],
@@ -118,10 +118,10 @@ const texts = {
         tagline: "Try the AI for 3 months",
         prefix: "",
         features: [
-          "3-month ChatGPT access token",
-          "Basic AI usage training",
-          "Email support",
-          "Members community",
+          { text: "3-month ChatGPT access token", info: "A key valid for 90 days to use all AI features.", highlight: false },
+          { text: "Basic AI usage training", info: "Simple video lessons designed for beginners.", highlight: false },
+          { text: "Email support", info: "Get help by emailing our team.", highlight: false },
+          { text: "Members community", info: "Exclusive group to share experiences.", highlight: false },
         ],
       },
       {
@@ -129,11 +129,11 @@ const texts = {
         tagline: "Your lifetime AI key",
         prefix: "",
         features: [
-          "Lifetime ChatGPT access token",
-          "Complete platform training",
-          "Email support",
-          "Free system updates",
-          "Members community",
+          { text: "LIFETIME ChatGPT access token", info: "Your key never expires. Pay once and use forever, no subscriptions.", highlight: true },
+          { text: "Complete platform training", info: "All lessons from basic to advanced, step by step.", highlight: false },
+          { text: "Email support", info: "Get help by emailing our team.", highlight: false },
+          { text: "Free system updates", info: "Every platform improvement is included at no extra cost.", highlight: false },
+          { text: "Members community", info: "Exclusive group to share experiences.", highlight: false },
         ],
       },
       {
@@ -141,12 +141,12 @@ const texts = {
         tagline: "Turbocharged AI + guidance",
         prefix: "Everything in Essential, plus:",
         features: [
-          "Key with access to 3 simultaneous projects",
-          "30-day individual follow-up",
-          "Weekly group mentoring",
-          "Ready-made AI command templates",
-          "Priority WhatsApp support",
-          "Bonus: Quick Scale Guide with AI",
+          { text: "Key with access to 3 simultaneous projects", info: "Use the AI on up to 3 projects at the same time.", highlight: false },
+          { text: "30-day individual follow-up", info: "A specialist follows your progress personally for 1 month.", highlight: true },
+          { text: "Weekly group mentoring", info: "Live weekly sessions for questions and strategies.", highlight: false },
+          { text: "Ready-made AI command templates", info: "Copy-paste templates to start earning with AI right away.", highlight: false },
+          { text: "Priority WhatsApp support", info: "Fast responses directly on your WhatsApp.", highlight: false },
+          { text: "Bonus: Quick Scale Guide with AI", info: "Exclusive e-book with strategies to scale your earnings.", highlight: false },
         ],
       },
       {
@@ -154,13 +154,13 @@ const texts = {
         tagline: "Maximum access + exclusive mentoring",
         prefix: "Everything in Professional, plus:",
         features: [
-          "Key with unlimited AI projects",
-          "60-day 1-on-1 mentoring",
-          "Early access to new features",
-          "Exclusive VIP group",
-          "Personalized AI strategy consulting",
-          "Bonus: Complete ChatGPT Automation Kit",
-          "Extended 60-day guarantee",
+          { text: "Key with UNLIMITED AI projects", info: "No project limits. Use the AI on as many as you want, forever.", highlight: true },
+          { text: "60-day 1-on-1 mentoring", info: "Exclusive individual mentoring with a specialist for 2 months.", highlight: true },
+          { text: "Early access to new features", info: "Be the first to test new features before everyone.", highlight: false },
+          { text: "Exclusive VIP group", info: "Restricted community with the most advanced students.", highlight: false },
+          { text: "Personalized AI strategy consulting", info: "Custom action plan tailored to your profile and goals.", highlight: false },
+          { text: "Bonus: Complete ChatGPT Automation Kit", info: "Full package with templates, scripts and ready automations.", highlight: false },
+          { text: "Extended 60-day guarantee", info: "Double the standard period to test risk-free.", highlight: false },
         ],
       },
     ],
@@ -183,10 +183,10 @@ const texts = {
         tagline: "Probá la IA por 3 meses",
         prefix: "",
         features: [
-          "Token de acceso al ChatGPT por 3 meses",
-          "Entrenamiento básico de uso de la IA",
-          "Soporte por email",
-          "Comunidad de miembros",
+          { text: "Token de acceso al ChatGPT por 3 meses", info: "Recibís una clave válida por 90 días para usar todas las funciones.", highlight: false },
+          { text: "Entrenamiento básico de uso de la IA", info: "Clases en video simples y directas para principiantes.", highlight: false },
+          { text: "Soporte por email", info: "Sacá tus dudas enviando un email a nuestro equipo.", highlight: false },
+          { text: "Comunidad de miembros", info: "Grupo exclusivo para compartir experiencias.", highlight: false },
         ],
       },
       {
@@ -194,11 +194,11 @@ const texts = {
         tagline: "Tu clave vitalicia de IA",
         prefix: "",
         features: [
-          "Token de acceso vitalicio al ChatGPT",
-          "Entrenamiento completo de la plataforma",
-          "Soporte por email",
-          "Actualizaciones gratuitas del sistema",
-          "Comunidad de miembros",
+          { text: "Token de acceso VITALICIO al ChatGPT", info: "Tu clave nunca expira. Pagás una vez y usás para siempre.", highlight: true },
+          { text: "Entrenamiento completo de la plataforma", info: "Todas las clases del básico al avanzado, paso a paso.", highlight: false },
+          { text: "Soporte por email", info: "Sacá tus dudas enviando un email a nuestro equipo.", highlight: false },
+          { text: "Actualizaciones gratuitas del sistema", info: "Cada mejora de la plataforma la recibís sin pagar nada más.", highlight: false },
+          { text: "Comunidad de miembros", info: "Grupo exclusivo para compartir experiencias.", highlight: false },
         ],
       },
       {
@@ -206,12 +206,12 @@ const texts = {
         tagline: "IA turbo + acompañamiento",
         prefix: "Todo del Esencial, más:",
         features: [
-          "Clave con acceso a 3 proyectos simultáneos",
-          "Acompañamiento individual por 30 días",
-          "Mentoría grupal semanal",
-          "Templates de comandos listos para la IA",
-          "Soporte prioritario por WhatsApp",
-          "Bono: Guía de Escala Rápida con IA",
+          { text: "Clave con acceso a 3 proyectos simultáneos", info: "Usá la IA en hasta 3 proyectos al mismo tiempo.", highlight: false },
+          { text: "Acompañamiento individual por 30 días", info: "Un especialista sigue tu progreso personalmente durante 1 mes.", highlight: true },
+          { text: "Mentoría grupal semanal", info: "Cada semana, una clase en vivo para preguntas y estrategias.", highlight: false },
+          { text: "Templates de comandos listos para la IA", info: "Modelos listos para copiar y pegar en la IA y empezar a ganar.", highlight: false },
+          { text: "Soporte prioritario por WhatsApp", info: "Respuestas rápidas directo en tu WhatsApp.", highlight: false },
+          { text: "Bono: Guía de Escala Rápida con IA", info: "E-book exclusivo con estrategias para escalar tus ganancias.", highlight: false },
         ],
       },
       {
@@ -219,13 +219,13 @@ const texts = {
         tagline: "Acceso máximo + mentoría exclusiva",
         prefix: "Todo del Profesional, más:",
         features: [
-          "Clave con proyectos ilimitados en la IA",
-          "Mentoría 1-a-1 por 60 días",
-          "Acceso anticipado a nuevas funcionalidades",
-          "Grupo VIP exclusivo",
-          "Consultoría personalizada de estrategia con IA",
-          "Bono: Kit Completo de Automatización con ChatGPT",
-          "Garantía extendida de 60 días",
+          { text: "Clave con proyectos ILIMITADOS en la IA", info: "Sin límite de proyectos. Usá la IA en cuantos quieras, para siempre.", highlight: true },
+          { text: "Mentoría 1-a-1 por 60 días", info: "Acompañamiento individual y exclusivo con un mentor por 2 meses.", highlight: true },
+          { text: "Acceso anticipado a nuevas funcionalidades", info: "Sé el primero en probar nuevos recursos.", highlight: false },
+          { text: "Grupo VIP exclusivo", info: "Comunidad restringida con los alumnos más avanzados.", highlight: false },
+          { text: "Consultoría personalizada de estrategia con IA", info: "Plan de acción hecho a medida para tu perfil y objetivos.", highlight: false },
+          { text: "Bono: Kit Completo de Automatización con ChatGPT", info: "Paquete completo con templates, scripts y automatizaciones.", highlight: false },
+          { text: "Garantía extendida de 60 días", info: "El doble del plazo estándar para probar sin riesgo.", highlight: false },
         ],
       },
     ],
@@ -238,6 +238,40 @@ const texts = {
     secureCheckout: "Checkout 100% seguro",
     perAccess: "acceso único",
   },
+};
+
+type Feature = { text: string; info: string; highlight: boolean };
+
+const InfoTooltip = ({ info }: { info: string }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        className="ml-1 mt-0.5 text-black/25 hover:text-black/50 transition-colors"
+        aria-label="Mais informações"
+      >
+        <Info className="w-3.5 h-3.5" />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.15 }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-30 w-56 bg-black text-white text-xs leading-relaxed rounded-lg px-3 py-2.5 shadow-lg pointer-events-none"
+          >
+            {info}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-black" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </span>
+  );
 };
 
 const Oferta = () => {
@@ -401,10 +435,13 @@ const Oferta = () => {
                       <span className="text-xs font-semibold text-black/50">{planText.prefix}</span>
                     </div>
                   )}
-                  {planText.features.map((feat, fi) => (
+                  {planText.features.map((feat: Feature, fi: number) => (
                     <div key={fi} className="flex items-start gap-2.5">
-                      <Check className="w-4 h-4 mt-0.5 shrink-0 text-black/40" />
-                      <span className="text-sm text-black/70 leading-snug">{feat}</span>
+                      <Check className={`w-4 h-4 mt-0.5 shrink-0 ${feat.highlight ? "text-black" : "text-black/40"}`} />
+                      <span className={`text-sm leading-snug ${feat.highlight ? "text-black font-semibold" : "text-black/70"}`}>
+                        {feat.text}
+                        <InfoTooltip info={feat.info} />
+                      </span>
                     </div>
                   ))}
                 </div>
