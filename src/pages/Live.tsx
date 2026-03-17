@@ -749,6 +749,11 @@ export default function AdminFunnelAudit() {
             <LiveUpsellMonitor />
           </TabsContent>
 
+          {/* TAB: PREÇOS */}
+          <TabsContent value="pricing" className="space-y-4 mt-4">
+            <LivePricingMonitor />
+          </TabsContent>
+
           {/* TAB: AUDITORIA */}
           <TabsContent value="audit" className="space-y-4 mt-4">
             <LiveAuditTab />
