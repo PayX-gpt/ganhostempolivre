@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Check, Clock, Users, Shield, Lock, Sparkles } from "lucide-react";
+import { Check, Clock, Users, Shield, Lock, Sparkles, Star, Zap, Crown } from "lucide-react";
 import { useLanguage, LanguageSelector } from "@/lib/i18n";
 import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
-import chatgptLogo from "@/assets/chatgpt-logo.webp";
+import chatgptIcon from "@/assets/chatgpt-icon.png";
 
 const PLANS = [
   {
@@ -15,6 +15,11 @@ const PLANS = [
     originalPrice: 97,
     popular: false,
     isLimited: true,
+    accent: "from-white/5 to-white/[0.02]",
+    border: "border-white/10",
+    iconBg: "bg-white/10",
+    checkColor: "text-white/40",
+    btnClass: "bg-white/10 text-white border border-white/15 hover:bg-white/20",
   },
   {
     id: "essencial",
@@ -23,6 +28,11 @@ const PLANS = [
     originalPrice: 197,
     popular: false,
     isLimited: false,
+    accent: "from-blue-500/10 to-blue-600/5",
+    border: "border-blue-500/20",
+    iconBg: "bg-blue-500/15",
+    checkColor: "text-blue-400",
+    btnClass: "bg-blue-600 text-white hover:bg-blue-500",
   },
   {
     id: "profissional",
@@ -31,6 +41,11 @@ const PLANS = [
     originalPrice: 397,
     popular: true,
     isLimited: false,
+    accent: "from-emerald-500/15 to-emerald-600/5",
+    border: "border-emerald-500/30",
+    iconBg: "bg-emerald-500/15",
+    checkColor: "text-emerald-400",
+    btnClass: "bg-emerald-500 text-white hover:bg-emerald-400 shadow-lg shadow-emerald-500/25",
   },
   {
     id: "vip",
@@ -39,14 +54,21 @@ const PLANS = [
     originalPrice: 697,
     popular: false,
     isLimited: false,
+    accent: "from-amber-500/15 to-amber-600/5",
+    border: "border-amber-500/25",
+    iconBg: "bg-amber-500/15",
+    checkColor: "text-amber-400",
+    btnClass: "bg-gradient-to-r from-amber-500 to-amber-400 text-black font-semibold hover:from-amber-400 hover:to-amber-300 shadow-lg shadow-amber-500/20",
   },
 ];
+
+const PLAN_ICONS = [Star, Zap, Sparkles, Crown];
 
 const texts = {
   pt: {
     brand: "ChatGPT",
-    title: "Preços",
-    subtitle: "Confira os planos de acesso à inteligência artificial que faz a plataforma funcionar.",
+    title: "Escolha seu plano de acesso",
+    subtitle: "Ative sua chave de inteligência artificial e comece a usar a plataforma hoje mesmo.",
     plans: [
       {
         name: "Starter",
@@ -107,11 +129,12 @@ const texts = {
     footer: "© 2026 — Plataforma de Ganhos com Tempo Livre • Todos os direitos reservados",
     secureCheckout: "Checkout 100% seguro",
     perAccess: "acesso único",
+    discount: "desconto",
   },
   en: {
     brand: "ChatGPT",
-    title: "Pricing",
-    subtitle: "Check the AI access plans that power the free time earnings platform.",
+    title: "Choose your access plan",
+    subtitle: "Activate your AI key and start using the platform today.",
     plans: [
       {
         name: "Starter",
@@ -172,11 +195,12 @@ const texts = {
     footer: "© 2026 — Free Time Earnings Platform • All rights reserved",
     secureCheckout: "100% secure checkout",
     perAccess: "one-time access",
+    discount: "off",
   },
   es: {
     brand: "ChatGPT",
-    title: "Precios",
-    subtitle: "Consultá los planes de acceso a la inteligencia artificial que hace funcionar la plataforma.",
+    title: "Elegí tu plan de acceso",
+    subtitle: "Activá tu clave de inteligencia artificial y empezá a usar la plataforma hoy.",
     plans: [
       {
         name: "Starter",
@@ -237,6 +261,7 @@ const texts = {
     footer: "© 2026 — Plataforma Ganancias con Tiempo Libre • Todos los derechos reservados",
     secureCheckout: "Checkout 100% seguro",
     perAccess: "acceso único",
+    discount: "descuento",
   },
 };
 
@@ -300,159 +325,157 @@ const Oferta = () => {
     window.open(buildCheckoutURL(plan), "_blank");
   };
 
+  const getDiscount = (original: number, price: number) => Math.round(((original - price) / original) * 100);
+
   return (
-    <div className="min-h-screen bg-[#0d0d0d] text-white selection:bg-primary/30">
-      {/* Subtle urgency strip */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-[#1a1a1a]/95 backdrop-blur-sm border-b border-white/5">
-        <div className="max-w-5xl mx-auto flex items-center justify-center gap-4 px-4 py-2.5">
-          <div className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5 text-white/50" />
-            <span className="text-xs text-white/60 font-medium">
-              {t.urgencyTitle}
-            </span>
-            <span className="text-sm font-bold tabular-nums text-white/90 ml-1">{formatTime(timeLeft)}</span>
+    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-primary/30">
+      {/* Top bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/[0.06]">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-2.5">
+          <div className="flex items-center gap-3">
+            <img src={chatgptIcon} alt="ChatGPT" className="w-6 h-6 object-contain" />
+            <span className="text-sm font-semibold text-white/80 hidden sm:inline">{t.brand}</span>
           </div>
-          <span className="hidden sm:inline text-white/20">|</span>
-          <div className="hidden sm:flex items-center gap-1.5">
-            <Users className="h-3.5 w-3.5 text-white/40" />
-            <span className="text-xs text-white/50">{spots} {t.spots}</span>
-          </div>
-          <div className="ml-auto">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-white/[0.06] rounded-full px-3 py-1">
+              <Clock className="h-3.5 w-3.5 text-red-400" />
+              <span className="text-xs font-bold tabular-nums text-red-400">{formatTime(timeLeft)}</span>
+            </div>
+            <div className="hidden sm:flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5 text-white/40" />
+              <span className="text-xs text-white/40">{spots} {t.spots}</span>
+            </div>
             <LanguageSelector className="shrink-0" />
           </div>
         </div>
       </div>
 
-      {/* Hero header */}
-      <header className="pt-20 pb-10 sm:pt-24 sm:pb-14 text-center px-4">
+      {/* Hero */}
+      <header className="pt-24 pb-12 sm:pt-28 sm:pb-16 text-center px-4">
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col items-center gap-4"
+          className="flex flex-col items-center gap-5"
         >
-          <img
-            src={chatgptLogo}
-            alt="ChatGPT"
-            className="w-10 h-10 object-contain"
-          />
-          <span className="text-sm text-white/40 font-medium tracking-wide">{t.brand}</span>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight">
+          <div className="flex items-center gap-3">
+            <img src={chatgptIcon} alt="ChatGPT" className="w-10 h-10 object-contain" />
+            <span className="text-lg font-bold text-white/70">{t.brand}</span>
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-bold text-white tracking-tight max-w-2xl leading-tight">
             {t.title}
           </h1>
-          <p className="text-base sm:text-lg text-white/50 max-w-lg leading-relaxed">
+          <p className="text-base sm:text-lg text-white/45 max-w-md leading-relaxed">
             {t.subtitle}
           </p>
         </motion.div>
       </header>
 
-      {/* Plans grid */}
-      <main className="max-w-5xl mx-auto px-4 pb-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 sm:gap-0 border border-white/10 rounded-2xl overflow-hidden">
+      {/* Plans */}
+      <main className="max-w-6xl mx-auto px-4 pb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
           {PLANS.map((plan, i) => {
             const planText = t.plans[i];
             const isPopular = plan.popular;
-            const isLast = i === PLANS.length - 1;
+            const Icon = PLAN_ICONS[i];
+            const discount = getDiscount(plan.originalPrice, plan.price);
 
             return (
               <motion.div
                 key={plan.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 + i * 0.08, duration: 0.4 }}
-                className={`relative flex flex-col p-6 sm:p-5 lg:p-6 ${
-                  i < PLANS.length - 1 ? "border-b sm:border-b-0 sm:border-r border-white/10" : ""
-                } ${isPopular ? "bg-white/[0.04]" : ""}`}
+                transition={{ delay: 0.1 + i * 0.1, duration: 0.45 }}
+                className={`relative flex flex-col rounded-2xl border ${plan.border} bg-gradient-to-b ${plan.accent} backdrop-blur-sm overflow-hidden ${
+                  isPopular ? "ring-2 ring-emerald-500/40 scale-[1.02] xl:scale-105" : ""
+                }`}
               >
                 {/* Popular badge */}
                 {isPopular && (
-                  <div className="absolute -top-0 left-0 right-0">
-                    <div className="flex justify-center">
-                      <span className="bg-primary text-primary-foreground text-[10px] font-semibold tracking-wider uppercase px-3 py-1 rounded-b-lg">
-                        {t.mostPopular}
-                      </span>
-                    </div>
+                  <div className="bg-emerald-500 text-white text-xs font-bold text-center py-1.5 tracking-wide uppercase">
+                    {t.mostPopular}
                   </div>
                 )}
 
-                {/* Plan name + tagline */}
-                <div className={`${isPopular ? "mt-5" : ""}`}>
-                  <h3 className="text-lg font-semibold text-white">{planText.name}</h3>
-                  <p className="text-sm text-white/40 mt-1 min-h-[2.5rem]">{planText.tagline}</p>
-                </div>
-
-                {/* Price */}
-                <div className="mt-5 mb-5">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-                      R${plan.price}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-xs text-white/30 line-through">R${plan.originalPrice}</span>
-                    <span className="text-[10px] text-white/40">/ {t.perAccess}</span>
-                  </div>
-                </div>
-
-                {/* CTA */}
-                <button
-                  onClick={() => handlePlanClick(plan)}
-                  className={`w-full py-3 rounded-xl font-medium text-sm transition-all active:scale-[0.97] mb-6 ${
-                    isPopular
-                      ? "bg-white text-black hover:bg-white/90"
-                      : isLast
-                      ? "bg-primary text-primary-foreground hover:brightness-110"
-                      : "bg-white/10 text-white border border-white/10 hover:bg-white/15"
-                  }`}
-                >
-                  {t.cta} <span className="inline-block ml-1">↗</span>
-                </button>
-
-                {/* Features */}
-                <div className="space-y-3 flex-1">
-                  {planText.prefix && (
-                    <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className="w-3.5 h-3.5 text-primary/70" />
-                      <span className="text-xs font-medium text-white/60">{planText.prefix}</span>
+                <div className="p-6 flex flex-col flex-1">
+                  {/* Icon + Name */}
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className={`w-9 h-9 rounded-xl ${plan.iconBg} flex items-center justify-center`}>
+                      <Icon className={`w-4.5 h-4.5 ${plan.checkColor}`} />
                     </div>
-                  )}
-                  {planText.features.map((feat, fi) => (
-                    <div key={fi} className="flex items-start gap-2.5">
-                      <Check className={`w-4 h-4 mt-0.5 shrink-0 ${
-                        isPopular ? "text-primary" : isLast ? "text-primary" : "text-white/30"
-                      }`} />
-                      <span className="text-sm text-white/70 leading-snug">{feat}</span>
+                    <h3 className="text-xl font-bold text-white">{planText.name}</h3>
+                  </div>
+                  <p className="text-sm text-white/40 mt-1 mb-5 min-h-[2rem]">{planText.tagline}</p>
+
+                  {/* Price block */}
+                  <div className="mb-6">
+                    <div className="flex items-end gap-2">
+                      <span className="text-4xl font-extrabold text-white tracking-tight">
+                        R${plan.price}
+                      </span>
+                      <span className="text-sm text-white/30 mb-1">/ {t.perAccess}</span>
                     </div>
-                  ))}
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-sm text-white/25 line-through">R${plan.originalPrice}</span>
+                      <span className="text-xs font-semibold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">
+                        -{discount}% {t.discount}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* CTA */}
+                  <button
+                    onClick={() => handlePlanClick(plan)}
+                    className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-[0.97] mb-6 ${plan.btnClass}`}
+                  >
+                    {t.cta}
+                  </button>
+
+                  {/* Divider */}
+                  <div className="border-t border-white/[0.06] mb-5" />
+
+                  {/* Features */}
+                  <div className="space-y-3 flex-1">
+                    {planText.prefix && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className={`w-3.5 h-3.5 ${plan.checkColor}`} />
+                        <span className="text-xs font-semibold text-white/50 uppercase tracking-wide">{planText.prefix}</span>
+                      </div>
+                    )}
+                    {planText.features.map((feat, fi) => (
+                      <div key={fi} className="flex items-start gap-2.5">
+                        <Check className={`w-4 h-4 mt-0.5 shrink-0 ${plan.checkColor}`} />
+                        <span className="text-sm text-white/65 leading-snug">{feat}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
             );
           })}
         </div>
 
-        {/* Guarantee */}
+        {/* Guarantee + Secure */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="mt-10 flex items-start gap-3 max-w-xl mx-auto text-center"
+          className="mt-14 flex flex-col items-center gap-3"
         >
-          <div className="flex flex-col items-center gap-2 w-full">
-            <Shield className="w-5 h-5 text-white/30" />
-            <p className="text-xs text-white/40 leading-relaxed">{t.guarantee}</p>
+          <div className="flex items-center gap-3 bg-white/[0.04] border border-white/[0.08] rounded-2xl px-6 py-4 max-w-lg text-center">
+            <Shield className="w-8 h-8 text-emerald-500/60 shrink-0" />
+            <p className="text-sm text-white/50 leading-relaxed">{t.guarantee}</p>
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            <Lock className="w-3.5 h-3.5 text-white/20" />
+            <span className="text-xs text-white/25 font-medium">{t.secureCheckout}</span>
           </div>
         </motion.div>
-
-        {/* Secure checkout */}
-        <div className="flex items-center justify-center gap-2 mt-4">
-          <Lock className="w-3 h-3 text-white/20" />
-          <span className="text-[11px] text-white/25 font-medium">{t.secureCheckout}</span>
-        </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 py-6">
-        <p className="text-xs text-white/25 text-center">{t.footer}</p>
+      <footer className="border-t border-white/[0.04] py-6">
+        <p className="text-xs text-white/20 text-center">{t.footer}</p>
       </footer>
     </div>
   );
