@@ -29,7 +29,7 @@ const PLANS = [
     checkoutUrl: "https://pay.kirvano.com/b9bbad45-8e94-40c0-b910-73e814b03c8c",
     price: 97,
     originalPrice: 397,
-    popular: true,
+    popular: false,
     isLimited: false,
   },
   {
