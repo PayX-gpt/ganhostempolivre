@@ -116,7 +116,7 @@ const QuizFunnel = () => {
   const isValidQuizSlug = STEP_SLUGS.includes(currentSlug as any);
 
   // Guard: if the slug belongs to a known non-quiz route, bail out immediately
-  const NON_QUIZ_ROUTES = ["upsell1", "upsell2", "upsell3", "upsell4", "live"];
+  const NON_QUIZ_ROUTES = ["upsell1", "upsell2", "upsell3", "upsell4", "upsell5", "upsell6", "live", "oferta"];
   const isNonQuizRoute = slug && NON_QUIZ_ROUTES.includes(slug);
 
   useEffect(() => {
