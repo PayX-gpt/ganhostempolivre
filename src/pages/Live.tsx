@@ -611,6 +611,9 @@ export default function AdminFunnelAudit() {
               <TabsTrigger value="sales" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
                 <Receipt className="w-3.5 h-3.5 mr-1.5" />Vendas
               </TabsTrigger>
+              <TabsTrigger value="pricing" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
+                <DollarSign className="w-3.5 h-3.5 mr-1.5" />Preços
+              </TabsTrigger>
               <TabsTrigger value="audit" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
                 <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />Auditoria
               </TabsTrigger>
