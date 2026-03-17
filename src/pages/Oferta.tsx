@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Shield, Zap, Crown, Clock, CheckCircle, Users, BookOpen, Headphones, Star, TrendingUp, Lock } from "lucide-react";
+import { Check, Clock, Users, Shield, Lock, Sparkles } from "lucide-react";
 import { useLanguage, LanguageSelector } from "@/lib/i18n";
 import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
@@ -13,7 +13,6 @@ const PLANS = [
     checkoutUrl: "https://pay.kirvano.com/4630333d-d5d1-4591-b767-2151f77c6b13",
     price: 37,
     originalPrice: 97,
-    icon: BookOpen,
     popular: false,
     isLimited: true,
   },
@@ -22,7 +21,6 @@ const PLANS = [
     checkoutUrl: "https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c",
     price: 47,
     originalPrice: 197,
-    icon: Zap,
     popular: false,
     isLimited: false,
   },
@@ -31,7 +29,6 @@ const PLANS = [
     checkoutUrl: "https://pay.kirvano.com/b9bbad45-8e94-40c0-b910-73e814b03c8c",
     price: 97,
     originalPrice: 397,
-    icon: Crown,
     popular: true,
     isLimited: false,
   },
@@ -40,7 +37,6 @@ const PLANS = [
     checkoutUrl: "https://pay.kirvano.com/4feda4e1-966a-400c-9b34-a68e9ca0fbb1",
     price: 197,
     originalPrice: 697,
-    icon: Star,
     popular: false,
     isLimited: false,
   },
@@ -48,14 +44,14 @@ const PLANS = [
 
 const texts = {
   pt: {
-    header: "GANHOS COM TEMPO LIVRE",
-    badge: "OFERTA ESPECIAL — CHAVE DE ACESSO LIBERADA",
-    title: "Ative Sua Chave de Acesso ao ChatGPT",
-    subtitle: "Garanta seu token de acesso à inteligência artificial que faz a plataforma de tempo livre funcionar.",
+    brand: "ChatGPT",
+    title: "Preços",
+    subtitle: "Confira os planos de acesso à inteligência artificial que faz a plataforma funcionar.",
     plans: [
       {
         name: "Starter",
-        tagline: "Teste a IA Por 3 Meses",
+        tagline: "Teste a IA por 3 meses",
+        prefix: "",
         features: [
           "Token de acesso ao ChatGPT por 3 meses",
           "Treinamento básico de uso da IA",
@@ -65,7 +61,8 @@ const texts = {
       },
       {
         name: "Essencial",
-        tagline: "Sua Chave Vitalícia da IA",
+        tagline: "Sua chave vitalícia da IA",
+        prefix: "",
         features: [
           "Token de acesso vitalício ao ChatGPT",
           "Treinamento completo da plataforma",
@@ -76,9 +73,9 @@ const texts = {
       },
       {
         name: "Profissional",
-        tagline: "IA Turbinada + Acompanhamento",
+        tagline: "IA turbinada + acompanhamento",
+        prefix: "Tudo do Essencial, mais:",
         features: [
-          "Tudo do plano Essencial",
           "Chave com acesso a 3 projetos simultâneos",
           "Acompanhamento individual por 30 dias",
           "Mentoria em grupo semanal",
@@ -89,9 +86,9 @@ const texts = {
       },
       {
         name: "VIP",
-        tagline: "Acesso Máximo + Mentoria Exclusiva",
+        tagline: "Acesso máximo + mentoria exclusiva",
+        prefix: "Tudo do Profissional, mais:",
         features: [
-          "Tudo do plano Profissional",
           "Chave com projetos ilimitados na IA",
           "Mentoria 1-a-1 por 60 dias",
           "Acesso antecipado a novas funcionalidades",
@@ -102,30 +99,24 @@ const texts = {
         ],
       },
     ],
-    lifetime: "Token Vitalício",
-    limited3mo: "Token por 3 Meses",
-    from: "De",
-    to: "por apenas",
-    cta: "ATIVAR MINHA CHAVE DE ACESSO",
-    mostPopular: "MAIS ESCOLHIDO",
-    bestValue: "MELHOR CUSTO-BENEFÍCIO",
-    lowestPrice: "MENOR PREÇO",
+    cta: "Ativar Chave de Acesso",
+    mostPopular: "Mais escolhido",
     urgencyTitle: "Oferta por tempo limitado",
-    urgencyText: "Esse valor promocional pode ser encerrado a qualquer momento.",
-    guarantee: "Garantia incondicional de 30 dias. Se a chave de acesso não funcionar para você, devolvemos 100% do seu dinheiro.",
+    spots: "chaves restantes neste valor",
+    guarantee: "Garantia incondicional de 30 dias. Se não funcionar para você, devolvemos 100% do seu dinheiro.",
     footer: "© 2026 — Plataforma de Ganhos com Tempo Livre • Todos os direitos reservados",
     secureCheckout: "Checkout 100% seguro",
-    spots: "chaves restantes neste valor",
+    perAccess: "acesso único",
   },
   en: {
-    header: "FREE TIME EARNINGS",
-    badge: "SPECIAL OFFER — ACCESS KEY UNLOCKED",
-    title: "Activate Your ChatGPT Access Key",
-    subtitle: "Lock in your AI access token that powers the free time earnings platform.",
+    brand: "ChatGPT",
+    title: "Pricing",
+    subtitle: "Check the AI access plans that power the free time earnings platform.",
     plans: [
       {
         name: "Starter",
-        tagline: "Try the AI For 3 Months",
+        tagline: "Try the AI for 3 months",
+        prefix: "",
         features: [
           "3-month ChatGPT access token",
           "Basic AI usage training",
@@ -135,7 +126,8 @@ const texts = {
       },
       {
         name: "Essential",
-        tagline: "Your Lifetime AI Key",
+        tagline: "Your lifetime AI key",
+        prefix: "",
         features: [
           "Lifetime ChatGPT access token",
           "Complete platform training",
@@ -146,9 +138,9 @@ const texts = {
       },
       {
         name: "Professional",
-        tagline: "Turbocharged AI + Guidance",
+        tagline: "Turbocharged AI + guidance",
+        prefix: "Everything in Essential, plus:",
         features: [
-          "Everything in Essential",
           "Key with access to 3 simultaneous projects",
           "30-day individual follow-up",
           "Weekly group mentoring",
@@ -159,9 +151,9 @@ const texts = {
       },
       {
         name: "VIP",
-        tagline: "Maximum Access + Exclusive Mentoring",
+        tagline: "Maximum access + exclusive mentoring",
+        prefix: "Everything in Professional, plus:",
         features: [
-          "Everything in Professional",
           "Key with unlimited AI projects",
           "60-day 1-on-1 mentoring",
           "Early access to new features",
@@ -172,30 +164,24 @@ const texts = {
         ],
       },
     ],
-    lifetime: "Lifetime Token",
-    limited3mo: "3-Month Token",
-    from: "From",
-    to: "for only",
-    cta: "ACTIVATE MY ACCESS KEY",
-    mostPopular: "MOST POPULAR",
-    bestValue: "BEST VALUE",
-    lowestPrice: "LOWEST PRICE",
+    cta: "Activate Access Key",
+    mostPopular: "Most popular",
     urgencyTitle: "Limited time offer",
-    urgencyText: "This promotional price may end at any moment.",
-    guarantee: "Unconditional 30-day guarantee. If the access key doesn't work for you, we refund 100% of your money.",
+    spots: "keys left at this price",
+    guarantee: "Unconditional 30-day guarantee. If it doesn't work for you, we refund 100% of your money.",
     footer: "© 2026 — Free Time Earnings Platform • All rights reserved",
     secureCheckout: "100% secure checkout",
-    spots: "keys left at this price",
+    perAccess: "one-time access",
   },
   es: {
-    header: "GANANCIAS CON TIEMPO LIBRE",
-    badge: "OFERTA ESPECIAL — CLAVE DE ACCESO LIBERADA",
-    title: "Activá Tu Clave de Acceso al ChatGPT",
-    subtitle: "Asegurá tu token de acceso a la inteligencia artificial que hace funcionar la plataforma de tiempo libre.",
+    brand: "ChatGPT",
+    title: "Precios",
+    subtitle: "Consultá los planes de acceso a la inteligencia artificial que hace funcionar la plataforma.",
     plans: [
       {
         name: "Starter",
-        tagline: "Probá la IA Por 3 Meses",
+        tagline: "Probá la IA por 3 meses",
+        prefix: "",
         features: [
           "Token de acceso al ChatGPT por 3 meses",
           "Entrenamiento básico de uso de la IA",
@@ -205,7 +191,8 @@ const texts = {
       },
       {
         name: "Esencial",
-        tagline: "Tu Clave Vitalicia de IA",
+        tagline: "Tu clave vitalicia de IA",
+        prefix: "",
         features: [
           "Token de acceso vitalicio al ChatGPT",
           "Entrenamiento completo de la plataforma",
@@ -216,9 +203,9 @@ const texts = {
       },
       {
         name: "Profesional",
-        tagline: "IA Turbo + Acompañamiento",
+        tagline: "IA turbo + acompañamiento",
+        prefix: "Todo del Esencial, más:",
         features: [
-          "Todo del plan Esencial",
           "Clave con acceso a 3 proyectos simultáneos",
           "Acompañamiento individual por 30 días",
           "Mentoría grupal semanal",
@@ -229,9 +216,9 @@ const texts = {
       },
       {
         name: "VIP",
-        tagline: "Acceso Máximo + Mentoría Exclusiva",
+        tagline: "Acceso máximo + mentoría exclusiva",
+        prefix: "Todo del Profesional, más:",
         features: [
-          "Todo del plan Profesional",
           "Clave con proyectos ilimitados en la IA",
           "Mentoría 1-a-1 por 60 días",
           "Acceso anticipado a nuevas funcionalidades",
@@ -242,20 +229,14 @@ const texts = {
         ],
       },
     ],
-    lifetime: "Token Vitalicio",
-    limited3mo: "Token por 3 Meses",
-    from: "De",
-    to: "por solo",
-    cta: "ACTIVAR MI CLAVE DE ACCESO",
-    mostPopular: "MÁS ELEGIDO",
-    bestValue: "MEJOR COSTO-BENEFICIO",
-    lowestPrice: "MENOR PRECIO",
+    cta: "Activar Clave de Acceso",
+    mostPopular: "Más elegido",
     urgencyTitle: "Oferta por tiempo limitado",
-    urgencyText: "Este valor promocional puede finalizar en cualquier momento.",
-    guarantee: "Garantía incondicional de 30 días. Si la clave de acceso no funciona para vos, te devolvemos el 100% de tu dinero.",
+    spots: "claves restantes a este precio",
+    guarantee: "Garantía incondicional de 30 días. Si no funciona para vos, te devolvemos el 100% de tu dinero.",
     footer: "© 2026 — Plataforma Ganancias con Tiempo Libre • Todos los derechos reservados",
     secureCheckout: "Checkout 100% seguro",
-    spots: "claves restantes a este precio",
+    perAccess: "acceso único",
   },
 };
 
@@ -264,7 +245,6 @@ const Oferta = () => {
   const t = texts[lang];
   const icFiredRef = useRef(false);
 
-  // Countdown timer
   const [timeLeft, setTimeLeft] = useState(() => {
     const stored = sessionStorage.getItem("oferta_timer_end");
     if (stored) {
@@ -278,15 +258,11 @@ const Oferta = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 0) return 0;
-        return prev - 1;
-      });
+      setTimeLeft((prev) => (prev <= 0 ? 0 : prev - 1));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Fake spots counter
   const [spots] = useState(() => Math.floor(Math.random() * 5) + 3);
 
   const formatTime = (s: number) => {
@@ -295,25 +271,16 @@ const Oferta = () => {
     return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
   };
 
-  // Get UTMs from URL and session
   const buildCheckoutURL = (plan: typeof PLANS[0]) => {
     const sessionId = sessionStorage.getItem("session_id") || localStorage.getItem("session_id") || "";
     const params = new URLSearchParams(window.location.search);
-    const utmSource = params.get("utm_source") || "";
-    const utmMedium = params.get("utm_medium") || "";
-    const utmCampaign = params.get("utm_campaign") || "";
-    const utmContent = params.get("utm_content") || "";
-    const utmTerm = params.get("utm_term") || "";
-
     const checkoutParams = new URLSearchParams();
     if (sessionId) checkoutParams.set("session_id", sessionId);
-    if (utmSource) checkoutParams.set("utm_source", utmSource);
-    if (utmMedium) checkoutParams.set("utm_medium", utmMedium);
-    if (utmCampaign) checkoutParams.set("utm_campaign", utmCampaign);
-    if (utmContent) checkoutParams.set("utm_content", utmContent);
-    if (utmTerm) checkoutParams.set("utm_term", utmTerm);
+    ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"].forEach((k) => {
+      const v = params.get(k);
+      if (v) checkoutParams.set(k, v);
+    });
     checkoutParams.set("plan", plan.id);
-
     const qs = checkoutParams.toString();
     return `${plan.checkoutUrl}${qs ? `?${qs}` : ""}`;
   };
@@ -333,178 +300,130 @@ const Oferta = () => {
     window.open(buildCheckoutURL(plan), "_blank");
   };
 
-  const planIcons = [BookOpen, Zap, Crown, Star];
-
   return (
-    <div className="min-h-screen bg-background" style={{ fontFamily: "'Source Sans 3', 'Inter', system-ui, sans-serif" }}>
-      {/* Fixed top panel */}
-      <div className="fixed top-0 left-0 right-0 z-50 px-2 pt-2 sm:px-4 sm:pt-3">
-        <div className="mx-auto w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-background/95 shadow-lg backdrop-blur-md">
-          {/* Header */}
-          <header className="flex items-center justify-between gap-3 px-3 py-3 sm:px-4">
-            <div className="min-w-0 flex-1">
-              <span className="block truncate text-[10px] font-semibold tracking-[0.28em] text-foreground/90 sm:text-[11px]">
-                <span className="text-primary font-bold">G</span>{t.header.slice(1)}
-              </span>
-            </div>
+    <div className="min-h-screen bg-[#0d0d0d] text-white selection:bg-primary/30">
+      {/* Subtle urgency strip */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-[#1a1a1a]/95 backdrop-blur-sm border-b border-white/5">
+        <div className="max-w-5xl mx-auto flex items-center justify-center gap-4 px-4 py-2.5">
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5 text-white/50" />
+            <span className="text-xs text-white/60 font-medium">
+              {t.urgencyTitle}
+            </span>
+            <span className="text-sm font-bold tabular-nums text-white/90 ml-1">{formatTime(timeLeft)}</span>
+          </div>
+          <span className="hidden sm:inline text-white/20">|</span>
+          <div className="hidden sm:flex items-center gap-1.5">
+            <Users className="h-3.5 w-3.5 text-white/40" />
+            <span className="text-xs text-white/50">{spots} {t.spots}</span>
+          </div>
+          <div className="ml-auto">
             <LanguageSelector className="shrink-0" />
-          </header>
-
-          {/* Urgency bar */}
-          <div className="border-t border-border bg-accent/10 px-3 py-2 sm:px-4">
-            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-center sm:gap-3">
-              <div className="flex items-center justify-center gap-1.5 text-center">
-                <Clock className="h-3.5 w-3.5 shrink-0 text-accent" />
-                <span className="text-[11px] font-semibold text-accent sm:text-xs">
-                  {t.urgencyTitle}: <span className="text-sm font-bold tabular-nums">{formatTime(timeLeft)}</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center gap-1.5 text-center">
-                <Users className="h-3.5 w-3.5 shrink-0 text-accent/80" />
-                <span className="text-[11px] font-medium text-accent/80 sm:text-xs">
-                  {spots} {t.spots}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Content — offset for fixed top panel */}
-      <main className="pt-32 pb-16 px-4 mx-auto sm:pt-28" style={{ maxWidth: 520 }}>
-        {/* Badge */}
+      {/* Hero header */}
+      <header className="pt-20 pb-10 sm:pt-24 sm:pb-14 text-center px-4">
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center mb-4"
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-center gap-4"
         >
-          <span className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/30 rounded-full px-3 py-1 text-[10px] font-bold tracking-widest text-primary uppercase">
-            <Lock className="w-3 h-3" />
-            {t.badge}
-          </span>
-        </motion.div>
-
-        {/* ChatGPT Logo + Title */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="flex flex-col items-center gap-3 mb-2"
-        >
-          <img src={chatgptLogo} alt="ChatGPT" className="w-12 h-12 object-contain" />
-          <h1
-            className="text-xl sm:text-2xl font-bold text-foreground text-center leading-tight"
-            style={{ fontFamily: "'Merriweather', serif" }}
-          >
+          <img
+            src={chatgptLogo}
+            alt="ChatGPT"
+            className="w-10 h-10 object-contain"
+          />
+          <span className="text-sm text-white/40 font-medium tracking-wide">{t.brand}</span>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight">
             {t.title}
           </h1>
+          <p className="text-base sm:text-lg text-white/50 max-w-lg leading-relaxed">
+            {t.subtitle}
+          </p>
         </motion.div>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-sm text-muted-foreground text-center mb-6"
-        >
-          {t.subtitle}
-        </motion.p>
+      </header>
 
-        {/* Plans */}
-        <div className="space-y-4">
+      {/* Plans grid */}
+      <main className="max-w-5xl mx-auto px-4 pb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 sm:gap-0 border border-white/10 rounded-2xl overflow-hidden">
           {PLANS.map((plan, i) => {
-            const PlanIcon = planIcons[i];
             const planText = t.plans[i];
             const isPopular = plan.popular;
+            const isLast = i === PLANS.length - 1;
 
             return (
               <motion.div
                 key={plan.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + i * 0.1 }}
-                className={`relative rounded-2xl border overflow-hidden transition-all ${
-                  isPopular
-                    ? "border-accent shadow-[0_0_30px_-5px_hsl(var(--accent)/0.3)] bg-card"
-                    : "border-border bg-card/80 hover:border-primary/40"
-                }`}
+                transition={{ delay: 0.15 + i * 0.08, duration: 0.4 }}
+                className={`relative flex flex-col p-6 sm:p-5 lg:p-6 ${
+                  i < PLANS.length - 1 ? "border-b sm:border-b-0 sm:border-r border-white/10" : ""
+                } ${isPopular ? "bg-white/[0.04]" : ""}`}
               >
-                {/* Badges */}
-                {i === 0 && (
-                  <div className="bg-muted text-muted-foreground text-[10px] font-bold tracking-widest text-center py-1.5 uppercase">
-                    {t.lowestPrice}
-                  </div>
-                )}
+                {/* Popular badge */}
                 {isPopular && (
-                  <div className="bg-accent text-accent-foreground text-[10px] font-bold tracking-widest text-center py-1.5 uppercase">
-                    {t.mostPopular}
-                  </div>
-                )}
-                {i === 3 && (
-                  <div className="bg-primary/20 text-primary text-[10px] font-bold tracking-widest text-center py-1.5 uppercase">
-                    {t.bestValue}
-                  </div>
-                )}
-
-                <div className="p-5">
-                  {/* Plan header */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      isPopular ? "bg-accent/20" : i === 3 ? "bg-primary/15" : i === 0 ? "bg-muted" : "bg-secondary"
-                    }`}>
-                      <PlanIcon className={`w-5 h-5 ${
-                        isPopular ? "text-accent" : i === 3 ? "text-primary" : "text-muted-foreground"
-                      }`} />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-foreground text-base">{planText.name}</h3>
-                      <p className="text-xs text-muted-foreground">{planText.tagline}</p>
-                    </div>
-                  </div>
-
-                  {/* Price */}
-                  <div className="mb-4">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-xs text-muted-foreground line-through">{t.from} R${plan.originalPrice}</span>
-                    </div>
-                    <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-xs text-muted-foreground">{t.to}</span>
-                      <span className={`text-3xl font-bold ${isPopular ? "text-accent" : "text-foreground"}`}>
-                        R${plan.price}
+                  <div className="absolute -top-0 left-0 right-0">
+                    <div className="flex justify-center">
+                      <span className="bg-primary text-primary-foreground text-[10px] font-semibold tracking-wider uppercase px-3 py-1 rounded-b-lg">
+                        {t.mostPopular}
                       </span>
                     </div>
-                    <span className={`inline-block mt-1 text-[10px] font-semibold rounded-full px-2 py-0.5 uppercase tracking-wide ${
-                      plan.isLimited
-                        ? "text-muted-foreground bg-muted border border-border"
-                        : "text-primary bg-primary/10"
-                    }`}>
-                      {plan.isLimited ? t.limited3mo : t.lifetime}
+                  </div>
+                )}
+
+                {/* Plan name + tagline */}
+                <div className={`${isPopular ? "mt-5" : ""}`}>
+                  <h3 className="text-lg font-semibold text-white">{planText.name}</h3>
+                  <p className="text-sm text-white/40 mt-1 min-h-[2.5rem]">{planText.tagline}</p>
+                </div>
+
+                {/* Price */}
+                <div className="mt-5 mb-5">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+                      R${plan.price}
                     </span>
                   </div>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-xs text-white/30 line-through">R${plan.originalPrice}</span>
+                    <span className="text-[10px] text-white/40">/ {t.perAccess}</span>
+                  </div>
+                </div>
 
-                  {/* Features */}
-                  <ul className="space-y-2 mb-5">
-                    {planText.features.map((feat, fi) => (
-                      <li key={fi} className="flex items-start gap-2 text-sm text-foreground/85">
-                        <CheckCircle className={`w-4 h-4 mt-0.5 shrink-0 ${
-                          isPopular ? "text-accent" : "text-primary"
-                        }`} />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
+                {/* CTA */}
+                <button
+                  onClick={() => handlePlanClick(plan)}
+                  className={`w-full py-3 rounded-xl font-medium text-sm transition-all active:scale-[0.97] mb-6 ${
+                    isPopular
+                      ? "bg-white text-black hover:bg-white/90"
+                      : isLast
+                      ? "bg-primary text-primary-foreground hover:brightness-110"
+                      : "bg-white/10 text-white border border-white/10 hover:bg-white/15"
+                  }`}
+                >
+                  {t.cta} <span className="inline-block ml-1">↗</span>
+                </button>
 
-                  {/* CTA */}
-                  <button
-                    onClick={() => handlePlanClick(plan)}
-                    className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all active:scale-[0.98] ${
-                      isPopular
-                        ? "bg-accent text-accent-foreground shadow-lg shadow-accent/25 hover:brightness-110"
-                        : i === 3
-                        ? "bg-primary text-primary-foreground hover:brightness-110"
-                        : "bg-secondary text-secondary-foreground border border-border hover:bg-secondary/80"
-                    }`}
-                  >
-                    {t.cta}
-                  </button>
+                {/* Features */}
+                <div className="space-y-3 flex-1">
+                  {planText.prefix && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <Sparkles className="w-3.5 h-3.5 text-primary/70" />
+                      <span className="text-xs font-medium text-white/60">{planText.prefix}</span>
+                    </div>
+                  )}
+                  {planText.features.map((feat, fi) => (
+                    <div key={fi} className="flex items-start gap-2.5">
+                      <Check className={`w-4 h-4 mt-0.5 shrink-0 ${
+                        isPopular ? "text-primary" : isLast ? "text-primary" : "text-white/30"
+                      }`} />
+                      <span className="text-sm text-white/70 leading-snug">{feat}</span>
+                    </div>
+                  ))}
                 </div>
               </motion.div>
             );
@@ -515,23 +434,25 @@ const Oferta = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3"
+          transition={{ delay: 0.7 }}
+          className="mt-10 flex items-start gap-3 max-w-xl mx-auto text-center"
         >
-          <Shield className="w-8 h-8 text-primary shrink-0 mt-0.5" />
-          <p className="text-xs text-foreground/80 leading-relaxed">{t.guarantee}</p>
+          <div className="flex flex-col items-center gap-2 w-full">
+            <Shield className="w-5 h-5 text-white/30" />
+            <p className="text-xs text-white/40 leading-relaxed">{t.guarantee}</p>
+          </div>
         </motion.div>
 
         {/* Secure checkout */}
-        <div className="flex items-center justify-center gap-2 mt-4 text-muted-foreground">
-          <Lock className="w-3.5 h-3.5" />
-          <span className="text-[11px] font-medium">{t.secureCheckout}</span>
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <Lock className="w-3 h-3 text-white/20" />
+          <span className="text-[11px] text-white/25 font-medium">{t.secureCheckout}</span>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-3 border-t border-border">
-        <p className="text-xs text-muted-foreground text-center">{t.footer}</p>
+      <footer className="border-t border-white/5 py-6">
+        <p className="text-xs text-white/25 text-center">{t.footer}</p>
       </footer>
     </div>
   );
