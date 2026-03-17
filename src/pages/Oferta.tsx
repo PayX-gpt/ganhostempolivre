@@ -402,7 +402,26 @@ const Oferta = () => {
             {t.title}
           </h1>
           <p className="text-base sm:text-lg text-black/50 max-w-lg leading-relaxed mt-1">
-            {t.subtitle}
+            {t.subtitle.split("Plataforma de Tempo Livre").length > 1
+              ? <>
+                  {t.subtitle.split("Plataforma de Tempo Livre")[0]}
+                  <span className="font-semibold text-black">Plataforma de Tempo Livre</span>
+                  {t.subtitle.split("Plataforma de Tempo Livre")[1]}
+                </>
+              : t.subtitle.split("Free Time Platform").length > 1
+              ? <>
+                  {t.subtitle.split("Free Time Platform")[0]}
+                  <span className="font-semibold text-black">Free Time Platform</span>
+                  {t.subtitle.split("Free Time Platform")[1]}
+                </>
+              : t.subtitle.split("Plataforma de Tiempo Libre").length > 1
+              ? <>
+                  {t.subtitle.split("Plataforma de Tiempo Libre")[0]}
+                  <span className="font-semibold text-black">Plataforma de Tiempo Libre</span>
+                  {t.subtitle.split("Plataforma de Tiempo Libre")[1]}
+                </>
+              : t.subtitle
+            }
           </p>
         </motion.div>
       </header>
