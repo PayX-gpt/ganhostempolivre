@@ -352,9 +352,10 @@ const Oferta = () => {
             return (
               <motion.div
                 key={plan.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.08, duration: 0.4 }}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ delay: i * 0.12, duration: 0.5, ease: "easeOut" }}
                 className={`relative flex flex-col rounded-2xl border p-6 ${
                   isPopular
                     ? "border-black bg-white shadow-lg"
