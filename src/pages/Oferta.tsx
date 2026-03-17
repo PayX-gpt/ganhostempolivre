@@ -481,7 +481,7 @@ const Oferta = () => {
                     className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all active:scale-[0.98] ${
                       isPopular
                         ? "bg-accent text-accent-foreground shadow-lg shadow-accent/25 hover:brightness-110"
-                        : i === 2
+                        : i === 3
                         ? "bg-primary text-primary-foreground hover:brightness-110"
                         : "bg-secondary text-secondary-foreground border border-border hover:bg-secondary/80"
                     }`}
