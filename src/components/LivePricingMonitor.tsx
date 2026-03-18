@@ -104,7 +104,7 @@ export default function LivePricingMonitor() {
         planRevenue[p] = 0;
       });
 
-      // Map clicks to plans
+      // Map clicks to plans (only /oferta events reach here due to filter above)
       clickEvents?.forEach(e => {
         const data = e.event_data as Record<string, unknown> | null;
         const plan = (data?.plan as string) || inferPlanFromAmount(data?.amount as number);
