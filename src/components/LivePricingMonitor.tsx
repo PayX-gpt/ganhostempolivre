@@ -54,11 +54,17 @@ export default function LivePricingMonitor() {
         .order("created_at", { ascending: false });
 
       // Fetch IC events
-      const { data: icEvents } = await supabase
+      // Fetch IC events - filter by plan field presence (only /oferta sends plan)
+      const { data: icEventsRaw } = await supabase
         .from("funnel_events")
-        .select("session_id, event_data, created_at")
+        .select("session_id, event_data, created_at, page_url")
         .eq("event_name", "capi_ic_sent")
         .gte("created_at", dayStart);
+      // Only include ICs that came from /oferta or have a plan field
+      const icEvents = (icEventsRaw || []).filter(e => {
+        const data = e.event_data as Record<string, unknown> | null;
+        return data?.plan || (e.page_url && e.page_url.includes("/oferta"));
+      });
 
       // Fetch purchases
       const { data: purchases } = await supabase
