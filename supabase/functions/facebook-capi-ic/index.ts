@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { email, phone, session_id, fbclid, fbp, fbc, amount, event_name } = body;
+    const { email, phone, session_id, fbclid, fbp, fbc, amount, plan, event_name } = body;
 
     // Only allow IC event
     if (event_name !== "InitiateCheckout") {
