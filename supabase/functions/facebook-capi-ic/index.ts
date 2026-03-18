@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
       await supabase.from("funnel_events").insert({
         event_name: "capi_ic_sent",
         session_id: dedupKey,
-        event_data: { email, event_id: eventId, amount },
+        event_data: { email, event_id: eventId, amount, plan },
         page_url: "capi_initiate_checkout",
       });
       console.log(`✅ [CAPI-IC] Sent for ${dedupKey} (event_id: ${eventId})`);

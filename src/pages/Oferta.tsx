@@ -359,8 +359,8 @@ const Oferta = () => {
         amount: plan.price,
         product: plan.id,
       });
-      sendCAPIInitiateCheckout({ amount: plan.price });
-      trackTikTokInitiateCheckout({ amount: plan.price });
+      sendCAPIInitiateCheckout({ amount: plan.price, plan: plan.id });
+      trackTikTokInitiateCheckout({ amount: plan.price, contentId: plan.id });
     }
     window.open(buildCheckoutURL(plan), "_blank");
   };
