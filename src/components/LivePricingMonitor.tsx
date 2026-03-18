@@ -422,7 +422,7 @@ function resolveFunnelStep(step: string | null, amount: number | null): PlanKey 
     case "front_47": return "essencial";
     case "front_97": return "profissional";
     case "front_197": return "vip";
-    case "front_66": return exactAmountToPlan(amount) || "essencial"; // dynamic pricing → map by actual amount paid
+    case "front_66": return null; // standby — not active, ignore
     default: return step?.startsWith("front") ? (exactAmountToPlan(amount) || "essencial") : null;
   }
 }
