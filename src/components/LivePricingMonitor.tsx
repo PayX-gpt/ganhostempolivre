@@ -3,8 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, MousePointerClick, ShoppingCart, TrendingUp, Users, BarChart3, RefreshCw } from "lucide-react";
 
+type PlanKey = "starter" | "essencial" | "profissional" | "vip";
+
 interface PlanMetrics {
-  plan: string;
+  plan: PlanKey;
   clicks: number;
   ics: number;
   sales: number;
@@ -21,128 +23,154 @@ interface LeadProfile {
   revenue: number;
 }
 
-const PLAN_ORDER = ["starter", "essencial", "profissional", "vip"];
-const PLAN_LABELS: Record<string, string> = {
+interface FunnelEventRow {
+  session_id: string;
+  event_data: Record<string, unknown> | null;
+  created_at: string;
+  page_url: string | null;
+}
+
+interface PurchaseRow {
+  id: string;
+  transaction_id: string | null;
+  session_id: string | null;
+  amount: number | null;
+  status: string | null;
+  funnel_step: string | null;
+  email: string | null;
+  created_at: string;
+}
+
+interface LeadBehaviorRow {
+  session_id: string;
+  quiz_answers: Record<string, unknown> | null;
+}
+
+const PLAN_ORDER: PlanKey[] = ["starter", "essencial", "profissional", "vip"];
+const PLAN_LABELS: Record<PlanKey, string> = {
   starter: "Starter (R$37)",
   essencial: "Essencial (R$47)",
   profissional: "Profissional (R$97)",
   vip: "VIP (R$197)",
 };
-const PLAN_PRICES: Record<string, number> = { starter: 37, essencial: 47, profissional: 97, vip: 197 };
+const PLAN_PRICES: Record<PlanKey, number> = { starter: 37, essencial: 47, profissional: 97, vip: 197 };
+const QUERY_PAGE_SIZE = 1000;
+const SESSION_CHUNK_SIZE = 500;
 
 export default function LivePricingMonitor() {
   const [metrics, setMetrics] = useState<PlanMetrics[]>([]);
   const [profiles, setProfiles] = useState<LeadProfile[]>([]);
-  const [planProfiles, setPlanProfiles] = useState<Record<string, LeadProfile[]>>({});
+  const [planProfiles, setPlanProfiles] = useState<Record<PlanKey, LeadProfile[]>>({
+    starter: [],
+    essencial: [],
+    profissional: [],
+    vip: [],
+  });
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   const fetchData = useCallback(async () => {
+    setLoading(true);
+
     try {
-      const todayStart = new Date();
-      todayStart.setHours(todayStart.getHours() - todayStart.getTimezoneOffset() / 60 - 3); // BRT
-      const dateStr = todayStart.toISOString().slice(0, 10);
-      const dayStart = `${dateStr}T00:00:00-03:00`;
+      const dayStart = getTodayStartInSaoPaulo();
 
-      // Fetch checkout clicks ONLY from /oferta page (exclude quiz step-17 dynamic pricing)
-      const { data: clickEvents } = await supabase
-        .from("funnel_events")
-        .select("session_id, event_data, created_at, page_url")
-        .eq("event_name", "checkout_click")
-        .gte("created_at", dayStart)
-        .like("page_url", "%/oferta%")
-        .order("created_at", { ascending: false });
+      const [clickEvents, icEventsRaw, purchases] = await Promise.all([
+        fetchAllRows<FunnelEventRow>("funnel_events", "session_id, event_data, created_at, page_url", (query) =>
+          query
+            .eq("event_name", "checkout_click")
+            .gte("created_at", dayStart)
+            .like("page_url", "%/oferta%")
+            .order("created_at", { ascending: false })
+        ),
+        fetchAllRows<FunnelEventRow>("funnel_events", "session_id, event_data, created_at, page_url", (query) =>
+          query
+            .eq("event_name", "capi_ic_sent")
+            .gte("created_at", dayStart)
+            .order("created_at", { ascending: false })
+        ),
+        fetchAllRows<PurchaseRow>("purchase_tracking", "id, transaction_id, session_id, amount, status, funnel_step, email, created_at", (query) =>
+          query
+            .gte("created_at", dayStart)
+            .eq("status", "approved")
+            .order("created_at", { ascending: false })
+        ),
+      ]);
 
-      // Fetch IC events
-      // Fetch IC events - filter by plan field presence (only /oferta sends plan)
-      const { data: icEventsRaw } = await supabase
-        .from("funnel_events")
-        .select("session_id, event_data, created_at, page_url")
-        .eq("event_name", "capi_ic_sent")
-        .gte("created_at", dayStart);
-      // Only include ICs that came from /oferta or have a plan field
-      const icEvents = (icEventsRaw || []).filter(e => {
-        const data = e.event_data as Record<string, unknown> | null;
-        return data?.plan || (e.page_url && e.page_url.includes("/oferta"));
+      const latestClickPlanBySession = new Map<string, PlanKey>();
+      clickEvents.forEach((event) => {
+        const plan = resolveEventPlan(event);
+        if (plan && !latestClickPlanBySession.has(event.session_id)) {
+          latestClickPlanBySession.set(event.session_id, plan);
+        }
       });
 
-      // Fetch purchases
-      const { data: purchases } = await supabase
-        .from("purchase_tracking")
-        .select("session_id, plan_id, amount, status, funnel_step, email, created_at")
-        .gte("created_at", dayStart)
-        .eq("status", "approved");
+      const sessionIds = new Set<string>(latestClickPlanBySession.keys());
+      purchases.forEach((purchase) => {
+        if (purchase.session_id) sessionIds.add(purchase.session_id);
+      });
 
-      // Fetch lead behaviors for profile correlation
-      const sessionIds = new Set<string>();
-      clickEvents?.forEach(e => sessionIds.add(e.session_id));
-      icEvents?.forEach(e => sessionIds.add(e.session_id));
-      purchases?.forEach(p => { if (p.session_id) sessionIds.add(p.session_id); });
-
-      const { data: behaviors } = await supabase
-        .from("lead_behavior")
-        .select("session_id, quiz_answers")
-        .in("session_id", Array.from(sessionIds).slice(0, 500));
-
+      const behaviors = await fetchLeadBehaviors(Array.from(sessionIds));
       const behaviorMap = new Map<string, Record<string, unknown>>();
-      behaviors?.forEach(b => {
-        if (b.quiz_answers && typeof b.quiz_answers === "object") {
-          behaviorMap.set(b.session_id, b.quiz_answers as Record<string, unknown>);
+      behaviors.forEach((behavior) => {
+        if (behavior.quiz_answers && typeof behavior.quiz_answers === "object") {
+          behaviorMap.set(behavior.session_id, behavior.quiz_answers);
         }
       });
 
-      // Aggregate per plan
-      const planClickSessions: Record<string, Set<string>> = {};
-      const planICSessions: Record<string, Set<string>> = {};
-      const planSales: Record<string, number> = {};
-      const planRevenue: Record<string, number> = {};
+      const planClickSessions = createPlanSessionMap();
+      const planICSessions = createPlanSessionMap();
+      const planSales = createPlanNumberMap();
+      const planRevenue = createPlanNumberMap();
+      const ageMap = new Map<string, { count: number; sales: number; revenue: number }>();
+      const planAgeMap = createPlanAgeMap();
 
-      PLAN_ORDER.forEach(p => {
-        planClickSessions[p] = new Set();
-        planICSessions[p] = new Set();
-        planSales[p] = 0;
-        planRevenue[p] = 0;
+      latestClickPlanBySession.forEach((plan, sessionId) => {
+        planClickSessions[plan].add(sessionId);
       });
 
-      // Map clicks to plans (only /oferta events reach here due to filter above)
-      clickEvents?.forEach(e => {
-        const data = e.event_data as Record<string, unknown> | null;
-        const plan = (data?.plan as string) || inferPlanFromAmount(data?.amount as number);
-        if (plan && planClickSessions[plan]) {
-          planClickSessions[plan].add(e.session_id);
+      icEventsRaw.forEach((event) => {
+        const plan = resolveEventPlan(event) || latestClickPlanBySession.get(event.session_id) || null;
+        if (plan) {
+          planICSessions[plan].add(event.session_id);
         }
       });
 
-      // Map ICs to plans
-      icEvents?.forEach(e => {
-        const data = e.event_data as Record<string, unknown> | null;
-        const plan = (data?.plan as string) || inferPlanFromAmount(data?.amount as number);
-        if (plan && planICSessions[plan]) {
-          planICSessions[plan].add(e.session_id);
-        }
+      const countedSales = new Set<string>();
+      purchases.forEach((purchase) => {
+        const plan = resolvePurchasePlan(purchase) || (purchase.session_id ? latestClickPlanBySession.get(purchase.session_id) || null : null);
+        if (!plan) return;
+
+        const saleKey = purchase.transaction_id || purchase.id;
+        if (countedSales.has(saleKey)) return;
+        countedSales.add(saleKey);
+
+        planSales[plan] += 1;
+        planRevenue[plan] += Number(purchase.amount) || 0;
+
+        if (!purchase.session_id) return;
+
+        const quizAnswers = behaviorMap.get(purchase.session_id);
+        const age = (quizAnswers?.age as string) || "unknown";
+        const globalAge = ageMap.get(age) || { count: 0, sales: 0, revenue: 0 };
+        globalAge.count += 1;
+        globalAge.sales += 1;
+        globalAge.revenue += Number(purchase.amount) || 0;
+        ageMap.set(age, globalAge);
+
+        const planAge = planAgeMap[plan].get(age) || { count: 0, sales: 0, revenue: 0 };
+        planAge.count += 1;
+        planAge.sales += 1;
+        planAge.revenue += Number(purchase.amount) || 0;
+        planAgeMap[plan].set(age, planAge);
       });
 
-      // Map purchases to plans
-      const planBuyerProfiles: Record<string, LeadProfile[]> = {};
-      PLAN_ORDER.forEach(p => { planBuyerProfiles[p] = []; });
-
-      purchases?.forEach(p => {
-        if (p.funnel_step && p.funnel_step.startsWith("front")) {
-          const plan = p.plan_id || inferPlanFromAmount(p.amount || 0);
-          if (plan && planSales[plan] !== undefined) {
-            planSales[plan]++;
-            planRevenue[plan] += p.amount || 0;
-          }
-        }
-      });
-
-      // Build metrics
-      const totalClicks = Object.values(planClickSessions).reduce((s, set) => s + set.size, 0);
-      const metricsArr: PlanMetrics[] = PLAN_ORDER.map(plan => {
+      const metricsArr: PlanMetrics[] = PLAN_ORDER.map((plan) => {
         const clicks = planClickSessions[plan].size;
         const ics = planICSessions[plan].size;
         const sales = planSales[plan];
         const revenue = planRevenue[plan];
+
         return {
           plan,
           clicks,
@@ -155,44 +183,20 @@ export default function LivePricingMonitor() {
         };
       });
 
-      // Build age profiles for buyers
-      const ageMap = new Map<string, { count: number; sales: number; revenue: number }>();
-      const planAgeMap: Record<string, Map<string, { count: number; sales: number; revenue: number }>> = {};
-      PLAN_ORDER.forEach(p => { planAgeMap[p] = new Map(); });
-
-      purchases?.forEach(p => {
-        if (p.status === "approved" && p.funnel_step?.startsWith("front") && p.session_id) {
-          const qa = behaviorMap.get(p.session_id);
-          const age = (qa?.age as string) || "unknown";
-          const plan = p.plan_id || inferPlanFromAmount(p.amount || 0);
-
-          // Global
-          const existing = ageMap.get(age) || { count: 0, sales: 0, revenue: 0 };
-          existing.count++;
-          existing.sales++;
-          existing.revenue += p.amount || 0;
-          ageMap.set(age, existing);
-
-          // Per plan
-          if (plan && planAgeMap[plan]) {
-            const ex = planAgeMap[plan].get(age) || { count: 0, sales: 0, revenue: 0 };
-            ex.count++;
-            ex.sales++;
-            ex.revenue += p.amount || 0;
-            planAgeMap[plan].set(age, ex);
-          }
-        }
-      });
-
       const profilesArr: LeadProfile[] = Array.from(ageMap.entries())
         .map(([age, data]) => ({ age, ...data }))
         .sort((a, b) => b.count - a.count);
 
-      const planProfilesObj: Record<string, LeadProfile[]> = {};
-      PLAN_ORDER.forEach(plan => {
-        planProfilesObj[plan] = Array.from(planAgeMap[plan].entries())
+      const planProfilesObj = PLAN_ORDER.reduce<Record<PlanKey, LeadProfile[]>>((acc, plan) => {
+        acc[plan] = Array.from(planAgeMap[plan].entries())
           .map(([age, data]) => ({ age, ...data }))
           .sort((a, b) => b.count - a.count);
+        return acc;
+      }, {
+        starter: [],
+        essencial: [],
+        profissional: [],
+        vip: [],
       });
 
       setMetrics(metricsArr);
@@ -212,19 +216,25 @@ export default function LivePricingMonitor() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const totalClicks = metrics.reduce((s, m) => s + m.clicks, 0);
-  const totalSales = metrics.reduce((s, m) => s + m.sales, 0);
-  const totalRevenue = metrics.reduce((s, m) => s + m.revenue, 0);
-  const bestPlan = metrics.reduce((best, m) => m.convRate > (best?.convRate || 0) ? m : best, metrics[0]);
+  const totalClicks = metrics.reduce((sum, metric) => sum + metric.clicks, 0);
+  const totalSales = metrics.reduce((sum, metric) => sum + metric.sales, 0);
+  const totalRevenue = metrics.reduce((sum, metric) => sum + metric.revenue, 0);
+  const bestPlan = metrics.reduce<PlanMetrics | null>((best, metric) => {
+    if (metric.clicks === 0 || metric.sales === 0) return best;
+    if (!best || metric.convRate > best.convRate) return metric;
+    return best;
+  }, null);
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-amber-400" />
-            <h3 className="text-sm font-bold text-white">Monitor de Preços — Página /oferta</h3>
+            <div>
+              <h3 className="text-sm font-bold text-white">Monitor de Preços — Página /oferta</h3>
+              <p className="text-[10px] text-[#666]">Sessões únicas por plano + vendas aprovadas reais</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-[#666]">
@@ -236,15 +246,13 @@ export default function LivePricingMonitor() {
           </div>
         </div>
 
-        {/* Summary cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          <SummaryCard icon={MousePointerClick} label="Cliques Hoje" value={totalClicks} color="text-blue-400" />
-          <SummaryCard icon={ShoppingCart} label="Vendas Hoje" value={totalSales} color="text-emerald-400" />
+          <SummaryCard icon={MousePointerClick} label="Cliques Únicos" value={totalClicks} color="text-blue-400" />
+          <SummaryCard icon={ShoppingCart} label="Vendas Front" value={totalSales} color="text-emerald-400" />
           <SummaryCard icon={DollarSign} label="Receita" value={`R$${totalRevenue.toFixed(0)}`} color="text-amber-400" />
-          <SummaryCard icon={TrendingUp} label="Melhor Conv." value={bestPlan ? `${PLAN_LABELS[bestPlan.plan]?.split(" ")[0] || bestPlan.plan}` : "—"} color="text-violet-400" />
+          <SummaryCard icon={TrendingUp} label="Melhor Conv." value={bestPlan ? `${PLAN_LABELS[bestPlan.plan].split(" ")[0]}` : "—"} color="text-violet-400" />
         </div>
 
-        {/* Per-plan table */}
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
@@ -259,26 +267,26 @@ export default function LivePricingMonitor() {
               </tr>
             </thead>
             <tbody>
-              {metrics.map((m) => {
-                const isBest = bestPlan && m.plan === bestPlan.plan && m.sales > 0;
+              {metrics.map((metric) => {
+                const isBest = bestPlan?.plan === metric.plan;
                 return (
-                  <tr key={m.plan} className={`border-b border-[#1a1a1a] ${isBest ? "bg-emerald-500/5" : ""}`}>
+                  <tr key={metric.plan} className={`border-b border-[#1a1a1a] ${isBest ? "bg-emerald-500/5" : ""}`}>
                     <td className="py-2.5 px-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-medium">{PLAN_LABELS[m.plan] || m.plan}</span>
+                        <span className="text-white font-medium">{PLAN_LABELS[metric.plan]}</span>
                         {isBest && <Badge className="text-[9px] bg-emerald-500/20 text-emerald-400 border-0">Melhor</Badge>}
                       </div>
                     </td>
-                    <td className="text-right py-2.5 px-2 text-white tabular-nums">{m.clicks}</td>
-                    <td className="text-right py-2.5 px-2 text-white tabular-nums">{m.ics}</td>
-                    <td className="text-right py-2.5 px-2 text-emerald-400 font-semibold tabular-nums">{m.sales}</td>
-                    <td className="text-right py-2.5 px-2 text-amber-400 font-semibold tabular-nums">R${m.revenue.toFixed(0)}</td>
+                    <td className="text-right py-2.5 px-2 text-white tabular-nums">{metric.clicks}</td>
+                    <td className="text-right py-2.5 px-2 text-white tabular-nums">{metric.ics}</td>
+                    <td className="text-right py-2.5 px-2 text-emerald-400 font-semibold tabular-nums">{metric.sales}</td>
+                    <td className="text-right py-2.5 px-2 text-amber-400 font-semibold tabular-nums">R${metric.revenue.toFixed(0)}</td>
                     <td className="text-right py-2.5 px-2">
-                      <span className={`tabular-nums font-semibold ${m.convRate > 5 ? "text-emerald-400" : m.convRate > 0 ? "text-amber-400" : "text-[#666]"}`}>
-                        {m.convRate.toFixed(1)}%
+                      <span className={`tabular-nums font-semibold ${metric.convRate > 5 ? "text-emerald-400" : metric.convRate > 0 ? "text-amber-400" : "text-[#666]"}`}>
+                        {metric.convRate.toFixed(1)}%
                       </span>
                     </td>
-                    <td className="text-right py-2.5 px-2 text-[#aaa] tabular-nums">{m.icRate.toFixed(1)}%</td>
+                    <td className="text-right py-2.5 px-2 text-[#aaa] tabular-nums">{metric.icRate.toFixed(1)}%</td>
                   </tr>
                 );
               })}
@@ -287,7 +295,6 @@ export default function LivePricingMonitor() {
         </div>
       </div>
 
-      {/* Buyer profile per plan */}
       {profiles.length > 0 && (
         <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-4">
           <div className="flex items-center gap-2 mb-4">
@@ -295,30 +302,29 @@ export default function LivePricingMonitor() {
             <h3 className="text-sm font-bold text-white">Perfil do Comprador por Plano</h3>
           </div>
 
-          {/* Global age distribution */}
           <div className="mb-4">
             <p className="text-xs text-[#888] mb-2">Distribuição por faixa etária (compradores)</p>
             <div className="flex flex-wrap gap-2">
-              {profiles.map(p => (
-                <div key={p.age} className="bg-[#0d0d0d] border border-[#2a2a2a] rounded-lg px-3 py-2 text-center">
-                  <div className="text-xs text-white font-semibold">{p.age === "unknown" ? "N/D" : p.age}</div>
-                  <div className="text-[10px] text-[#888]">{p.count} vendas</div>
-                  <div className="text-[10px] text-amber-400">R${p.revenue.toFixed(0)}</div>
+              {profiles.map((profile) => (
+                <div key={profile.age} className="bg-[#0d0d0d] border border-[#2a2a2a] rounded-lg px-3 py-2 text-center">
+                  <div className="text-xs text-white font-semibold">{profile.age === "unknown" ? "N/D" : profile.age}</div>
+                  <div className="text-[10px] text-[#888]">{profile.count} vendas</div>
+                  <div className="text-[10px] text-amber-400">R${profile.revenue.toFixed(0)}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Per-plan breakdown */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {PLAN_ORDER.map(plan => {
-              const pp = planProfiles[plan] || [];
-              if (pp.length === 0) return null;
+            {PLAN_ORDER.map((plan) => {
+              const entries = planProfiles[plan] || [];
+              if (entries.length === 0) return null;
+
               return (
                 <div key={plan} className="bg-[#0d0d0d] border border-[#2a2a2a] rounded-xl p-3">
                   <p className="text-xs font-semibold text-white mb-2">{PLAN_LABELS[plan]}</p>
                   <div className="space-y-1.5">
-                    {pp.map(profile => (
+                    {entries.map((profile) => (
                       <div key={profile.age} className="flex items-center justify-between text-xs">
                         <span className="text-[#aaa]">{profile.age === "unknown" ? "N/D" : profile.age}</span>
                         <div className="flex items-center gap-3">
@@ -350,10 +356,137 @@ function SummaryCard({ icon: Icon, label, value, color }: { icon: typeof DollarS
   );
 }
 
-function inferPlanFromAmount(amount: number | undefined | null): string {
-  if (!amount) return "starter";
-  if (amount <= 40) return "starter";
-  if (amount <= 50) return "essencial";
-  if (amount <= 100) return "profissional";
-  return "vip";
+function getTodayStartInSaoPaulo() {
+  const nowInSaoPaulo = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const year = nowInSaoPaulo.getFullYear();
+  const month = String(nowInSaoPaulo.getMonth() + 1).padStart(2, "0");
+  const day = String(nowInSaoPaulo.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}T00:00:00-03:00`;
+}
+
+async function fetchAllRows<T>(
+  table: "funnel_events" | "purchase_tracking" | "lead_behavior",
+  select: string,
+  configure: (query: ReturnType<typeof supabase.from>) => unknown,
+): Promise<T[]> {
+  const rows: T[] = [];
+  let page = 0;
+
+  while (true) {
+    const query = configure(supabase.from(table).select(select) as ReturnType<typeof supabase.from>) as {
+      range: (from: number, to: number) => Promise<{ data: T[] | null; error: Error | null }>;
+    };
+    const { data, error } = await query.range(page * QUERY_PAGE_SIZE, (page + 1) * QUERY_PAGE_SIZE - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    rows.push(...data);
+    if (data.length < QUERY_PAGE_SIZE) break;
+    page += 1;
+  }
+
+  return rows;
+}
+
+async function fetchLeadBehaviors(sessionIds: string[]) {
+  if (sessionIds.length === 0) return [];
+
+  const chunks = chunkArray(sessionIds, SESSION_CHUNK_SIZE);
+  const results = await Promise.all(
+    chunks.map(async (chunk) => {
+      const { data, error } = await supabase
+        .from("lead_behavior")
+        .select("session_id, quiz_answers")
+        .in("session_id", chunk);
+
+      if (error) throw error;
+      return (data || []) as LeadBehaviorRow[];
+    })
+  );
+
+  return results.flat();
+}
+
+function createPlanSessionMap() {
+  return {
+    starter: new Set<string>(),
+    essencial: new Set<string>(),
+    profissional: new Set<string>(),
+    vip: new Set<string>(),
+  } satisfies Record<PlanKey, Set<string>>;
+}
+
+function createPlanNumberMap() {
+  return {
+    starter: 0,
+    essencial: 0,
+    profissional: 0,
+    vip: 0,
+  } satisfies Record<PlanKey, number>;
+}
+
+function createPlanAgeMap() {
+  return {
+    starter: new Map<string, { count: number; sales: number; revenue: number }>(),
+    essencial: new Map<string, { count: number; sales: number; revenue: number }>(),
+    profissional: new Map<string, { count: number; sales: number; revenue: number }>(),
+    vip: new Map<string, { count: number; sales: number; revenue: number }>(),
+  } satisfies Record<PlanKey, Map<string, { count: number; sales: number; revenue: number }>>;
+}
+
+function resolveEventPlan(event: FunnelEventRow): PlanKey | null {
+  const data = event.event_data || {};
+  const explicitPlan = typeof data.plan === "string" ? normalizePlan(data.plan) : null;
+  if (explicitPlan) return explicitPlan;
+
+  const amount = typeof data.amount === "number" ? data.amount : Number(data.amount);
+  return resolvePlanFromExactAmount(Number.isFinite(amount) ? amount : null);
+}
+
+function resolvePurchasePlan(purchase: PurchaseRow): PlanKey | null {
+  const stepPlan = resolvePlanFromFrontStep(purchase.funnel_step);
+  if (stepPlan) return stepPlan;
+  return resolvePlanFromExactAmount(purchase.amount);
+}
+
+function resolvePlanFromFrontStep(step: string | null | undefined): PlanKey | null {
+  switch (step) {
+    case "front_37":
+      return "starter";
+    case "front_47":
+      return "essencial";
+    case "front_97":
+      return "profissional";
+    case "front_197":
+      return "vip";
+    default:
+      return null;
+  }
+}
+
+function resolvePlanFromExactAmount(amount: number | null | undefined): PlanKey | null {
+  if (amount == null) return null;
+
+  if (Math.abs(amount - 37) < 0.01) return "starter";
+  if (Math.abs(amount - 47) < 0.01) return "essencial";
+  if (Math.abs(amount - 97) < 0.01) return "profissional";
+  if (Math.abs(amount - 197) < 0.01) return "vip";
+
+  return null;
+}
+
+function normalizePlan(value: string): PlanKey | null {
+  if (PLAN_ORDER.includes(value as PlanKey)) {
+    return value as PlanKey;
+  }
+  return null;
+}
+
+function chunkArray<T>(items: T[], size: number) {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+  return chunks;
 }

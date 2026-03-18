@@ -10,6 +10,7 @@ export async function sendCAPIInitiateCheckout(params: {
   email?: string;
   phone?: string;
   amount?: number;
+  plan?: string;
 }): Promise<void> {
   if (icSent) return; // Already sent this session
   icSent = true; // Mark immediately to prevent double-fire
@@ -30,6 +31,7 @@ export async function sendCAPIInitiateCheckout(params: {
       fbp: tracking.fbp,
       fbc: tracking.fbc,
       amount: params.amount || null,
+      plan: params.plan || null,
     };
 
     const resp = await fetch(url, {
