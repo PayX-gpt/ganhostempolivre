@@ -44,20 +44,27 @@ export default function LivePricingMonitor() {
       const dateStr = todayStart.toISOString().slice(0, 10);
       const dayStart = `${dateStr}T00:00:00-03:00`;
 
-      // Fetch checkout clicks (from funnel_events)
+      // Fetch checkout clicks ONLY from /oferta page (exclude quiz step-17 dynamic pricing)
       const { data: clickEvents } = await supabase
         .from("funnel_events")
-        .select("session_id, event_data, created_at")
+        .select("session_id, event_data, created_at, page_url")
         .eq("event_name", "checkout_click")
         .gte("created_at", dayStart)
+        .like("page_url", "%/oferta%")
         .order("created_at", { ascending: false });
 
       // Fetch IC events
-      const { data: icEvents } = await supabase
+      // Fetch IC events - filter by plan field presence (only /oferta sends plan)
+      const { data: icEventsRaw } = await supabase
         .from("funnel_events")
-        .select("session_id, event_data, created_at")
+        .select("session_id, event_data, created_at, page_url")
         .eq("event_name", "capi_ic_sent")
         .gte("created_at", dayStart);
+      // Only include ICs that came from /oferta or have a plan field
+      const icEvents = (icEventsRaw || []).filter(e => {
+        const data = e.event_data as Record<string, unknown> | null;
+        return data?.plan || (e.page_url && e.page_url.includes("/oferta"));
+      });
 
       // Fetch purchases
       const { data: purchases } = await supabase
@@ -97,7 +104,7 @@ export default function LivePricingMonitor() {
         planRevenue[p] = 0;
       });
 
-      // Map clicks to plans
+      // Map clicks to plans (only /oferta events reach here due to filter above)
       clickEvents?.forEach(e => {
         const data = e.event_data as Record<string, unknown> | null;
         const plan = (data?.plan as string) || inferPlanFromAmount(data?.amount as number);
