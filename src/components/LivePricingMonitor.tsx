@@ -44,12 +44,13 @@ export default function LivePricingMonitor() {
       const dateStr = todayStart.toISOString().slice(0, 10);
       const dayStart = `${dateStr}T00:00:00-03:00`;
 
-      // Fetch checkout clicks (from funnel_events)
+      // Fetch checkout clicks ONLY from /oferta page (exclude quiz step-17 dynamic pricing)
       const { data: clickEvents } = await supabase
         .from("funnel_events")
-        .select("session_id, event_data, created_at")
+        .select("session_id, event_data, created_at, page_url")
         .eq("event_name", "checkout_click")
         .gte("created_at", dayStart)
+        .like("page_url", "%/oferta%")
         .order("created_at", { ascending: false });
 
       // Fetch IC events
