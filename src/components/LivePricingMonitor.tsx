@@ -392,7 +392,7 @@ function getTodayBRT(): string {
   return `${sp.getFullYear()}-${String(sp.getMonth() + 1).padStart(2, "0")}-${String(sp.getDate()).padStart(2, "0")}T00:00:00-03:00`;
 }
 
-async function fetchAllPaged(table: string, select: string, configure: (q: any) => any): Promise<any[]> {
+async function fetchAllPaged(table: "funnel_events" | "purchase_tracking" | "lead_behavior", select: string, configure: (q: any) => any): Promise<any[]> {
   const PAGE = 1000;
   const rows: any[] = [];
   let page = 0;
