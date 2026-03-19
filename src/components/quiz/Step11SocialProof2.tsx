@@ -128,6 +128,7 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
         saveFunnelEventReliable("checkout_click", { context: "vturb_cta_step17", product: "chave_token_chatgpt", amount: offerAmount });
         sendCAPIInitiateCheckout({ amount: offerAmount });
         trackTikTokInitiateCheckout({ amount: offerAmount });
+        trackMetaInitiateCheckout({ amount: offerAmount });
       }
     };
 
