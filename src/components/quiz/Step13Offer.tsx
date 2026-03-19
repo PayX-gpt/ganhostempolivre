@@ -2092,6 +2092,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             <CTAButton onClick={() => {
               trackCheckoutClick();
               sendCAPIInitiateCheckout({ amount: pricing.price });
+              trackMetaInitiateCheckout({ amount: pricing.price });
               saveFunnelEvent("checkout_click", { context: "sticky_footer", product: "chave_token_chatgpt", amount: pricing.price });
               const utmQs = buildTrackingQueryString();
               const separator = pricing.checkoutUrl.includes("?") ? "&" : "?";
