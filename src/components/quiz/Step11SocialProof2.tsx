@@ -10,6 +10,7 @@ import { useLanguage, type Language } from "@/lib/i18n";
 import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
+import { trackMetaInitiateCheckout } from "@/lib/metaPixel";
 
 interface Step11Props {
   onNext: () => void;
