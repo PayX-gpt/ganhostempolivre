@@ -5,6 +5,7 @@ import { useLanguage, LanguageSelector } from "@/lib/i18n";
 import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
+import { trackMetaInitiateCheckout } from "@/lib/metaPixel";
 import chatgptIcon from "@/assets/chatgpt-icon.png";
 
 const PLANS = [
@@ -361,6 +362,7 @@ const Oferta = () => {
       });
       sendCAPIInitiateCheckout({ amount: plan.price, plan: plan.id });
       trackTikTokInitiateCheckout({ amount: plan.price, contentId: plan.id });
+      trackMetaInitiateCheckout({ amount: plan.price, contentId: plan.id });
     }
     window.open(buildCheckoutURL(plan), "_blank");
   };

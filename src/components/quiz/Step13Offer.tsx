@@ -7,6 +7,7 @@ import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import { initBehaviorTracker, trackSectionView, trackSectionLeave, trackCtaView, trackCtaHesitation, trackCheckoutClick, trackFaqOpen, trackVideoStart } from "@/lib/behaviorTracker";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
+import { trackMetaInitiateCheckout } from "@/lib/metaPixel";
 
 import { Separator } from "@/components/ui/separator";
 import { CTAButton, TrustBadge, VideoPlaceholder } from "./QuizUI";
@@ -117,6 +118,7 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
             trackCheckoutClick();
             sendCAPIInitiateCheckout({ amount: pricing.price });
             trackTikTokInitiateCheckout({ amount: pricing.price });
+            trackMetaInitiateCheckout({ amount: pricing.price });
             saveFunnelEvent("checkout_click", { context: context || "default", product: "chave_token_chatgpt", amount: pricing.price });
             const utmQs = buildTrackingQueryString();
             const separator = pricing.checkoutUrl.includes("?") ? "&" : "?";
@@ -2090,6 +2092,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
             <CTAButton onClick={() => {
               trackCheckoutClick();
               sendCAPIInitiateCheckout({ amount: pricing.price });
+              trackMetaInitiateCheckout({ amount: pricing.price });
               saveFunnelEvent("checkout_click", { context: "sticky_footer", product: "chave_token_chatgpt", amount: pricing.price });
               const utmQs = buildTrackingQueryString();
               const separator = pricing.checkoutUrl.includes("?") ? "&" : "?";
