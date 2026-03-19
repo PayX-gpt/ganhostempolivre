@@ -118,6 +118,7 @@ const CTABlock = ({ showCTA, context, pricing }: { showCTA: boolean; context?: s
             trackCheckoutClick();
             sendCAPIInitiateCheckout({ amount: pricing.price });
             trackTikTokInitiateCheckout({ amount: pricing.price });
+            trackMetaInitiateCheckout({ amount: pricing.price });
             saveFunnelEvent("checkout_click", { context: context || "default", product: "chave_token_chatgpt", amount: pricing.price });
             const utmQs = buildTrackingQueryString();
             const separator = pricing.checkoutUrl.includes("?") ? "&" : "?";

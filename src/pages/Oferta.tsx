@@ -362,6 +362,7 @@ const Oferta = () => {
       });
       sendCAPIInitiateCheckout({ amount: plan.price, plan: plan.id });
       trackTikTokInitiateCheckout({ amount: plan.price, contentId: plan.id });
+      trackMetaInitiateCheckout({ amount: plan.price, contentId: plan.id });
     }
     window.open(buildCheckoutURL(plan), "_blank");
   };
