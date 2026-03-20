@@ -428,79 +428,95 @@ const Oferta = () => {
         </motion.div>
       </header>
 
-      {/* Plans grid — ChatGPT style: white bg, thin borders, black buttons */}
-      <main className="max-w-6xl mx-auto px-4 pb-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-          {PLANS.map((plan, i) => {
-            const planText = t.plans[i];
-            const isPopular = plan.popular;
+      {/* Main plan — Essencial R$47 HIGHLIGHTED */}
+      <main className="max-w-lg mx-auto px-4 pb-10">
+        {(() => {
+          const essentialPlan = PLANS[1];
+          const essentialText = t.plans[1];
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="relative flex flex-col rounded-2xl border-2 border-black bg-white shadow-xl p-6 sm:p-8"
+            >
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
+                {t.mostPopular}
+              </div>
+              <h3 className="text-3xl font-bold text-black mt-2">{essentialText.name}</h3>
+              <p className="text-sm text-black/50 mt-1">{essentialText.tagline}</p>
 
-            return (
-              <motion.div
-                key={plan.id}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ delay: i * 0.12, duration: 0.5, ease: "easeOut" }}
-                className={`relative flex flex-col rounded-2xl border p-6 ${
-                  isPopular
-                    ? "border-black bg-white shadow-lg"
-                    : "border-black/10 bg-white"
-                }`}
+              <div className="mt-6 mb-6">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-5xl font-bold text-black tracking-tight">R${essentialPlan.price}</span>
+                  <span className="text-sm text-black/40">/{t.perAccess}</span>
+                </div>
+                <span className="text-sm text-black/30 line-through mt-1 inline-block">R${essentialPlan.originalPrice}</span>
+              </div>
+
+              <button
+                onClick={() => handlePlanClick(essentialPlan)}
+                className="w-full py-4 rounded-full font-semibold text-base bg-black text-white hover:bg-black/85 transition-all active:scale-[0.97] mb-8"
               >
-                {/* Plan name + tagline */}
-                <h3 className="text-2xl font-bold text-black">{planText.name}</h3>
-                <p className="text-sm text-black/50 mt-1 min-h-[2.5rem] leading-relaxed">
-                  {planText.tagline}
-                </p>
+                {t.cta[1]} <span className="inline-block ml-0.5">↗</span>
+              </button>
 
-                {/* Price */}
-                <div className="mt-6 mb-6">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-5xl font-bold text-black tracking-tight">
-                      R${plan.price}
+              <div className="space-y-3.5">
+                {essentialText.features.map((feat: Feature, fi: number) => (
+                  <div key={fi} className="flex items-start gap-2.5">
+                    <Check className={`w-4 h-4 mt-0.5 shrink-0 ${feat.highlight ? "text-black" : "text-black/40"}`} />
+                    <span className={`text-sm leading-snug ${feat.highlight ? "text-black font-semibold" : "text-black/70"}`}>
+                      {feat.text}
+                      <InfoTooltip info={feat.info} />
                     </span>
-                    <span className="text-sm text-black/40">/{t.perAccess}</span>
                   </div>
-                  <span className="text-sm text-black/30 line-through mt-1 inline-block">
-                    R${plan.originalPrice}
-                  </span>
-                </div>
+                ))}
+              </div>
+            </motion.div>
+          );
+        })()}
 
-                {/* CTA — black pill button like ChatGPT */}
-                <button
-                  onClick={() => handlePlanClick(plan)}
-                  className={`w-full py-3 rounded-full font-medium text-sm transition-all active:scale-[0.97] mb-8 ${
-                    isPopular
-                      ? "bg-black text-white hover:bg-black/85"
-                      : "bg-black text-white hover:bg-black/85"
-                  }`}
+        {/* Other plans — collapsed */}
+        <details className="mt-8 group">
+          <summary className="cursor-pointer text-center text-sm text-black/40 hover:text-black/60 transition-colors py-3 list-none flex items-center justify-center gap-2">
+            <span>{lang === "en" ? "See other plans" : lang === "es" ? "Ver otros planes" : "Ver outros planos"}</span>
+            <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </summary>
+          <div className="grid grid-cols-1 gap-4 mt-4">
+            {PLANS.filter((_, i) => i !== 1).map((plan, idx) => {
+              const originalIdx = plan.id === "starter" ? 0 : plan.id === "profissional" ? 2 : 3;
+              const planText = t.plans[originalIdx];
+              return (
+                <motion.div
+                  key={plan.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="flex flex-col rounded-2xl border border-black/10 bg-white p-5"
                 >
-                  {t.cta[i]} <span className="inline-block ml-0.5">↗</span>
-                </button>
-
-                {/* Features */}
-                <div className="space-y-3.5 flex-1">
-                  {planText.prefix && (
-                    <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className="w-3.5 h-3.5 text-black/30" />
-                      <span className="text-xs font-semibold text-black/50">{planText.prefix}</span>
+                  <div className="flex items-baseline justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-black">{planText.name}</h3>
+                      <p className="text-xs text-black/40">{planText.tagline}</p>
                     </div>
-                  )}
-                  {planText.features.map((feat: Feature, fi: number) => (
-                    <div key={fi} className="flex items-start gap-2.5">
-                      <Check className={`w-4 h-4 mt-0.5 shrink-0 ${feat.highlight ? "text-black" : "text-black/40"}`} />
-                      <span className={`text-sm leading-snug ${feat.highlight ? "text-black font-semibold" : "text-black/70"}`}>
-                        {feat.text}
-                        <InfoTooltip info={feat.info} />
-                      </span>
+                    <div className="text-right">
+                      <span className="text-2xl font-bold text-black">R${plan.price}</span>
+                      <span className="text-xs text-black/30 line-through ml-1">R${plan.originalPrice}</span>
                     </div>
-                  ))}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                  </div>
+                  <button
+                    onClick={() => handlePlanClick(plan)}
+                    className="w-full mt-4 py-2.5 rounded-full font-medium text-sm bg-white text-black border border-black/20 hover:bg-black/5 transition-all active:scale-[0.97]"
+                  >
+                    {t.cta[originalIdx]} <span className="inline-block ml-0.5">↗</span>
+                  </button>
+                </motion.div>
+              );
+            })}
+          </div>
+        </details>
 
         {/* Guarantee */}
         <motion.div

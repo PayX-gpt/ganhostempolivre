@@ -132,6 +132,8 @@ export default function AdminFunnelAudit() {
   const [activeUsers, setActiveUsers] = useState(0);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [timelineSessionId, setTimelineSessionId] = useState<string | null>(null);
+  const [step1BounceRate, setStep1BounceRate] = useState(0);
+  const [step1BounceCount, setStep1BounceCount] = useState(0);
   const [frontendICs, setFrontendICs] = useState(0);
   const [hotmartSalesToday, setHotmartSalesToday] = useState(0);
   const [icToSalesRate, setIcToSalesRate] = useState(0);
@@ -315,6 +317,29 @@ export default function AdminFunnelAudit() {
 
     const interactingCount = allLeadSessions.size;
     setInteractionRateToday(allVisitSessions.size > 0 ? (interactingCount / allVisitSessions.size) * 100 : 0);
+
+    // Step 1 Bounce Rate: sessions that saw step-1 but NOT step-2
+    const step1Sessions = new Set<string>();
+    const step2Sessions = new Set<string>();
+    let bouncePage = 0;
+    while (true) {
+      const { data: bRows } = await supabase.from("funnel_events")
+        .select("session_id, event_data")
+        .eq("event_name", "step_viewed")
+        .gte("created_at", todayISO)
+        .range(bouncePage * 1000, (bouncePage + 1) * 1000 - 1);
+      if (!bRows || bRows.length === 0) break;
+      bRows.forEach(r => {
+        const step = (r.event_data as Record<string, string>)?.step;
+        if (step === "step-1") step1Sessions.add(r.session_id);
+        if (step === "step-2") step2Sessions.add(r.session_id);
+      });
+      if (bRows.length < 1000) break;
+      bouncePage++;
+    }
+    const bounced = [...step1Sessions].filter(s => !step2Sessions.has(s)).length;
+    setStep1BounceCount(bounced);
+    setStep1BounceRate(step1Sessions.size > 0 ? (bounced / step1Sessions.size) * 100 : 0);
 
     setLastUpdated(new Date());
     setIsLoading(false);
@@ -623,7 +648,7 @@ export default function AdminFunnelAudit() {
 
           {/* TAB: VISAO GERAL */}
           <TabsContent value="overview" className="space-y-4 mt-4">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <MetricCard title="Taxa de Aprovacao" value={`${hotmartApprovalRate.toFixed(1)}%`}
                 subtitle={`${hotmartApproved} pagos | ${hotmartPending} pend. | ${hotmartRefused} recus.`} icon={CreditCard}
                 trend={periodData ? getVariation(periodData.current.approvalRate, periodData.previous.approvalRate).trend : undefined}
@@ -638,6 +663,14 @@ export default function AdminFunnelAudit() {
                 value={isLoading ? "..." : `${interactionRateToday.toFixed(1)}%`}
                 subtitle={isLoading ? "Carregando..." : `${totalVisitsToday} visitantes`}
                 icon={Activity} iconClassName="from-amber-500/20 to-amber-600/10 border-amber-500/20" valueClassName="text-amber-400" />
+              <MetricCard title="Bounce Step 1"
+                value={`${step1BounceRate.toFixed(1)}%`}
+                subtitle={`${step1BounceCount} abandonaram no step 1`}
+                icon={TrendingDown}
+                iconClassName={step1BounceRate > 35 ? "from-red-500/20 to-red-600/10 border-red-500/20" : "from-amber-500/20 to-amber-600/10 border-amber-500/20"}
+                valueClassName={step1BounceRate > 35 ? "text-red-400" : "text-amber-400"}
+                trend={step1BounceRate > 35 ? "down" : "neutral"}
+                trendLabel={step1BounceRate > 35 ? "⚠️ Acima de 35% — revisar criativos" : "Normal"} />
             </div>
 
             {/* Horizontal scrollable cards - KEPT AS-IS */}
