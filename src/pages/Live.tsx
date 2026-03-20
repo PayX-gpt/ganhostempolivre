@@ -648,7 +648,7 @@ export default function AdminFunnelAudit() {
 
           {/* TAB: VISAO GERAL */}
           <TabsContent value="overview" className="space-y-4 mt-4">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <MetricCard title="Taxa de Aprovacao" value={`${hotmartApprovalRate.toFixed(1)}%`}
                 subtitle={`${hotmartApproved} pagos | ${hotmartPending} pend. | ${hotmartRefused} recus.`} icon={CreditCard}
                 trend={periodData ? getVariation(periodData.current.approvalRate, periodData.previous.approvalRate).trend : undefined}
@@ -663,6 +663,14 @@ export default function AdminFunnelAudit() {
                 value={isLoading ? "..." : `${interactionRateToday.toFixed(1)}%`}
                 subtitle={isLoading ? "Carregando..." : `${totalVisitsToday} visitantes`}
                 icon={Activity} iconClassName="from-amber-500/20 to-amber-600/10 border-amber-500/20" valueClassName="text-amber-400" />
+              <MetricCard title="Bounce Step 1"
+                value={`${step1BounceRate.toFixed(1)}%`}
+                subtitle={`${step1BounceCount} abandonaram no step 1`}
+                icon={TrendingDown}
+                iconClassName={step1BounceRate > 35 ? "from-red-500/20 to-red-600/10 border-red-500/20" : "from-amber-500/20 to-amber-600/10 border-amber-500/20"}
+                valueClassName={step1BounceRate > 35 ? "text-red-400" : "text-amber-400"}
+                trend={step1BounceRate > 35 ? "down" : "neutral"}
+                trendLabel={step1BounceRate > 35 ? "⚠️ Acima de 35% — revisar criativos" : "Normal"} />
             </div>
 
             {/* Horizontal scrollable cards - KEPT AS-IS */}
