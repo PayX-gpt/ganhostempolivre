@@ -1,51 +1,78 @@
 
 
-# Plan: Corrigir Métricas do Dashboard — Auditoria Completa
+# Auditoria Completa do Quiz — Diagnóstico da Queda
 
-## Problemas Identificados
+## Dados Analisados (10 dias)
 
-### 1. "Leads Qualificados" totalmente errado
-**Valor atual**: 8 (usa `intent_score >= 50` da tabela `lead_behavior`)  
-**Valor real**: Deveria ser ~746 (leads que informaram contato via `lead_captured`) ou ~813 (quiz completo)  
-**Causa**: O campo `intent_score` raramente passa de 50 — 66 leads têm score 1-29, apenas 8 têm 50+. A definição de "qualificado" está errada.  
-**Correção**: "Leads qualificados" = sessões que completaram o quiz (chegaram no step-15/16/17). Isso é o real indicador de qualificação no funil.
+```text
+Data       | Visitantes | Vendas | Conv% | Step1→Step2
+-----------+------------+--------+-------+------------
+12/mar     |   6.206    |  287   | 4.62% |   69.0%
+13/mar     |   4.885    |  260   | 5.32% |   63.0%
+14/mar     |   3.710    |  159   | 4.29% |   63.1%
+15/mar     |   2.515    |   90   | 3.58% |   58.5%
+16/mar     |   1.171    |   57   | 4.87% |   59.4%
+17/mar     |   3.129    |  114   | 3.64% |   65.5%
+18/mar     |   1.698    |   49   | 2.89% |   67.2%
+19/mar     |   1.169    |   33   | 2.82% |   59.6%
+20/mar*    |     361    |   10   | 2.77% |   43.4%*
+```
+*Dia 20 ainda em andamento.
 
-### 2. "Vendas Hoje" conta statuses errados
-**Valor atual**: Conta `approved` + `completed` + `purchased` + `redirected` como vendas aprovadas (linha 230-231)  
-**Valor real**: Deveria contar apenas `approved` (é o que o webhook Kirvano define como venda real confirmada)  
-**Impacto**: O KPI "Vendas Hoje" fica inflado comparado ao A/B test que usa apenas `approved`  
-**Dados**: 225 approved hoje. Os statuses `completed`/`purchased`/`redirected` são estados intermediários, não vendas confirmadas.
+---
 
-### 3. Timezone inconsistente no Live.tsx
-**Problema**: `todayISO` usa `new Date().setHours(0,0,0,0).toISOString()` — isso usa o timezone do browser do usuário, não São Paulo.  
-**Impacto**: Se o user acessar de outro fuso, os dados do "hoje" ficam errados. O A/B test usa SP corretamente, criando discrepância.  
-**Correção**: Usar mesma lógica de São Paulo do A/B test.
+## Diagnóstico — 3 Problemas Encontrados
 
-### 4. Query de lead_captured pode perder dados (limite 1000 rows)
-**Problema**: Linha 255 `supabase.from("funnel_events").select("session_id").eq("event_name", "lead_captured")` não pagina.  
-**Dados**: 752 registros hoje — próximo do limite de 1000. Em dias de tráfego alto, dados serão truncados silenciosamente.
+### 1. Queda de tráfego (problema externo — anúncios)
+- O volume caiu de **6.206** sessões (12/mar) para **1.169** (19/mar) — queda de **81%**.
+- A distribuição A/B está uniforme (25% cada), então o problema não é no teste A/B.
+- Isso é causado por **redução de investimento ou fatiga dos anúncios**, não pelo quiz.
 
-### 5. Separação Front vs Total não está clara nos KPIs
-**Problema**: "Vendas Hoje" mostra TODAS as vendas (front + upsell), mas o subtitle mostra apenas reembolsos. Deveria separar visualmente front e upsell para bater com o A/B test.
+### 2. Queda na taxa de conversão (problema potencial — página /oferta)
+- A conversão caiu de **~5%** (12-13/mar) para **~2.8%** (18-19/mar).
+- O funil interno (step-1 a step-17) está funcionando normalmente — a retenção step-1→step-2 está estável em 60-67%.
+- A queda coincide com a introdução dos **4 planos na página /oferta** (R$37, R$47, R$97, R$197). Antes havia apenas um preço de R$47.
+- **Hipótese: paralisia de decisão** — oferecer 4 opções no momento de compra pode estar confundindo o lead e reduzindo a conversão.
 
-## Correções Planejadas
+### 3. Bounce alto no Step 1 (alerta)
+- Em 17/mar: **1.074 sessões** (34%) viram apenas o step-1 e não avançaram para o step-2.
+- Em 19/mar: **456 sessões** (39%) fizeram o mesmo.
+- Isso indica que a **qualidade do tráfego piorou** — pessoas clicam no anúncio mas não engajam com o quiz.
 
-### Fix 1: Live.tsx — Corrigir "Leads Qualificados"
-Mudar de `intent_score >= 50` para contar sessões que completaram o quiz (step_viewed com step-15/16/17). Com paginação para evitar limite de 1000.
+---
 
-### Fix 2: Live.tsx — Alinhar status de vendas
-Contar apenas `status = 'approved'` como venda confirmada (remover `completed`, `purchased`, `redirected`).
+## O que NÃO está quebrado (código OK)
 
-### Fix 3: Live.tsx — Timezone São Paulo consistente
-Substituir `new Date().setHours(0,0,0,0).toISOString()` por cálculo baseado em `America/Sao_Paulo`, mesma lógica do A/B test.
+- Rastreamento de eventos está funcionando normalmente
+- Pixels Meta (4 pixels) e TikTok estão disparando PageView corretamente
+- UTM capture está intacto
+- Webhook da Kirvano está registrando vendas corretamente
+- Sessão e atribuição funcionando (sem vendas órfãs significativas)
+- Redirecionamento de steps funciona
+- A/B test distribuindo igualmente
 
-### Fix 4: Live.tsx — Paginar queries de leads
-Adicionar paginação nas queries de `lead_captured` e `lead_behavior` para evitar truncamento.
+---
 
-### Fix 5: Live.tsx — KPI subtitle mais informativo
-Mostrar "X front + Y upsell" no subtitle de vendas, e "X completaram quiz" no subtitle de leads.
+## Plano de Ação Recomendado
 
-## Arquivos a Editar
+### Ação 1 — Simplificar página /oferta (alto impacto)
+Voltar para uma versão mais simples com destaque forte no plano de R$47 (Essencial), com os outros planos menos visíveis ou em um accordion "Ver outros planos". Reduzir a paralisia de decisão.
 
-1. **`src/pages/Live.tsx`** — Todas as 5 correções acima (timezone, leads qualificados, status vendas, paginação, subtitles)
+### Ação 2 — Criar alerta no /live para monitorar bounce rate do Step 1
+Adicionar um KPI "Taxa de Bounce Step 1" no dashboard para detectar quando a qualidade do tráfego cai.
+
+### Ação 3 — Nenhuma mudança no código do quiz
+O quiz em si está funcionando bem. A retenção entre steps está estável. O problema está na **entrada** (tráfego) e na **saída** (página de oferta com muitos planos).
+
+---
+
+## Resumo
+
+| Problema | Causa | Solução |
+|----------|-------|---------|
+| Menos visitantes | Anúncios/investimento | Revisar campanhas Meta/TikTok |
+| Conv% caiu de 5% → 2.8% | Página /oferta com 4 planos | Simplificar oferta, destacar R$47 |
+| Bounce alto no Step 1 | Qualidade do tráfego | Revisar criativos e segmentação |
+
+Devo implementar a simplificação da página /oferta para priorizar o plano Essencial (R$47)?
 
