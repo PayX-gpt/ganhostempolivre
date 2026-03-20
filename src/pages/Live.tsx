@@ -132,6 +132,8 @@ export default function AdminFunnelAudit() {
   const [activeUsers, setActiveUsers] = useState(0);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [timelineSessionId, setTimelineSessionId] = useState<string | null>(null);
+  const [step1BounceRate, setStep1BounceRate] = useState(0);
+  const [step1BounceCount, setStep1BounceCount] = useState(0);
   const [frontendICs, setFrontendICs] = useState(0);
   const [hotmartSalesToday, setHotmartSalesToday] = useState(0);
   const [icToSalesRate, setIcToSalesRate] = useState(0);
