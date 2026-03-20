@@ -318,6 +318,29 @@ export default function AdminFunnelAudit() {
     const interactingCount = allLeadSessions.size;
     setInteractionRateToday(allVisitSessions.size > 0 ? (interactingCount / allVisitSessions.size) * 100 : 0);
 
+    // Step 1 Bounce Rate: sessions that saw step-1 but NOT step-2
+    const step1Sessions = new Set<string>();
+    const step2Sessions = new Set<string>();
+    let bouncePage = 0;
+    while (true) {
+      const { data: bRows } = await supabase.from("funnel_events")
+        .select("session_id, event_data")
+        .eq("event_name", "step_viewed")
+        .gte("created_at", todayISO)
+        .range(bouncePage * 1000, (bouncePage + 1) * 1000 - 1);
+      if (!bRows || bRows.length === 0) break;
+      bRows.forEach(r => {
+        const step = (r.event_data as Record<string, string>)?.step;
+        if (step === "step-1") step1Sessions.add(r.session_id);
+        if (step === "step-2") step2Sessions.add(r.session_id);
+      });
+      if (bRows.length < 1000) break;
+      bouncePage++;
+    }
+    const bounced = [...step1Sessions].filter(s => !step2Sessions.has(s)).length;
+    setStep1BounceCount(bounced);
+    setStep1BounceRate(step1Sessions.size > 0 ? (bounced / step1Sessions.size) * 100 : 0);
+
     setLastUpdated(new Date());
     setIsLoading(false);
   }, [getDateRange, eventFilter, sessionFilter]);
