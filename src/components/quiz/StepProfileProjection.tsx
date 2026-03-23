@@ -156,6 +156,24 @@ const AnimatedNumber = ({ target, prefix = "", suffix = "", delay = 0 }: { targe
 /* ─── Main Component ─── */
 const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
   const firstName = userName?.split(" ")[0] || "";
+  const ttFired = useRef(false);
+
+  useEffect(() => {
+    if (ttFired.current) return;
+    ttFired.current = true;
+    try {
+      if (window.ttq) {
+        window.ttq.track("InitiateCheckout", {
+          content_name: "Quiz - Etapa Projecao",
+          content_type: "product",
+          currency: "BRL",
+        });
+        console.log("[TikTok Pixel] ✅ InitiateCheckout fired (Projeção)");
+      }
+    } catch (err) {
+      console.warn("[TikTok Pixel] InitiateCheckout error:", err);
+    }
+  }, []);
   const daily = getGoalDaily(answers?.incomeGoal);
   const balanceMult = getBalanceMultiplier(answers?.accountBalance);
   const adjustedDaily = Math.round(daily * balanceMult);
