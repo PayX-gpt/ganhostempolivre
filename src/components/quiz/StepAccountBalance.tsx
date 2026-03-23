@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard } from "./QuizUI";
 import { Wallet, PiggyBank, Landmark, TrendingUp, Gem } from "lucide-react";
 import { useLanguage, type Language } from "@/lib/i18n";
