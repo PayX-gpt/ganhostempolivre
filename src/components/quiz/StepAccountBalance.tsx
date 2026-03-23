@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard } from "./QuizUI";
 import { Wallet, PiggyBank, Landmark, TrendingUp, Gem } from "lucide-react";
 import { useLanguage, type Language } from "@/lib/i18n";
@@ -60,6 +61,23 @@ const StepAccountBalance = ({ onNext, userName }: StepAccountBalanceProps) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const firstName = userName?.split(" ")[0];
+  const ttFired = useRef(false);
+
+  useEffect(() => {
+    if (ttFired.current) return;
+    ttFired.current = true;
+    try {
+      if (window.ttq) {
+        window.ttq.track("ViewContent", {
+          content_name: "Quiz - Etapa Saldo",
+          content_type: "product",
+        });
+        console.log("[TikTok Pixel] ✅ ViewContent fired (Saldo)");
+      }
+    } catch (err) {
+      console.warn("[TikTok Pixel] ViewContent error:", err);
+    }
+  }, []);
 
   return (
     <StepContainer>
