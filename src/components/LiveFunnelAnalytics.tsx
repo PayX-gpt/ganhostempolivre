@@ -51,6 +51,18 @@ const FUNNEL_STEPS = [
   { route: "/upsell6", label: "UP6 FOREX" },
 ];
 
+const TIKTOK_FUNNEL_STEPS = [
+  { route: "tiktok/step-1", label: "TK Intro" },
+  { route: "tiktok/step-2", label: "TK Idade" },
+  { route: "tiktok/step-3", label: "TK Prova" },
+  { route: "tiktok/step-4", label: "TK Meta" },
+  { route: "tiktok/step-5", label: "TK 10min" },
+  { route: "tiktok/step-6", label: "TK Email" },
+  { route: "tiktok/step-7", label: "TK Análise" },
+  { route: "tiktok/step-8", label: "TK Projeção" },
+  { route: "tiktok/step-9", label: "TK Oferta" },
+];
+
 const ROUTE_ALIASES: Record<string, string> = {
   "/step-18": "/step-17",
   "/step-19": "/step-17",
