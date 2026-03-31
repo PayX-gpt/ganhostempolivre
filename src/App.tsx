@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/lib/i18n";
 import Index from "./pages/Index";
 import Live from "./pages/Live";
 import NotFound from "./pages/NotFound";
+import TikTokQuizFunnel from "./components/quiz/TikTokQuizFunnel";
 import UpsellFunnel from "./components/upsell/UpsellFunnel";
 import Upsell2Page from "./components/upsell/Upsell2Page";
 import Upsell3Page from "./components/upsell/Upsell3Page";
@@ -28,6 +29,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/live" element={<Live />} />
             <Route path="/oferta" element={<Oferta />} />
+            <Route path="/tiktok" element={<TikTokQuizFunnel />} />
+            <Route path="/tiktok/:slug" element={<TikTokQuizFunnel />} />
             <Route path="/upsell1" element={<UpsellFunnel />} />
             <Route path="/upsell2" element={<Upsell2Page />} />
             <Route path="/upsell3" element={<Upsell3Page />} />
