@@ -33,19 +33,20 @@ const stepBadgeTexts: Record<Language, string> = {
 };
 
 const TIKTOK_STEP_SLUGS = [
-  "step-1",  // → original step-1 (intro)
-  "step-2",  // → original step-2 (idade)
-  "step-3",  // → original step-4 (vídeo depoimento Dona Márcia)
-  "step-4",  // → original step-6 (meta de renda)
-  "step-5",  // → original step-10 (disponibilidade 10 min)
-  "step-6",  // → original step-14 (campo email com timer)
-  "step-7",  // → original step-15 (loading)
-  "step-8",  // → original step-16 (projeção perfil)
-  "step-9",  // → original step-17 (vídeo vendas final)
+  "step-1",   // → original step-1 (intro)
+  "step-2",   // → original step-2 (idade)
+  "step-3",   // → original step-4 (vídeo depoimento Dona Márcia)
+  "step-4",   // → original step-6 (meta de renda)
+  "step-5",   // → original step-10 (disponibilidade 10 min)
+  "step-6",   // → original step-11 (demo plataforma) ← NOVO
+  "step-7",   // → original step-14 (campo email com timer)
+  "step-8",   // → original step-15 (loading)
+  "step-9",   // → original step-16 (projeção perfil)
+  "step-10",  // → original step-17 (vídeo vendas final)
 ] as const;
 
 const TOTAL_STEPS = TIKTOK_STEP_SLUGS.length;
-const PROGRESS_STEPS = 6; // steps 1-6 show progress
+const PROGRESS_STEPS = 7; // steps 1-7 show progress
 
 const STEP_NAMES: Record<string, string> = {
   "step-1": "tiktok_intro",
@@ -53,10 +54,11 @@ const STEP_NAMES: Record<string, string> = {
   "step-3": "tiktok_prova_social",
   "step-4": "tiktok_meta_renda",
   "step-5": "tiktok_disponibilidade",
-  "step-6": "tiktok_input_contato",
-  "step-7": "tiktok_loading",
-  "step-8": "tiktok_projecao_perfil",
-  "step-9": "tiktok_oferta_vturb",
+  "step-6": "tiktok_demo_plataforma",
+  "step-7": "tiktok_input_contato",
+  "step-8": "tiktok_loading",
+  "step-9": "tiktok_projecao_perfil",
+  "step-10": "tiktok_oferta_vturb",
 };
 
 const normalizeSlug = (slug?: string) => {
