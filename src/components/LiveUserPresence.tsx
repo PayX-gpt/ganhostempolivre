@@ -84,10 +84,11 @@ const TIKTOK_STEPS: FunnelStep[] = [
   { id: "tk_step3", route: "/tiktok/step-3", label: "Prova Social", icon: Star, count: 0 },
   { id: "tk_step4", route: "/tiktok/step-4", label: "Meta Renda", icon: Target, count: 0 },
   { id: "tk_step5", route: "/tiktok/step-5", label: "10 min?", icon: Clock, count: 0 },
-  { id: "tk_step6", route: "/tiktok/step-6", label: "E-mail", icon: Mail, count: 0 },
-  { id: "tk_step7", route: "/tiktok/step-7", label: "Análise", icon: Clock, count: 0 },
-  { id: "tk_step8", route: "/tiktok/step-8", label: "Projeção", icon: UserCheck, count: 0 },
-  { id: "tk_step9", route: "/tiktok/step-9", label: "Oferta", icon: Star, count: 0 },
+  { id: "tk_step6", route: "/tiktok/step-6", label: "Demo", icon: Smartphone, count: 0 },
+  { id: "tk_step7", route: "/tiktok/step-7", label: "E-mail", icon: Mail, count: 0 },
+  { id: "tk_step8", route: "/tiktok/step-8", label: "Análise", icon: Clock, count: 0 },
+  { id: "tk_step9", route: "/tiktok/step-9", label: "Projeção", icon: UserCheck, count: 0 },
+  { id: "tk_step10", route: "/tiktok/step-10", label: "Oferta", icon: Star, count: 0 },
 ];
 
 const ALL_STEPS = [...STEPS, ...TIKTOK_STEPS];
