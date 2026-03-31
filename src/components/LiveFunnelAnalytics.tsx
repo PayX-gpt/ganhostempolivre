@@ -448,6 +448,8 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
           </div>
         );
       })()}
+
+      {selectedStep && (
         <FunnelStepModal stepRoute={selectedStep.route} stepLabel={selectedStep.label} onClose={() => setSelectedStep(null)} />
       )}
     </div>
