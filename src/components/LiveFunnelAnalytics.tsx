@@ -412,7 +412,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
               <div className="p-1.5 rounded-lg bg-red-500/15 border border-red-500/25 flex-shrink-0">
                 <BarChart3 className="w-3.5 h-3.5 text-red-400" />
               </div>
-              <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wider">Funil TikTok — 9 Etapas</h4>
+              <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wider">Funil TikTok — 10 Etapas</h4>
               <span className="text-[10px] text-[#666] ml-auto tabular-nums">{tkTotal} views</span>
             </div>
             <div className="h-[180px] mb-3">

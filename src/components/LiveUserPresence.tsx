@@ -422,7 +422,7 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
                 <Zap className="w-3.5 h-3.5 text-red-400" />
               </div>
               <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wider">Funil TikTok</h4>
-              <span className="text-[10px] text-[#666]">9 etapas</span>
+              <span className="text-[10px] text-[#666]">10 etapas</span>
               {tkTotal > 0 && (
                 <Badge className="bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 text-[10px] ml-auto">
                   {tkTotal} online

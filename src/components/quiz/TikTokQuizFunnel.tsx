@@ -214,7 +214,9 @@ const TikTokQuizFunnel = () => {
         return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} userName={answers.name} userAge={answers.age} />;
       case "step-5": // disponibilidade (original step-10)
         return <Step9Availability onNext={(v) => updateAndNext("availability", v)} userName={answers.name} userAge={answers.age} />;
-      case "step-6": // email input (original step-14)
+      case "step-6": // demo plataforma (original step-11)
+        return <StepPlatformDemo onNext={goNext} userName={answers.name} />;
+      case "step-7": // email input (original step-14)
         return (
           <StepContactInput
             method="email"
@@ -229,11 +231,11 @@ const TikTokQuizFunnel = () => {
             }}
           />
         );
-      case "step-7": // loading (original step-15)
+      case "step-8": // loading (original step-15)
         return <Step10Loading onNext={goNext} userAge={answers.age} />;
-      case "step-8": // projeção perfil (original step-16)
+      case "step-9": // projeção perfil (original step-16)
         return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} />;
-      case "step-9": // oferta vturb (original step-17)
+      case "step-10": // oferta vturb (original step-17)
         return <Step11SocialProof2 onNext={() => {}} userAge={answers.age} />;
       default:
         return null;
