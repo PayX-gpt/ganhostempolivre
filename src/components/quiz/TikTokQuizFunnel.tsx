@@ -15,6 +15,7 @@ import Step3SocialProof from "./Step3SocialProof";
 import Step5IncomeGoal from "./Step5IncomeGoal";
 import Step9Availability from "./Step9Availability";
 import StepContactInput from "./StepContactInput";
+import StepPlatformDemo from "./StepPlatformDemo";
 import Step10Loading from "./Step10Loading";
 import StepProfileProjection from "./StepProfileProjection";
 import Step11SocialProof2 from "./Step11SocialProof2";
