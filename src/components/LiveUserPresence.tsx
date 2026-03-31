@@ -78,6 +78,20 @@ const STEPS: FunnelStep[] = [
   { id: "upsell6", route: "/upsell6", label: "UP6 FOREX", icon: TrendingUp, count: 0 },
 ];
 
+const TIKTOK_STEPS: FunnelStep[] = [
+  { id: "tk_step1", route: "/tiktok/step-1", label: "Intro", icon: Zap, count: 0 },
+  { id: "tk_step2", route: "/tiktok/step-2", label: "Idade", icon: Users, count: 0 },
+  { id: "tk_step3", route: "/tiktok/step-3", label: "Prova Social", icon: Star, count: 0 },
+  { id: "tk_step4", route: "/tiktok/step-4", label: "Meta Renda", icon: Target, count: 0 },
+  { id: "tk_step5", route: "/tiktok/step-5", label: "10 min?", icon: Clock, count: 0 },
+  { id: "tk_step6", route: "/tiktok/step-6", label: "E-mail", icon: Mail, count: 0 },
+  { id: "tk_step7", route: "/tiktok/step-7", label: "Análise", icon: Clock, count: 0 },
+  { id: "tk_step8", route: "/tiktok/step-8", label: "Projeção", icon: UserCheck, count: 0 },
+  { id: "tk_step9", route: "/tiktok/step-9", label: "Oferta", icon: Star, count: 0 },
+];
+
+const ALL_STEPS = [...STEPS, ...TIKTOK_STEPS];
+
 const FUNNEL_STEP_LABELS: Record<string, string> = {
   front_37: "R$37", front_47: "R$47",
   acelerador_basico: "UP1", acelerador_duplo: "UP1", acelerador_maximo: "UP1",
