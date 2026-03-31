@@ -78,6 +78,20 @@ const STEPS: FunnelStep[] = [
   { id: "upsell6", route: "/upsell6", label: "UP6 FOREX", icon: TrendingUp, count: 0 },
 ];
 
+const TIKTOK_STEPS: FunnelStep[] = [
+  { id: "tk_step1", route: "/tiktok/step-1", label: "Intro", icon: Zap, count: 0 },
+  { id: "tk_step2", route: "/tiktok/step-2", label: "Idade", icon: Users, count: 0 },
+  { id: "tk_step3", route: "/tiktok/step-3", label: "Prova Social", icon: Star, count: 0 },
+  { id: "tk_step4", route: "/tiktok/step-4", label: "Meta Renda", icon: Target, count: 0 },
+  { id: "tk_step5", route: "/tiktok/step-5", label: "10 min?", icon: Clock, count: 0 },
+  { id: "tk_step6", route: "/tiktok/step-6", label: "E-mail", icon: Mail, count: 0 },
+  { id: "tk_step7", route: "/tiktok/step-7", label: "Análise", icon: Clock, count: 0 },
+  { id: "tk_step8", route: "/tiktok/step-8", label: "Projeção", icon: UserCheck, count: 0 },
+  { id: "tk_step9", route: "/tiktok/step-9", label: "Oferta", icon: Star, count: 0 },
+];
+
+const ALL_STEPS = [...STEPS, ...TIKTOK_STEPS];
+
 const FUNNEL_STEP_LABELS: Record<string, string> = {
   front_37: "R$37", front_47: "R$47",
   acelerador_basico: "UP1", acelerador_duplo: "UP1", acelerador_maximo: "UP1",
@@ -87,6 +101,13 @@ const FUNNEL_STEP_LABELS: Record<string, string> = {
 
 const toStepId = (page: string): string | null => {
   const p = page.toLowerCase();
+  // TikTok funnel routes
+  if (p.includes("/tiktok/")) {
+    for (let i = 9; i >= 1; i--) {
+      if (p.includes(`/tiktok/step-${i}`)) return `tk_step${i}`;
+    }
+    return null;
+  }
   if (p.includes("/upsell6") || p.includes("forex")) return "upsell6";
   if (p.includes("/upsell5") || p.includes("safety")) return "upsell5";
   if (p.includes("/upsell4") || p.includes("/upsell-sucesso") || p.includes("upsell4-")) return "upsell4";
@@ -155,12 +176,12 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
   const handlePresenceSync = useCallback((channel: ReturnType<typeof supabase.channel>) => {
     const state = channel.presenceState<PresencePayload>();
     const counts: Record<string, number> = {};
-    STEPS.forEach(s => { counts[s.id] = 0; });
+    ALL_STEPS.forEach(s => { counts[s.id] = 0; });
 
     let total = 0;
     const users: OnlineUser[] = [];
     const stepSources: Record<string, Set<string>> = {};
-    STEPS.forEach(s => { stepSources[s.id] = new Set(); });
+    ALL_STEPS.forEach(s => { stepSources[s.id] = new Set(); });
 
     Object.entries(state).forEach(([sessionKey, presences]) => {
       if (!presences || presences.length === 0) return;
@@ -173,7 +194,7 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
         total++;
         const source = latest.traffic_source || "organic";
         stepSources[stepId].add(source);
-        const stepLabel = STEPS.find(s => s.id === stepId)?.label || pageId;
+        const stepLabel = ALL_STEPS.find(s => s.id === stepId)?.label || pageId;
         users.push({
           session_id: latest.session_id,
           name: latest.lead_name || "Visitante",
@@ -230,10 +251,10 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
     // Recalculate counts from filtered users
     const filteredCounts: Record<string, number> = {};
     const filteredSources: Record<string, Set<string>> = {};
-    STEPS.forEach(s => { filteredCounts[s.id] = 0; filteredSources[s.id] = new Set(); });
+    ALL_STEPS.forEach(s => { filteredCounts[s.id] = 0; filteredSources[s.id] = new Set(); });
 
     filteredUsers.forEach(u => {
-      const stepId = STEPS.find(s => s.label === u.page)?.id;
+      const stepId = ALL_STEPS.find(s => s.label === u.page)?.id;
       if (stepId) {
         filteredCounts[stepId]++;
         filteredSources[stepId].add(u.traffic_source);
@@ -351,8 +372,9 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
         </div>
       </div>
 
+      {/* Original Funnel */}
       <div className="grid grid-cols-7 sm:grid-cols-11 gap-1.5 sm:gap-2">
-        {funnelSteps.map((step) => {
+        {funnelSteps.filter(s => !s.id.startsWith("tk_")).map((step) => {
           const Icon = step.icon;
           const hasUsers = step.count > 0;
           const sources = step.sources || [];
@@ -387,6 +409,46 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
           );
         })}
       </div>
+
+      {/* TikTok Funnel */}
+      {(() => {
+        const tkSteps = funnelSteps.filter(s => s.id.startsWith("tk_"));
+        const tkTotal = tkSteps.reduce((sum, s) => sum + s.count, 0);
+        return (
+          <div className="mt-4 rounded-xl border border-red-500/20 bg-[#0d0d0d] p-3">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 rounded-lg bg-red-500/15 border border-red-500/25 flex-shrink-0">
+                <Zap className="w-3.5 h-3.5 text-red-400" />
+              </div>
+              <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wider">Funil TikTok</h4>
+              <span className="text-[10px] text-[#666]">9 etapas</span>
+              {tkTotal > 0 && (
+                <Badge className="bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 text-[10px] ml-auto">
+                  {tkTotal} online
+                </Badge>
+              )}
+            </div>
+            <div className="grid grid-cols-9 gap-1.5 sm:gap-2">
+              {tkSteps.map((step) => {
+                const Icon = step.icon;
+                const hasUsers = step.count > 0;
+                const borderColor = hasUsers ? "border-red-500/40 shadow-lg shadow-red-500/10" : "border-[#2a2a2a]";
+                const iconColor = hasUsers ? "text-red-400" : "text-[#666]";
+                return (
+                  <div key={step.id} className={cn(
+                    "flex flex-col items-center justify-center p-1.5 sm:p-2.5 rounded-xl transition-all overflow-hidden",
+                    "bg-[#0d0d0d] border", borderColor
+                  )}>
+                    <Icon className={cn("w-3.5 h-3.5 mb-0.5 flex-shrink-0", iconColor)} />
+                    <span className={cn("text-sm sm:text-lg font-bold tabular-nums leading-none", hasUsers ? "text-white" : "text-[#444]")}>{step.count}</span>
+                    <span className="text-[7px] sm:text-[9px] text-[#666] text-center leading-tight truncate w-full">{step.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {onlineUsers.length > 0 && (
         <div className="mt-4 rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3">
