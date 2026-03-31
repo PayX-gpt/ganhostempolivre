@@ -251,10 +251,10 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
     // Recalculate counts from filtered users
     const filteredCounts: Record<string, number> = {};
     const filteredSources: Record<string, Set<string>> = {};
-    STEPS.forEach(s => { filteredCounts[s.id] = 0; filteredSources[s.id] = new Set(); });
+    ALL_STEPS.forEach(s => { filteredCounts[s.id] = 0; filteredSources[s.id] = new Set(); });
 
     filteredUsers.forEach(u => {
-      const stepId = STEPS.find(s => s.label === u.page)?.id;
+      const stepId = ALL_STEPS.find(s => s.label === u.page)?.id;
       if (stepId) {
         filteredCounts[stepId]++;
         filteredSources[stepId].add(u.traffic_source);
