@@ -194,7 +194,7 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
         total++;
         const source = latest.traffic_source || "organic";
         stepSources[stepId].add(source);
-        const stepLabel = STEPS.find(s => s.id === stepId)?.label || pageId;
+        const stepLabel = ALL_STEPS.find(s => s.id === stepId)?.label || pageId;
         users.push({
           session_id: latest.session_id,
           name: latest.lead_name || "Visitante",
