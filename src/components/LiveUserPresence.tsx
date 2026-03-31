@@ -101,6 +101,13 @@ const FUNNEL_STEP_LABELS: Record<string, string> = {
 
 const toStepId = (page: string): string | null => {
   const p = page.toLowerCase();
+  // TikTok funnel routes
+  if (p.includes("/tiktok/")) {
+    for (let i = 9; i >= 1; i--) {
+      if (p.includes(`/tiktok/step-${i}`)) return `tk_step${i}`;
+    }
+    return null;
+  }
   if (p.includes("/upsell6") || p.includes("forex")) return "upsell6";
   if (p.includes("/upsell5") || p.includes("safety")) return "upsell5";
   if (p.includes("/upsell4") || p.includes("/upsell-sucesso") || p.includes("upsell4-")) return "upsell4";
