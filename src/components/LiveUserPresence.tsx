@@ -372,8 +372,9 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
         </div>
       </div>
 
+      {/* Original Funnel */}
       <div className="grid grid-cols-7 sm:grid-cols-11 gap-1.5 sm:gap-2">
-        {funnelSteps.map((step) => {
+        {funnelSteps.filter(s => !s.id.startsWith("tk_")).map((step) => {
           const Icon = step.icon;
           const hasUsers = step.count > 0;
           const sources = step.sources || [];
@@ -408,6 +409,46 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
           );
         })}
       </div>
+
+      {/* TikTok Funnel */}
+      {(() => {
+        const tkSteps = funnelSteps.filter(s => s.id.startsWith("tk_"));
+        const tkTotal = tkSteps.reduce((sum, s) => sum + s.count, 0);
+        return (
+          <div className="mt-4 rounded-xl border border-red-500/20 bg-[#0d0d0d] p-3">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 rounded-lg bg-red-500/15 border border-red-500/25 flex-shrink-0">
+                <Zap className="w-3.5 h-3.5 text-red-400" />
+              </div>
+              <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wider">Funil TikTok</h4>
+              <span className="text-[10px] text-[#666]">9 etapas</span>
+              {tkTotal > 0 && (
+                <Badge className="bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 text-[10px] ml-auto">
+                  {tkTotal} online
+                </Badge>
+              )}
+            </div>
+            <div className="grid grid-cols-9 gap-1.5 sm:gap-2">
+              {tkSteps.map((step) => {
+                const Icon = step.icon;
+                const hasUsers = step.count > 0;
+                const borderColor = hasUsers ? "border-red-500/40 shadow-lg shadow-red-500/10" : "border-[#2a2a2a]";
+                const iconColor = hasUsers ? "text-red-400" : "text-[#666]";
+                return (
+                  <div key={step.id} className={cn(
+                    "flex flex-col items-center justify-center p-1.5 sm:p-2.5 rounded-xl transition-all overflow-hidden",
+                    "bg-[#0d0d0d] border", borderColor
+                  )}>
+                    <Icon className={cn("w-3.5 h-3.5 mb-0.5 flex-shrink-0", iconColor)} />
+                    <span className={cn("text-sm sm:text-lg font-bold tabular-nums leading-none", hasUsers ? "text-white" : "text-[#444]")}>{step.count}</span>
+                    <span className="text-[7px] sm:text-[9px] text-[#666] text-center leading-tight truncate w-full">{step.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {onlineUsers.length > 0 && (
         <div className="mt-4 rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3">
