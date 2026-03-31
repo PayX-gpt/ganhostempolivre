@@ -401,7 +401,53 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
         </div>
       </div>
 
-      {selectedStep && (
+      {/* TikTok Funnel Section */}
+      {(() => {
+        const tkTotal = tiktokFunnelData.reduce((sum, s) => sum + s.views, 0);
+        if (tkTotal === 0 && tiktokFunnelData.length > 0) return null;
+        return (
+          <div className="rounded-xl border border-red-500/20 bg-[#0d0d0d] p-3 mt-3">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 rounded-lg bg-red-500/15 border border-red-500/25 flex-shrink-0">
+                <BarChart3 className="w-3.5 h-3.5 text-red-400" />
+              </div>
+              <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wider">Funil TikTok — 9 Etapas</h4>
+              <span className="text-[10px] text-[#666] ml-auto tabular-nums">{tkTotal} views</span>
+            </div>
+            <div className="h-[180px] mb-3">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={tiktokFunnelData} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
+                  <XAxis dataKey="label" tick={{ fill: "#666", fontSize: 8 }} axisLine={false} tickLine={false} interval={0} angle={-45} textAnchor="end" height={50} />
+                  <YAxis tick={{ fill: "#666", fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="views" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-1">
+              {tiktokFunnelData.map((s, i) => {
+                const avgSec = s.avgTimeMs > 0 ? s.avgTimeMs / 1000 : 0;
+                const avgLabel = avgSec > 60 ? `${(avgSec / 60).toFixed(1)}min` : `${Math.round(avgSec)}s`;
+                return (
+                  <div key={i} className="flex items-center gap-1.5 text-[10px] py-0.5 px-1">
+                    <span className="text-[#888] w-16 truncate font-medium">{s.label}</span>
+                    <span className="text-[#666] w-8 text-right tabular-nums">{s.views}</span>
+                    <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+                      <div className={cn("h-full rounded-full transition-all",
+                        s.dropOff > 50 ? "bg-red-500" : s.dropOff > 30 ? "bg-amber-500" : s.dropOff > 15 ? "bg-yellow-500" : "bg-red-400"
+                      )} style={{ width: `${Math.min(s.dropOff, 100)}%` }} />
+                    </div>
+                    {s.dropOff > 0 && <span className={cn("font-bold tabular-nums w-10 text-right text-[10px]", s.dropOff > 30 ? "text-red-400" : "text-amber-400")}>-{s.dropOff}%</span>}
+                    {s.dropOff === 0 && <span className="w-10" />}
+                    {avgSec > 0 && <span className="tabular-nums w-12 text-right text-[9px] text-[#555]">~{avgLabel}</span>}
+                    {avgSec === 0 && <span className="w-12" />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
         <FunnelStepModal stepRoute={selectedStep.route} stepLabel={selectedStep.label} onClose={() => setSelectedStep(null)} />
       )}
     </div>
