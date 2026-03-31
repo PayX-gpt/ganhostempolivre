@@ -57,10 +57,11 @@ const TIKTOK_FUNNEL_STEPS = [
   { route: "tiktok/step-3", label: "TK Prova" },
   { route: "tiktok/step-4", label: "TK Meta" },
   { route: "tiktok/step-5", label: "TK 10min" },
-  { route: "tiktok/step-6", label: "TK Email" },
-  { route: "tiktok/step-7", label: "TK Análise" },
-  { route: "tiktok/step-8", label: "TK Projeção" },
-  { route: "tiktok/step-9", label: "TK Oferta" },
+  { route: "tiktok/step-6", label: "TK Demo" },
+  { route: "tiktok/step-7", label: "TK Email" },
+  { route: "tiktok/step-8", label: "TK Análise" },
+  { route: "tiktok/step-9", label: "TK Projeção" },
+  { route: "tiktok/step-10", label: "TK Oferta" },
 ];
 
 const ROUTE_ALIASES: Record<string, string> = {
@@ -411,7 +412,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
               <div className="p-1.5 rounded-lg bg-red-500/15 border border-red-500/25 flex-shrink-0">
                 <BarChart3 className="w-3.5 h-3.5 text-red-400" />
               </div>
-              <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wider">Funil TikTok — 9 Etapas</h4>
+              <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wider">Funil TikTok — 10 Etapas</h4>
               <span className="text-[10px] text-[#666] ml-auto tabular-nums">{tkTotal} views</span>
             </div>
             <div className="h-[180px] mb-3">

@@ -84,10 +84,11 @@ const TIKTOK_STEPS: FunnelStep[] = [
   { id: "tk_step3", route: "/tiktok/step-3", label: "Prova Social", icon: Star, count: 0 },
   { id: "tk_step4", route: "/tiktok/step-4", label: "Meta Renda", icon: Target, count: 0 },
   { id: "tk_step5", route: "/tiktok/step-5", label: "10 min?", icon: Clock, count: 0 },
-  { id: "tk_step6", route: "/tiktok/step-6", label: "E-mail", icon: Mail, count: 0 },
-  { id: "tk_step7", route: "/tiktok/step-7", label: "Análise", icon: Clock, count: 0 },
-  { id: "tk_step8", route: "/tiktok/step-8", label: "Projeção", icon: UserCheck, count: 0 },
-  { id: "tk_step9", route: "/tiktok/step-9", label: "Oferta", icon: Star, count: 0 },
+  { id: "tk_step6", route: "/tiktok/step-6", label: "Demo", icon: Smartphone, count: 0 },
+  { id: "tk_step7", route: "/tiktok/step-7", label: "E-mail", icon: Mail, count: 0 },
+  { id: "tk_step8", route: "/tiktok/step-8", label: "Análise", icon: Clock, count: 0 },
+  { id: "tk_step9", route: "/tiktok/step-9", label: "Projeção", icon: UserCheck, count: 0 },
+  { id: "tk_step10", route: "/tiktok/step-10", label: "Oferta", icon: Star, count: 0 },
 ];
 
 const ALL_STEPS = [...STEPS, ...TIKTOK_STEPS];
@@ -103,7 +104,7 @@ const toStepId = (page: string): string | null => {
   const p = page.toLowerCase();
   // TikTok funnel routes
   if (p.includes("/tiktok/")) {
-    for (let i = 9; i >= 1; i--) {
+    for (let i = 10; i >= 1; i--) {
       if (p.includes(`/tiktok/step-${i}`)) return `tk_step${i}`;
     }
     return null;
@@ -421,7 +422,7 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
                 <Zap className="w-3.5 h-3.5 text-red-400" />
               </div>
               <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wider">Funil TikTok</h4>
-              <span className="text-[10px] text-[#666]">9 etapas</span>
+              <span className="text-[10px] text-[#666]">10 etapas</span>
               {tkTotal > 0 && (
                 <Badge className="bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 text-[10px] ml-auto">
                   {tkTotal} online
