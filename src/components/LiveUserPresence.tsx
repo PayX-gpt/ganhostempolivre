@@ -176,12 +176,12 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
   const handlePresenceSync = useCallback((channel: ReturnType<typeof supabase.channel>) => {
     const state = channel.presenceState<PresencePayload>();
     const counts: Record<string, number> = {};
-    STEPS.forEach(s => { counts[s.id] = 0; });
+    ALL_STEPS.forEach(s => { counts[s.id] = 0; });
 
     let total = 0;
     const users: OnlineUser[] = [];
     const stepSources: Record<string, Set<string>> = {};
-    STEPS.forEach(s => { stepSources[s.id] = new Set(); });
+    ALL_STEPS.forEach(s => { stepSources[s.id] = new Set(); });
 
     Object.entries(state).forEach(([sessionKey, presences]) => {
       if (!presences || presences.length === 0) return;
