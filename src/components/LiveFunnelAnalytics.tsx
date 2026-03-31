@@ -194,7 +194,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
 
     const stepCounts: Record<string, Set<string>> = {};
     const stepCampaignCounts: Record<string, Record<string, Set<string>>> = {};
-    FUNNEL_STEPS.forEach(s => {
+    [...FUNNEL_STEPS, ...TIKTOK_FUNNEL_STEPS].forEach(s => {
       stepCounts[s.route] = new Set();
       stepCampaignCounts[s.route] = {};
     });
@@ -204,6 +204,8 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
 
     mergedPageLoads.forEach(log => {
       let pid = log.page_id || "";
+      // Remove leading slash for tiktok routes to match TIKTOK_FUNNEL_STEPS format
+      const pidNoSlash = pid.startsWith("/") ? pid.slice(1) : pid;
       if (pid.startsWith("/upsell")) {
         if (pid.startsWith("/upsell6") || pid.includes("forex")) pid = "/upsell6";
         else if (pid.startsWith("/upsell5") || pid.includes("safety")) pid = "/upsell5";
@@ -213,11 +215,13 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
         else if (pid.startsWith("/upsell1") || pid.startsWith("/upsell-")) pid = "/upsell1";
       }
       if (ROUTE_ALIASES[pid]) pid = ROUTE_ALIASES[pid];
-      if (stepCounts[pid]) {
-        stepCounts[pid].add(log.session_id);
+      // Check both formats
+      const matchKey = stepCounts[pid] ? pid : stepCounts[pidNoSlash] ? pidNoSlash : null;
+      if (matchKey) {
+        stepCounts[matchKey].add(log.session_id);
         const camp = sessionCampaign[log.session_id] || "Direto";
-        if (!stepCampaignCounts[pid][camp]) stepCampaignCounts[pid][camp] = new Set();
-        stepCampaignCounts[pid][camp].add(log.session_id);
+        if (!stepCampaignCounts[matchKey][camp]) stepCampaignCounts[matchKey][camp] = new Set();
+        stepCampaignCounts[matchKey][camp].add(log.session_id);
       }
       const hour = new Date(log.created_at).getHours();
       hourCounts[`${hour.toString().padStart(2, "0")}h`] = (hourCounts[`${hour.toString().padStart(2, "0")}h`] || 0) + 1;
@@ -238,14 +242,24 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
       return row;
     });
 
+    // TikTok funnel data
+    const tkSteps: StepData[] = TIKTOK_FUNNEL_STEPS.map((s, i) => {
+      const views = stepCounts[s.route]?.size || 0;
+      const prevViews = i > 0 ? (stepCounts[TIKTOK_FUNNEL_STEPS[i - 1].route]?.size || 0) : views;
+      const dropOff = prevViews > 0 ? Math.round(((prevViews - views) / prevViews) * 100) : 0;
+      const times = stepTimes[s.route] || stepTimes[`/${s.route}`] || [];
+      const avgTimeMs = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
+      const row: StepData = { step: s.route, label: s.label, views, dropOff: i === 0 ? 0 : dropOff, avgTimeMs };
+      return row;
+    });
+
     setFunnelData(steps);
+    setTiktokFunnelData(tkSteps);
     setHourlyData(Object.entries(hourCounts).map(([hour, visits]) => ({ hour, visits })));
     setTotalViews(steps[0]?.views || 0);
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
     setOfferViews(stepCounts["/step-17"]?.size || 0);
     setCheckoutClicks(new Set(checkoutData.map(e => e.session_id)).size);
-    // Fix Divergence 4: Count each purchase row individually (by unique id)
-    // Don't dedup by email which merges front + upsell from same buyer
     setPurchases(purchaseData.length);
     setLoading(false);
   }, [allCampaigns]);
