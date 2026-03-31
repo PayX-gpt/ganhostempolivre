@@ -104,7 +104,7 @@ const toStepId = (page: string): string | null => {
   const p = page.toLowerCase();
   // TikTok funnel routes
   if (p.includes("/tiktok/")) {
-    for (let i = 9; i >= 1; i--) {
+    for (let i = 10; i >= 1; i--) {
       if (p.includes(`/tiktok/step-${i}`)) return `tk_step${i}`;
     }
     return null;
