@@ -4,7 +4,7 @@ import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, Chevr
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
-import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
+
 import avatarCarlos from "@/assets/avatar-carlos.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
 import avatarJose from "@/assets/avatar-jose.jpg";
@@ -244,14 +244,22 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     }, 300);
   }, []);
 
+  // Set up Kirvano offerMap for one-click upsell on step 17 (plans page)
+  useEffect(() => {
+    if (step === 17) {
+      const nextPageURL = "https://ganhostempolivre.lovable.app/upsell3";
+      (window as any).offerMap = {
+        'btn-prata': { offer: "b61b6335-9325-4ecb-9b87-8214d948e90e", nextPageURL, refusePageURL: null },
+        'btn-ouro': { offer: "2f8e1d23-b71c-4c4b-9da1-672a6ca75c9b", nextPageURL, refusePageURL: null },
+        'btn-diamante': { offer: "e7d1995f-9b55-47d0-a1c4-762b07721162", nextPageURL, refusePageURL: null },
+      };
+    }
+  }, [step]);
+
   const handleSelectPlan = (plan: (typeof plans)[0]) => {
     saveUpsellExtras("multiplicador", { plan: plan.id, price: plan.price });
     saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell2", plan: plan.id, price: plan.price });
     logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell2", metadata: { plan: plan.id, price: plan.price } });
-    const utmQs = buildTrackingQueryString();
-    const separator = plan.checkoutUrl.includes("?") ? "&" : "?";
-    const fullUrl = utmQs ? `${plan.checkoutUrl}${separator}${utmQs.slice(1)}` : plan.checkoutUrl;
-    window.open(fullUrl, "_blank");
   };
 
   /* ── Helper: get which question number ── */
@@ -1392,7 +1400,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                       <button
                         id={`btn-${plan.id}`}
                         onClick={() => handleSelectPlan(plan)}
-                        className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
+                        className="kirvano-payment-trigger w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
                         style={{
                           background: isRecommended ? "linear-gradient(135deg, #16A34A, #22C55E)" : plan.btnBg,
                           color: isRecommended ? "#fff" : plan.btnColor,
