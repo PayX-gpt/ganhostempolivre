@@ -35,19 +35,17 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
   const [loading, setLoading] = useState(false);
 
-  
+  // Kirvano Modo 1 — oferta única
+  useEffect(() => {
+    (window as any).offer = "67e759ec-598c-43c6-890e-b993901712b7";
+    (window as any).nextPageURL = "https://ganhostempolivre.lovable.app/upsell5";
+    (window as any).refusePageURL = null;
+  }, []);
 
   const handleBuy = () => {
-    setLoading(true);
     saveUpsellExtras("circulo", { price: 29.9 });
     saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell4", product: "circulo", price: 29.9 });
     logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell4", metadata: { product: "circulo", price: 29.9 } });
-    const checkoutUrl = "https://pay.kirvano.com/67e759ec-598c-43c6-890e-b993901712b7";
-    const utmQs = buildTrackingQueryString();
-    const separator = checkoutUrl.includes("?") ? "&" : "?";
-    const fullUrl = utmQs ? `${checkoutUrl}${separator}${utmQs.slice(1)}` : checkoutUrl;
-    window.open(fullUrl, "_blank");
-    setTimeout(() => setLoading(false), 3000);
   };
 
   return (
