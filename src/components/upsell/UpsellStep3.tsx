@@ -16,6 +16,7 @@ interface Props { name: string; onNext: () => void; onDecline: () => void; }
 const plans = [
   {
     id: "basico" as const,
+    buttonId: "btn-basico",
     name: "Acelerador Básico",
     subtitle: "Resultados em até 72 horas",
     subtitleColor: "#22C55E",
@@ -30,10 +31,11 @@ const plans = [
     btnBg: "transparent", btnColor: "#22C55E", btnBorder: "1.5px solid #22C55E",
     btnText: "ATIVAR BÁSICO",
     badge: null,
-    checkoutUrl: "https://pay.kirvano.com/863c8fe9-ca48-452f-9fa4-22e14df182cf",
+    offer: "59a5cba3-f876-46a8-b0e4-6e2c72cf725a",
   },
   {
     id: "duplo" as const,
+    buttonId: "btn-duplo",
     name: "Acelerador Duplo",
     subtitle: "Resultados em até 24 horas",
     subtitleColor: "#22C55E",
@@ -49,10 +51,11 @@ const plans = [
     btnBg: "linear-gradient(135deg, #16A34A, #15803D)", btnColor: "#fff", btnBorder: "none",
     btnText: "ATIVAR DUPLO — MAIS ESCOLHIDO",
     badge: "⚡ RECOMENDADO",
-    checkoutUrl: "https://pay.kirvano.com/59a5cba3-f876-46a8-b0e4-6e2c72cf725a",
+    offer: "59a5cba3-f876-46a8-b0e4-6e2c72cf725a",
   },
   {
     id: "maximo" as const,
+    buttonId: "btn-maximo",
     name: "Acelerador Máximo",
     subtitle: "Resultados em até 12 horas",
     subtitleColor: "#FACC15",
@@ -69,7 +72,7 @@ const plans = [
     btnBg: "linear-gradient(135deg, #FACC15, #EAB308)", btnColor: "#020617", btnBorder: "none",
     btnText: "ATIVAR MÁXIMO",
     badge: null,
-    checkoutUrl: "https://pay.kirvano.com/e8135deb-de2d-4cac-bbeb-1aed6610921c",
+    offer: "e8135deb-de2d-4cac-bbeb-1aed6610921c",
   },
 ];
 
