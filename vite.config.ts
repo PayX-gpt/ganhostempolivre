@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ["favicon.ico", "robots.txt"],
       workbox: {
         navigateFallback: "index.html",
-        navigateFallbackDenylist: [/^\/~oauth/, /\.md$/, /\.json$/, /\.txt$/],
+        navigateFallbackDenylist: [/^\/~oauth/, /\.md$/, /\.json$/, /\.txt$/, /^\/api\//],
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
