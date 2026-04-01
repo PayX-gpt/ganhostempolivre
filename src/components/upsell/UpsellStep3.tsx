@@ -1,9 +1,15 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Check, Shield, Zap, MessageCircle, BarChart3, Headphones } from "lucide-react";
 import { saveUpsellChoice } from "@/lib/upsellData";
-import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
+
+declare global {
+  interface Window {
+    offerMap?: Record<string, { offer: string; nextPageURL: string | null; refusePageURL: string | null }>;
+  }
+}
 
 interface Props { name: string; onNext: () => void; onDecline: () => void; }
 
