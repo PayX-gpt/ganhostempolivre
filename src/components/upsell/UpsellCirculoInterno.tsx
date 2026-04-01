@@ -163,7 +163,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
           <button
             onClick={handleBuy}
             disabled={loading}
-            className="w-full mt-4 py-[16px] rounded-xl text-[15px] font-bold transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70"
+            className="kirvano-payment-trigger w-full mt-4 py-[16px] rounded-xl text-[15px] font-bold transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70"
             style={{
               background: "linear-gradient(135deg, #FACC15, #D4A017)",
               color: "#020617",
