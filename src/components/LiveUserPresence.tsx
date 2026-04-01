@@ -134,7 +134,7 @@ const shouldSkip = (pageId: string, sessionKey?: string) => {
 };
 
 export default function LiveUserPresence({ onTotalChange, campaignFilter }: LiveUserPresenceProps) {
-  const [funnelSteps, setFunnelSteps] = useState<FunnelStep[]>(STEPS);
+  const [funnelSteps, setFunnelSteps] = useState<FunnelStep[]>(ALL_STEPS);
   const [totalOnline, setTotalOnline] = useState(0);
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [allOnlineUsers, setAllOnlineUsers] = useState<OnlineUser[]>([]);
