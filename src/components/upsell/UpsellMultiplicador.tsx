@@ -4,7 +4,7 @@ import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, Chevr
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
-import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
+
 import avatarCarlos from "@/assets/avatar-carlos.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
 import avatarJose from "@/assets/avatar-jose.jpg";
