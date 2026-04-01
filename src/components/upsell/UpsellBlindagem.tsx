@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ShieldCheck, Check, Lock, RefreshCw, AlertTriangle, CheckCircle2,
@@ -68,16 +68,27 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
 
   const activePlan = plans.find((p) => p.id === selectedPlan)!;
 
+  // Kirvano offerMap — Modo 2 (only vitalicio for now, others will be added)
+  useEffect(() => {
+    (window as any).offerMap = {
+      'btn-vitalicio': { offer: "8b821768-dfb9-487d-a6a6-8beb9a9cdb20", nextPageURL: "https://ganhostempolivre.lovable.app/upsell4", refusePageURL: null },
+    };
+  }, []);
+
   const handleBuy = () => {
-    setLoading(true);
     saveUpsellExtras("blindagem", { price: activePlan.price, plan: activePlan.id });
     saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell3", product: `blindagem_${activePlan.id}`, price: activePlan.price });
     logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell3", metadata: { product: `blindagem_${activePlan.id}`, price: activePlan.price } });
-    const utmQs = buildTrackingQueryString();
-    const separator = activePlan.checkoutUrl.includes("?") ? "&" : "?";
-    const fullUrl = utmQs ? `${activePlan.checkoutUrl}${separator}${utmQs.slice(1)}` : activePlan.checkoutUrl;
-    window.open(fullUrl, "_blank");
-    setTimeout(() => setLoading(false), 3000);
+    // For plans without Kirvano one-click, open checkout link
+    if (activePlan.id !== "vitalicio") {
+      setLoading(true);
+      const utmQs = buildTrackingQueryString();
+      const separator = activePlan.checkoutUrl.includes("?") ? "&" : "?";
+      const fullUrl = utmQs ? `${activePlan.checkoutUrl}${separator}${utmQs.slice(1)}` : activePlan.checkoutUrl;
+      window.open(fullUrl, "_blank");
+      setTimeout(() => setLoading(false), 3000);
+    }
+    // Vitalicio uses Kirvano one-click via class trigger
   };
 
   return (
@@ -386,9 +397,10 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
 
             {/* CTA */}
             <button
+              id={activePlan.id === "vitalicio" ? "btn-vitalicio" : undefined}
               onClick={handleBuy}
               disabled={loading}
-              className="w-full mt-5 py-[16px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
+              className={`${activePlan.id === "vitalicio" ? "kirvano-payment-trigger " : ""}w-full mt-5 py-[16px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2`}
               style={{
                 background: activePlan.id === "extensao"
                   ? "transparent"
