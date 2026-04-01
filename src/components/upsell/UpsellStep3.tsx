@@ -141,8 +141,9 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
           </div>
 
           <button
-            onClick={() => handleSelect(plan)}
-            className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
+            id={plan.buttonId}
+            onClick={() => handleClick(plan)}
+            className="kirvano-payment-trigger w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
             style={{ background: plan.btnBg, color: plan.btnColor, border: plan.btnBorder }}
           >
             {plan.btnText}
