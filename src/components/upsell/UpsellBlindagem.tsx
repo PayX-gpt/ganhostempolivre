@@ -70,8 +70,11 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
 
   // Kirvano offerMap — Modo 2 (only vitalicio for now, others will be added)
   useEffect(() => {
+    const nextPageURL = "https://ganhostempolivre.lovable.app/upsell4";
     (window as any).offerMap = {
-      'btn-vitalicio': { offer: "8b821768-dfb9-487d-a6a6-8beb9a9cdb20", nextPageURL: "https://ganhostempolivre.lovable.app/upsell4", refusePageURL: null },
+      'btn-extensao': { offer: "5efbb9e7-6033-4281-bd6d-6b5830e7145d", nextPageURL, refusePageURL: null },
+      'btn-vitalicio': { offer: "8b821768-dfb9-487d-a6a6-8beb9a9cdb20", nextPageURL, refusePageURL: null },
+      'btn-vip': { offer: "a7cfdcbf-849f-4060-b660-b850f46a0e52", nextPageURL, refusePageURL: null },
     };
   }, []);
 
@@ -79,16 +82,6 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
     saveUpsellExtras("blindagem", { price: activePlan.price, plan: activePlan.id });
     saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell3", product: `blindagem_${activePlan.id}`, price: activePlan.price });
     logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell3", metadata: { product: `blindagem_${activePlan.id}`, price: activePlan.price } });
-    // For plans without Kirvano one-click, open checkout link
-    if (activePlan.id !== "vitalicio") {
-      setLoading(true);
-      const utmQs = buildTrackingQueryString();
-      const separator = activePlan.checkoutUrl.includes("?") ? "&" : "?";
-      const fullUrl = utmQs ? `${activePlan.checkoutUrl}${separator}${utmQs.slice(1)}` : activePlan.checkoutUrl;
-      window.open(fullUrl, "_blank");
-      setTimeout(() => setLoading(false), 3000);
-    }
-    // Vitalicio uses Kirvano one-click via class trigger
   };
 
   return (
