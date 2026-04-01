@@ -79,12 +79,21 @@ const plans = [
 const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
 
-  const handleSelect = (plan: typeof plans[0]) => {
+  // Set up Kirvano offerMap for one-click upsell
+  useEffect(() => {
+    const nextPageURL = "https://ganhostempolivre.lovable.app/upsell2";
+    window.offerMap = {};
+    plans.forEach((plan) => {
+      window.offerMap![plan.buttonId] = {
+        offer: plan.offer,
+        nextPageURL,
+        refusePageURL: null,
+      };
+    });
+  }, []);
+
+  const handleClick = (plan: typeof plans[0]) => {
     saveUpsellChoice({ accelerator: plan.id, guide: false, price: plan.price });
-    const utmQs = buildTrackingQueryString();
-    const separator = plan.checkoutUrl.includes("?") ? "&" : "?";
-    const fullUrl = utmQs ? `${plan.checkoutUrl}${separator}${utmQs.slice(1)}` : plan.checkoutUrl;
-    window.open(fullUrl, "_blank");
   };
 
   return (
