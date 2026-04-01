@@ -429,7 +429,7 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
                 </Badge>
               )}
             </div>
-            <div className="grid grid-cols-9 gap-1.5 sm:gap-2">
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 sm:gap-2">
               {tkSteps.map((step) => {
                 const Icon = step.icon;
                 const hasUsers = step.count > 0;
