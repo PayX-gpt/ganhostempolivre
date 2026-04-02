@@ -1,15 +1,9 @@
-import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, Shield, Zap, MessageCircle, BarChart3, Headphones } from "lucide-react";
+import { Shield, Zap, MessageCircle, BarChart3, Headphones } from "lucide-react";
 import { saveUpsellChoice } from "@/lib/upsellData";
+import KirvanoOneClick from "./KirvanoOneClick";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
-
-declare global {
-  interface Window {
-    offerMap?: Record<string, { offer: string; nextPageURL: string | null; refusePageURL: string | null }>;
-  }
-}
 
 interface Props { name: string; onNext: () => void; onDecline: () => void; }
 
@@ -79,24 +73,20 @@ const plans = [
 const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
 
-  // Set up Kirvano offerMap for one-click upsell
-  useEffect(() => {
-    const nextPageURL = "https://ganhostempolivre.lovable.app/upsell2";
-    window.offerMap = {};
-    plans.forEach((plan) => {
-      window.offerMap![plan.buttonId] = {
-        offer: plan.offer,
-        nextPageURL,
-        refusePageURL: null,
-      };
-    });
-  }, []);
+  const offerMap = Object.fromEntries(
+    plans.map((plan) => [
+      plan.buttonId,
+      { offer: plan.offer, nextPageURL: "https://ganhostempolivre.lovable.app/upsell2", refusePageURL: null },
+    ])
+  );
 
   const handleClick = (plan: typeof plans[0]) => {
     saveUpsellChoice({ accelerator: plan.id, guide: false, price: plan.price });
   };
 
   return (
+    <>
+    <KirvanoOneClick offerMap={offerMap} />
     <div className="flex flex-col gap-5 pt-4">
       <div className="text-center">
         <h1 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
@@ -174,6 +164,7 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
         Não, prefiro esperar os 7 dias com a configuração padrão.
       </button>
     </div>
+    </>
   );
 };
 
