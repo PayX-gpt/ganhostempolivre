@@ -73,18 +73,12 @@ const plans = [
 const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
 
-  // Set up Kirvano offerMap for one-click upsell
-  useEffect(() => {
-    const nextPageURL = "https://ganhostempolivre.lovable.app/upsell2";
-    window.offerMap = {};
-    plans.forEach((plan) => {
-      window.offerMap![plan.buttonId] = {
-        offer: plan.offer,
-        nextPageURL,
-        refusePageURL: null,
-      };
-    });
-  }, []);
+  const offerMap = Object.fromEntries(
+    plans.map((plan) => [
+      plan.buttonId,
+      { offer: plan.offer, nextPageURL: "https://ganhostempolivre.lovable.app/upsell2", refusePageURL: null },
+    ])
+  );
 
   const handleClick = (plan: typeof plans[0]) => {
     saveUpsellChoice({ accelerator: plan.id, guide: false, price: plan.price });
