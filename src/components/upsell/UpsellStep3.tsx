@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, Zap, MessageCircle, BarChart3, Headphones } from "lucide-react";
 import { saveUpsellChoice } from "@/lib/upsellData";
-import KirvanoOneClick from "./KirvanoOneClick";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
 
@@ -10,7 +11,6 @@ interface Props { name: string; onNext: () => void; onDecline: () => void; }
 const plans = [
   {
     id: "basico" as const,
-    buttonId: "btn-basico",
     name: "Acelerador Básico",
     subtitle: "Resultados em até 72 horas",
     subtitleColor: "#22C55E",
@@ -25,11 +25,10 @@ const plans = [
     btnBg: "transparent", btnColor: "#22C55E", btnBorder: "1.5px solid #22C55E",
     btnText: "ATIVAR BÁSICO",
     badge: null,
-    offer: "59a5cba3-f876-46a8-b0e4-6e2c72cf725a",
+    checkoutUrl: "https://pay.kirvano.com/863c8fe9-ca48-452f-9fa4-22e14df182cf",
   },
   {
     id: "duplo" as const,
-    buttonId: "btn-duplo",
     name: "Acelerador Duplo",
     subtitle: "Resultados em até 24 horas",
     subtitleColor: "#22C55E",
@@ -45,11 +44,10 @@ const plans = [
     btnBg: "linear-gradient(135deg, #16A34A, #15803D)", btnColor: "#fff", btnBorder: "none",
     btnText: "ATIVAR DUPLO — MAIS ESCOLHIDO",
     badge: "⚡ RECOMENDADO",
-    offer: "59a5cba3-f876-46a8-b0e4-6e2c72cf725a",
+    checkoutUrl: "https://pay.kirvano.com/59a5cba3-f876-46a8-b0e4-6e2c72cf725a",
   },
   {
     id: "maximo" as const,
-    buttonId: "btn-maximo",
     name: "Acelerador Máximo",
     subtitle: "Resultados em até 12 horas",
     subtitleColor: "#FACC15",
@@ -66,27 +64,26 @@ const plans = [
     btnBg: "linear-gradient(135deg, #FACC15, #EAB308)", btnColor: "#020617", btnBorder: "none",
     btnText: "ATIVAR MÁXIMO",
     badge: null,
-    offer: "e8135deb-de2d-4cac-bbeb-1aed6610921c",
+    checkoutUrl: "https://pay.kirvano.com/e8135deb-de2d-4cac-bbeb-1aed6610921c",
   },
 ];
 
 const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
-
-  const offerMap = Object.fromEntries(
-    plans.map((plan) => [
-      plan.buttonId,
-      { offer: plan.offer, nextPageURL: "https://ganhostempolivre.lovable.app/upsell2", refusePageURL: null },
-    ])
-  );
+  const [loading, setLoading] = useState<string | null>(null);
 
   const handleClick = (plan: typeof plans[0]) => {
+    setLoading(plan.id);
     saveUpsellChoice({ accelerator: plan.id, guide: false, price: plan.price });
+    const utmQs = buildTrackingQueryString();
+    const separator = plan.checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${plan.checkoutUrl}${separator}${utmQs.slice(1)}` : plan.checkoutUrl;
+    window.open(fullUrl, "_blank");
+    setTimeout(() => setLoading(null), 3000);
   };
 
   return (
     <>
-    <KirvanoOneClick offerMap={offerMap} />
     <div className="flex flex-col gap-5 pt-4">
       <div className="text-center">
         <h1 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
@@ -131,12 +128,12 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
           </div>
 
           <button
-            id={plan.buttonId}
             onClick={() => handleClick(plan)}
-            className="kirvano-payment-trigger w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
+            disabled={loading === plan.id}
+            className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70"
             style={{ background: plan.btnBg, color: plan.btnColor, border: plan.btnBorder }}
           >
-            {plan.btnText}
+            {loading === plan.id ? "Abrindo checkout..." : plan.btnText}
           </button>
         </motion.div>
       ))}
