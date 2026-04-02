@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Users, MessageCircle, Headphones, Sparkles } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
+import KirvanoOneClick from "./KirvanoOneClick";
 
 
 interface Props {
@@ -35,12 +36,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
   const [loading, setLoading] = useState(false);
 
-  // Kirvano Modo 1 — oferta única
-  useEffect(() => {
-    (window as any).offer = "67e759ec-598c-43c6-890e-b993901712b7";
-    (window as any).nextPageURL = "https://ganhostempolivre.lovable.app/upsell5";
-    (window as any).refusePageURL = null;
-  }, []);
+  // Kirvano variables handled by KirvanoOneClick component
 
   const handleBuy = () => {
     saveUpsellExtras("circulo", { price: 29.9 });
@@ -49,6 +45,12 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
   };
 
   return (
+    <>
+    <KirvanoOneClick
+      offer="67e759ec-598c-43c6-890e-b993901712b7"
+      nextPageURL="https://ganhostempolivre.lovable.app/upsell5"
+      refusePageURL={null}
+    />
     <div className="flex flex-col gap-5 pt-4">
       {/* Header */}
       <div className="text-center">
@@ -200,6 +202,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
         Não, obrigado. Prefiro seguir sem o grupo por enquanto.
       </button>
     </div>
+    </>
   );
 };
 
