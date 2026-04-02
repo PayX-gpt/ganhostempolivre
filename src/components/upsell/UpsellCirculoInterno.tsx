@@ -36,12 +36,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
   const [loading, setLoading] = useState(false);
 
-  // Kirvano Modo 1 — oferta única
-  useEffect(() => {
-    (window as any).offer = "67e759ec-598c-43c6-890e-b993901712b7";
-    (window as any).nextPageURL = "https://ganhostempolivre.lovable.app/upsell5";
-    (window as any).refusePageURL = null;
-  }, []);
+  // Kirvano variables handled by KirvanoOneClick component
 
   const handleBuy = () => {
     saveUpsellExtras("circulo", { price: 29.9 });
