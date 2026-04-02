@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Users, MessageCircle, Headphones, Sparkles } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
