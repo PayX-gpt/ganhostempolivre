@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, ChevronRight, Sparkles, AlertTriangle, Users, Home, Wallet, Trophy, Clock, Calendar, Timer, Target, Landmark, ShieldCheck, XCircle, CheckCircle2, Flame, Rocket, UserCheck } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
+import KirvanoOneClick from "./KirvanoOneClick";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 
