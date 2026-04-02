@@ -28,15 +28,35 @@ declare global {
 /**
  * Injects the Kirvano one-click upsell script into the page.
  * 
- * Single offer mode: sets window.offer once.
- * Multi offer mode (offerMap): uses mousedown listeners on buttons
- * to set window.offer dynamically BEFORE the Kirvano script's click handler fires.
+ * IMPORTANT: This component is designed to be stable across re-renders.
+ * It uses JSON serialization to detect actual data changes and avoid
+ * constantly tearing down and re-injecting the Kirvano script.
  */
 const KirvanoOneClick = ({ offer, nextPageURL, refusePageURL, offerMap }: Props) => {
   const scriptRef = useRef<HTMLScriptElement | null>(null);
   const listenersRef = useRef<Array<{ el: Element; handler: () => void }>>([]);
+  // Track serialized version to detect real changes
+  const prevDataRef = useRef<string>("");
 
   useEffect(() => {
+    // Serialize current props to detect actual changes
+    const currentData = JSON.stringify({ offer, nextPageURL, refusePageURL, offerMap });
+    const isFirstRun = prevDataRef.current === "";
+    const dataChanged = prevDataRef.current !== currentData;
+
+    if (!isFirstRun && !dataChanged) {
+      // No real change, skip re-initialization
+      return;
+    }
+    prevDataRef.current = currentData;
+
+    // Clean up previous listeners (but NOT the script unless data actually changed)
+    listenersRef.current.forEach(({ el, handler }) => {
+      el.removeEventListener("mousedown", handler);
+      el.removeEventListener("touchstart", handler);
+    });
+    listenersRef.current = [];
+
     // Set global variables for single offer mode
     if (offer) {
       window.offer = offer;
@@ -49,10 +69,9 @@ const KirvanoOneClick = ({ offer, nextPageURL, refusePageURL, offerMap }: Props)
     }
 
     // For multi-offer mode, attach mousedown listeners to set the correct offer
-    // mousedown fires before click, so Kirvano's click handler will read the right offer
     if (offerMap) {
       const setupListeners = () => {
-        // Clean up previous listeners
+        // Clean up any stale listeners
         listenersRef.current.forEach(({ el, handler }) => {
           el.removeEventListener("mousedown", handler);
           el.removeEventListener("touchstart", handler);
@@ -79,15 +98,23 @@ const KirvanoOneClick = ({ offer, nextPageURL, refusePageURL, offerMap }: Props)
         setTimeout(setupListeners, 100);
       });
 
-      // Inject script AFTER listeners are set up
+      // Also set up a MutationObserver to catch dynamically rendered buttons
+      const observer = new MutationObserver(() => {
+        setupListeners();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      // Stop observing after 2 seconds to avoid performance issues
+      const observerTimeout = setTimeout(() => observer.disconnect(), 2000);
+
+      // Inject script only if not already loaded
       const scriptTimer = setTimeout(() => {
-        // Remove old script if it exists
         if (scriptRef.current) {
-          try { document.body.removeChild(scriptRef.current); } catch {}
+          // Script already loaded, don't re-inject
+          return;
         }
 
         const script = document.createElement("script");
-        // Cache-bust to ensure re-execution on SPA navigation
         script.src = `https://snippets.kirvano.com/upsell.min.js?t=${Date.now()}`;
         script.async = true;
         document.body.appendChild(script);
@@ -97,6 +124,8 @@ const KirvanoOneClick = ({ offer, nextPageURL, refusePageURL, offerMap }: Props)
       return () => {
         cancelAnimationFrame(raf);
         clearTimeout(scriptTimer);
+        clearTimeout(observerTimeout);
+        observer.disconnect();
         listenersRef.current.forEach(({ el, handler }) => {
           el.removeEventListener("mousedown", handler);
           el.removeEventListener("touchstart", handler);
@@ -112,10 +141,10 @@ const KirvanoOneClick = ({ offer, nextPageURL, refusePageURL, offerMap }: Props)
       };
     }
 
-    // Single offer mode: inject script with slight delay for DOM readiness
+    // Single offer mode: inject script only once
     const timer = setTimeout(() => {
       if (scriptRef.current) {
-        try { document.body.removeChild(scriptRef.current); } catch {}
+        return;
       }
 
       const script = document.createElement("script");
@@ -135,7 +164,7 @@ const KirvanoOneClick = ({ offer, nextPageURL, refusePageURL, offerMap }: Props)
       delete window.nextPageURL;
       delete window.refusePageURL;
     };
-  }, [offer, nextPageURL, refusePageURL, offerMap]);
+  }); // No dependency array - runs every render but uses ref to skip no-ops
 
   return null;
 };
