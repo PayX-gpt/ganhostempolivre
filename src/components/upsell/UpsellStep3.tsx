@@ -85,6 +85,8 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
   };
 
   return (
+    <>
+    <KirvanoOneClick offerMap={offerMap} />
     <div className="flex flex-col gap-5 pt-4">
       <div className="text-center">
         <h1 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
