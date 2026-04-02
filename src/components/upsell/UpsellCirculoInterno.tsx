@@ -202,6 +202,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
         Não, obrigado. Prefiro seguir sem o grupo por enquanto.
       </button>
     </div>
+    </>
   );
 };
 

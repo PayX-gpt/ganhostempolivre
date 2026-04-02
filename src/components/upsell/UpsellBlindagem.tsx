@@ -522,6 +522,7 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
         Não, prefiro arriscar perder meu acesso em 6 meses.
       </button>
     </div>
+    </>
   );
 };
 

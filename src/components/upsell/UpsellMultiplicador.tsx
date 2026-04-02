@@ -1568,6 +1568,7 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
         ))}
       </div>
     </div>
+    </>
   );
 };
 
