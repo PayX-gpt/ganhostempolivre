@@ -1393,9 +1393,8 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                       </p>
 
                       <button
-                        id={`btn-${plan.id}`}
                         onClick={() => handleSelectPlan(plan)}
-                        className="kirvano-payment-trigger w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
+                        className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
                         style={{
                           background: isRecommended ? "linear-gradient(135deg, #16A34A, #22C55E)" : plan.btnBg,
                           color: isRecommended ? "#fff" : plan.btnColor,
