@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, Zap, MessageCircle, BarChart3, Headphones } from "lucide-react";
 import { saveUpsellChoice } from "@/lib/upsellData";
-import KirvanoOneClick from "./KirvanoOneClick";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
 
