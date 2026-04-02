@@ -493,7 +493,6 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
 
   return (
     <>
-    <>
     <div className="flex flex-col gap-4 pt-2">
       <AnimatePresence mode="wait">
         <motion.div
