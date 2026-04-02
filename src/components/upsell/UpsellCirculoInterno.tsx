@@ -4,6 +4,7 @@ import { Check, Users, MessageCircle, Headphones, Sparkles } from "lucide-react"
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
+import KirvanoOneClick from "./KirvanoOneClick";
 
 
 interface Props {
