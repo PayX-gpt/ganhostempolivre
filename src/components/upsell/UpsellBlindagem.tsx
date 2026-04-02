@@ -82,6 +82,8 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
   };
 
   return (
+    <>
+    <KirvanoOneClick offerMap={blindagemOfferMap} />
     <div className="flex flex-col gap-0 pt-2">
 
       {/* ── HERO: Expiration Timeline ── */}

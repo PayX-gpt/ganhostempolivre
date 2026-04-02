@@ -45,6 +45,12 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
   };
 
   return (
+    <>
+    <KirvanoOneClick
+      offer="67e759ec-598c-43c6-890e-b993901712b7"
+      nextPageURL="https://ganhostempolivre.lovable.app/upsell5"
+      refusePageURL={null}
+    />
     <div className="flex flex-col gap-5 pt-4">
       {/* Header */}
       <div className="text-center">

@@ -493,6 +493,8 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
   };
 
   return (
+    <>
+    {step === 17 && <KirvanoOneClick offerMap={multiplicadorOfferMap} />}
     <div className="flex flex-col gap-4 pt-2">
       <AnimatePresence mode="wait">
         <motion.div
