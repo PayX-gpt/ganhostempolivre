@@ -69,15 +69,11 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
 
   const activePlan = plans.find((p) => p.id === selectedPlan)!;
 
-  // Kirvano offerMap — Modo 2 (only vitalicio for now, others will be added)
-  useEffect(() => {
-    const nextPageURL = "https://ganhostempolivre.lovable.app/upsell4";
-    (window as any).offerMap = {
-      'btn-extensao': { offer: "5efbb9e7-6033-4281-bd6d-6b5830e7145d", nextPageURL, refusePageURL: null },
-      'btn-vitalicio': { offer: "8b821768-dfb9-487d-a6a6-8beb9a9cdb20", nextPageURL, refusePageURL: null },
-      'btn-vip': { offer: "a7cfdcbf-849f-4060-b660-b850f46a0e52", nextPageURL, refusePageURL: null },
-    };
-  }, []);
+  const blindagemOfferMap = {
+    'btn-extensao': { offer: "5efbb9e7-6033-4281-bd6d-6b5830e7145d", nextPageURL: "https://ganhostempolivre.lovable.app/upsell4", refusePageURL: null },
+    'btn-vitalicio': { offer: "8b821768-dfb9-487d-a6a6-8beb9a9cdb20", nextPageURL: "https://ganhostempolivre.lovable.app/upsell4", refusePageURL: null },
+    'btn-vip': { offer: "a7cfdcbf-849f-4060-b660-b850f46a0e52", nextPageURL: "https://ganhostempolivre.lovable.app/upsell4", refusePageURL: null },
+  };
 
   const handleBuy = () => {
     saveUpsellExtras("blindagem", { price: activePlan.price, plan: activePlan.id });
