@@ -69,21 +69,20 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
 
   const activePlan = plans.find((p) => p.id === selectedPlan)!;
 
-  const blindagemOfferMap = {
-    'btn-extensao': { offer: "5efbb9e7-6033-4281-bd6d-6b5830e7145d", nextPageURL: "https://ganhostempolivre.lovable.app/upsell4", refusePageURL: null },
-    'btn-vitalicio': { offer: "8b821768-dfb9-487d-a6a6-8beb9a9cdb20", nextPageURL: "https://ganhostempolivre.lovable.app/upsell4", refusePageURL: null },
-    'btn-vip': { offer: "a7cfdcbf-849f-4060-b660-b850f46a0e52", nextPageURL: "https://ganhostempolivre.lovable.app/upsell4", refusePageURL: null },
-  };
-
   const handleBuy = () => {
+    setLoading(true);
     saveUpsellExtras("blindagem", { price: activePlan.price, plan: activePlan.id });
     saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell3", product: `blindagem_${activePlan.id}`, price: activePlan.price });
     logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell3", metadata: { product: `blindagem_${activePlan.id}`, price: activePlan.price } });
+    const utmQs = buildTrackingQueryString();
+    const separator = activePlan.checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${activePlan.checkoutUrl}${separator}${utmQs.slice(1)}` : activePlan.checkoutUrl;
+    window.open(fullUrl, "_blank");
+    setTimeout(() => setLoading(false), 3000);
   };
 
   return (
     <>
-    <KirvanoOneClick offerMap={blindagemOfferMap} />
     <div className="flex flex-col gap-0 pt-2">
 
       {/* ── HERO: Expiration Timeline ── */}
