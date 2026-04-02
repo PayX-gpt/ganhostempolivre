@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Crown, Diamond, Check, ArrowRight, Lock, TrendingUp, Zap, ChevronRight, Sparkles, AlertTriangle, Users, Home, Wallet, Trophy, Clock, Calendar, Timer, Target, Landmark, ShieldCheck, XCircle, CheckCircle2, Flame, Rocket, UserCheck } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
-import KirvanoOneClick from "./KirvanoOneClick";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 
@@ -245,16 +245,15 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     }, 300);
   }, []);
 
-  const multiplicadorOfferMap = {
-    'btn-prata': { offer: "b61b6335-9325-4ecb-9b87-8214d948e90e", nextPageURL: "https://ganhostempolivre.lovable.app/upsell3", refusePageURL: null },
-    'btn-ouro': { offer: "2f8e1d23-b71c-4c4b-9da1-672a6ca75c9b", nextPageURL: "https://ganhostempolivre.lovable.app/upsell3", refusePageURL: null },
-    'btn-diamante': { offer: "e7d1995f-9b55-47d0-a1c4-762b07721162", nextPageURL: "https://ganhostempolivre.lovable.app/upsell3", refusePageURL: null },
-  };
 
   const handleSelectPlan = (plan: (typeof plans)[0]) => {
     saveUpsellExtras("multiplicador", { plan: plan.id, price: plan.price });
     saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell2", plan: plan.id, price: plan.price });
     logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell2", metadata: { plan: plan.id, price: plan.price } });
+    const utmQs = buildTrackingQueryString();
+    const separator = plan.checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${plan.checkoutUrl}${separator}${utmQs.slice(1)}` : plan.checkoutUrl;
+    window.open(fullUrl, "_blank");
   };
 
   /* ── Helper: get which question number ── */
@@ -494,7 +493,6 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
 
   return (
     <>
-    {step === 17 && <KirvanoOneClick offerMap={multiplicadorOfferMap} />}
     <div className="flex flex-col gap-4 pt-2">
       <AnimatePresence mode="wait">
         <motion.div
@@ -1395,9 +1393,8 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
                       </p>
 
                       <button
-                        id={`btn-${plan.id}`}
                         onClick={() => handleSelectPlan(plan)}
-                        className="kirvano-payment-trigger w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
+                        className="w-full mt-4 py-[14px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98]"
                         style={{
                           background: isRecommended ? "linear-gradient(135deg, #16A34A, #22C55E)" : plan.btnBg,
                           color: isRecommended ? "#fff" : plan.btnColor,
