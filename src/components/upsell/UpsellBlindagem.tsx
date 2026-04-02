@@ -8,7 +8,7 @@ import {
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
-import KirvanoOneClick from "./KirvanoOneClick";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 
 import mentorPhoto from "@/assets/mentor-new.webp";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
@@ -69,21 +69,20 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
 
   const activePlan = plans.find((p) => p.id === selectedPlan)!;
 
-  const blindagemOfferMap = {
-    'btn-extensao': { offer: "5efbb9e7-6033-4281-bd6d-6b5830e7145d", nextPageURL: "https://ganhostempolivre.lovable.app/upsell4", refusePageURL: null },
-    'btn-vitalicio': { offer: "8b821768-dfb9-487d-a6a6-8beb9a9cdb20", nextPageURL: "https://ganhostempolivre.lovable.app/upsell4", refusePageURL: null },
-    'btn-vip': { offer: "a7cfdcbf-849f-4060-b660-b850f46a0e52", nextPageURL: "https://ganhostempolivre.lovable.app/upsell4", refusePageURL: null },
-  };
-
   const handleBuy = () => {
+    setLoading(true);
     saveUpsellExtras("blindagem", { price: activePlan.price, plan: activePlan.id });
     saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell3", product: `blindagem_${activePlan.id}`, price: activePlan.price });
     logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell3", metadata: { product: `blindagem_${activePlan.id}`, price: activePlan.price } });
+    const utmQs = buildTrackingQueryString();
+    const separator = activePlan.checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${activePlan.checkoutUrl}${separator}${utmQs.slice(1)}` : activePlan.checkoutUrl;
+    window.open(fullUrl, "_blank");
+    setTimeout(() => setLoading(false), 3000);
   };
 
   return (
     <>
-    <KirvanoOneClick offerMap={blindagemOfferMap} />
     <div className="flex flex-col gap-0 pt-2">
 
       {/* ── HERO: Expiration Timeline ── */}
@@ -389,10 +388,9 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
 
             {/* CTA */}
             <button
-              id={`btn-${activePlan.id}`}
               onClick={handleBuy}
               disabled={loading}
-              className="kirvano-payment-trigger w-full mt-5 py-[16px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
+              className="w-full mt-5 py-[16px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
               style={{
                 background: activePlan.id === "extensao"
                   ? "transparent"
