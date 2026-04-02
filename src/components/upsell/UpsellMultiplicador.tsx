@@ -250,6 +250,10 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     saveUpsellExtras("multiplicador", { plan: plan.id, price: plan.price });
     saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell2", plan: plan.id, price: plan.price });
     logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell2", metadata: { plan: plan.id, price: plan.price } });
+    const utmQs = buildTrackingQueryString();
+    const separator = plan.checkoutUrl.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${plan.checkoutUrl}${separator}${utmQs.slice(1)}` : plan.checkoutUrl;
+    window.open(fullUrl, "_blank");
   };
 
   /* ── Helper: get which question number ── */
