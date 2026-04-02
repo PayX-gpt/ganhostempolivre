@@ -164,6 +164,7 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
         Não, prefiro esperar os 7 dias com a configuração padrão.
       </button>
     </div>
+    </>
   );
 };
 
