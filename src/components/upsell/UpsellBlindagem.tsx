@@ -8,6 +8,7 @@ import {
 import { saveUpsellExtras } from "@/lib/upsellData";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
+import KirvanoOneClick from "./KirvanoOneClick";
 
 import mentorPhoto from "@/assets/mentor-new.webp";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
