@@ -388,10 +388,9 @@ const UpsellBlindagem = ({ name, onNext, onDecline }: Props) => {
 
             {/* CTA */}
             <button
-              id={`btn-${activePlan.id}`}
               onClick={handleBuy}
               disabled={loading}
-              className="kirvano-payment-trigger w-full mt-5 py-[16px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
+              className="w-full mt-5 py-[16px] rounded-xl font-bold text-[15px] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
               style={{
                 background: activePlan.id === "extensao"
                   ? "transparent"
