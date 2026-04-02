@@ -245,11 +245,6 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
     }, 300);
   }, []);
 
-  const multiplicadorOfferMap = {
-    'btn-prata': { offer: "b61b6335-9325-4ecb-9b87-8214d948e90e", nextPageURL: "https://ganhostempolivre.lovable.app/upsell3", refusePageURL: null },
-    'btn-ouro': { offer: "2f8e1d23-b71c-4c4b-9da1-672a6ca75c9b", nextPageURL: "https://ganhostempolivre.lovable.app/upsell3", refusePageURL: null },
-    'btn-diamante': { offer: "e7d1995f-9b55-47d0-a1c4-762b07721162", nextPageURL: "https://ganhostempolivre.lovable.app/upsell3", refusePageURL: null },
-  };
 
   const handleSelectPlan = (plan: (typeof plans)[0]) => {
     saveUpsellExtras("multiplicador", { plan: plan.id, price: plan.price });
