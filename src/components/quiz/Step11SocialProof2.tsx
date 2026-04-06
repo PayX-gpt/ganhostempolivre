@@ -139,7 +139,7 @@ const Step11SocialProof2 = ({ onNext, userAge, vturbVideoId }: Step11Props) => {
     const handleVisibilityChange = () => {
       if (document.hidden && !icFiredRef.current) {
         // Check if Vturb player is on the page — user likely clicked the CTA
-        const player = document.querySelector('vturb-smartplayer[id="vid-69a5dbeca414172eb5d48ed7"]');
+        const player = document.querySelector(`vturb-smartplayer[id="vid-${videoId}"]`);
         if (player) {
           icFiredRef.current = true;
           console.log("[Step17] ✅ IC fired on page hide (Vturb CTA presumed)");
@@ -157,7 +157,7 @@ const Step11SocialProof2 = ({ onNext, userAge, vturbVideoId }: Step11Props) => {
       window.removeEventListener("message", handleVturbMessage);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [videoId, offerAmount]);
 
   const testimonials = young ? t.youngTestimonials : t.matureTestimonials;
   const avatarsYoung = [avatarRafael, avatarCamila];
