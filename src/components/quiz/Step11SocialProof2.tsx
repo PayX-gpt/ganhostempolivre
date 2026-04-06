@@ -176,7 +176,7 @@ const Step11SocialProof2 = ({ onNext, userAge, vturbVideoId }: Step11Props) => {
       <div
         className="w-full rounded-2xl border border-border shadow-xl overflow-visible mb-4"
         dangerouslySetInnerHTML={{
-          __html: '<vturb-smartplayer id="vid-69a5dbeca414172eb5d48ed7" style="display:block;margin:0 auto;width:100%;max-width:400px;"></vturb-smartplayer>'
+          __html: `<vturb-smartplayer id="vid-${videoId}" style="display:block;margin:0 auto;width:100%;max-width:400px;"></vturb-smartplayer>`
         }}
       />
 
