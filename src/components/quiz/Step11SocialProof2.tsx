@@ -15,6 +15,7 @@ import { trackMetaInitiateCheckout } from "@/lib/metaPixel";
 interface Step11Props {
   onNext: () => void;
   userAge?: string;
+  vturbVideoId?: string;
 }
 
 const texts = {
