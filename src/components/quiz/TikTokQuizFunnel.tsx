@@ -9,6 +9,7 @@ import Step1Intro from "./Step1Intro";
 import Step1VariantB from "./Step1VariantB";
 import Step1VariantC from "./Step1VariantC";
 import Step1VariantD from "./Step1VariantD";
+import TikTokStep1Landing from "./TikTokStep1Landing";
 import { getEffectiveVariant, saveVariantToAttribution, type QuizVariant } from "@/lib/abTestVariant";
 import Step2Age from "./Step2Age";
 import Step3SocialProof from "./Step3SocialProof";
@@ -200,12 +201,7 @@ const TikTokQuizFunnel = () => {
   const renderStep = () => {
     switch (currentSlug) {
       case "step-1": // intro (original step-1)
-        switch (variant) {
-          case "B": return <Step1VariantB onNext={goNext} />;
-          case "C": return <Step1VariantC onNext={goNext} />;
-          case "D": return <Step1VariantD onNext={goNext} />;
-          default: return <Step1Intro onNext={goNext} />;
-        }
+        return <TikTokStep1Landing onNext={goNext} />;
       case "step-2": // idade (original step-2)
         return <Step2Age onNext={(v) => updateAndNext("age", v)} />;
       case "step-3": // prova social vídeo (original step-4)
@@ -251,22 +247,24 @@ const TikTokQuizFunnel = () => {
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col">
-      <header className="w-full bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-        <div className="max-w-lg mx-auto px-3 py-2 sm:py-3 flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <h1 className="font-bold text-foreground tracking-tight whitespace-nowrap text-sm sm:text-lg">
-              <span className="text-gradient-green font-extrabold">
-                {lang === "pt" ? "GTL" : lang === "en" ? "FTE" : "GTL"}
-              </span>
-              <span className="text-foreground/80 font-semibold ml-1.5 text-[11px] sm:text-sm uppercase tracking-wider">
-                {lang === "pt" ? "Ganhos com Tempo Livre" : lang === "en" ? "Free Time Earnings" : "Ganancias Tiempo Libre"}
-              </span>
-            </h1>
+      {step > 1 && (
+        <header className="w-full bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
+          <div className="max-w-lg mx-auto px-3 py-2 sm:py-3 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h1 className="font-bold text-foreground tracking-tight whitespace-nowrap text-sm sm:text-lg">
+                <span className="text-gradient-green font-extrabold">
+                  {lang === "pt" ? "GTL" : lang === "en" ? "FTE" : "GTL"}
+                </span>
+                <span className="text-foreground/80 font-semibold ml-1.5 text-[11px] sm:text-sm uppercase tracking-wider">
+                  {lang === "pt" ? "Ganhos com Tempo Livre" : lang === "en" ? "Free Time Earnings" : "Ganancias Tiempo Libre"}
+                </span>
+              </h1>
+            </div>
+            <LanguageSelector />
           </div>
-          <LanguageSelector />
-        </div>
-        <ProgressBar current={progressCurrent} total={progressTotal} />
-      </header>
+          <ProgressBar current={progressCurrent} total={progressTotal} />
+        </header>
+      )}
 
       <main className="flex-1 flex items-start justify-center pt-2" key={step}>
         {renderStep()}
