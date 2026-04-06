@@ -306,7 +306,7 @@ const TikTokStep1Landing = ({ onNext }: Props) => {
         {/* Testimonial Marlene */}
         <div className="mt-10 max-w-xl mx-auto rounded-xl p-5 sm:p-6" style={{ background: "#fff", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
           <div className="flex items-center gap-3 mb-3">
-            <Avatar initials="MA" color="#8e44ad" />
+            <Avatar photo={testimonialMarlene} />
             <div>
               <Stars />
               <p className="text-sm font-semibold mt-1" style={{ color: "#1a1a1a" }}>Marlene Aparecida S., 61 anos — Patos de Minas, MG</p>
@@ -484,7 +484,7 @@ const TikTokStep1Landing = ({ onNext }: Props) => {
             {TESTIMONIALS.map((t, i) => (
               <div key={i} className="rounded-xl p-5 sm:p-6" style={{ background: "#fff", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
                 <div className="flex items-center gap-3 mb-3">
-                  <Avatar initials={t.initials} color={t.color} />
+                  <Avatar photo={t.photo} />
                   <Stars />
                 </div>
                 <p className="italic text-[15px] leading-relaxed mb-3" style={{ color: "#333" }}>"{t.text}"</p>
