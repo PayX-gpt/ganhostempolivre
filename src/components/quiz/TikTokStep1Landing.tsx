@@ -153,6 +153,17 @@ const TikTokStep1Landing = ({ onNext }: Props) => {
   const [toastVisible, setToastVisible] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const toastTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const [userRegion, setUserRegion] = useState("sua região");
+
+  // Fetch user location from IP
+  useEffect(() => {
+    fetch("https://ipapi.co/json/")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.region) setUserRegion(data.region);
+      })
+      .catch(() => {});
+  }, []);
 
   // Counter +1 every 28s
   useEffect(() => {
@@ -233,7 +244,7 @@ const TikTokStep1Landing = ({ onNext }: Props) => {
       <div className="w-full py-3 px-4 text-center" style={{ background: "#c0392b" }}>
         <p className="text-[14px] sm:text-[15px] font-bold text-white leading-snug max-w-lg mx-auto">
           <AlertCircle className="inline w-4 h-4 mr-1 -mt-0.5" />
-          Análise disponível para o seu CEP agora — se fechar essa página, seu perfil personalizado é perdido
+          Análise disponível para {userRegion} agora — se fechar essa página, seu perfil personalizado é perdido
         </p>
       </div>
 
