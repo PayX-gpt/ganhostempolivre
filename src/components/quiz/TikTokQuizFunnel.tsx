@@ -39,15 +39,14 @@ const TIKTOK_STEP_SLUGS = [
   "step-3",   // → original step-4 (vídeo depoimento Dona Márcia)
   "step-4",   // → original step-6 (meta de renda)
   "step-5",   // → original step-10 (disponibilidade 10 min)
-  "step-6",   // → original step-11 (demo plataforma) ← NOVO
-  "step-7",   // → original step-14 (campo email com timer)
-  "step-8",   // → original step-15 (loading)
-  "step-9",   // → original step-16 (projeção perfil)
-  "step-10",  // → original step-17 (vídeo vendas final)
+  "step-6",   // → original step-14 (campo email com timer)
+  "step-7",   // → original step-15 (loading)
+  "step-8",   // → original step-16 (projeção perfil)
+  "step-9",   // → original step-17 (vídeo vendas final)
 ] as const;
 
 const TOTAL_STEPS = TIKTOK_STEP_SLUGS.length;
-const PROGRESS_STEPS = 7; // steps 1-7 show progress
+const PROGRESS_STEPS = 6; // steps 1-6 show progress
 
 const STEP_NAMES: Record<string, string> = {
   "step-1": "tiktok_intro",
@@ -55,11 +54,10 @@ const STEP_NAMES: Record<string, string> = {
   "step-3": "tiktok_prova_social",
   "step-4": "tiktok_meta_renda",
   "step-5": "tiktok_disponibilidade",
-  "step-6": "tiktok_demo_plataforma",
-  "step-7": "tiktok_input_contato",
-  "step-8": "tiktok_loading",
-  "step-9": "tiktok_projecao_perfil",
-  "step-10": "tiktok_oferta_vturb",
+  "step-6": "tiktok_input_contato",
+  "step-7": "tiktok_loading",
+  "step-8": "tiktok_projecao_perfil",
+  "step-9": "tiktok_oferta_vturb",
 };
 
 const normalizeSlug = (slug?: string) => {
@@ -210,9 +208,7 @@ const TikTokQuizFunnel = () => {
         return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} userName={answers.name} userAge={answers.age} />;
       case "step-5": // disponibilidade (original step-10)
         return <Step9Availability onNext={(v) => updateAndNext("availability", v)} userName={answers.name} userAge={answers.age} />;
-      case "step-6": // demo plataforma (original step-11)
-        return <StepPlatformDemo onNext={goNext} userName={answers.name} />;
-      case "step-7": // email input (original step-14)
+      case "step-6": // email input (original step-14)
         return (
           <StepContactInput
             method="email"
@@ -227,11 +223,11 @@ const TikTokQuizFunnel = () => {
             }}
           />
         );
-      case "step-8": // loading (original step-15)
+      case "step-7": // loading (original step-15)
         return <Step10Loading onNext={goNext} userAge={answers.age} />;
-      case "step-9": // projeção perfil (original step-16)
+      case "step-8": // projeção perfil (original step-16)
         return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} isTiktok />;
-      case "step-10": // oferta vturb (original step-17)
+      case "step-9": // oferta vturb (original step-17)
         return <Step11SocialProof2 onNext={() => {}} userAge={answers.age} vturbVideoId="69d3a4e6781b1e0902fd6f9b" />;
       default:
         return null;
