@@ -1,78 +1,71 @@
 
 
-# Auditoria Completa do Quiz — Diagnóstico da Queda
+## Plan: Reformulacao Completa da /tiktok/step-1
 
-## Dados Analisados (10 dias)
+### Summary
 
-```text
-Data       | Visitantes | Vendas | Conv% | Step1→Step2
------------+------------+--------+-------+------------
-12/mar     |   6.206    |  287   | 4.62% |   69.0%
-13/mar     |   4.885    |  260   | 5.32% |   63.0%
-14/mar     |   3.710    |  159   | 4.29% |   63.1%
-15/mar     |   2.515    |   90   | 3.58% |   58.5%
-16/mar     |   1.171    |   57   | 4.87% |   59.4%
-17/mar     |   3.129    |  114   | 3.64% |   65.5%
-18/mar     |   1.698    |   49   | 2.89% |   67.2%
-19/mar     |   1.169    |   33   | 2.82% |   59.6%
-20/mar*    |     361    |   10   | 2.77% |   43.4%*
-```
-*Dia 20 ainda em andamento.
+Create a new dedicated component `TikTokStep1Landing.tsx` that replaces `Step1Intro` exclusively for the `/tiktok` funnel. This is a full landing page (not a simple quiz step) with 9 sections, floating social proof toasts, sticky bar, and countdown timer. The current `Step1Intro` remains untouched for the normal funnel.
 
----
+### Architecture
 
-## Diagnóstico — 3 Problemas Encontrados
+- **New file**: `src/components/quiz/TikTokStep1Landing.tsx` — self-contained component with all 9 sections
+- **Edit**: `src/components/quiz/TikTokQuizFunnel.tsx` — in `renderStep()` case `"step-1"`, render `TikTokStep1Landing` instead of `Step1Intro` (for variant A; variants B/C/D stay as-is or also use new component depending on preference)
+- **No changes** to `Step1Intro.tsx`, `QuizUI.tsx`, or any other route
 
-### 1. Queda de tráfego (problema externo — anúncios)
-- O volume caiu de **6.206** sessões (12/mar) para **1.169** (19/mar) — queda de **81%**.
-- A distribuição A/B está uniforme (25% cada), então o problema não é no teste A/B.
-- Isso é causado por **redução de investimento ou fatiga dos anúncios**, não pelo quiz.
+### Component Structure (TikTokStep1Landing.tsx)
 
-### 2. Queda na taxa de conversão (problema potencial — página /oferta)
-- A conversão caiu de **~5%** (12-13/mar) para **~2.8%** (18-19/mar).
-- O funil interno (step-1 a step-17) está funcionando normalmente — a retenção step-1→step-2 está estável em 60-67%.
-- A queda coincide com a introdução dos **4 planos na página /oferta** (R$37, R$47, R$97, R$197). Antes havia apenas um preço de R$47.
-- **Hipótese: paralisia de decisão** — oferecer 4 opções no momento de compra pode estar confundindo o lead e reduzindo a conversão.
+Single file, ~600-700 lines. All sections inline, no sub-components needed. Props: `{ onNext: () => void }`.
 
-### 3. Bounce alto no Step 1 (alerta)
-- Em 17/mar: **1.074 sessões** (34%) viram apenas o step-1 e não avançaram para o step-2.
-- Em 19/mar: **456 sessões** (39%) fizeram o mesmo.
-- Isso indica que a **qualidade do tráfego piorou** — pessoas clicam no anúncio mas não engajam com o quiz.
+**State:**
+- `counter` (starts 36860, +1 every 28s)
+- `timerSeconds` (starts 1080 = 18min, counts down, resets at 0)
+- `slotsRemaining` (random 42-54, set once on mount)
+- `activeToast` (index of current social proof notification)
 
----
+**Sections implemented top-to-bottom:**
 
-## O que NÃO está quebrado (código OK)
+0. **Sticky Bar** — fixed top, z-50, bg `#1a1a1a`, counter + "Sistema aberto agora"
+1. **Pre-headline** — bg `#c0392b`, white text urgency strip
+2. **Hero** — badge pill, headline 32px mobile, subheadline 18px, social proof box with checkmarks, CTA #1, testimonial card (Marlene)
+3. **Future Pacing** — two cards (without quiz / with quiz), CTA #2
+4. **5 Bullets** — vertical cards with icons (Lucide: DollarSign, Smartphone, Clock, Shield, Ban), CTA #3
+5. **Urgency** — dark bg, MM:SS timer (yellow, monospace), progress bar 83%, money calculation box, CTA #4
+6. **3 Testimonials** — grid cards with stars, avatar placeholders (initials-based), badges, CTA #5
+7. **Objections** — accordion/FAQ cards, CTA #6
+8. **Final CTA** — gradient dark bg, emotional copy, large pulsing CTA #7
+9. **Disclaimer footer** — dark bg, small legal text
 
-- Rastreamento de eventos está funcionando normalmente
-- Pixels Meta (4 pixels) e TikTok estão disparando PageView corretamente
-- UTM capture está intacto
-- Webhook da Kirvano está registrando vendas corretamente
-- Sessão e atribuição funcionando (sem vendas órfãs significativas)
-- Redirecionamento de steps funciona
-- A/B test distribuindo igualmente
+**Floating toasts**: `useEffect` with 35-55s random interval, slide-in from left, 4s visible, hidden on screens < 400px.
 
----
+### Styling Approach
 
-## Plano de Ação Recomendado
+- Inline Tailwind classes throughout (consistent with project patterns)
+- Override the dark theme colors using explicit hex/rgb values where the spec demands light backgrounds (e.g., white cards, `#fafafa` sections) via inline `style` props or Tailwind arbitrary values like `bg-[#fafafa]`
+- This page uses a **light color scheme** for most sections — will use `style={{ color, background }}` where needed since the global theme is dark
+- Font sizes: min 18px body text (`text-lg`), 32px headlines mobile, buttons min h-14 (56px)
+- All 7 CTA buttons call `onNext()`
 
-### Ação 1 — Simplificar página /oferta (alto impacto)
-Voltar para uma versão mais simples com destaque forte no plano de R$47 (Essencial), com os outros planos menos visíveis ou em um accordion "Ver outros planos". Reduzir a paralisia de decisão.
+### Key Design Decisions
 
-### Ação 2 — Criar alerta no /live para monitorar bounce rate do Step 1
-Adicionar um KPI "Taxa de Bounce Step 1" no dashboard para detectar quando a qualidade do tráfego cai.
+- **Avatars**: Use colored initials circles (e.g., "MA" for Marlene Aparecida) instead of stock photos, per the no-stock-photos rule
+- **Icons**: Lucide React only, no emojis in rendered UI — emoji characters in the spec will be replaced with Lucide icons (CheckCircle, AlertTriangle, Clock, etc.)
+- **Timer**: Evergreen countdown from 18:00, monospace font, yellow `#f1c40f` on dark background
+- **The page scrolls independently** — it's a long-form landing, not a quiz card
 
-### Ação 3 — Nenhuma mudança no código do quiz
-O quiz em si está funcionando bem. A retenção entre steps está estável. O problema está na **entrada** (tráfego) e na **saída** (página de oferta com muitos planos).
+### Edit to TikTokQuizFunnel.tsx
 
----
+In the `renderStep` switch, for `case "step-1"`:
+- Default variant renders `<TikTokStep1Landing onNext={goNext} />` instead of `<Step1Intro>`
+- Import added at top
 
-## Resumo
+Also: the TikTok funnel header (with progress bar and branding) should be **hidden** on step-1 since this landing page has its own sticky bar. Add a condition to hide the header when `step === 1`.
 
-| Problema | Causa | Solução |
-|----------|-------|---------|
-| Menos visitantes | Anúncios/investimento | Revisar campanhas Meta/TikTok |
-| Conv% caiu de 5% → 2.8% | Página /oferta com 4 planos | Simplificar oferta, destacar R$47 |
-| Bounce alto no Step 1 | Qualidade do tráfego | Revisar criativos e segmentação |
+### Files Changed
 
-Devo implementar a simplificação da página /oferta para priorizar o plano Essencial (R$47)?
+| File | Change |
+|------|--------|
+| `src/components/quiz/TikTokStep1Landing.tsx` | **NEW** — Full landing page component |
+| `src/components/quiz/TikTokQuizFunnel.tsx` | Import + render new component for step-1; hide header on step-1 |
+
+No other files modified.
 
