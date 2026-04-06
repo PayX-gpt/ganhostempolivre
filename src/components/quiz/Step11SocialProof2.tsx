@@ -81,7 +81,7 @@ const texts = {
   },
 };
 
-const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
+const Step11SocialProof2 = ({ onNext, userAge, vturbVideoId }: Step11Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const young = isYoungProfile(userAge);
@@ -104,17 +104,19 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
 
   const offerAmount = getCurrentOfferAmount();
 
+  const videoId = vturbVideoId || "69a5dbeca414172eb5d48ed7";
+
   // Load Vturb player script
   useEffect(() => {
-    const scriptSelector = 'script[data-vturb-player="69a5dbeca414172eb5d48ed7"]';
+    const scriptSelector = `script[data-vturb-player="${videoId}"]`;
     if (document.querySelector(scriptSelector)) return;
 
     const s = document.createElement("script");
-    s.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/69a5dbeca414172eb5d48ed7/v4/player.js";
+    s.src = `https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/${videoId}/v4/player.js`;
     s.async = true;
-    s.setAttribute("data-vturb-player", "69a5dbeca414172eb5d48ed7");
+    s.setAttribute("data-vturb-player", videoId);
     document.head.appendChild(s);
-  }, []);
+  }, [videoId]);
 
   // Listen for Vturb CTA click (postMessage) and external navigation
   useEffect(() => {
