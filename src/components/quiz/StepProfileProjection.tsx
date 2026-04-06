@@ -19,6 +19,7 @@ interface Props {
   onNext: () => void;
   userName?: string;
   answers?: QuizAnswers;
+  isTiktok?: boolean;
 }
 
 /* ─── Helpers ─── */
