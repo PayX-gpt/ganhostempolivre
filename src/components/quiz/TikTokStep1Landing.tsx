@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import testimonialMarlene from "@/assets/testimonial-marlene.jpg";
+import testimonialSeverino from "@/assets/testimonial-severino.jpg";
+import testimonialTeresinha from "@/assets/testimonial-teresinha.jpg";
 import {
   CheckCircle,
   Star,
@@ -31,8 +34,7 @@ const NOTIFICATIONS = [
 
 const TESTIMONIALS = [
   {
-    initials: "MA",
-    color: "#8e44ad",
+    photo: testimonialMarlene,
     name: "Marlene Aparecida S., 61 anos",
     location: "Patos de Minas, MG",
     role: "Aposentada",
@@ -40,8 +42,7 @@ const TESTIMONIALS = [
     text: "Achei que era golpe, igual tudo na internet. Fiz o teste numa quarta à noite, lá pelas 22h. Na quinta de tarde, R$87 na conta. Mostrei pro meu marido e ele quis fazer também. Na semana seguinte: mais R$203. Com 61 anos eu achei que minha vida de trabalho tinha acabado.",
   },
   {
-    initials: "SR",
-    color: "#2980b9",
+    photo: testimonialSeverino,
     name: "Severino Raimundo O., 57 anos",
     location: "Caruaru, PE",
     role: "Ex-vendedor",
@@ -49,8 +50,7 @@ const TESTIMONIALS = [
     text: "Perdi emprego com 57 anos. Ninguém me chamava pra entrevista — você sabe como é. Fiz o quiz sem acreditar muito. A IA calculou R$260 por dia pro meu perfil. Segunda semana: R$1.847 acumulados. Minha esposa parou de reclamar do dinheiro. Pode confiar.",
   },
   {
-    initials: "TC",
-    color: "#27ae60",
+    photo: testimonialTeresinha,
     name: "Teresinha Conceição M., 64 anos",
     location: "Vitória da Conquista, BA",
     role: "Aposentada",
@@ -136,13 +136,15 @@ const Stars = () => (
   </div>
 );
 
-const Avatar = ({ initials, color }: { initials: string; color: string }) => (
-  <div
-    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
-    style={{ background: color }}
-  >
-    {initials}
-  </div>
+const Avatar = ({ photo }: { photo: string }) => (
+  <img
+    src={photo}
+    alt="Depoimento"
+    className="w-12 h-12 rounded-full object-cover shrink-0"
+    loading="lazy"
+    width={48}
+    height={48}
+  />
 );
 
 const TikTokStep1Landing = ({ onNext }: Props) => {
@@ -304,7 +306,7 @@ const TikTokStep1Landing = ({ onNext }: Props) => {
         {/* Testimonial Marlene */}
         <div className="mt-10 max-w-xl mx-auto rounded-xl p-5 sm:p-6" style={{ background: "#fff", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
           <div className="flex items-center gap-3 mb-3">
-            <Avatar initials="MA" color="#8e44ad" />
+            <Avatar photo={testimonialMarlene} />
             <div>
               <Stars />
               <p className="text-sm font-semibold mt-1" style={{ color: "#1a1a1a" }}>Marlene Aparecida S., 61 anos — Patos de Minas, MG</p>
@@ -482,7 +484,7 @@ const TikTokStep1Landing = ({ onNext }: Props) => {
             {TESTIMONIALS.map((t, i) => (
               <div key={i} className="rounded-xl p-5 sm:p-6" style={{ background: "#fff", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
                 <div className="flex items-center gap-3 mb-3">
-                  <Avatar initials={t.initials} color={t.color} />
+                  <Avatar photo={t.photo} />
                   <Stars />
                 </div>
                 <p className="italic text-[15px] leading-relaxed mb-3" style={{ color: "#333" }}>"{t.text}"</p>
