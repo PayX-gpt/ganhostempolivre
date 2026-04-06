@@ -19,6 +19,7 @@ interface Props {
   onNext: () => void;
   userName?: string;
   answers?: QuizAnswers;
+  isTiktok?: boolean;
 }
 
 /* ─── Helpers ─── */
@@ -154,7 +155,7 @@ const AnimatedNumber = ({ target, prefix = "", suffix = "", delay = 0 }: { targe
 };
 
 /* ─── Main Component ─── */
-const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
+const StepProfileProjection = ({ onNext, userName, answers, isTiktok }: Props) => {
   const firstName = userName?.split(" ")[0] || "";
   const ttFired = useRef(false);
 
@@ -193,8 +194,8 @@ const StepProfileProjection = ({ onNext, userName, answers }: Props) => {
   const monthly = day30 * 30;
 
   const projections = [
-    { period: "Dia 3", value: day3, bar: 10, label: "Primeira operação configurada", icon: Target },
-    { period: "Dia 7", value: day7, bar: 25, label: "Primeiros resultados reais", icon: TrendingUp },
+    { period: isTiktok ? "HOJE" : "Dia 3", value: day3, bar: 10, label: "Primeira operação configurada", icon: Target },
+    { period: "Dia 7", value: day7, bar: 25, label: isTiktok ? "Primeiros resultados altos" : "Primeiros resultados reais", icon: TrendingUp },
     { period: "Dia 14", value: day14, bar: 45, label: "Ganhando consistência", icon: BarChart3 },
     { period: "Dia 21", value: day21, bar: 70, label: "Ritmo acelerando", icon: Zap },
     { period: "Dia 30", value: day30, bar: 100, label: "Meta diária atingida", icon: Award },
