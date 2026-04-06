@@ -234,7 +234,7 @@ const TikTokQuizFunnel = () => {
       case "step-8": // loading (original step-15)
         return <Step10Loading onNext={goNext} userAge={answers.age} />;
       case "step-9": // projeção perfil (original step-16)
-        return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} />;
+        return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} isTiktok />;
       case "step-10": // oferta vturb (original step-17)
         return <Step11SocialProof2 onNext={() => {}} userAge={answers.age} vturbVideoId="69d3a4e6781b1e0902fd6f9b" />;
       default:
