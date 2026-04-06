@@ -15,6 +15,7 @@ import { trackMetaInitiateCheckout } from "@/lib/metaPixel";
 interface Step11Props {
   onNext: () => void;
   userAge?: string;
+  vturbVideoId?: string;
 }
 
 const texts = {
@@ -80,7 +81,7 @@ const texts = {
   },
 };
 
-const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
+const Step11SocialProof2 = ({ onNext, userAge, vturbVideoId }: Step11Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const young = isYoungProfile(userAge);
@@ -103,17 +104,19 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
 
   const offerAmount = getCurrentOfferAmount();
 
+  const videoId = vturbVideoId || "69a5dbeca414172eb5d48ed7";
+
   // Load Vturb player script
   useEffect(() => {
-    const scriptSelector = 'script[data-vturb-player="69a5dbeca414172eb5d48ed7"]';
+    const scriptSelector = `script[data-vturb-player="${videoId}"]`;
     if (document.querySelector(scriptSelector)) return;
 
     const s = document.createElement("script");
-    s.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/69a5dbeca414172eb5d48ed7/v4/player.js";
+    s.src = `https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/${videoId}/v4/player.js`;
     s.async = true;
-    s.setAttribute("data-vturb-player", "69a5dbeca414172eb5d48ed7");
+    s.setAttribute("data-vturb-player", videoId);
     document.head.appendChild(s);
-  }, []);
+  }, [videoId]);
 
   // Listen for Vturb CTA click (postMessage) and external navigation
   useEffect(() => {
@@ -136,7 +139,7 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
     const handleVisibilityChange = () => {
       if (document.hidden && !icFiredRef.current) {
         // Check if Vturb player is on the page — user likely clicked the CTA
-        const player = document.querySelector('vturb-smartplayer[id="vid-69a5dbeca414172eb5d48ed7"]');
+        const player = document.querySelector(`vturb-smartplayer[id="vid-${videoId}"]`);
         if (player) {
           icFiredRef.current = true;
           console.log("[Step17] ✅ IC fired on page hide (Vturb CTA presumed)");
@@ -154,7 +157,7 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
       window.removeEventListener("message", handleVturbMessage);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [videoId, offerAmount]);
 
   const testimonials = young ? t.youngTestimonials : t.matureTestimonials;
   const avatarsYoung = [avatarRafael, avatarCamila];
@@ -173,7 +176,7 @@ const Step11SocialProof2 = ({ onNext, userAge }: Step11Props) => {
       <div
         className="w-full rounded-2xl border border-border shadow-xl overflow-visible mb-4"
         dangerouslySetInnerHTML={{
-          __html: '<vturb-smartplayer id="vid-69a5dbeca414172eb5d48ed7" style="display:block;margin:0 auto;width:100%;max-width:400px;"></vturb-smartplayer>'
+          __html: `<vturb-smartplayer id="vid-${videoId}" style="display:block;margin:0 auto;width:100%;max-width:400px;"></vturb-smartplayer>`
         }}
       />
 
