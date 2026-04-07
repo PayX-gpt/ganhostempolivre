@@ -62,17 +62,7 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
   useEffect(() => { const timer = setTimeout(() => setShowCTA(true), 12_000); return () => clearTimeout(timer); }, []);
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, []);
 
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js";
-    script.async = true;
-    document.head.appendChild(script);
-    const iframe = document.getElementById("ifr_692056147cc713fc76f6135f") as HTMLIFrameElement;
-    if (iframe) {
-      iframe.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/692056147cc713fc76f6135f/v4/embed.html" + (window.location.search || "?") + "&vl=" + encodeURIComponent(window.location.href);
-    }
-    return () => { script.remove(); };
-  }, []);
+  // Panda Video - no script needed
 
   return (
     <StepContainer>
@@ -88,10 +78,15 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
       <StepSubtitle>{young ? t.subtitleYoung : t.subtitleMature}</StepSubtitle>
 
       <div className="w-full rounded-2xl overflow-hidden border border-border scroll-mt-24" ref={videoRef}>
-        <div id="ifr_692056147cc713fc76f6135f_wrapper" style={{ margin: "0 auto", width: "100%" }}>
-          <div style={{ position: "relative", paddingTop: "177.77777777777777%", width: "100%" }} id="ifr_692056147cc713fc76f6135f_aspect">
-            <iframe frameBorder="0" allowFullScreen src="about:blank" id="ifr_692056147cc713fc76f6135f" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} referrerPolicy="origin" />
-          </div>
+        <div style={{ position: "relative", paddingTop: "177.77777777777777%" }}>
+          <iframe
+            id="panda-c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8"
+            src="https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8"
+            style={{ border: "none", position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
+            allowFullScreen
+            fetchPriority="high"
+          />
         </div>
       </div>
 
