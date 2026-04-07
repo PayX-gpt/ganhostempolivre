@@ -359,26 +359,20 @@ const plans = [
   },
 ];
 
-// ── Expert video (vturb) ──
+// ── Expert video (Panda Video) ──
 const ExpertVideo = () => {
-  useEffect(() => {
-    // Inject script first (only once)
-    if (!document.getElementById("vturb-script-safety")) {
-      const s = document.createElement("script");
-      s.id = "vturb-script-safety";
-      s.src = "https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/690e73433ad3bcc011d96455/v4/player.js";
-      s.async = true;
-      document.head.appendChild(s);
-    }
-  }, []);
-
   return (
     <div className="w-full" style={{ maxWidth: 400, margin: "0 auto" }}>
-      {/* @ts-ignore custom web component */}
-      <vturb-smartplayer
-        id="vid-690e73433ad3bcc011d96455"
-        style={{ display: "block", margin: "0 auto", width: "100%", maxWidth: "400px" }}
-      />
+      <div style={{ position: "relative", paddingTop: "177.77777777777777%" }}>
+        <iframe
+          id="panda-10c7a9a9-2f9e-4bee-8a47-43cb05709fdb"
+          src="https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=10c7a9a9-2f9e-4bee-8a47-43cb05709fdb"
+          style={{ border: "none", position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
+          allowFullScreen
+          
+        />
+      </div>
     </div>
   );
 };

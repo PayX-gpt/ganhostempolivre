@@ -15,7 +15,7 @@ import { trackMetaInitiateCheckout } from "@/lib/metaPixel";
 interface Step11Props {
   onNext: () => void;
   userAge?: string;
-  vturbVideoId?: string;
+  pandaVideoId?: string;
 }
 
 const texts = {
@@ -81,7 +81,7 @@ const texts = {
   },
 };
 
-const Step11SocialProof2 = ({ onNext, userAge, vturbVideoId }: Step11Props) => {
+const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const young = isYoungProfile(userAge);
@@ -104,46 +104,31 @@ const Step11SocialProof2 = ({ onNext, userAge, vturbVideoId }: Step11Props) => {
 
   const offerAmount = getCurrentOfferAmount();
 
-  const videoId = vturbVideoId || "69a5dbeca414172eb5d48ed7";
+  const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
 
-  // Load Vturb player script
+  // Listen for Panda Video CTA click (postMessage) and external navigation
   useEffect(() => {
-    const scriptSelector = `script[data-vturb-player="${videoId}"]`;
-    if (document.querySelector(scriptSelector)) return;
-
-    const s = document.createElement("script");
-    s.src = `https://scripts.converteai.net/09ec79a4-c31f-44ce-ba7d-89003424c826/players/${videoId}/v4/player.js`;
-    s.async = true;
-    s.setAttribute("data-vturb-player", videoId);
-    document.head.appendChild(s);
-  }, [videoId]);
-
-  // Listen for Vturb CTA click (postMessage) and external navigation
-  useEffect(() => {
-    const handleVturbMessage = (event: MessageEvent) => {
+    const handlePandaMessage = (event: MessageEvent) => {
       if (icFiredRef.current) return;
-      // Vturb fires postMessage with various formats on CTA click
       const data = typeof event.data === "string" ? event.data : JSON.stringify(event.data || "");
-      const isCtaClick = data.includes("cta") || data.includes("button") || data.includes("click") || data.includes("redirect");
+      const isCtaClick = data.includes("cta") || data.includes("button") || data.includes("click") || data.includes("redirect") || data.includes("panda");
       if (isCtaClick) {
         icFiredRef.current = true;
-        console.log("[Step17] ✅ Vturb CTA click detected via postMessage");
-        saveFunnelEventReliable("checkout_click", { context: "vturb_cta_step17", product: "chave_token_chatgpt", amount: offerAmount });
+        console.log("[Step17] ✅ Panda CTA click detected via postMessage");
+        saveFunnelEventReliable("checkout_click", { context: "panda_cta_step17", product: "chave_token_chatgpt", amount: offerAmount });
         sendCAPIInitiateCheckout({ amount: offerAmount });
         trackTikTokInitiateCheckout({ amount: offerAmount });
         trackMetaInitiateCheckout({ amount: offerAmount });
       }
     };
 
-    // Also detect when user leaves page (clicks external link in Vturb)
     const handleVisibilityChange = () => {
       if (document.hidden && !icFiredRef.current) {
-        // Check if Vturb player is on the page — user likely clicked the CTA
-        const player = document.querySelector(`vturb-smartplayer[id="vid-${videoId}"]`);
+        const player = document.querySelector(`iframe[id="panda-${videoId}"]`);
         if (player) {
           icFiredRef.current = true;
-          console.log("[Step17] ✅ IC fired on page hide (Vturb CTA presumed)");
-          saveFunnelEventReliable("checkout_click", { context: "vturb_cta_step17_pagehide", product: "chave_token_chatgpt", amount: offerAmount });
+          console.log("[Step17] ✅ IC fired on page hide (Panda CTA presumed)");
+          saveFunnelEventReliable("checkout_click", { context: "panda_cta_step17_pagehide", product: "chave_token_chatgpt", amount: offerAmount });
           sendCAPIInitiateCheckout({ amount: offerAmount });
           trackTikTokInitiateCheckout({ amount: offerAmount });
           trackMetaInitiateCheckout({ amount: offerAmount });
@@ -151,10 +136,10 @@ const Step11SocialProof2 = ({ onNext, userAge, vturbVideoId }: Step11Props) => {
       }
     };
 
-    window.addEventListener("message", handleVturbMessage);
+    window.addEventListener("message", handlePandaMessage);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      window.removeEventListener("message", handleVturbMessage);
+      window.removeEventListener("message", handlePandaMessage);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [videoId, offerAmount]);
@@ -173,12 +158,18 @@ const Step11SocialProof2 = ({ onNext, userAge, vturbVideoId }: Step11Props) => {
         <p className="text-[12px] sm:text-sm text-foreground font-bold leading-snug">{young ? t.headlineYoung : t.headlineMature}</p>
       </div>
 
-      <div
-        className="w-full rounded-2xl border border-border shadow-xl overflow-visible mb-4"
-        dangerouslySetInnerHTML={{
-          __html: `<vturb-smartplayer id="vid-${videoId}" style="display:block;margin:0 auto;width:100%;max-width:400px;"></vturb-smartplayer>`
-        }}
-      />
+      <div className="w-full rounded-2xl border border-border shadow-xl overflow-hidden mb-4">
+        <div style={{ position: "relative", paddingTop: "177.77777777777777%" }}>
+          <iframe
+            id={`panda-${videoId}`}
+            src={`https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=${videoId}`}
+            style={{ border: "none", position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
+            allowFullScreen
+            
+          />
+        </div>
+      </div>
 
       <div className="w-full space-y-1.5">
         {testimonials.map((tm, i) => (
