@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Live from "./pages/Live";
 import NotFound from "./pages/NotFound";
 import TikTokQuizFunnel from "./components/quiz/TikTokQuizFunnel";
+import TikTokEsQuizFunnel from "./components/quiz/TikTokEsQuizFunnel";
 import UpsellFunnel from "./components/upsell/UpsellFunnel";
 import Upsell2Page from "./components/upsell/Upsell2Page";
 import Upsell3Page from "./components/upsell/Upsell3Page";
