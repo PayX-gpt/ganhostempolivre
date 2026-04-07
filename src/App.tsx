@@ -32,7 +32,8 @@ const App = () => (
             <Route path="/oferta" element={<Oferta />} />
             <Route path="/tiktok" element={<TikTokQuizFunnel />} />
             <Route path="/tiktok/:slug" element={<TikTokQuizFunnel />} />
-            <Route path="/upsell1" element={<UpsellFunnel />} />
+            <Route path="/tiktok-es" element={<TikTokEsQuizFunnel />} />
+            <Route path="/tiktok-es/:slug" element={<TikTokEsQuizFunnel />} />
             <Route path="/upsell2" element={<Upsell2Page />} />
             <Route path="/upsell3" element={<Upsell3Page />} />
             <Route path="/upsell4" element={<Upsell4Page />} />
