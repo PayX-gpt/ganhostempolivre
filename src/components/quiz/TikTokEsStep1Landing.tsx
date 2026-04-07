@@ -35,24 +35,24 @@ const NOTIFICATIONS = [
 const TESTIMONIALS = [
   {
     photo: testimonialMarlene,
-    name: "Marlene Aparecida S., 61 años",
-    location: "Patos de Minas, MG",
+    name: "Carmen Lucía S., 61 años",
+    location: "Puebla, México",
     role: "Jubilada",
     badge: "$412 en los primeros 3 días",
     text: "Pensé que era una estafa más de internet. Mi hija me obligó a intentarlo. Casi cerré la página tres veces. En 2 minutos la IA dijo que podía ganar $190 por día. Me reí en su cara. Tres días después tenía $412 en la cuenta. Con 61 años pensé que mi vida laboral se había terminado.",
   },
   {
     photo: testimonialSeverino,
-    name: "Severino Raimundo O., 57 años",
-    location: "Caruaru, PE",
+    name: "Roberto Enrique O., 57 años",
+    location: "Medellín, Colombia",
     role: "Ex-vendedor",
     badge: "$1.847 en 2 semanas",
     text: "Perdí el empleo a los 57 años. Nadie me llamaba a entrevistas — vos sabés cómo es. Hice el quiz sin creer mucho. La IA calculó $260 por día para mi perfil. Segunda semana: $1.847 acumulados. Mi esposa dejó de quejarse por la plata. Podés confiar.",
   },
   {
     photo: testimonialTeresinha,
-    name: "Teresinha Conceição M., 64 años",
-    location: "Vitória da Conquista, BA",
+    name: "María del Carmen M., 64 años",
+    location: "Valencia, España",
     role: "Jubilada",
     badge: "$2.800/mes complementados",
     text: "Tengo 64 años y solo uso el celular para WhatsApp y YouTube. Mi nieta me ayudó a hacer el test. La IA dijo $140 por día. Hoy gano entre $95 y $180 cada día hábil. Lo uso para pagar los remedios de mi marido sin pedirle a nadie.",
@@ -309,7 +309,7 @@ const TikTokEsStep1Landing = ({ onNext }: Props) => {
             <Avatar photo={testimonialMarlene} />
             <div>
               <Stars />
-              <p className="text-sm font-semibold mt-1" style={{ color: "#1a1a1a" }}>Marlene Aparecida S., 61 años — Patos de Minas, MG</p>
+              <p className="text-sm font-semibold mt-1" style={{ color: "#1a1a1a" }}>Carmen Lucía S., 61 años — Puebla, México</p>
             </div>
           </div>
           <p className="italic text-[15px] sm:text-[16px] leading-relaxed mb-3" style={{ color: "#333" }}>
@@ -385,7 +385,7 @@ const TikTokEsStep1Landing = ({ onNext }: Props) => {
                 Icon: Clock,
                 iconColor: "#e67e22",
                 title: "PRIMEROS RESULTADOS EN MENOS DE 24 HORAS",
-                desc: "Cláudia, MG: $87 en la cuenta al día siguiente. Severino, Caruaru (PE): $210 en 48 horas.",
+                desc: "Gloria, Guadalajara (MX): $87 en la cuenta al día siguiente. Roberto, Medellín (CO): $210 en 48 horas.",
               },
               {
                 Icon: Shield,
