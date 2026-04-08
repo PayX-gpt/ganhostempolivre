@@ -108,7 +108,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
   const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
   const pandaButtonId = "3e462562-4d30-4dd4-b759-de8c4f18b84e";
 
-  // Inject Panda API script for external button
+  // Inject Panda API script for external button + PANDA_CONTEXT listener
   useEffect(() => {
     if (!document.querySelector('script[src^="https://player.pandavideo.com.br/api.v2.js"]')) {
       const s = document.createElement('script');
@@ -124,6 +124,15 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
         },
       });
     });
+
+    // Panda CONTEXT: forward page URL (with UTMs) to iframe
+    const handlePandaReady = (e: MessageEvent) => {
+      if (e.data && e.data.type === 'PANDA_READY' && e.source) {
+        (e.source as Window).postMessage({ type: 'PANDA_CONTEXT', url: location.href }, '*');
+      }
+    };
+    window.addEventListener('message', handlePandaReady);
+    return () => window.removeEventListener('message', handlePandaReady);
   }, [videoId]);
 
   // Listen for Panda Video CTA click (postMessage) and external navigation
@@ -179,16 +188,13 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
       </div>
 
       <div className="w-full rounded-2xl border border-border shadow-xl overflow-hidden mb-4">
-        <div style={{ position: "relative", paddingTop: "177.77777777777777%" }}>
-          <iframe
-            id={`panda-${videoId}`}
-            src={`https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=${videoId}`}
-            style={{ border: "none", position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
-            allowFullScreen
-            
-          />
-        </div>
+        <iframe
+          id={`panda-${videoId}`}
+          src={`https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=${videoId}`}
+          style={{ border: "none", width: "100%", aspectRatio: "720/360" }}
+          allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
+          allowFullScreen
+        />
       </div>
 
       {/* Panda external button container */}
