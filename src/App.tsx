@@ -16,6 +16,7 @@ import Upsell4Page from "./components/upsell/Upsell4Page";
 import Upsell5Page from "./components/upsell/Upsell5Page";
 import Upsell6Page from "./components/upsell/Upsell6Page";
 import Oferta from "./pages/Oferta";
+import GoCheckout from "./pages/GoCheckout";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/live" element={<Live />} />
             <Route path="/oferta" element={<Oferta />} />
+            <Route path="/go/:plan" element={<GoCheckout />} />
             <Route path="/tiktok" element={<TikTokQuizFunnel />} />
             <Route path="/tiktok/:slug" element={<TikTokQuizFunnel />} />
             <Route path="/tiktok-es" element={<TikTokEsQuizFunnel />} />
