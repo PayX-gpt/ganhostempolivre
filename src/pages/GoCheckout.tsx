@@ -13,54 +13,51 @@ const UTM_KEYS = [
   "fbclid", "gclid", "ttclid", "src", "sck",
 ];
 
+const buildCheckoutUrl = (plan: string | undefined): string | null => {
+  const baseUrl = PLAN_URLS[(plan || "").toLowerCase()];
+  if (!baseUrl) return null;
+
+  let storedUtms: Record<string, string> = {};
+  try {
+    const raw = localStorage.getItem("lead_utm");
+    if (raw) storedUtms = JSON.parse(raw);
+  } catch {}
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const finalParams = new URLSearchParams();
+
+  for (const key of UTM_KEYS) {
+    const value = urlParams.get(key) || storedUtms[key];
+    if (value) finalParams.set(key, value);
+  }
+
+  const sessionId = sessionStorage.getItem("session_id") || localStorage.getItem("session_id");
+  if (sessionId) finalParams.set("gtl_sid", sessionId);
+
+  const cookies = document.cookie.split(";").reduce((acc, c) => {
+    const [k, v] = c.trim().split("=");
+    if (k && v) acc[k] = v;
+    return acc;
+  }, {} as Record<string, string>);
+  if (cookies._fbp) finalParams.set("fbp", cookies._fbp);
+  if (cookies._fbc) finalParams.set("fbc", cookies._fbc);
+
+  const separator = baseUrl.includes("?") ? "&" : "?";
+  return finalParams.toString()
+    ? `${baseUrl}${separator}${finalParams.toString()}`
+    : baseUrl;
+};
+
 const GoCheckout = () => {
   const { plan } = useParams<{ plan: string }>();
 
-  useEffect(() => {
-    const baseUrl = PLAN_URLS[(plan || "").toLowerCase()];
-    if (!baseUrl) {
-      window.location.replace("/step-1");
-      return;
-    }
-
-    // Read UTMs from localStorage (saved by our tracking layer on step-1)
-    let storedUtms: Record<string, string> = {};
-    try {
-      const raw = localStorage.getItem("lead_utm");
-      if (raw) storedUtms = JSON.parse(raw);
-    } catch {}
-
-    // Also check current URL params (backup from Panda "Enviar parâmetros de URL")
-    const urlParams = new URLSearchParams(window.location.search);
-
-    // Merge: URL params take priority, then localStorage
-    const finalParams = new URLSearchParams();
-
-    for (const key of UTM_KEYS) {
-      const value = urlParams.get(key) || storedUtms[key];
-      if (value) finalParams.set(key, value);
-    }
-
-    // Add session_id
-    const sessionId = sessionStorage.getItem("session_id") || localStorage.getItem("session_id");
-    if (sessionId) finalParams.set("gtl_sid", sessionId);
-
-    // Add fbp/fbc cookies
-    const cookies = document.cookie.split(";").reduce((acc, c) => {
-      const [k, v] = c.trim().split("=");
-      if (k && v) acc[k] = v;
-      return acc;
-    }, {} as Record<string, string>);
-    if (cookies._fbp) finalParams.set("fbp", cookies._fbp);
-    if (cookies._fbc) finalParams.set("fbc", cookies._fbc);
-
-    const separator = baseUrl.includes("?") ? "&" : "?";
-    const finalUrl = finalParams.toString()
-      ? `${baseUrl}${separator}${finalParams.toString()}`
-      : baseUrl;
-
-    window.location.replace(finalUrl);
-  }, [plan]);
+  // Redirect immediately on first render — no useEffect delay
+  const redirectUrl = buildCheckoutUrl(plan);
+  if (redirectUrl) {
+    window.location.replace(redirectUrl);
+  } else {
+    window.location.replace("/step-1");
+  }
 
   return (
     <div style={{
