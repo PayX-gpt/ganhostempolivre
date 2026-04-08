@@ -6,6 +6,7 @@ import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
 import { trackMetaInitiateCheckout } from "@/lib/metaPixel";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import chatgptIcon from "@/assets/chatgpt-icon.png";
 
 const PLANS = [
@@ -338,14 +339,8 @@ const Oferta = () => {
   };
 
   const buildCheckoutURL = (plan: typeof PLANS[0]) => {
-    const sessionId = sessionStorage.getItem("session_id") || localStorage.getItem("session_id") || "";
-    const params = new URLSearchParams(window.location.search);
-    const checkoutParams = new URLSearchParams();
-    if (sessionId) checkoutParams.set("session_id", sessionId);
-    ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"].forEach((k) => {
-      const v = params.get(k);
-      if (v) checkoutParams.set(k, v);
-    });
+    const trackingQs = buildTrackingQueryString();
+    const checkoutParams = new URLSearchParams(trackingQs.startsWith("?") ? trackingQs.slice(1) : trackingQs);
     checkoutParams.set("plan", plan.id);
     const qs = checkoutParams.toString();
     return `${plan.checkoutUrl}${qs ? `?${qs}` : ""}`;
