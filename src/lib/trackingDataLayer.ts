@@ -299,15 +299,22 @@ export const buildTrackingQueryString = (): string => {
 export const ensureUrlHasTrackingParams = (): void => {
   if (!window.trackingData) initializeTrackingDataLayer();
   const data = window.trackingData;
+
+  // Also read early-captured UTMs as ultimate fallback
+  const earlyUtm: Record<string, string> = (() => {
+    try { return JSON.parse(localStorage.getItem('lead_utm') || '{}'); } catch { return {}; }
+  })();
+
   const currentParams = new URLSearchParams(window.location.search);
   let changed = false;
   const criticalParams: (keyof TrackingData)[] = [
-    "utm_source", "utm_medium", "utm_campaign", "fbclid", "gclid", "src", "sck",
+    "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
+    "fbclid", "gclid", "ttclid", "src", "sck",
   ];
   criticalParams.forEach((param) => {
-    const value = data[param];
+    const value = data[param] || earlyUtm[param];
     if (value && !currentParams.has(param)) {
-      currentParams.set(param, value as string);
+      currentParams.set(param, String(value));
       changed = true;
     }
   });
