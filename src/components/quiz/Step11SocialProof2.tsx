@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import { StepContainer, StepTitle, CTAButton } from "./QuizUI";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { StepContainer, StepTitle } from "./QuizUI";
+import { CheckCircle } from "lucide-react";
 import avatarJose from "@/assets/avatar-jose.jpg";
 import avatarLucia from "@/assets/avatar-lucia.jpg";
 import avatarRafael from "@/assets/avatar-rafael.jpg";
