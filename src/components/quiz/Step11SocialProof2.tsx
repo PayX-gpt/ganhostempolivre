@@ -85,6 +85,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const young = isYoungProfile(userAge);
+  const [showCTA, setShowCTA] = useState(false);
 
   const icFiredRef = useRef(false);
 
@@ -105,6 +106,12 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
   const offerAmount = getCurrentOfferAmount();
 
   const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
+
+  // Show CTA after 15 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setShowCTA(true), 15_000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Listen for Panda Video CTA click (postMessage) and external navigation
   useEffect(() => {
