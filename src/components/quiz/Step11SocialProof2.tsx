@@ -194,6 +194,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
       {/* Panda external button container */}
       <div id={pandaButtonId} className="w-full flex justify-center" />
 
+      <div className="w-full space-y-1.5">
         {testimonials.map((tm, i) => (
           <div key={i} className="funnel-card border-primary/25 bg-primary/5 py-2 px-2.5">
             <div className="flex items-center gap-2">
