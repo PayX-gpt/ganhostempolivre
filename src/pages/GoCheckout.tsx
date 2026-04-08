@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import {} from "react";
 import { useParams } from "react-router-dom";
 
 const PLAN_URLS: Record<string, string> = {
