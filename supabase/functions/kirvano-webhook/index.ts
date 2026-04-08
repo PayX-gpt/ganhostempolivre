@@ -288,7 +288,6 @@ Deno.serve(async (req) => {
         .eq("session_id", sessionId)
         .maybeSingle();
       if (saData) {
-        // Always overwrite with session_attribution data when available
         resolvedUtmCampaign = saData.utm_campaign || resolvedUtmCampaign;
         resolvedUtmSource = saData.utm_source || resolvedUtmSource;
         resolvedUtmMedium = saData.utm_medium || resolvedUtmMedium;
@@ -305,6 +304,41 @@ Deno.serve(async (req) => {
         resolvedReferrer = saData.referrer || resolvedReferrer;
         console.log(`🎯 [Kirvano] Resolved from session_attribution: campaign=${resolvedUtmCampaign}, variant=${resolvedVariant}`);
       }
+
+      // ====== FUNNEL_EVENTS FALLBACK — if session_attribution had no UTMs ======
+      if (!resolvedUtmCampaign && !resolvedUtmSource) {
+        const { data: feData } = await supabase
+          .from("funnel_events")
+          .select("event_data")
+          .eq("session_id", sessionId)
+          .eq("event_name", "step_viewed")
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (feData?.event_data) {
+          const ed = feData.event_data as Record<string, unknown>;
+          resolvedUtmCampaign = (ed.utm_campaign as string) || resolvedUtmCampaign;
+          resolvedUtmSource = (ed.utm_source as string) || resolvedUtmSource;
+          resolvedUtmMedium = (ed.utm_medium as string) || resolvedUtmMedium;
+          resolvedUtmContent = (ed.utm_content as string) || resolvedUtmContent;
+          resolvedUtmTerm = (ed.utm_term as string) || resolvedUtmTerm;
+          resolvedFbclid = (ed.fbclid as string) || resolvedFbclid;
+          resolvedTtclid = (ed.ttclid as string) || resolvedTtclid;
+          if (resolvedUtmSource || resolvedFbclid) {
+            console.log(`📊 [Kirvano] Resolved UTMs from funnel_events: source=${resolvedUtmSource}, fbclid=${resolvedFbclid?.slice(-8)}`);
+          }
+        }
+      }
+    }
+
+    // ====== FBCLID-BASED SOURCE — if we have fbclid but still no utm_source ======
+    if (resolvedFbclid && !resolvedUtmSource) {
+      resolvedUtmSource = "FB";
+      console.log(`🔗 [Kirvano] Set utm_source=FB based on fbclid presence`);
+    }
+    if (resolvedTtclid && !resolvedUtmSource) {
+      resolvedUtmSource = "tiktok";
+      console.log(`🔗 [Kirvano] Set utm_source=tiktok based on ttclid presence`);
     }
 
     const statusMap: Record<string, string> = {
