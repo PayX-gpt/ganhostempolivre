@@ -290,6 +290,7 @@ export const buildTrackingQueryString = (): string => {
   // Kirvano forwards "src" in utm.src — use it to carry session_id
   if (params.session_id) {
     searchParams.set("src", params.session_id);
+    searchParams.set("gtl_sid", params.session_id);
   }
   const qs = searchParams.toString();
   return qs ? `?${qs}` : "";
@@ -358,17 +359,37 @@ export const saveSessionAttribution = async (quizVariant?: QuizVariant): Promise
     }] as any, { onConflict: "session_id" } as any);
 
     if (error) {
-      console.warn("[Attribution] Upsert failed, retrying variant save:", error);
-      // Retry just the variant update
-      await supabase.from("session_attribution" as any)
-        .update({ quiz_variant: resolvedVariant } as any)
-        .eq("session_id", sessionId);
+      console.warn("[Attribution] Upsert failed, retrying insert:", error);
+      // Retry with plain insert (no upsert) as fallback
+      const { error: insertError } = await supabase.from("session_attribution" as any).insert([{
+        session_id: sessionId,
+        quiz_variant: resolvedVariant,
+        utm_source: data.utm_source || earlyUtm.utm_source || null,
+        utm_medium: data.utm_medium || earlyUtm.utm_medium || null,
+        utm_campaign: data.utm_campaign || earlyUtm.utm_campaign || null,
+        utm_content: data.utm_content || earlyUtm.utm_content || null,
+        utm_term: data.utm_term || earlyUtm.utm_term || null,
+        fbclid: data.fbclid || earlyUtm.fbclid || null,
+        ttclid: data.ttclid || earlyUtm.ttclid || null,
+        fbp: data.fbp || null,
+        fbc: data.fbc || null,
+        ttp: data.ttp || null,
+        gclid: data.gclid || earlyUtm.gclid || null,
+        referrer: data.referrer || earlyUtm.referrer || null,
+        landing_page: data.landing_page || earlyUtm.landing_url || null,
+      }] as any);
+      if (insertError) {
+        console.error("[Attribution] Insert fallback also failed:", insertError);
+        // Do NOT set flag — allow retry on next render
+        return;
+      }
     }
 
     sessionStorage.setItem("attribution_saved", "1");
-    console.log("✅ Atribuição salva:", { sessionId, quiz_variant: resolvedVariant, utm_source: data.utm_source, fbclid: data.fbclid, ttclid: data.ttclid });
+    console.log("✅ Atribuição salva:", { sessionId, quiz_variant: resolvedVariant, utm_source: data.utm_source || earlyUtm.utm_source, fbclid: data.fbclid, ttclid: data.ttclid });
   } catch (e) {
     console.warn("[Attribution] Failed to save:", e);
+    // Do NOT set flag on exception — allow retry
   }
 };
 

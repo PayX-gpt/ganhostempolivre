@@ -130,18 +130,21 @@ const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) =
           fbclid: earlyUtm.fbclid || null,
         });
         // Save phone→session for webhook attribution
+        // IMPORTANT: Always use trackingData.session_id (sess_* format) — NOT funnel_session_id (session_* format)
         if (method === 'whatsapp' && contactValue) {
-          const sessionId = sessionStorage.getItem('funnel_session_id') || window.trackingData?.session_id;
+          const sessionId = window.trackingData?.session_id;
           if (sessionId) {
             const cleanPhone = contactValue.replace(/\D/g, '');
             supabase.from("phone_session_map" as any).insert({ phone: cleanPhone, session_id: sessionId }).then(() => {});
+            console.log(`📱 [Attribution] Phone mapped: ${cleanPhone.slice(-4)} → ${sessionId}`);
           }
         }
         // Save email→session for webhook attribution
         if (method === 'email' && contactValue) {
-          const sessionId = sessionStorage.getItem('funnel_session_id') || (window as any).trackingData?.session_id;
+          const sessionId = window.trackingData?.session_id;
           if (sessionId) {
             supabase.from("email_session_map" as any).insert({ email: contactValue.toLowerCase().trim(), session_id: sessionId }).then(() => {});
+            console.log(`📧 [Attribution] Email mapped: ${contactValue} → ${sessionId}`);
           }
         }
         onNext(contactValue);
