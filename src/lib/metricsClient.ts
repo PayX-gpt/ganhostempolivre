@@ -9,26 +9,35 @@ const getLeadUTM = (): Record<string, string> => {
   } catch { return {}; }
 };
 
+const buildEnrichedEventData = (
+  eventData: Record<string, unknown>,
+  trackingData: ReturnType<typeof getTrackingData>
+) => {
+  const utmData = getLeadUTM();
+  const current = eventData as Record<string, unknown>;
+
+  return {
+    ...eventData,
+    utm_source: current.utm_source ?? utmData.utm_source ?? trackingData.utm_source ?? null,
+    utm_medium: current.utm_medium ?? utmData.utm_medium ?? trackingData.utm_medium ?? null,
+    utm_campaign: current.utm_campaign ?? utmData.utm_campaign ?? trackingData.utm_campaign ?? null,
+    utm_content: current.utm_content ?? utmData.utm_content ?? trackingData.utm_content ?? null,
+    utm_term: current.utm_term ?? utmData.utm_term ?? trackingData.utm_term ?? null,
+    fbclid: current.fbclid ?? utmData.fbclid ?? trackingData.fbclid ?? null,
+    ttclid: current.ttclid ?? utmData.ttclid ?? trackingData.ttclid ?? null,
+    referrer: current.referrer ?? utmData.referrer ?? utmData.referrer_detected ?? trackingData.referrer ?? null,
+    landing_url: current.landing_url ?? utmData.landing_url ?? null,
+  };
+};
+
 export const saveFunnelEvent = async (
   eventName: string,
   eventData: Record<string, unknown> = {}
 ): Promise<void> => {
   try {
     const trackingData = getTrackingData();
-    const utmData = getLeadUTM();
-    // Enrich event_data with UTM fields for attribution
-    const enrichedData = {
-      ...eventData,
-      utm_source: utmData.utm_source || trackingData.utm_source || null,
-      utm_medium: utmData.utm_medium || trackingData.utm_medium || null,
-      utm_campaign: utmData.utm_campaign || trackingData.utm_campaign || null,
-      utm_content: utmData.utm_content || trackingData.utm_content || null,
-      utm_term: utmData.utm_term || trackingData.utm_term || null,
-      fbclid: utmData.fbclid || trackingData.fbclid || null,
-      ttclid: utmData.ttclid || trackingData.ttclid || null,
-      referrer: utmData.referrer || utmData.referrer_detected || trackingData.referrer || null,
-      landing_url: utmData.landing_url || null,
-    };
+    const enrichedData = buildEnrichedEventData(eventData, trackingData);
+
     await supabase.from("funnel_events").insert([{
       session_id: trackingData.session_id || "unknown",
       event_name: eventName,
@@ -52,10 +61,11 @@ export const saveFunnelEventReliable = (
 ): void => {
   try {
     const trackingData = getTrackingData();
+    const enrichedData = buildEnrichedEventData(eventData, trackingData);
     const payload = {
       session_id: trackingData.session_id || "unknown",
       event_name: eventName,
-      event_data: JSON.parse(JSON.stringify(eventData)),
+      event_data: JSON.parse(JSON.stringify(enrichedData)),
       page_url: window.location.href,
       user_agent: navigator.userAgent,
     };

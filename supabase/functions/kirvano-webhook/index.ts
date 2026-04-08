@@ -138,6 +138,7 @@ Deno.serve(async (req) => {
     const funnelStep = identifyFunnelStep(body, amount);
 
     const email = body.customer?.email || body.email || body.buyer_email || body.cliente_email || null;
+    const normalizedEmail = typeof email === "string" ? email.toLowerCase().trim() : null;
     const buyerName = body.customer?.name || body.buyer_name || body.nome || body.cliente_nome || null;
     const phone = body.customer?.phone_number || body.phone || body.telefone || body.buyer_phone || null;
     const paymentMethod = body.payment?.method || body.payment_method || body.forma_pagamento || null;
@@ -165,6 +166,22 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    let purchaseFallback: {
+      session_id: string | null;
+      utm_source: string | null;
+      utm_medium: string | null;
+      utm_campaign: string | null;
+      utm_content: string | null;
+      utm_term: string | null;
+      fbclid: string | null;
+      gclid: string | null;
+      fbp: string | null;
+      fbc: string | null;
+      landing_page: string | null;
+      referrer: string | null;
+      vsl_variant: string | null;
+    } | null = null;
+
     // Resolve session_id: prefer gtl_sid, then src, then fallback to phone/email
     let sessionId = (gtlSid && gtlSid.startsWith("sess_")) ? gtlSid
       : (src && src.startsWith("sess_")) ? src
@@ -191,23 +208,41 @@ Deno.serve(async (req) => {
     }
 
     // ====== EMAIL-BASED SESSION RESOLUTION ======
-    if (!sessionId && email) {
+    if (!sessionId && normalizedEmail) {
       const { data: emailMatch } = await supabase
         .from("email_session_map")
         .select("session_id")
-        .eq("email", email.toLowerCase().trim())
+        .eq("email", normalizedEmail)
         .order("created_at", { ascending: false })
         .limit(1);
       if (emailMatch && emailMatch.length > 0) {
         sessionId = emailMatch[0].session_id;
-        console.log(`📧 [Kirvano] Resolved session via email: ${email} → ${sessionId}`);
+        console.log(`📧 [Kirvano] Resolved session via email: ${normalizedEmail} → ${sessionId}`);
+      }
+    }
+
+    // ====== PURCHASE-BASED FALLBACK ======
+    if (!sessionId && normalizedEmail) {
+      const { data: purchaseMatch } = await supabase
+        .from("purchase_tracking")
+        .select("session_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, fbclid, gclid, fbp, fbc, landing_page, referrer, vsl_variant")
+        .eq("email", normalizedEmail)
+        .not("session_id", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (purchaseMatch?.session_id) {
+        purchaseFallback = purchaseMatch;
+        sessionId = purchaseMatch.session_id;
+        console.log(`♻️ [Kirvano] Resolved session via purchase history: ${normalizedEmail} → ${sessionId}`);
       }
     }
 
     // ====== SAVE EMAIL→SESSION MAPPING (for future lookups) ======
-    if (sessionId && email) {
+    if (sessionId && normalizedEmail) {
       await supabase.from("email_session_map").upsert(
-        { email: email.toLowerCase().trim(), session_id: sessionId },
+        { email: normalizedEmail, session_id: sessionId },
         { onConflict: "email,session_id", ignoreDuplicates: true }
       ).then(() => {});
     }
@@ -223,13 +258,33 @@ Deno.serve(async (req) => {
     let resolvedUtmMedium = decodeUtm(utmMedium);
     let resolvedUtmContent = decodeUtm(utmContent);
     let resolvedUtmTerm = decodeUtm(utmTerm);
-    let resolvedVariant: string | null = null;
+    let resolvedVariant: string | null = purchaseFallback?.vsl_variant || null;
+    let resolvedFbclid = fbclid;
+    let resolvedGclid = gclid;
+    let resolvedFbp = fbp;
+    let resolvedFbc = fbc;
+    let resolvedTtclid = ttclid;
+    let resolvedTtp = ttp;
+    let resolvedLandingPage: string | null = purchaseFallback?.landing_page || null;
+    let resolvedReferrer: string | null = purchaseFallback?.referrer || null;
+
+    if (purchaseFallback) {
+      resolvedUtmCampaign = purchaseFallback.utm_campaign || resolvedUtmCampaign;
+      resolvedUtmSource = purchaseFallback.utm_source || resolvedUtmSource;
+      resolvedUtmMedium = purchaseFallback.utm_medium || resolvedUtmMedium;
+      resolvedUtmContent = purchaseFallback.utm_content || resolvedUtmContent;
+      resolvedUtmTerm = purchaseFallback.utm_term || resolvedUtmTerm;
+      resolvedFbclid = purchaseFallback.fbclid || resolvedFbclid;
+      resolvedGclid = purchaseFallback.gclid || resolvedGclid;
+      resolvedFbp = purchaseFallback.fbp || resolvedFbp;
+      resolvedFbc = purchaseFallback.fbc || resolvedFbc;
+    }
 
     // ====== SESSION-BASED UTM RESOLUTION — ALWAYS prioritize session_attribution ======
     if (sessionId) {
       const { data: saData } = await supabase
         .from("session_attribution")
-        .select("utm_campaign, utm_source, utm_medium, utm_content, utm_term, quiz_variant")
+        .select("utm_campaign, utm_source, utm_medium, utm_content, utm_term, quiz_variant, fbclid, ttclid, fbp, fbc, gclid, ttp, landing_page, referrer")
         .eq("session_id", sessionId)
         .maybeSingle();
       if (saData) {
@@ -240,6 +295,14 @@ Deno.serve(async (req) => {
         resolvedUtmContent = saData.utm_content || resolvedUtmContent;
         resolvedUtmTerm = saData.utm_term || resolvedUtmTerm;
         resolvedVariant = saData.quiz_variant || null;
+        resolvedFbclid = saData.fbclid || resolvedFbclid;
+        resolvedTtclid = saData.ttclid || resolvedTtclid;
+        resolvedFbp = saData.fbp || resolvedFbp;
+        resolvedFbc = saData.fbc || resolvedFbc;
+        resolvedGclid = saData.gclid || resolvedGclid;
+        resolvedTtp = saData.ttp || resolvedTtp;
+        resolvedLandingPage = saData.landing_page || resolvedLandingPage;
+        resolvedReferrer = saData.referrer || resolvedReferrer;
         console.log(`🎯 [Kirvano] Resolved from session_attribution: campaign=${resolvedUtmCampaign}, variant=${resolvedVariant}`);
       }
     }
@@ -277,7 +340,7 @@ Deno.serve(async (req) => {
           .from("purchase_tracking")
           .update({
             status: normalizedStatus,
-            amount, email,
+            amount, email: normalizedEmail ?? email,
             buyer_name: buyerName,
             product_name: productName,
             plan_id: planId,
@@ -286,7 +349,8 @@ Deno.serve(async (req) => {
             session_id: sessionId,
             utm_source: resolvedUtmSource, utm_medium: resolvedUtmMedium,
             utm_campaign: resolvedUtmCampaign, utm_content: resolvedUtmContent, utm_term: resolvedUtmTerm,
-            fbclid, gclid, fbp,
+            fbclid: resolvedFbclid, gclid: resolvedGclid, fbp: resolvedFbp, fbc: resolvedFbc,
+            landing_page: resolvedLandingPage, referrer: resolvedReferrer,
             vsl_variant: resolvedVariant,
           })
           .eq("transaction_id", transactionId)
@@ -306,14 +370,15 @@ Deno.serve(async (req) => {
         transaction_id: transactionId,
         plan_id: planId,
         product_name: productName,
-        amount, email,
+        amount, email: normalizedEmail ?? email,
         buyer_name: buyerName,
         status: normalizedStatus,
         funnel_step: funnelStep,
         session_id: sessionId,
         utm_source: resolvedUtmSource, utm_medium: resolvedUtmMedium,
         utm_campaign: resolvedUtmCampaign, utm_content: resolvedUtmContent, utm_term: resolvedUtmTerm,
-        fbclid, gclid, fbp,
+        fbclid: resolvedFbclid, gclid: resolvedGclid, fbp: resolvedFbp, fbc: resolvedFbc,
+        landing_page: resolvedLandingPage, referrer: resolvedReferrer,
         vsl_variant: resolvedVariant,
         redirect_source: "kirvano_webhook",
         user_agent: req.headers.get("user-agent") || "kirvano-webhook",
@@ -347,6 +412,45 @@ Deno.serve(async (req) => {
       console.log(`✅ [Kirvano] New record: ${data.id} → ${funnelStep} R$${amount}`);
     }
 
+    // ====== RETROACTIVE BACKFILL FOR SAME EMAIL ======
+    if (sessionId && normalizedEmail && recordId) {
+      const { data: orphanRows } = await supabase
+        .from("purchase_tracking")
+        .select("id, session_id, utm_campaign")
+        .eq("email", normalizedEmail)
+        .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .neq("id", recordId)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const orphanIds = (orphanRows || [])
+        .filter((row) => !row.session_id || !row.utm_campaign)
+        .map((row) => row.id);
+
+      if (orphanIds.length > 0) {
+        await supabase
+          .from("purchase_tracking")
+          .update({
+            session_id: sessionId,
+            utm_source: resolvedUtmSource,
+            utm_medium: resolvedUtmMedium,
+            utm_campaign: resolvedUtmCampaign,
+            utm_content: resolvedUtmContent,
+            utm_term: resolvedUtmTerm,
+            fbclid: resolvedFbclid,
+            gclid: resolvedGclid,
+            fbp: resolvedFbp,
+            fbc: resolvedFbc,
+            landing_page: resolvedLandingPage,
+            referrer: resolvedReferrer,
+            vsl_variant: resolvedVariant,
+          })
+          .in("id", orphanIds);
+
+        console.log(`♻️ [Kirvano] Backfilled ${orphanIds.length} orphan purchase(s) for ${normalizedEmail}`);
+      }
+    }
+
     // ====== FACEBOOK CAPI — DISABLED ======
     const capiSent = false;
 
@@ -365,7 +469,8 @@ Deno.serve(async (req) => {
               event_id: `tt_purchase_${transactionId || Date.now()}`,
               email, phone, amount,
               currency: "BRL",
-              ttclid, ttp,
+              ttclid: resolvedTtclid,
+              ttp: resolvedTtp,
               ip: clientIp,
               user_agent: req.headers.get("user-agent"),
               source_url: "https://ganhostempolivre.lovable.app",
