@@ -151,6 +151,7 @@ Deno.serve(async (req) => {
     const utmTerm = utmData.utm_term || body.utm_term || null;
     const sck = body.sck || null;
     const src = utmData.src || body.src || null;
+    const gtlSid = utmData.gtl_sid || body.gtl_sid || null;
     const fbclid = body.cookies?.fbclid || body.fbclid || null;
     const gclid = body.cookies?.gclid || body.gclid || null;
     const fbp = body.cookies?.fbp || null;
@@ -164,7 +165,12 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    let sessionId = (src && src.startsWith("sess_")) ? src : null;
+    // Resolve session_id: prefer gtl_sid, then src, then fallback to phone/email
+    let sessionId = (gtlSid && gtlSid.startsWith("sess_")) ? gtlSid
+      : (src && src.startsWith("sess_")) ? src
+      : null;
+    
+    console.log(`🔍 [Kirvano] Session resolution: gtl_sid=${gtlSid}, src=${src}, resolved=${sessionId}`);
 
     // ====== PHONE-BASED SESSION RESOLUTION ======
     if (!sessionId && phone) {
