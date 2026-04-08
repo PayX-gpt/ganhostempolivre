@@ -106,12 +106,6 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
 
   const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
 
-  // Show CTA after 15 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => setShowCTA(true), 15_000);
-    return () => clearTimeout(timer);
-  }, []);
-
   // Listen for Panda Video CTA click (postMessage) and external navigation
   useEffect(() => {
     const handlePandaMessage = (event: MessageEvent) => {
@@ -176,16 +170,6 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
           />
         </div>
       </div>
-
-      <CTAButton onClick={onNext} className={showCTA ? "animate-fade-in" : "opacity-0 pointer-events-none"}>
-        {t.cta}
-      </CTAButton>
-      {!showCTA && (
-        <div className="flex items-center gap-2 justify-center">
-          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
-          <p className="text-sm text-muted-foreground animate-pulse">{t.watchToUnlock}</p>
-        </div>
-      )}
 
       <div className="w-full space-y-1.5">
         {testimonials.map((tm, i) => (
