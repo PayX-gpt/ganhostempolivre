@@ -194,7 +194,6 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
           style={{ border: "none", width: "100%", aspectRatio: "720/360" }}
           allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
           allowFullScreen
-          fetchPriority="high"
         />
       </div>
 
