@@ -106,6 +106,25 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
   const offerAmount = getCurrentOfferAmount();
 
   const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
+  const pandaButtonId = "3e462562-4d30-4dd4-b759-de8c4f18b84e";
+
+  // Inject Panda API script for external button
+  useEffect(() => {
+    if (!document.querySelector('script[src^="https://player.pandavideo.com.br/api.v2.js"]')) {
+      const s = document.createElement('script');
+      s.src = 'https://player.pandavideo.com.br/api.v2.js';
+      s.async = true;
+      document.head.appendChild(s);
+    }
+    (window as any).pandascripttag = (window as any).pandascripttag || [];
+    (window as any).pandascripttag.push(function () {
+      const p = new (window as any).PandaPlayer(`panda-${videoId}`, {
+        onReady() {
+          p.loadButtonInTime({ fetchApi: true });
+        },
+      });
+    });
+  }, [videoId]);
 
   // Listen for Panda Video CTA click (postMessage) and external navigation
   useEffect(() => {
