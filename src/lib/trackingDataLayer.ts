@@ -247,21 +247,33 @@ export const recordFunnelEvent = (eventName: string): void => {
 export const getTrackingDataForCheckout = (): Record<string, string> => {
   if (!window.trackingData) initializeTrackingDataLayer();
   const data = window.trackingData;
+
+  // Fallback to early-captured UTMs if trackingData is empty
+  const earlyUtm: Record<string, string> = (() => {
+    try { return JSON.parse(localStorage.getItem('lead_utm') || '{}'); } catch { return {}; }
+  })();
+
+  const resolve = (key: keyof TrackingData, earlyKey?: string): string | undefined => {
+    const val = data[key];
+    if (val && typeof val === 'string') return val;
+    return earlyUtm[earlyKey || key] || undefined;
+  };
+
   const result: Record<string, string> = {};
-  if (data.utm_source) result.utm_source = data.utm_source;
-  if (data.utm_medium) result.utm_medium = data.utm_medium;
-  if (data.utm_campaign) result.utm_campaign = data.utm_campaign;
-  if (data.utm_content) result.utm_content = data.utm_content;
-  if (data.utm_term) result.utm_term = data.utm_term;
-  if (data.fbclid) result.fbclid = data.fbclid;
-  if (data.gclid) result.gclid = data.gclid;
-  if (data.ttclid) result.ttclid = data.ttclid;
-  if (data.xcod) result.xcod = data.xcod;
-  if (data.src) result.src = data.src;
-  if (data.sck) result.sck = data.sck;
-  if (data.fbp) result.fbp = data.fbp;
-  if (data.fbc) result.fbc = data.fbc;
-  if (data.ttp) result.ttp = data.ttp;
+  if (resolve("utm_source")) result.utm_source = resolve("utm_source")!;
+  if (resolve("utm_medium")) result.utm_medium = resolve("utm_medium")!;
+  if (resolve("utm_campaign")) result.utm_campaign = resolve("utm_campaign")!;
+  if (resolve("utm_content")) result.utm_content = resolve("utm_content")!;
+  if (resolve("utm_term")) result.utm_term = resolve("utm_term")!;
+  if (resolve("fbclid")) result.fbclid = resolve("fbclid")!;
+  if (resolve("gclid")) result.gclid = resolve("gclid")!;
+  if (resolve("ttclid")) result.ttclid = resolve("ttclid")!;
+  if (resolve("xcod")) result.xcod = resolve("xcod")!;
+  if (resolve("src")) result.src = resolve("src")!;
+  if (resolve("sck")) result.sck = resolve("sck")!;
+  if (resolve("fbp")) result.fbp = resolve("fbp")!;
+  if (resolve("fbc")) result.fbc = resolve("fbc")!;
+  if (resolve("ttp")) result.ttp = resolve("ttp")!;
   if (data.vsl_variant) result.vsl_variant = data.vsl_variant;
   if (data.vsl_player_id) result.vsl_player_id = data.vsl_player_id;
   result.session_id = data.session_id;
