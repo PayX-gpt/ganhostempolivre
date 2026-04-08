@@ -85,6 +85,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const young = isYoungProfile(userAge);
+  const pandaBtnRef = useRef<HTMLDivElement>(null);
 
   const icFiredRef = useRef(false);
 
