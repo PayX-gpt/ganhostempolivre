@@ -323,6 +323,11 @@ const Oferta = () => {
     return 15 * 60;
   });
 
+  // Inject UTMs into URL so Utmify pixel can read them
+  useEffect(() => {
+    ensureUrlHasTrackingParams();
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setTimeLeft((prev) => (prev <= 0 ? 0 : prev - 1));
