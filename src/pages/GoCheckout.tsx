@@ -2,10 +2,10 @@ import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 
 const PLAN_URLS: Record<string, string> = {
-  starter: "https://pay.kirvano.com/4630333d-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  starter: "https://pay.kirvano.com/4630333d-d5d1-4591-b767-2151f77c6b13",
   essencial: "https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c",
-  profissional: "https://pay.kirvano.com/b9bbad45-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-  vip: "https://pay.kirvano.com/4feda4e1-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  profissional: "https://pay.kirvano.com/b9bbad45-8e94-40c0-b910-73e814b03c8c",
+  vip: "https://pay.kirvano.com/4feda4e1-966a-400c-9b34-a68e9ca0fbb1",
 };
 
 const UTM_KEYS = [

@@ -16,6 +16,7 @@ import Upsell4Page from "./components/upsell/Upsell4Page";
 import Upsell5Page from "./components/upsell/Upsell5Page";
 import Upsell6Page from "./components/upsell/Upsell6Page";
 import Oferta from "./pages/Oferta";
+import GoCheckout from "./pages/GoCheckout";
 
 const queryClient = new QueryClient();
 
