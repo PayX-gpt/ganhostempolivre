@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import { StepContainer, StepTitle, CTAButton } from "./QuizUI";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { StepContainer, StepTitle } from "./QuizUI";
+import { CheckCircle } from "lucide-react";
 import avatarJose from "@/assets/avatar-jose.jpg";
 import avatarLucia from "@/assets/avatar-lucia.jpg";
 import avatarRafael from "@/assets/avatar-rafael.jpg";
@@ -85,7 +85,6 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const young = isYoungProfile(userAge);
-  const [showCTA, setShowCTA] = useState(false);
 
   const icFiredRef = useRef(false);
 
@@ -106,12 +105,6 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
   const offerAmount = getCurrentOfferAmount();
 
   const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
-
-  // Show CTA after 15 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => setShowCTA(true), 15_000);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Listen for Panda Video CTA click (postMessage) and external navigation
   useEffect(() => {
@@ -177,16 +170,6 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
           />
         </div>
       </div>
-
-      <CTAButton onClick={onNext} className={showCTA ? "animate-fade-in" : "opacity-0 pointer-events-none"}>
-        {t.cta}
-      </CTAButton>
-      {!showCTA && (
-        <div className="flex items-center gap-2 justify-center">
-          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
-          <p className="text-sm text-muted-foreground animate-pulse">{t.watchToUnlock}</p>
-        </div>
-      )}
 
       <div className="w-full space-y-1.5">
         {testimonials.map((tm, i) => (
