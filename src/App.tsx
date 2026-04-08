@@ -31,6 +31,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/live" element={<Live />} />
             <Route path="/oferta" element={<Oferta />} />
+            <Route path="/go/:plan" element={<GoCheckout />} />
             <Route path="/tiktok" element={<TikTokQuizFunnel />} />
             <Route path="/tiktok/:slug" element={<TikTokQuizFunnel />} />
             <Route path="/tiktok-es" element={<TikTokEsQuizFunnel />} />
