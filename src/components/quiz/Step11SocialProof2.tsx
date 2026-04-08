@@ -178,6 +178,16 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
         </div>
       </div>
 
+      <CTAButton onClick={onNext} className={showCTA ? "animate-fade-in" : "opacity-0 pointer-events-none"}>
+        {t.cta}
+      </CTAButton>
+      {!showCTA && (
+        <div className="flex items-center gap-2 justify-center">
+          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+          <p className="text-sm text-muted-foreground animate-pulse">{t.watchToUnlock}</p>
+        </div>
+      )}
+
       <div className="w-full space-y-1.5">
         {testimonials.map((tm, i) => (
           <div key={i} className="funnel-card border-primary/25 bg-primary/5 py-2 px-2.5">
