@@ -6,6 +6,7 @@ const PLAN_URLS: Record<string, string> = {
   essencial: "https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c",
   profissional: "https://pay.kirvano.com/b9bbad45-8e94-40c0-b910-73e814b03c8c",
   vip: "https://pay.kirvano.com/4feda4e1-966a-400c-9b34-a68e9ca0fbb1",
+  "essencial-es": "https://pay.mycheckoutt.com/019d72d9-839a-72f0-8f3b-ef9ad1681d33",
 };
 
 const UTM_KEYS = [
