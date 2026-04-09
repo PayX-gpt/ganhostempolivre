@@ -91,7 +91,19 @@ const TIKTOK_STEPS: FunnelStep[] = [
   { id: "tk_step10", route: "/tiktok/step-10", label: "Oferta", icon: Star, count: 0 },
 ];
 
-const ALL_STEPS = [...STEPS, ...TIKTOK_STEPS];
+const TIKTOK_ES_STEPS: FunnelStep[] = [
+  { id: "tkes_step1", route: "/tiktok-es/step-1", label: "Intro", icon: Zap, count: 0 },
+  { id: "tkes_step2", route: "/tiktok-es/step-2", label: "Edad", icon: Users, count: 0 },
+  { id: "tkes_step3", route: "/tiktok-es/step-3", label: "Prueba", icon: Star, count: 0 },
+  { id: "tkes_step4", route: "/tiktok-es/step-4", label: "Meta", icon: Target, count: 0 },
+  { id: "tkes_step5", route: "/tiktok-es/step-5", label: "10 min", icon: Clock, count: 0 },
+  { id: "tkes_step6", route: "/tiktok-es/step-6", label: "Contacto", icon: Mail, count: 0 },
+  { id: "tkes_step7", route: "/tiktok-es/step-7", label: "Loading", icon: Clock, count: 0 },
+  { id: "tkes_step8", route: "/tiktok-es/step-8", label: "Proyección", icon: UserCheck, count: 0 },
+  { id: "tkes_step9", route: "/tiktok-es/step-9", label: "Oferta", icon: Star, count: 0 },
+];
+
+const ALL_STEPS = [...STEPS, ...TIKTOK_STEPS, ...TIKTOK_ES_STEPS];
 
 const FUNNEL_STEP_LABELS: Record<string, string> = {
   front_37: "R$37", front_47: "R$47",
