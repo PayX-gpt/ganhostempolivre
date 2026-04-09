@@ -191,7 +191,7 @@ const TikTokEsQuizFunnel = () => {
       case "step-2":
         return <Step2Age onNext={(v) => updateAndNext("age", v)} />;
       case "step-3":
-        return <Step3SocialProof onNext={goNext} userAge={answers.age} />;
+        return <Step3SocialProof onNext={goNext} userAge={answers.age} pandaVideoId="cacc3211-9810-4ca7-8d75-5108ec1c843e" />;
       case "step-4":
         return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} userName={answers.name} userAge={answers.age} />;
       case "step-5":
