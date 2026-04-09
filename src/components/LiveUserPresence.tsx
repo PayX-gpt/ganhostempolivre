@@ -510,6 +510,7 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
         );
       })()}
 
+      {onlineUsers.length > 0 && (
         <div className="mt-4 rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3">
           <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <Eye className="w-3.5 h-3.5 text-emerald-400" /> Usuários Online Agora
