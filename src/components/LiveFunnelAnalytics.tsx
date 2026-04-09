@@ -64,6 +64,18 @@ const TIKTOK_FUNNEL_STEPS = [
   { route: "tiktok/step-10", label: "TK Oferta" },
 ];
 
+const TIKTOK_ES_FUNNEL_STEPS = [
+  { route: "tiktok-es/step-1", label: "ES Intro" },
+  { route: "tiktok-es/step-2", label: "ES Edad" },
+  { route: "tiktok-es/step-3", label: "ES Prueba" },
+  { route: "tiktok-es/step-4", label: "ES Meta" },
+  { route: "tiktok-es/step-5", label: "ES 10min" },
+  { route: "tiktok-es/step-6", label: "ES Contacto" },
+  { route: "tiktok-es/step-7", label: "ES Loading" },
+  { route: "tiktok-es/step-8", label: "ES Proyección" },
+  { route: "tiktok-es/step-9", label: "ES Oferta" },
+];
+
 const ROUTE_ALIASES: Record<string, string> = {
   "/step-18": "/step-17",
   "/step-19": "/step-17",
