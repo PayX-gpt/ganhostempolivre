@@ -16,6 +16,8 @@ interface Step11Props {
   onNext: () => void;
   userAge?: string;
   pandaVideoId?: string;
+  pandaButtonId?: string;
+  videoAspectRatio?: "9:16" | "16:9";
 }
 
 const texts = {
@@ -81,7 +83,7 @@ const texts = {
   },
 };
 
-const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
+const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: customButtonId, videoAspectRatio = "9:16" }: Step11Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const young = isYoungProfile(userAge);
@@ -106,7 +108,8 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
   const offerAmount = getCurrentOfferAmount();
 
   const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
-  const pandaButtonId = "3e462562-4d30-4dd4-b759-de8c4f18b84e";
+  const pandaButtonId = customButtonId || "3e462562-4d30-4dd4-b759-de8c4f18b84e";
+  const aspectPadding = videoAspectRatio === "16:9" ? "56.25%" : "177.77777777777777%";
 
   // Inject Panda API script for external button + PANDA_CONTEXT listener
   useEffect(() => {
@@ -188,7 +191,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId }: Step11Props) => {
       </div>
 
       <div className="w-full rounded-2xl border border-border shadow-xl overflow-hidden mb-4">
-        <div style={{ position: "relative", paddingTop: "177.77777777777777%" }}>
+        <div style={{ position: "relative", paddingTop: aspectPadding }}>
           <iframe
             id={`panda-${videoId}`}
             src={`https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=${videoId}`}

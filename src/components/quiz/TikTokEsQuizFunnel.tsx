@@ -216,7 +216,7 @@ const TikTokEsQuizFunnel = () => {
       case "step-8":
         return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} isTiktok />;
       case "step-9":
-        return <Step11SocialProof2 onNext={() => {}} userAge={answers.age} pandaVideoId="daa037ca-64f0-4637-97dc-c0278d1f6df6" />;
+        return <Step11SocialProof2 onNext={() => {}} userAge={answers.age} pandaVideoId="23cf5521-529d-4627-8144-980f0552575f" pandaButtonId="eb600fb7-bf10-4f88-9b1f-0312a24ad094" videoAspectRatio="16:9" />;
       default:
         return null;
     }
