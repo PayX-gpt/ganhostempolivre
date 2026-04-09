@@ -520,14 +520,16 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
               const purchase = getPurchaseForUser(user);
               const isVisitante = user.name === "Visitante";
               const isTiktok = user.traffic_source === "tiktok";
+              const isTiktokEs = user.page_id?.includes("/tiktok-es/");
               const isMeta = user.traffic_source === "meta";
-              const dotColor = isTiktok ? "bg-red-500" : isMeta ? "bg-emerald-400" : "bg-gray-400";
-              const dotGlow = isTiktok ? "bg-red-500" : isMeta ? "bg-emerald-400" : "bg-gray-400";
+              const dotColor = isTiktok ? (isTiktokEs ? "bg-orange-500" : "bg-red-500") : isMeta ? "bg-emerald-400" : "bg-gray-400";
+              const dotGlow = dotColor;
               const userCampaign = sessionCampaignMap[user.session_id];
               return (
                 <div key={user.session_id} className={cn(
                   "flex items-center gap-2 text-xs py-1.5 px-2 rounded-lg",
                   purchase ? "bg-emerald-500/10 border border-emerald-500/20"
+                  : isTiktokEs ? "bg-orange-500/5 border border-orange-500/15"
                   : isTiktok ? "bg-red-500/5 border border-red-500/15"
                   : "bg-[#1a1a1a]"
                 )}>
