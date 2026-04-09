@@ -540,7 +540,12 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
                   <span className={cn("font-medium truncate flex-1", isVisitante ? "text-[#666] italic" : "text-white")}>
                     {user.name}
                   </span>
-                  {isTiktok && (
+                  {isTiktokEs && (
+                    <span className="text-[8px] bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full border border-orange-500/30 font-bold shrink-0 shadow-[0_0_6px_rgba(249,115,22,0.3)]">
+                      TikTok ES
+                    </span>
+                  )}
+                  {isTiktok && !isTiktokEs && (
                     <span className="text-[8px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full border border-red-500/30 font-bold shrink-0 shadow-[0_0_6px_rgba(239,68,68,0.3)]">
                       TikTok
                     </span>
