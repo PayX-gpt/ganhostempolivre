@@ -114,6 +114,7 @@ async function fetchAllRows(
 const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
   const [funnelData, setFunnelData] = useState<StepData[]>([]);
   const [tiktokFunnelData, setTiktokFunnelData] = useState<StepData[]>([]);
+  const [tiktokEsFunnelData, setTiktokEsFunnelData] = useState<StepData[]>([]);
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalViews, setTotalViews] = useState(0);
