@@ -394,7 +394,7 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
 
       {/* Original Funnel */}
       <div className="grid grid-cols-7 sm:grid-cols-11 gap-1.5 sm:gap-2">
-        {funnelSteps.filter(s => !s.id.startsWith("tk_")).map((step) => {
+        {funnelSteps.filter(s => !s.id.startsWith("tk_") && !s.id.startsWith("tkes_")).map((step) => {
           const Icon = step.icon;
           const hasUsers = step.count > 0;
           const sources = step.sources || [];
