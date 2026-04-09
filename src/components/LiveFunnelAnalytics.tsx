@@ -267,8 +267,20 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
       return row;
     });
 
+    // TikTok ES funnel data
+    const tkEsSteps: StepData[] = TIKTOK_ES_FUNNEL_STEPS.map((s, i) => {
+      const views = stepCounts[s.route]?.size || 0;
+      const prevViews = i > 0 ? (stepCounts[TIKTOK_ES_FUNNEL_STEPS[i - 1].route]?.size || 0) : views;
+      const dropOff = prevViews > 0 ? Math.round(((prevViews - views) / prevViews) * 100) : 0;
+      const times = stepTimes[s.route] || stepTimes[`/${s.route}`] || [];
+      const avgTimeMs = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
+      const row: StepData = { step: s.route, label: s.label, views, dropOff: i === 0 ? 0 : dropOff, avgTimeMs };
+      return row;
+    });
+
     setFunnelData(steps);
     setTiktokFunnelData(tkSteps);
+    setTiktokEsFunnelData(tkEsSteps);
     setHourlyData(Object.entries(hourCounts).map(([hour, visits]) => ({ hour, visits })));
     setTotalViews(steps[0]?.views || 0);
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
