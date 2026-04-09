@@ -520,7 +520,7 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
               const purchase = getPurchaseForUser(user);
               const isVisitante = user.name === "Visitante";
               const isTiktok = user.traffic_source === "tiktok";
-              const isTiktokEs = user.page_id?.includes("/tiktok-es/");
+              const isTiktokEs = user.page?.includes("/tiktok-es/");
               const isMeta = user.traffic_source === "meta";
               const dotColor = isTiktok ? (isTiktokEs ? "bg-orange-500" : "bg-red-500") : isMeta ? "bg-emerald-400" : "bg-gray-400";
               const dotGlow = dotColor;
