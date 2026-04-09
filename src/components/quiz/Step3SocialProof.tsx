@@ -9,6 +9,7 @@ import { useLanguage, type Language } from "@/lib/i18n";
 interface Step3Props {
   onNext: () => void;
   userAge?: string;
+  pandaVideoId?: string;
 }
 
 const texts = {
@@ -65,7 +66,7 @@ const texts = {
   },
 };
 
-const Step3SocialProof = ({ onNext, userAge }: Step3Props) => {
+const Step3SocialProof = ({ onNext, userAge, pandaVideoId }: Step3Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const [showCTA, setShowCTA] = useState(false);
@@ -87,12 +88,11 @@ const Step3SocialProof = ({ onNext, userAge }: Step3Props) => {
       <div className="w-full rounded-2xl overflow-hidden border border-border scroll-mt-24" ref={videoRef}>
         <div style={{ position: "relative", paddingTop: "56.25%" }}>
           <iframe
-            id="panda-ec4b550c-ac32-42c4-b4ea-40a7a2c28d35"
-            src="https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=ec4b550c-ac32-42c4-b4ea-40a7a2c28d35"
+            id={`panda-${pandaVideoId || "ec4b550c-ac32-42c4-b4ea-40a7a2c28d35"}`}
+            src={`https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=${pandaVideoId || "ec4b550c-ac32-42c4-b4ea-40a7a2c28d35"}`}
             style={{ border: "none", position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
             allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
             allowFullScreen
-            
           />
         </div>
       </div>
