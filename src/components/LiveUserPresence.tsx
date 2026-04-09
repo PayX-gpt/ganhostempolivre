@@ -91,7 +91,19 @@ const TIKTOK_STEPS: FunnelStep[] = [
   { id: "tk_step10", route: "/tiktok/step-10", label: "Oferta", icon: Star, count: 0 },
 ];
 
-const ALL_STEPS = [...STEPS, ...TIKTOK_STEPS];
+const TIKTOK_ES_STEPS: FunnelStep[] = [
+  { id: "tkes_step1", route: "/tiktok-es/step-1", label: "Intro", icon: Zap, count: 0 },
+  { id: "tkes_step2", route: "/tiktok-es/step-2", label: "Edad", icon: Users, count: 0 },
+  { id: "tkes_step3", route: "/tiktok-es/step-3", label: "Prueba", icon: Star, count: 0 },
+  { id: "tkes_step4", route: "/tiktok-es/step-4", label: "Meta", icon: Target, count: 0 },
+  { id: "tkes_step5", route: "/tiktok-es/step-5", label: "10 min", icon: Clock, count: 0 },
+  { id: "tkes_step6", route: "/tiktok-es/step-6", label: "Contacto", icon: Mail, count: 0 },
+  { id: "tkes_step7", route: "/tiktok-es/step-7", label: "Loading", icon: Clock, count: 0 },
+  { id: "tkes_step8", route: "/tiktok-es/step-8", label: "Proyección", icon: UserCheck, count: 0 },
+  { id: "tkes_step9", route: "/tiktok-es/step-9", label: "Oferta", icon: Star, count: 0 },
+];
+
+const ALL_STEPS = [...STEPS, ...TIKTOK_STEPS, ...TIKTOK_ES_STEPS];
 
 const FUNNEL_STEP_LABELS: Record<string, string> = {
   front_37: "R$37", front_47: "R$47",
@@ -102,7 +114,14 @@ const FUNNEL_STEP_LABELS: Record<string, string> = {
 
 const toStepId = (page: string): string | null => {
   const p = page.toLowerCase();
-  // TikTok funnel routes
+  // TikTok ES funnel routes (check before PT to avoid false match)
+  if (p.includes("/tiktok-es/")) {
+    for (let i = 9; i >= 1; i--) {
+      if (p.includes(`/tiktok-es/step-${i}`)) return `tkes_step${i}`;
+    }
+    return null;
+  }
+  // TikTok PT funnel routes
   if (p.includes("/tiktok/")) {
     for (let i = 10; i >= 1; i--) {
       if (p.includes(`/tiktok/step-${i}`)) return `tk_step${i}`;
@@ -451,6 +470,46 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
         );
       })()}
 
+      {/* TikTok ES Funnel */}
+      {(() => {
+        const tkesSteps = funnelSteps.filter(s => s.id.startsWith("tkes_"));
+        const tkesTotal = tkesSteps.reduce((sum, s) => sum + s.count, 0);
+        return (
+          <div className="mt-4 rounded-xl border border-orange-500/20 bg-[#0d0d0d] p-3">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 rounded-lg bg-orange-500/15 border border-orange-500/25 flex-shrink-0">
+                <Zap className="w-3.5 h-3.5 text-orange-400" />
+              </div>
+              <h4 className="text-xs font-semibold text-orange-400 uppercase tracking-wider">Funil TikTok ES</h4>
+              <span className="text-[10px] text-[#666]">9 etapas</span>
+              {tkesTotal > 0 && (
+                <Badge className="bg-orange-500/20 text-orange-400 border border-orange-500/30 px-1.5 text-[10px] ml-auto">
+                  {tkesTotal} online
+                </Badge>
+              )}
+            </div>
+            <div className="grid grid-cols-5 sm:grid-cols-9 gap-1.5 sm:gap-2">
+              {tkesSteps.map((step) => {
+                const Icon = step.icon;
+                const hasUsers = step.count > 0;
+                const borderColor = hasUsers ? "border-orange-500/40 shadow-lg shadow-orange-500/10" : "border-[#2a2a2a]";
+                const iconColor = hasUsers ? "text-orange-400" : "text-[#666]";
+                return (
+                  <div key={step.id} className={cn(
+                    "flex flex-col items-center justify-center p-1.5 sm:p-2.5 rounded-xl transition-all overflow-hidden",
+                    "bg-[#0d0d0d] border", borderColor
+                  )}>
+                    <Icon className={cn("w-3.5 h-3.5 mb-0.5 flex-shrink-0", iconColor)} />
+                    <span className={cn("text-sm sm:text-lg font-bold tabular-nums leading-none", hasUsers ? "text-white" : "text-[#444]")}>{step.count}</span>
+                    <span className="text-[7px] sm:text-[9px] text-[#666] text-center leading-tight truncate w-full">{step.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {onlineUsers.length > 0 && (
         <div className="mt-4 rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3">
           <h4 className="text-[10px] font-medium text-[#888] uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -461,14 +520,16 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
               const purchase = getPurchaseForUser(user);
               const isVisitante = user.name === "Visitante";
               const isTiktok = user.traffic_source === "tiktok";
+              const isTiktokEs = user.page?.includes("/tiktok-es/");
               const isMeta = user.traffic_source === "meta";
-              const dotColor = isTiktok ? "bg-red-500" : isMeta ? "bg-emerald-400" : "bg-gray-400";
-              const dotGlow = isTiktok ? "bg-red-500" : isMeta ? "bg-emerald-400" : "bg-gray-400";
+              const dotColor = isTiktok ? (isTiktokEs ? "bg-orange-500" : "bg-red-500") : isMeta ? "bg-emerald-400" : "bg-gray-400";
+              const dotGlow = dotColor;
               const userCampaign = sessionCampaignMap[user.session_id];
               return (
                 <div key={user.session_id} className={cn(
                   "flex items-center gap-2 text-xs py-1.5 px-2 rounded-lg",
                   purchase ? "bg-emerald-500/10 border border-emerald-500/20"
+                  : isTiktokEs ? "bg-orange-500/5 border border-orange-500/15"
                   : isTiktok ? "bg-red-500/5 border border-red-500/15"
                   : "bg-[#1a1a1a]"
                 )}>
@@ -479,7 +540,12 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
                   <span className={cn("font-medium truncate flex-1", isVisitante ? "text-[#666] italic" : "text-white")}>
                     {user.name}
                   </span>
-                  {isTiktok && (
+                  {isTiktokEs && (
+                    <span className="text-[8px] bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full border border-orange-500/30 font-bold shrink-0 shadow-[0_0_6px_rgba(249,115,22,0.3)]">
+                      TikTok ES
+                    </span>
+                  )}
+                  {isTiktok && !isTiktokEs && (
                     <span className="text-[8px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full border border-red-500/30 font-bold shrink-0 shadow-[0_0_6px_rgba(239,68,68,0.3)]">
                       TikTok
                     </span>
