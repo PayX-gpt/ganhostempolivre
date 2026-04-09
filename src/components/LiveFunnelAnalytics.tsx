@@ -64,6 +64,18 @@ const TIKTOK_FUNNEL_STEPS = [
   { route: "tiktok/step-10", label: "TK Oferta" },
 ];
 
+const TIKTOK_ES_FUNNEL_STEPS = [
+  { route: "tiktok-es/step-1", label: "ES Intro" },
+  { route: "tiktok-es/step-2", label: "ES Edad" },
+  { route: "tiktok-es/step-3", label: "ES Prueba" },
+  { route: "tiktok-es/step-4", label: "ES Meta" },
+  { route: "tiktok-es/step-5", label: "ES 10min" },
+  { route: "tiktok-es/step-6", label: "ES Contacto" },
+  { route: "tiktok-es/step-7", label: "ES Loading" },
+  { route: "tiktok-es/step-8", label: "ES Proyección" },
+  { route: "tiktok-es/step-9", label: "ES Oferta" },
+];
+
 const ROUTE_ALIASES: Record<string, string> = {
   "/step-18": "/step-17",
   "/step-19": "/step-17",
@@ -102,6 +114,7 @@ async function fetchAllRows(
 const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
   const [funnelData, setFunnelData] = useState<StepData[]>([]);
   const [tiktokFunnelData, setTiktokFunnelData] = useState<StepData[]>([]);
+  const [tiktokEsFunnelData, setTiktokEsFunnelData] = useState<StepData[]>([]);
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalViews, setTotalViews] = useState(0);
@@ -195,7 +208,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
 
     const stepCounts: Record<string, Set<string>> = {};
     const stepCampaignCounts: Record<string, Record<string, Set<string>>> = {};
-    [...FUNNEL_STEPS, ...TIKTOK_FUNNEL_STEPS].forEach(s => {
+    [...FUNNEL_STEPS, ...TIKTOK_FUNNEL_STEPS, ...TIKTOK_ES_FUNNEL_STEPS].forEach(s => {
       stepCounts[s.route] = new Set();
       stepCampaignCounts[s.route] = {};
     });
@@ -254,8 +267,20 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
       return row;
     });
 
+    // TikTok ES funnel data
+    const tkEsSteps: StepData[] = TIKTOK_ES_FUNNEL_STEPS.map((s, i) => {
+      const views = stepCounts[s.route]?.size || 0;
+      const prevViews = i > 0 ? (stepCounts[TIKTOK_ES_FUNNEL_STEPS[i - 1].route]?.size || 0) : views;
+      const dropOff = prevViews > 0 ? Math.round(((prevViews - views) / prevViews) * 100) : 0;
+      const times = stepTimes[s.route] || stepTimes[`/${s.route}`] || [];
+      const avgTimeMs = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
+      const row: StepData = { step: s.route, label: s.label, views, dropOff: i === 0 ? 0 : dropOff, avgTimeMs };
+      return row;
+    });
+
     setFunnelData(steps);
     setTiktokFunnelData(tkSteps);
+    setTiktokEsFunnelData(tkEsSteps);
     setHourlyData(Object.entries(hourCounts).map(([hour, visits]) => ({ hour, visits })));
     setTotalViews(steps[0]?.views || 0);
     setTotalCompleted(steps[steps.length - 1]?.views || 0);
@@ -436,6 +461,54 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
                     <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
                       <div className={cn("h-full rounded-full transition-all",
                         s.dropOff > 50 ? "bg-red-500" : s.dropOff > 30 ? "bg-amber-500" : s.dropOff > 15 ? "bg-yellow-500" : "bg-red-400"
+                      )} style={{ width: `${Math.min(s.dropOff, 100)}%` }} />
+                    </div>
+                    {s.dropOff > 0 && <span className={cn("font-bold tabular-nums w-10 text-right text-[10px]", s.dropOff > 30 ? "text-red-400" : "text-amber-400")}>-{s.dropOff}%</span>}
+                    {s.dropOff === 0 && <span className="w-10" />}
+                    {avgSec > 0 && <span className="tabular-nums w-12 text-right text-[9px] text-[#555]">~{avgLabel}</span>}
+                    {avgSec === 0 && <span className="w-12" />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* TikTok ES Funnel Section */}
+      {(() => {
+        const tkEsTotal = tiktokEsFunnelData.reduce((sum, s) => sum + s.views, 0);
+        if (tkEsTotal === 0 && tiktokEsFunnelData.length > 0) return null;
+        return (
+          <div className="rounded-xl border border-orange-500/20 bg-[#0d0d0d] p-3 mt-3">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 rounded-lg bg-orange-500/15 border border-orange-500/25 flex-shrink-0">
+                <BarChart3 className="w-3.5 h-3.5 text-orange-400" />
+              </div>
+              <h4 className="text-xs font-semibold text-orange-400 uppercase tracking-wider">Funil TikTok ES — 9 Etapas</h4>
+              <span className="text-[10px] text-[#666] ml-auto tabular-nums">{tkEsTotal} views</span>
+            </div>
+            <div className="h-[180px] mb-3">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={tiktokEsFunnelData} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
+                  <XAxis dataKey="label" tick={{ fill: "#666", fontSize: 8 }} axisLine={false} tickLine={false} interval={0} angle={-45} textAnchor="end" height={50} />
+                  <YAxis tick={{ fill: "#666", fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="views" fill="#f97316" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-1">
+              {tiktokEsFunnelData.map((s, i) => {
+                const avgSec = s.avgTimeMs > 0 ? s.avgTimeMs / 1000 : 0;
+                const avgLabel = avgSec > 60 ? `${(avgSec / 60).toFixed(1)}min` : `${Math.round(avgSec)}s`;
+                return (
+                  <div key={i} className="flex items-center gap-1.5 text-[10px] py-0.5 px-1">
+                    <span className="text-[#888] w-16 truncate font-medium">{s.label}</span>
+                    <span className="text-[#666] w-8 text-right tabular-nums">{s.views}</span>
+                    <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+                      <div className={cn("h-full rounded-full transition-all",
+                        s.dropOff > 50 ? "bg-red-500" : s.dropOff > 30 ? "bg-amber-500" : s.dropOff > 15 ? "bg-yellow-500" : "bg-orange-400"
                       )} style={{ width: `${Math.min(s.dropOff, 100)}%` }} />
                     </div>
                     {s.dropOff > 0 && <span className={cn("font-bold tabular-nums w-10 text-right text-[10px]", s.dropOff > 30 ? "text-red-400" : "text-amber-400")}>-{s.dropOff}%</span>}
