@@ -208,7 +208,7 @@ const LiveFunnelAnalytics = ({ campaignFilter }: LiveFunnelAnalyticsProps) => {
 
     const stepCounts: Record<string, Set<string>> = {};
     const stepCampaignCounts: Record<string, Record<string, Set<string>>> = {};
-    [...FUNNEL_STEPS, ...TIKTOK_FUNNEL_STEPS].forEach(s => {
+    [...FUNNEL_STEPS, ...TIKTOK_FUNNEL_STEPS, ...TIKTOK_ES_FUNNEL_STEPS].forEach(s => {
       stepCounts[s.route] = new Set();
       stepCampaignCounts[s.route] = {};
     });
