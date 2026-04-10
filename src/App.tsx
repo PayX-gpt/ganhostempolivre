@@ -20,13 +20,17 @@ import GoCheckout from "./pages/GoCheckout";
 
 const queryClient = new QueryClient();
 
+// Match Vite's base so the app routes correctly when served from a subpath
+// (e.g. GitHub Pages at /ganhostempolivre/). In dev this resolves to "/".
+const routerBasename = import.meta.env.BASE_URL.replace(/\/+$/, "") || "/";
+
 const App = () => (
   <LanguageProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename={routerBasename}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/live" element={<Live />} />

@@ -5,7 +5,13 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  // GitHub Pages serves this repo from /ganhostempolivre/.
+  // Keep dev at root so `bun run dev` works normally on localhost.
+  const base = mode === "production" ? "/ganhostempolivre/" : "/";
+
+  return ({
+  base,
   server: {
     host: "::",
     port: 8080,
@@ -55,12 +61,12 @@ export default defineConfig(({ mode }) => ({
         background_color: "#0f1319",
         display: "standalone",
         orientation: "portrait",
-        scope: "/",
-        start_url: "/live",
+        scope: base,
+        start_url: `${base}live`,
         icons: [
-          { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" },
-          { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png" },
-          { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: `${base}pwa-192x192.png`, sizes: "192x192", type: "image/png" },
+          { src: `${base}pwa-512x512.png`, sizes: "512x512", type: "image/png" },
+          { src: `${base}pwa-512x512.png`, sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
     }),
@@ -70,4 +76,5 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-}));
+  });
+});
