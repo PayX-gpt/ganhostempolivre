@@ -116,21 +116,20 @@ Deno.serve(async (req) => {
       if (r.status === "rejected") console.warn(`⚠️ [CAPI-IC] Pixel ${pixels[i].id} failed:`, r.reason);
     });
 
-    if (response.ok) {
-      // Mark as sent for dedup
+    if (anySuccess) {
       await supabase.from("funnel_events").insert({
         event_name: "capi_ic_sent",
         session_id: dedupKey,
-        event_data: { email, event_id: eventId, amount, plan },
+        event_data: { email, event_id: eventId, amount, plan, pixels_sent: pixels.map(p => p.id) },
         page_url: "capi_initiate_checkout",
       });
-      console.log(`✅ [CAPI-IC] Sent for ${dedupKey} (event_id: ${eventId})`);
+      console.log(`✅ [CAPI-IC] Sent for ${dedupKey} to ${pixels.length} pixels (event_id: ${eventId})`);
       return new Response(JSON.stringify({ success: true, sent: true, event_id: eventId }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } else {
-      console.error(`❌ [CAPI-IC] Failed:`, JSON.stringify(result));
-      return new Response(JSON.stringify({ success: false, error: result }), {
+      console.error(`❌ [CAPI-IC] All pixels failed`);
+      return new Response(JSON.stringify({ success: false, error: "All pixels failed" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
