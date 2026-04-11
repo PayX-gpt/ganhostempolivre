@@ -61,10 +61,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ====== SEND TO FACEBOOK CAPI ======
-    const pixelId = Deno.env.get("FB_PIXEL_ID");
-    const accessToken = Deno.env.get("FB_ACCESS_TOKEN");
-    if (!pixelId || !accessToken) {
+    // ====== SEND TO FACEBOOK CAPI (multi-pixel) ======
+    const pixels = [
+      { id: Deno.env.get("FB_PIXEL_ID"), token: Deno.env.get("FB_ACCESS_TOKEN") },
+      { id: "952975541025077", token: Deno.env.get("FB_ACCESS_TOKEN_2") },
+    ].filter(p => p.id && p.token);
+
+    if (pixels.length === 0) {
       console.warn("⚠️ [CAPI-IC] Missing FB credentials");
       return new Response(JSON.stringify({ success: false, error: "Missing FB credentials" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -93,13 +96,25 @@ Deno.serve(async (req) => {
       custom_data: amount ? { currency: "BRL", value: amount } : undefined,
     };
 
-    const url = `https://graph.facebook.com/v21.0/${pixelId}/events?access_token=${accessToken}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: [eventData] }),
+    // Send to all pixels in parallel
+    const results = await Promise.allSettled(
+      pixels.map(async (p) => {
+        const url = `https://graph.facebook.com/v21.0/${p.id}/events?access_token=${p.token}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: [eventData] }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(`Pixel ${p.id}: ${JSON.stringify(result)}`);
+        return { pixelId: p.id, result };
+      })
+    );
+
+    const anySuccess = results.some(r => r.status === "fulfilled");
+    results.forEach((r, i) => {
+      if (r.status === "rejected") console.warn(`⚠️ [CAPI-IC] Pixel ${pixels[i].id} failed:`, r.reason);
     });
-    const result = await response.json();
 
     if (response.ok) {
       // Mark as sent for dedup
