@@ -285,7 +285,7 @@ const QuizFunnel = () => {
       case "step-4":
         return <Step3SocialProof onNext={goNext} userAge={answers.age} />;
       case "step-5":
-        return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} userName={answers.name} userAge={answers.age} />;
+        return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} userName={answers.name} userAge={answers.age} quizVersion={quizVersion} />;
       case "step-6":
         return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} userName={answers.name} userAge={answers.age} />;
       case "step-7":
