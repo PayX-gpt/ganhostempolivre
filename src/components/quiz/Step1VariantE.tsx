@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StepContainer, CTAButton } from "./QuizUI";
 import { useLanguage } from "@/lib/i18n";
 
@@ -16,6 +16,12 @@ const Step1VariantE = ({ onNext }: Step1VariantEProps) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const iframeRef = useRef<HTMLDivElement>(null);
+  const [showCta, setShowCta] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowCta(true), 60000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Send parent context to Panda iframe
   useEffect(() => {
@@ -50,7 +56,7 @@ const Step1VariantE = ({ onNext }: Step1VariantEProps) => {
       </div>
 
       {/* CTA */}
-      <div className="w-full mt-4">
+      <div className={`w-full mt-4 transition-all duration-700 ${showCta ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
         <button
           onClick={onNext}
           className="w-full py-4 px-6 rounded-xl font-extrabold text-[15px] sm:text-xl text-black uppercase tracking-wide animate-bounce-subtle transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
