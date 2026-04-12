@@ -289,7 +289,7 @@ const QuizFunnel = () => {
       case "step-6":
         return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} userName={answers.name} userAge={answers.age} />;
       case "step-7":
-        return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} userName={answers.name} userAge={answers.age} />;
+        return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} userName={answers.name} userAge={answers.age} quizVersion={quizVersion} />;
       case "step-8":
         return <Step7MentorVideo onNext={goNext} userAge={answers.age} />;
       case "step-9":

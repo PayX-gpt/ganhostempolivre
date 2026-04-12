@@ -13,7 +13,7 @@ import {
   XCircle, Database, Radio, Filter, Search,
   Bell, BellOff, Volume2, VolumeX,
   Globe, TrendingDown, LayoutDashboard, FlaskConical,
-  Megaphone, Palette, Receipt, ShieldCheck
+  Megaphone, Palette, Receipt, ShieldCheck, Beaker
 } from "lucide-react";
 import LiveRevenueChart from "@/components/LiveRevenueChart";
 import LiveUserPresence from "@/components/LiveUserPresence";
@@ -36,6 +36,7 @@ import LiveABTest from "@/components/LiveABTest";
 import LiveBuyerProfile from "@/components/LiveBuyerProfile";
 import LiveAuditTab from "@/components/LiveAuditTab";
 import LivePricingMonitor from "@/components/LivePricingMonitor";
+import LiveQuizVersionAB from "@/components/LiveQuizVersionAB";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import SessionLogsDialog from "@/components/SessionLogsDialog";
@@ -643,6 +644,9 @@ export default function AdminFunnelAudit() {
               <TabsTrigger value="audit" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
                 <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />Auditoria
               </TabsTrigger>
+              <TabsTrigger value="quizab" className="data-[state=active]:bg-violet-500/20 data-[state=active]:text-violet-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
+                <Beaker className="w-3.5 h-3.5 mr-1.5" />Quiz V1/V2
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -868,6 +872,11 @@ export default function AdminFunnelAudit() {
                 </div>
               </ScrollArea>
             </div>
+          </TabsContent>
+
+          {/* TAB: QUIZ V1 vs V2 */}
+          <TabsContent value="quizab" className="space-y-4 mt-4">
+            <LiveQuizVersionAB />
           </TabsContent>
         </Tabs>
       </div>
