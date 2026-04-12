@@ -74,6 +74,13 @@ const VARIANT_INFO: Record<string, { angle: string; headline: string; cta: strin
     description: "3 cards de pessoas reais (Maria 52, José 34, Amanda 28) com ganhos diários e semanais. Estrelas 5/5. Prova social pesada antes da promessa. Alerta visual: 'Última turma com vagas'. Foco em identificação com pessoas comuns.",
   },
 };
+  E: {
+    angle: "Vídeo Direto — VSL Panda",
+    headline: "Vídeo vertical (9:16) com VSL do mentor",
+    cta: "CLIQUE AGORA PARA CONTINUAR →",
+    description: "Landing page minimalista com vídeo vertical em tela cheia (Panda Video). Botão CTA amarelo aparece após 60 segundos para garantir que o lead assista o vídeo antes de avançar. Foco em retenção e qualificação pelo conteúdo do vídeo.",
+  },
+};
 
 /* ── Criteria weights ── */
 const WEIGHTS = {
