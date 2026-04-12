@@ -340,7 +340,7 @@ export const ensureUrlHasTrackingParams = (): void => {
  * Save session attribution to the database (once per session).
  * Called on funnel entry to create an independent source of truth.
  */
-export const saveSessionAttribution = async (quizVariant?: QuizVariant): Promise<void> => {
+export const saveSessionAttribution = async (quizVariant?: string): Promise<void> => {
   try {
     const data = getTrackingData();
     const sessionId = data.session_id;
