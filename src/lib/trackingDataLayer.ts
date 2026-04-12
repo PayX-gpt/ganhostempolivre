@@ -1,6 +1,7 @@
 /**
  * Global Tracking Data Layer
  * Centraliza todos os dados de rastreamento em window.trackingData
+ * Updated: variant E support
  */
 
 export interface TrackingData {
