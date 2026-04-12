@@ -218,19 +218,28 @@ const QuizFunnel = () => {
     });
   }, [currentSlug, step, quizVersion]);
 
+  // Find the next valid step, skipping V2-removed steps
+  const findNextStep = useCallback((fromStep: number): number => {
+    let next = Math.min(fromStep + 1, TOTAL_STEPS);
+    while (next <= TOTAL_STEPS && shouldSkipStep(STEP_SLUGS[next - 1], quizVersion)) {
+      next++;
+    }
+    return Math.min(next, TOTAL_STEPS);
+  }, [quizVersion]);
+
   const goNext = useCallback(() => {
     if (isNavigatingRef.current) return;
     isNavigatingRef.current = true;
 
     trackStepComplete();
-    const nextStep = Math.min(step + 1, TOTAL_STEPS);
+    const nextStep = findNextStep(step);
     navigate(`/${STEP_SLUGS[nextStep - 1]}`);
     window.scrollTo({ top: 0 });
 
     window.setTimeout(() => {
       isNavigatingRef.current = false;
     }, 500);
-  }, [step, navigate, trackStepComplete]);
+  }, [step, navigate, trackStepComplete, findNextStep]);
 
   const updateAndNext = useCallback(
     (key: keyof QuizAnswers, value: string) => {
@@ -248,7 +257,7 @@ const QuizFunnel = () => {
         } catch {}
         return updated;
       });
-      const nextStep = Math.min(step + 1, TOTAL_STEPS);
+      const nextStep = findNextStep(step);
       navigate(`/${STEP_SLUGS[nextStep - 1]}`);
       window.scrollTo({ top: 0 });
 
@@ -256,7 +265,7 @@ const QuizFunnel = () => {
         isNavigatingRef.current = false;
       }, 500);
     },
-    [step, navigate, trackStepComplete]
+    [step, navigate, trackStepComplete, findNextStep]
   );
 
   const renderStep = () => {
