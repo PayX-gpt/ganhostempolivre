@@ -346,9 +346,8 @@ export const saveSessionAttribution = async (quizVariant?: string): Promise<void
     const sessionId = data.session_id;
     if (!sessionId || sessionStorage.getItem("attribution_saved")) return;
 
-    // GUARANTEE variant is never null
-    let resolvedVariant = quizVariant ?? ensureSessionVariant();
-    if (!resolvedVariant || !QUIZ_VARIANTS.includes(resolvedVariant)) {
+    let resolvedVariant: string = quizVariant ?? ensureSessionVariant();
+    if (!resolvedVariant || !QUIZ_VARIANTS.includes(resolvedVariant as QuizVariant)) {
       resolvedVariant = QUIZ_VARIANTS[Math.floor(Math.random() * QUIZ_VARIANTS.length)];
       localStorage.setItem("quiz_variant", resolvedVariant);
     }
