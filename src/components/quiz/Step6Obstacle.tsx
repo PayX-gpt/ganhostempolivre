@@ -7,6 +7,7 @@ interface Step6Props {
   onNext: (answer: string) => void;
   userName?: string;
   userAge?: string;
+  quizVersion?: string;
 }
 
 const texts = {
@@ -18,6 +19,12 @@ const texts = {
     opts: [
       { label: "Medo de errar de novo", sublabel: "Já tentei antes e perdi dinheiro. Tenho receio de repetir.", val: "medo" },
       { label: "Falta de tempo", sublabel: "Minha rotina é corrida, não sei se consigo encaixar", val: "tempo" },
+      { label: "Não sei por onde começar", sublabel: "Me sinto perdido com tanta informação na internet", val: "inicio" },
+      { label: "Falta de dinheiro para investir", sublabel: "Não tenho capital sobrando para começar", val: "dinheiro" },
+    ],
+    opts_v2: [
+      { label: "Medo de errar de novo", sublabel: "Já tentei antes e perdi dinheiro. Tenho receio de repetir.", val: "medo" },
+      { label: "Já fui enganado antes", sublabel: "Promessas de dinheiro fácil que nunca se cumpriram", val: "enganado" },
       { label: "Não sei por onde começar", sublabel: "Me sinto perdido com tanta informação na internet", val: "inicio" },
       { label: "Falta de dinheiro para investir", sublabel: "Não tenho capital sobrando para começar", val: "dinheiro" },
     ],
@@ -33,6 +40,12 @@ const texts = {
       { label: "Don't know where to start", sublabel: "I feel lost with so much information online", val: "inicio" },
       { label: "No money to invest", sublabel: "I don't have spare capital to get started", val: "dinheiro" },
     ],
+    opts_v2: [
+      { label: "Fear of failing again", sublabel: "I've tried before and lost money. I'm afraid of repeating that.", val: "medo" },
+      { label: "I've been scammed before", sublabel: "Promises of easy money that never came true", val: "enganado" },
+      { label: "Don't know where to start", sublabel: "I feel lost with so much information online", val: "inicio" },
+      { label: "No money to invest", sublabel: "I don't have spare capital to get started", val: "dinheiro" },
+    ],
   },
   es: {
     title1: "¿Cuál es tu ",
@@ -42,6 +55,12 @@ const texts = {
     opts: [
       { label: "Miedo a equivocarme de nuevo", sublabel: "Ya intenté antes y perdí plata. Tengo miedo de repetirlo.", val: "medo" },
       { label: "Falta de tiempo", sublabel: "Mi rutina es intensa, no sé si puedo encajarlo", val: "tempo" },
+      { label: "No sé por dónde empezar", sublabel: "Me siento perdido con tanta información en internet", val: "inicio" },
+      { label: "No tengo plata para invertir", sublabel: "No me sobra capital para empezar", val: "dinheiro" },
+    ],
+    opts_v2: [
+      { label: "Miedo a equivocarme de nuevo", sublabel: "Ya intenté antes y perdí plata. Tengo miedo de repetirlo.", val: "medo" },
+      { label: "Ya me estafaron antes", sublabel: "Promesas de plata fácil que nunca se cumplieron", val: "enganado" },
       { label: "No sé por dónde empezar", sublabel: "Me siento perdido con tanta información en internet", val: "inicio" },
       { label: "No tengo plata para invertir", sublabel: "No me sobra capital para empezar", val: "dinheiro" },
     ],
@@ -55,9 +74,19 @@ const icons = [
   <Wallet className="w-5 h-5" />,
 ];
 
-const Step6Obstacle = ({ onNext }: Step6Props) => {
+const iconsV2 = [
+  <AlertCircle className="w-5 h-5" />,
+  <AlertCircle className="w-5 h-5" />,
+  <Compass className="w-5 h-5" />,
+  <Wallet className="w-5 h-5" />,
+];
+
+const Step6Obstacle = ({ onNext, quizVersion }: Step6Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
+  const isV2 = quizVersion === "V2";
+  const opts = isV2 ? t.opts_v2 : t.opts;
+  const currentIcons = isV2 ? iconsV2 : icons;
   const [selected, setSelected] = useState<string | null>(null);
 
   const handleSelect = (val: string) => {
@@ -71,12 +100,12 @@ const Step6Obstacle = ({ onNext }: Step6Props) => {
       <StepSubtitle>{t.subtitle}</StepSubtitle>
 
       <div className="w-full space-y-3 mt-2">
-        {t.opts.map((opt, i) => (
+        {opts.map((opt, i) => (
           <OptionCard
             key={opt.val}
             label={opt.label}
             sublabel={opt.sublabel}
-            icon={icons[i]}
+            icon={currentIcons[i]}
             selected={selected === opt.val}
             onClick={() => handleSelect(opt.val)}
           />
