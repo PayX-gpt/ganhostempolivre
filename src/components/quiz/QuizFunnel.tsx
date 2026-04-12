@@ -9,6 +9,7 @@ import Step1Intro from "./Step1Intro";
 import Step1VariantB from "./Step1VariantB";
 import Step1VariantC from "./Step1VariantC";
 import Step1VariantD from "./Step1VariantD";
+import Step1VariantE from "./Step1VariantE";
 import { getEffectiveVariant, saveVariantToAttribution, type QuizVariant } from "@/lib/abTestVariant";
 import Step2Age from "./Step2Age";
 import StepName from "./StepName";
@@ -256,6 +257,7 @@ const QuizFunnel = () => {
           case "B": return <Step1VariantB onNext={goNext} />;
           case "C": return <Step1VariantC onNext={goNext} />;
           case "D": return <Step1VariantD onNext={goNext} />;
+          case "E": return <Step1VariantE onNext={goNext} />;
           default: return <Step1Intro onNext={goNext} />;
         }
       case "step-2":
