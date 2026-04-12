@@ -138,15 +138,30 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     return () => window.removeEventListener('message', handlePandaReady);
   }, [videoId]);
 
-  // Listen for Panda Video CTA click (postMessage) and external navigation
+  // Listen for Panda Video CTA click — only fires on REAL button click
+  // Panda sends postMessage with type "buttonClick" or "smartplayer_cta_click"
+  // when user clicks the in-video CTA button. Generic player messages are ignored.
   useEffect(() => {
     const handlePandaMessage = (event: MessageEvent) => {
       if (icFiredRef.current) return;
-      const data = typeof event.data === "string" ? event.data : JSON.stringify(event.data || "");
-      const isCtaClick = data.includes("cta") || data.includes("button") || data.includes("click") || data.includes("redirect") || data.includes("panda");
-      if (isCtaClick) {
+
+      // Panda CTA click events have specific message structures:
+      // 1. { type: "buttonClick" } — Panda external button API
+      // 2. { message_type: "smartplayer_cta_click" } — SmartPlayer CTA
+      // 3. { type: "panda:ctaClick" } — newer Panda API
+      const d = event.data;
+      if (!d || typeof d !== "object") return;
+
+      const isRealCtaClick =
+        d.type === "buttonClick" ||
+        d.type === "panda:ctaClick" ||
+        d.message_type === "smartplayer_cta_click" ||
+        (d.type === "panda:buttonClick") ||
+        (d.action === "redirect" && typeof d.url === "string");
+
+      if (isRealCtaClick) {
         icFiredRef.current = true;
-        console.log("[Step17] ✅ Panda CTA click detected via postMessage");
+        console.log("[Step17] ✅ Panda CTA click detected:", d.type || d.message_type || d.action);
         saveFunnelEventReliable("checkout_click", { context: "panda_cta_step17", product: "chave_token_chatgpt", amount: offerAmount });
         sendCAPIInitiateCheckout({ amount: offerAmount });
         trackTikTokInitiateCheckout({ amount: offerAmount });
@@ -154,17 +169,20 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       }
     };
 
+    // Only fire IC on page hide if user has been on page for 3+ minutes
+    // AND has watched significant video — prevents false positives from tab-closers
+    const mountedAt = Date.now();
     const handleVisibilityChange = () => {
       if (document.hidden && !icFiredRef.current) {
-        const player = document.querySelector(`iframe[id="panda-${videoId}"]`);
-        if (player) {
-          icFiredRef.current = true;
-          console.log("[Step17] ✅ IC fired on page hide (Panda CTA presumed)");
-          saveFunnelEventReliable("checkout_click", { context: "panda_cta_step17_pagehide", product: "chave_token_chatgpt", amount: offerAmount });
-          sendCAPIInitiateCheckout({ amount: offerAmount });
-          trackTikTokInitiateCheckout({ amount: offerAmount });
-          trackMetaInitiateCheckout({ amount: offerAmount });
-        }
+        const timeOnPage = Date.now() - mountedAt;
+        // Only count as IC if user spent 3+ min on this step (likely engaged with VSL)
+        if (timeOnPage < 180_000) return;
+        icFiredRef.current = true;
+        console.log("[Step17] ✅ IC fired on page hide (3min+ engaged)");
+        saveFunnelEventReliable("checkout_click", { context: "panda_cta_step17_pagehide", product: "chave_token_chatgpt", amount: offerAmount });
+        sendCAPIInitiateCheckout({ amount: offerAmount });
+        trackTikTokInitiateCheckout({ amount: offerAmount });
+        trackMetaInitiateCheckout({ amount: offerAmount });
       }
     };
 
