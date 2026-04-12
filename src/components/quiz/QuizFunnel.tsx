@@ -106,7 +106,11 @@ const QuizFunnel = () => {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const { lang } = useLanguage();
-  const [variant] = useState<QuizVariant>(() => getEffectiveVariant());
+  const [variant] = useState<QuizVariant>(() => {
+    const urlVariant = new URLSearchParams(window.location.search).get("variant")?.toUpperCase();
+    if (urlVariant && ["A","B","C","D","E"].includes(urlVariant)) return urlVariant as QuizVariant;
+    return getEffectiveVariant();
+  });
   const [answers, setAnswers] = useState<QuizAnswers>(() => {
     try {
       const saved = sessionStorage.getItem("quiz_answers");
