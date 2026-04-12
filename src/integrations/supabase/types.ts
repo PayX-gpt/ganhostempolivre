@@ -388,6 +388,7 @@ export type Database = {
           id: string
           landing_page: string | null
           quiz_variant: string | null
+          quiz_version: string | null
           referrer: string | null
           session_id: string
           ttclid: string | null
@@ -408,6 +409,7 @@ export type Database = {
           id?: string
           landing_page?: string | null
           quiz_variant?: string | null
+          quiz_version?: string | null
           referrer?: string | null
           session_id: string
           ttclid?: string | null
@@ -428,6 +430,7 @@ export type Database = {
           id?: string
           landing_page?: string | null
           quiz_variant?: string | null
+          quiz_version?: string | null
           referrer?: string | null
           session_id?: string
           ttclid?: string | null
@@ -631,6 +634,7 @@ export type Database = {
         }[]
       }
       get_dashboard_summary_today: { Args: never; Returns: Json }
+      get_quiz_version_ab_today: { Args: never; Returns: Json }
       url_decode: { Args: { input: string }; Returns: string }
     }
     Enums: {

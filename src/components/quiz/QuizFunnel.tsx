@@ -11,6 +11,7 @@ import Step1VariantC from "./Step1VariantC";
 import Step1VariantD from "./Step1VariantD";
 import Step1VariantE from "./Step1VariantE";
 import { getEffectiveVariant, saveVariantToAttribution, type QuizVariant } from "@/lib/abTestVariant";
+import { getEffectiveQuizVersion, shouldSkipStep, saveQuizVersionToAttribution, type QuizVersion } from "@/lib/quizVersionAB";
 import Step2Age from "./Step2Age";
 import StepName from "./StepName";
 import Step3SocialProof from "./Step3SocialProof";
@@ -111,6 +112,7 @@ const QuizFunnel = () => {
     if (urlVariant && ["A","B","C","D","E"].includes(urlVariant)) return urlVariant as QuizVariant;
     return getEffectiveVariant();
   });
+  const [quizVersion] = useState<QuizVersion>(() => getEffectiveQuizVersion());
   const [answers, setAnswers] = useState<QuizAnswers>(() => {
     try {
       const saved = sessionStorage.getItem("quiz_answers");
@@ -185,8 +187,9 @@ const QuizFunnel = () => {
     if (step === 1) {
       void saveSessionAttribution(variant as string);
       void saveVariantToAttribution(variant);
+      void saveQuizVersionToAttribution(quizVersion);
     }
-  }, [step, variant]);
+  }, [step, variant, quizVersion]);
 
   // Track time spent when step changes
   useEffect(() => {
@@ -197,8 +200,9 @@ const QuizFunnel = () => {
       step_name: STEP_NAMES[currentSlug] || currentSlug,
       step_number: step,
       variant,
+      quiz_version: quizVersion,
     });
-  }, [currentSlug, step]);
+  }, [currentSlug, step, quizVersion]);
 
   const trackStepComplete = useCallback((answer?: { key: string; value: string }) => {
     const timeSpentMs = Date.now() - stepEnteredAt.current;
@@ -209,23 +213,33 @@ const QuizFunnel = () => {
       time_spent_ms: timeSpentMs,
       time_spent_seconds: Math.round(timeSpentMs / 1000),
       variant,
+      quiz_version: quizVersion,
       ...(answer ? { answer_key: answer.key, answer_value: answer.value } : {}),
     });
-  }, [currentSlug, step]);
+  }, [currentSlug, step, quizVersion]);
+
+  // Find the next valid step, skipping V2-removed steps
+  const findNextStep = useCallback((fromStep: number): number => {
+    let next = Math.min(fromStep + 1, TOTAL_STEPS);
+    while (next <= TOTAL_STEPS && shouldSkipStep(STEP_SLUGS[next - 1], quizVersion)) {
+      next++;
+    }
+    return Math.min(next, TOTAL_STEPS);
+  }, [quizVersion]);
 
   const goNext = useCallback(() => {
     if (isNavigatingRef.current) return;
     isNavigatingRef.current = true;
 
     trackStepComplete();
-    const nextStep = Math.min(step + 1, TOTAL_STEPS);
+    const nextStep = findNextStep(step);
     navigate(`/${STEP_SLUGS[nextStep - 1]}`);
     window.scrollTo({ top: 0 });
 
     window.setTimeout(() => {
       isNavigatingRef.current = false;
     }, 500);
-  }, [step, navigate, trackStepComplete]);
+  }, [step, navigate, trackStepComplete, findNextStep]);
 
   const updateAndNext = useCallback(
     (key: keyof QuizAnswers, value: string) => {
@@ -243,7 +257,7 @@ const QuizFunnel = () => {
         } catch {}
         return updated;
       });
-      const nextStep = Math.min(step + 1, TOTAL_STEPS);
+      const nextStep = findNextStep(step);
       navigate(`/${STEP_SLUGS[nextStep - 1]}`);
       window.scrollTo({ top: 0 });
 
@@ -251,7 +265,7 @@ const QuizFunnel = () => {
         isNavigatingRef.current = false;
       }, 500);
     },
-    [step, navigate, trackStepComplete]
+    [step, navigate, trackStepComplete, findNextStep]
   );
 
   const renderStep = () => {
@@ -271,11 +285,11 @@ const QuizFunnel = () => {
       case "step-4":
         return <Step3SocialProof onNext={goNext} userAge={answers.age} />;
       case "step-5":
-        return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} userName={answers.name} userAge={answers.age} />;
+        return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} userName={answers.name} userAge={answers.age} quizVersion={quizVersion} />;
       case "step-6":
         return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} userName={answers.name} userAge={answers.age} />;
       case "step-7":
-        return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} userName={answers.name} userAge={answers.age} />;
+        return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} userName={answers.name} userAge={answers.age} quizVersion={quizVersion} />;
       case "step-8":
         return <Step7MentorVideo onNext={goNext} userAge={answers.age} />;
       case "step-9":

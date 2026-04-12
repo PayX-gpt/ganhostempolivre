@@ -353,6 +353,9 @@ export const saveSessionAttribution = async (quizVariant?: string): Promise<void
       localStorage.setItem("quiz_variant", resolvedVariant);
     }
 
+    // Get quiz version (V1/V2)
+    const quizVersion = localStorage.getItem("quiz_version") || "V1";
+
     // Also read early-captured UTMs as fallback
     const earlyUtm: Record<string, string> = (() => {
       try { return JSON.parse(localStorage.getItem('lead_utm') || '{}'); } catch { return {}; }
@@ -362,6 +365,7 @@ export const saveSessionAttribution = async (quizVariant?: string): Promise<void
     const { error } = await supabase.from("session_attribution" as any).upsert([{
       session_id: sessionId,
       quiz_variant: resolvedVariant,
+      quiz_version: quizVersion,
       utm_source: data.utm_source || earlyUtm.utm_source || null,
       utm_medium: data.utm_medium || earlyUtm.utm_medium || null,
       utm_campaign: data.utm_campaign || earlyUtm.utm_campaign || null,
@@ -383,6 +387,7 @@ export const saveSessionAttribution = async (quizVariant?: string): Promise<void
       const { error: insertError } = await supabase.from("session_attribution" as any).insert([{
         session_id: sessionId,
         quiz_variant: resolvedVariant,
+        quiz_version: quizVersion,
         utm_source: data.utm_source || earlyUtm.utm_source || null,
         utm_medium: data.utm_medium || earlyUtm.utm_medium || null,
         utm_campaign: data.utm_campaign || earlyUtm.utm_campaign || null,

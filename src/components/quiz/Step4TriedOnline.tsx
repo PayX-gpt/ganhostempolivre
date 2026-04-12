@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { StepContainer, StepTitle, StepSubtitle, OptionCard, CTAButton } from "./QuizUI";
-import { Frown, ThumbsUp, HelpCircle, CheckCircle, BarChart3 } from "lucide-react";
+import { Frown, ThumbsUp, HelpCircle, CheckCircle, BarChart3, ShieldAlert, Smartphone } from "lucide-react";
 import { isYoungProfile } from "@/lib/agePersonalization";
 import { useLanguage, type Language } from "@/lib/i18n";
 
@@ -8,6 +8,7 @@ interface Step4Props {
   onNext: (answer: string) => void;
   userName?: string;
   userAge?: string;
+  quizVersion?: string;
 }
 
 const texts = {
@@ -22,12 +23,23 @@ const texts = {
     opt2sub: "Já tive alguns resultados, mas quero melhorar",
     opt3: "Não, nunca tentei",
     opt3sub: "Sempre tive vontade, mas nunca dei o primeiro passo",
+    // V2 replacement options
+    opt2_v2: "Sim, mas caí em golpe",
+    opt2sub_v2: "Perdi dinheiro com promessas falsas na internet",
+    opt3_v2: "Tenho medo de tecnologia",
+    opt3sub_v2: "Gostaria de ganhar online mas me sinto perdido com tanta coisa digital",
     stat: "68% responderam \"Sim, mas não deu certo\" — e mesmo assim conseguiram resultados.",
     feedbackTitleYoung: (n: string) => `${n}, o problema não foi você — foi o método.`,
     feedbackTitleMature: (n: string) => `${n}, eu preciso te dizer uma coisa.`,
     feedbackBodyYoung: "O que vou te mostrar agora é diferente. Uma IA que faz o trabalho pesado. Sem complicação.",
     feedbackBodyMature: "Se não deu certo antes, o problema não foi você. O que eu vou te mostrar aqui é diferente de tudo que você já viu. A tecnologia faz o trabalho. Você só acompanha.",
     feedbackCta: "CONTINUAR MEU TESTE →",
+    // V2 golpe feedback
+    feedbackTitleGolpe: (n: string) => `${n}, você não está sozinho(a) nisso.`,
+    feedbackBodyGolpe: "Milhares de pessoas passaram pela mesma situação. A diferença aqui é que a tecnologia trabalha por você — sem promessas vazias, sem guru, sem depender de sorte.",
+    // V2 tech fear feedback
+    feedbackTitleTech: (n: string) => `${n}, não precisa entender nada de tecnologia.`,
+    feedbackBodyTech: "A IA faz tudo automaticamente. Você só precisa de 10 minutos e um celular. Se você sabe usar WhatsApp, consegue usar isso.",
   },
   en: {
     title1: "Have you ever tried to ",
@@ -40,12 +52,20 @@ const texts = {
     opt2sub: "I've had some results, but I want to improve",
     opt3: "No, I've never tried",
     opt3sub: "I've always wanted to, but never took the first step",
+    opt2_v2: "Yes, but I got scammed",
+    opt2sub_v2: "I lost money to fake promises online",
+    opt3_v2: "I'm afraid of technology",
+    opt3sub_v2: "I'd like to earn online but feel lost with all the digital stuff",
     stat: "68% answered \"Yes, but it didn't work\" — and still managed to get results.",
     feedbackTitleYoung: (n: string) => `${n}, the problem wasn't you — it was the method.`,
     feedbackTitleMature: (n: string) => `${n}, I need to tell you something.`,
     feedbackBodyYoung: "What I'm about to show you is different. An AI that does the heavy lifting. No complications.",
     feedbackBodyMature: "If it didn't work before, the problem wasn't you. What I'm going to show you here is unlike anything you've seen. The technology does the work. You just follow along.",
     feedbackCta: "CONTINUE MY TEST →",
+    feedbackTitleGolpe: (n: string) => `${n}, you're not alone in this.`,
+    feedbackBodyGolpe: "Thousands have been through the same. The difference here is that technology works for you — no empty promises, no guru, no luck needed.",
+    feedbackTitleTech: (n: string) => `${n}, you don't need to understand technology.`,
+    feedbackBodyTech: "The AI does everything automatically. You just need 10 minutes and a phone. If you can use WhatsApp, you can use this.",
   },
   es: {
     title1: "¿Ya intentaste ",
@@ -58,30 +78,54 @@ const texts = {
     opt2sub: "Tuve algunos resultados, pero quiero mejorar",
     opt3: "No, nunca intenté",
     opt3sub: "Siempre quise, pero nunca di el primer paso",
+    opt2_v2: "Sí, pero caí en una estafa",
+    opt2sub_v2: "Perdí plata con promesas falsas en internet",
+    opt3_v2: "Tengo miedo a la tecnología",
+    opt3sub_v2: "Me gustaría ganar online pero me siento perdido con todo lo digital",
     stat: "El 68% respondió \"Sí, pero no funcionó\" — y aun así lograron resultados.",
     feedbackTitleYoung: (n: string) => `${n}, el problema no fuiste vos — fue el método.`,
     feedbackTitleMature: (n: string) => `${n}, necesito decirte algo.`,
     feedbackBodyYoung: "Lo que te voy a mostrar ahora es diferente. Una IA que hace el trabajo pesado. Sin complicaciones.",
     feedbackBodyMature: "Si no funcionó antes, el problema no fuiste vos. Lo que te voy a mostrar acá es diferente a todo lo que viste. La tecnología hace el trabajo. Vos solo acompañás.",
     feedbackCta: "CONTINUAR MI TEST →",
+    feedbackTitleGolpe: (n: string) => `${n}, no estás solo/a en esto.`,
+    feedbackBodyGolpe: "Miles de personas pasaron por lo mismo. La diferencia acá es que la tecnología trabaja por vos — sin promesas vacías, sin gurú, sin depender de suerte.",
+    feedbackTitleTech: (n: string) => `${n}, no necesitás entender nada de tecnología.`,
+    feedbackBodyTech: "La IA hace todo automáticamente. Solo necesitás 10 minutos y un celular. Si sabés usar WhatsApp, podés usar esto.",
   },
 } as const;
 
-const Step4TriedOnline = ({ onNext, userName, userAge }: Step4Props) => {
+const Step4TriedOnline = ({ onNext, userName, userAge, quizVersion }: Step4Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const [selected, setSelected] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const young = isYoungProfile(userAge);
   const n = userName || (lang === "en" ? "you" : lang === "es" ? "vos" : "você");
+  const isV2 = quizVersion === "V2";
 
   const handleSelect = (answer: string) => {
     setSelected(answer);
-    if (answer === "sim_falhou") setShowFeedback(true);
-    else setTimeout(() => onNext(answer), 400);
+    // Show feedback for actionable answers
+    if (answer === "sim_falhou" || answer === "golpe" || answer === "medo_tech") {
+      setShowFeedback(true);
+    } else {
+      setTimeout(() => onNext(answer), 400);
+    }
   };
 
-  if (showFeedback && selected === "sim_falhou") {
+  if (showFeedback && selected) {
+    let feedbackTitle: string = young ? t.feedbackTitleYoung(n) : t.feedbackTitleMature(n);
+    let feedbackBody: string = young ? t.feedbackBodyYoung : t.feedbackBodyMature;
+    
+    if (selected === "golpe") {
+      feedbackTitle = t.feedbackTitleGolpe(n);
+      feedbackBody = t.feedbackBodyGolpe;
+    } else if (selected === "medo_tech") {
+      feedbackTitle = t.feedbackTitleTech(n);
+      feedbackBody = t.feedbackBodyTech;
+    }
+
     return (
       <StepContainer>
         <div className="w-full flex flex-col items-center gap-4 py-3">
@@ -89,10 +133,10 @@ const Step4TriedOnline = ({ onNext, userName, userAge }: Step4Props) => {
             <CheckCircle className="w-7 h-7 text-primary" />
           </div>
           <h2 className="font-display text-lg sm:text-2xl font-bold text-foreground text-center leading-snug">
-            {young ? t.feedbackTitleYoung(n) : t.feedbackTitleMature(n)}
+            {feedbackTitle}
           </h2>
           <p className="text-[14px] sm:text-lg text-muted-foreground text-center leading-relaxed max-w-md">
-            {young ? t.feedbackBodyYoung : t.feedbackBodyMature}
+            {feedbackBody}
           </p>
           <div className="w-full mt-1">
             <CTAButton onClick={() => onNext(selected)}>{t.feedbackCta}</CTAButton>
@@ -109,8 +153,17 @@ const Step4TriedOnline = ({ onNext, userName, userAge }: Step4Props) => {
 
       <div className="w-full space-y-3 mt-2">
         <OptionCard label={t.opt1} sublabel={t.opt1sub} icon={<Frown className="w-5 h-5" />} selected={selected === "sim_falhou"} onClick={() => handleSelect("sim_falhou")} />
-        <OptionCard label={t.opt2} sublabel={t.opt2sub} icon={<ThumbsUp className="w-5 h-5" />} selected={selected === "sim_experiencia"} onClick={() => handleSelect("sim_experiencia")} />
-        <OptionCard label={t.opt3} sublabel={t.opt3sub} icon={<HelpCircle className="w-5 h-5" />} selected={selected === "nunca"} onClick={() => handleSelect("nunca")} />
+        {isV2 ? (
+          <>
+            <OptionCard label={t.opt2_v2} sublabel={t.opt2sub_v2} icon={<ShieldAlert className="w-5 h-5" />} selected={selected === "golpe"} onClick={() => handleSelect("golpe")} />
+            <OptionCard label={t.opt3_v2} sublabel={t.opt3sub_v2} icon={<Smartphone className="w-5 h-5" />} selected={selected === "medo_tech"} onClick={() => handleSelect("medo_tech")} />
+          </>
+        ) : (
+          <>
+            <OptionCard label={t.opt2} sublabel={t.opt2sub} icon={<ThumbsUp className="w-5 h-5" />} selected={selected === "sim_experiencia"} onClick={() => handleSelect("sim_experiencia")} />
+            <OptionCard label={t.opt3} sublabel={t.opt3sub} icon={<HelpCircle className="w-5 h-5" />} selected={selected === "nunca"} onClick={() => handleSelect("nunca")} />
+          </>
+        )}
       </div>
 
       <div className="flex items-center gap-2 justify-center mt-1">
