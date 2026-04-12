@@ -295,8 +295,10 @@ export default function LiveQuizVersionAB() {
 
   const v1Steps = (data?.step_funnel || []).filter(s => s.version === "V1");
   const v2Steps = (data?.step_funnel || []).filter(s => s.version === "V2");
-  const allStepSlugs = Array.from(new Set([...v1Steps.map(s => s.step), ...v2Steps.map(s => s.step)]))
-    .sort((a, b) => parseInt(a.replace("step-", "")) - parseInt(b.replace("step-", "")));
+  const QUIZ_STEPS = Array.from({ length: 17 }, (_, i) => `step-${i + 1}`);
+  const allStepSlugs = QUIZ_STEPS.filter(slug =>
+    v1Steps.some(s => s.step === slug) || v2Steps.some(s => s.step === slug) || V2_REMOVED.includes(slug)
+  );
 
   const v1Answers = (data?.answer_distribution || []).filter(a => a.version === "V1");
   const v2Answers = (data?.answer_distribution || []).filter(a => a.version === "V2");
