@@ -109,7 +109,7 @@ const CRITERIA_KEYS = Object.keys(WEIGHTS) as (keyof typeof WEIGHTS)[];
 /* ── Parse raw data into VariantData ── */
 function parseVariants(raw: any[]): VariantData[] {
   const parsed = (raw || [])
-    .filter((v: any) => ["A", "B", "C", "D"].includes(String(v.variant || "").toUpperCase()))
+    .filter((v: any) => ["A", "B", "C", "D", "E"].includes(String(v.variant || "").toUpperCase()))
     .map((v: any) => {
       const visitors = Number(v.visitors) || 0;
       const ctaClicks = Number(v.cta_clicks) || 0;
