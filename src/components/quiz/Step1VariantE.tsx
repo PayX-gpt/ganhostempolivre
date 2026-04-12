@@ -42,11 +42,11 @@ const Step1VariantE = ({ onNext }: Step1VariantEProps) => {
     <StepContainer>
       {/* Video */}
       <div className="w-full max-w-lg mx-auto" ref={iframeRef}>
-        <div className="relative w-full" style={{ paddingTop: "50%" }}>
+        <div className="relative w-full" style={{ paddingTop: "177.77777777777777%" }}>
           <iframe
             id="panda-f97837c4-d33c-4e5a-8ae3-27f0e36f2b6d"
             src="https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=f97837c4-d33c-4e5a-8ae3-27f0e36f2b6d"
-            className="absolute inset-0 w-full h-full rounded-xl"
+            className="absolute inset-0 w-full h-full"
             style={{ border: "none" }}
             allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
             allowFullScreen
