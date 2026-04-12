@@ -1,12 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
   FlaskConical, TrendingUp, TrendingDown, Users, ShoppingCart,
   DollarSign, Target, ArrowRight, Clock, BarChart3, Minus,
-  CheckCircle2, AlertTriangle, Loader2, Eye, Zap
+  CheckCircle2, AlertTriangle, Loader2, Eye, Zap, Power, PowerOff,
+  Trophy, Settings2, ToggleLeft, ToggleRight
 } from "lucide-react";
+import {
+  getV2Split, setV2Split, isTestActive, setTestActive,
+  getDeclaredWinner, declareVersionWinner, clearVersionWinner
+} from "@/lib/quizVersionAB";
 
 interface VersionData {
   version: string;
@@ -48,8 +56,6 @@ const STEP_LABELS: Record<string, string> = {
 
 const V2_REMOVED = ["step-10", "step-11", "step-12"];
 
-const pct = (num: number, den: number) => den > 0 ? ((num / den) * 100).toFixed(1) : "0.0";
-const rpv = (rev: number, visitors: number) => visitors > 0 ? (rev / visitors).toFixed(2) : "0.00";
 const fmtBRL = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const StatCard = ({ label, v1, v2, format = "number", higherIsBetter = true }: {
@@ -62,8 +68,7 @@ const StatCard = ({ label, v1, v2, format = "number", higherIsBetter = true }: {
 
   const fmt = (v: number) => {
     if (format === "pct") return `${v.toFixed(1)}%`;
-    if (format === "brl") return fmtBRL(v);
-    if (format === "rpv") return fmtBRL(v);
+    if (format === "brl" || format === "rpv") return fmtBRL(v);
     return v.toLocaleString("pt-BR");
   };
 
@@ -103,6 +108,12 @@ export default function LiveQuizVersionAB() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Controls state
+  const [active, setActive] = useState(isTestActive());
+  const [split, setSplit] = useState(getV2Split());
+  const [winner, setWinner] = useState(getDeclaredWinner());
+  const [showControls, setShowControls] = useState(false);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -119,6 +130,34 @@ export default function LiveQuizVersionAB() {
     const interval = setInterval(fetchData, 60_000);
     return () => clearInterval(interval);
   }, [fetchData]);
+
+  const handleToggleActive = () => {
+    const newActive = !active;
+    setTestActive(newActive);
+    setActive(newActive);
+    toast.success(newActive ? "Teste V1/V2 ativado! Novos visitantes receberão versão aleatória." : "Teste V1/V2 desativado! Novos visitantes receberão V1.");
+  };
+
+  const handleSplitChange = (val: number[]) => {
+    const v = val[0];
+    setSplit(v);
+    setV2Split(v);
+  };
+
+  const handleDeclareWinner = (version: "V1" | "V2") => {
+    declareVersionWinner(version);
+    setWinner(version);
+    setActive(false);
+    toast.success(`${version} declarado vencedor! 100% do tráfego será direcionado para ${version}.`);
+  };
+
+  const handleClearWinner = () => {
+    clearVersionWinner();
+    setWinner(null);
+    setTestActive(true);
+    setActive(true);
+    toast.success("Vencedor removido. Teste reativado.");
+  };
 
   if (loading && !data) {
     return (
@@ -152,47 +191,158 @@ export default function LiveQuizVersionAB() {
   const v1TicketAvg = v1.total_sales > 0 ? v1.total_revenue / v1.total_sales : 0;
   const v2TicketAvg = v2.total_sales > 0 ? v2.total_revenue / v2.total_sales : 0;
 
-  // Minimum sample for confidence
   const minSample = 100;
   const totalVisitors = v1.visitors + v2.visitors;
   const hasEnoughData = v1.visitors >= minSample && v2.visitors >= minSample;
-
-  // Simple winner detection
   const rpvWinner = v1RPV > v2RPV ? "V1" : v2RPV > v1RPV ? "V2" : null;
   const convWinner = v1ConvRate > v2ConvRate ? "V1" : v2ConvRate > v1ConvRate ? "V2" : null;
 
-  // Step funnel data
   const v1Steps = (data?.step_funnel || []).filter(s => s.version === "V1");
   const v2Steps = (data?.step_funnel || []).filter(s => s.version === "V2");
   const allStepSlugs = Array.from(new Set([...v1Steps.map(s => s.step), ...v2Steps.map(s => s.step)]))
-    .sort((a, b) => {
-      const numA = parseInt(a.replace("step-", ""));
-      const numB = parseInt(b.replace("step-", ""));
-      return numA - numB;
-    });
+    .sort((a, b) => parseInt(a.replace("step-", "")) - parseInt(b.replace("step-", "")));
 
-  // Answer distribution
   const v1Answers = (data?.answer_distribution || []).filter(a => a.version === "V1");
   const v2Answers = (data?.answer_distribution || []).filter(a => a.version === "V2");
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* Header + Controls */}
       <div className="rounded-xl bg-gradient-to-r from-violet-500/10 to-emerald-500/10 border border-violet-500/20 p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-lg bg-violet-500/20 border border-violet-500/30">
-            <FlaskConical className="w-5 h-5 text-violet-400" />
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-violet-500/20 border border-violet-500/30">
+              <FlaskConical className="w-5 h-5 text-violet-400" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-white">Teste Quiz V1 vs V2</h2>
+              <p className="text-[11px] text-[#888]">
+                V1: Original (17 etapas) • V2: Otimizado (14 etapas, -3 steps, respostas melhoradas)
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-sm font-bold text-white">Teste Quiz V1 vs V2</h2>
-            <p className="text-[11px] text-[#888]">
-              V1: Original (17 etapas) • V2: Otimizado (14 etapas, -3 steps, respostas melhoradas)
-            </p>
+          <div className="flex items-center gap-2">
+            {winner && (
+              <Badge className="text-[10px] bg-amber-500/20 text-amber-400 border-0 px-2 py-1">
+                <Trophy className="w-3 h-3 mr-1" />
+                Vencedor: {winner}
+              </Badge>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-[11px] border-[#333] bg-[#1a1a1a] hover:bg-[#222] text-white"
+              onClick={() => setShowControls(!showControls)}
+            >
+              <Settings2 className="w-3 h-3 mr-1" />
+              Controles
+            </Button>
           </div>
         </div>
 
+        {/* Controls panel */}
+        {showControls && (
+          <div className="mt-3 p-4 rounded-lg bg-[#0d0d0d] border border-[#2a2a2a] space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-white">Status do Teste</p>
+                <p className="text-[10px] text-[#666]">
+                  {winner
+                    ? `Vencedor declarado: ${winner}. Todo tráfego vai para ${winner}.`
+                    : active
+                      ? "Ativo — novos visitantes são divididos entre V1 e V2"
+                      : "Inativo — novos visitantes recebem V1"
+                  }
+                </p>
+              </div>
+              {!winner ? (
+                <Button
+                  size="sm"
+                  className={cn("h-8 text-[11px] gap-1.5",
+                    active
+                      ? "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30"
+                      : "bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+                  )}
+                  variant="outline"
+                  onClick={handleToggleActive}
+                >
+                  {active ? <><ToggleRight className="w-4 h-4" /> Ativo</> : <><ToggleLeft className="w-4 h-4" /> Inativo</>}
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-[11px] border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                  onClick={handleClearWinner}
+                >
+                  Reativar Teste
+                </Button>
+              )}
+            </div>
+
+            {/* Traffic split slider */}
+            {!winner && active && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-white">Divisão de Tráfego</p>
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <Badge className="bg-[#2a2a2a] text-[#888] border-0">V1: {100 - split}%</Badge>
+                    <Badge className="bg-emerald-500/20 text-emerald-400 border-0">V2: {split}%</Badge>
+                  </div>
+                </div>
+                <Slider
+                  value={[split]}
+                  onValueChange={handleSplitChange}
+                  max={100}
+                  min={0}
+                  step={5}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-[9px] text-[#555]">
+                  <span>100% V1</span>
+                  <span>50/50</span>
+                  <span>100% V2</span>
+                </div>
+                <p className="text-[10px] text-[#555]">
+                  ⚠️ Alterações afetam apenas <strong>novos visitantes</strong>. Quem já recebeu uma versão mantém a mesma.
+                </p>
+              </div>
+            )}
+
+            {/* Declare winner */}
+            {!winner && hasEnoughData && (
+              <div className="pt-2 border-t border-[#222]">
+                <p className="text-xs font-medium text-white mb-2">Declarar Vencedor</p>
+                <p className="text-[10px] text-[#666] mb-3">
+                  Ao declarar um vencedor, 100% do tráfego será direcionado para essa versão. O teste será encerrado.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-[11px] border-[#333] hover:bg-[#222] text-white flex-1"
+                    onClick={() => handleDeclareWinner("V1")}
+                  >
+                    <Trophy className="w-3 h-3 mr-1 text-amber-400" />
+                    V1 é o Vencedor
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-[11px] border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400 flex-1"
+                    onClick={() => handleDeclareWinner("V2")}
+                  >
+                    <Trophy className="w-3 h-3 mr-1 text-emerald-400" />
+                    V2 é o Vencedor
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Confidence banner */}
-        <div className={cn("flex items-center gap-2 px-3 py-2 rounded-lg text-[11px]",
+        <div className={cn("flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] mt-3",
           hasEnoughData
             ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
             : "bg-amber-500/10 border border-amber-500/20 text-amber-400"
@@ -256,7 +406,6 @@ export default function LiveQuizVersionAB() {
           <h3 className="text-sm font-bold text-white">Funil por Etapa (V1 vs V2)</h3>
         </div>
         <div className="space-y-1">
-          {/* Header */}
           <div className="grid grid-cols-[1fr_80px_80px_80px_80px_80px_80px] gap-1 text-[9px] text-[#555] font-medium px-2 py-1">
             <span>Etapa</span>
             <span className="text-center">Views V1</span>
