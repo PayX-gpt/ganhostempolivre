@@ -57,6 +57,9 @@ type QuizVariant = "A" | "B" | "C" | "D" | "E";
 const QUIZ_VARIANTS: QuizVariant[] = ["A", "B", "C", "D", "E"];
 
 const ensureSessionVariant = (): QuizVariant => {
+  // Import active variants from the central A/B config
+  const { getOrAssignVariant } = require("./abTestVariant");
+  
   const winner = localStorage.getItem("quiz_variant_winner");
   if (winner && QUIZ_VARIANTS.includes(winner as QuizVariant)) {
     const forced = winner as QuizVariant;
@@ -64,14 +67,8 @@ const ensureSessionVariant = (): QuizVariant => {
     return forced;
   }
 
-  const stored = localStorage.getItem("quiz_variant");
-  if (stored && QUIZ_VARIANTS.includes(stored as QuizVariant)) {
-    return stored as QuizVariant;
-  }
-
-  const assigned = QUIZ_VARIANTS[Math.floor(Math.random() * QUIZ_VARIANTS.length)];
-  localStorage.setItem("quiz_variant", assigned);
-  return assigned;
+  // Use the centralized function that respects ACTIVE_VARIANTS
+  return getOrAssignVariant() as QuizVariant;
 };
 
 const generateSessionId = (): string => {
