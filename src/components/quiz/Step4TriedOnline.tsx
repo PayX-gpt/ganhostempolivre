@@ -115,8 +115,8 @@ const Step4TriedOnline = ({ onNext, userName, userAge, quizVersion }: Step4Props
   };
 
   if (showFeedback && selected) {
-    let feedbackTitle = young ? t.feedbackTitleYoung(n) : t.feedbackTitleMature(n);
-    let feedbackBody = young ? t.feedbackBodyYoung : t.feedbackBodyMature;
+    let feedbackTitle: string = young ? t.feedbackTitleYoung(n) : t.feedbackTitleMature(n);
+    let feedbackBody: string = young ? t.feedbackBodyYoung : t.feedbackBodyMature;
     
     if (selected === "golpe") {
       feedbackTitle = t.feedbackTitleGolpe(n);
