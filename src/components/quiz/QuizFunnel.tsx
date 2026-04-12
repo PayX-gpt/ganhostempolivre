@@ -11,6 +11,7 @@ import Step1VariantC from "./Step1VariantC";
 import Step1VariantD from "./Step1VariantD";
 import Step1VariantE from "./Step1VariantE";
 import { getEffectiveVariant, saveVariantToAttribution, type QuizVariant } from "@/lib/abTestVariant";
+import { getEffectiveQuizVersion, shouldSkipStep, saveQuizVersionToAttribution, type QuizVersion } from "@/lib/quizVersionAB";
 import Step2Age from "./Step2Age";
 import StepName from "./StepName";
 import Step3SocialProof from "./Step3SocialProof";
@@ -111,6 +112,7 @@ const QuizFunnel = () => {
     if (urlVariant && ["A","B","C","D","E"].includes(urlVariant)) return urlVariant as QuizVariant;
     return getEffectiveVariant();
   });
+  const [quizVersion] = useState<QuizVersion>(() => getEffectiveQuizVersion());
   const [answers, setAnswers] = useState<QuizAnswers>(() => {
     try {
       const saved = sessionStorage.getItem("quiz_answers");
@@ -185,8 +187,9 @@ const QuizFunnel = () => {
     if (step === 1) {
       void saveSessionAttribution(variant as string);
       void saveVariantToAttribution(variant);
+      void saveQuizVersionToAttribution(quizVersion);
     }
-  }, [step, variant]);
+  }, [step, variant, quizVersion]);
 
   // Track time spent when step changes
   useEffect(() => {
@@ -197,8 +200,9 @@ const QuizFunnel = () => {
       step_name: STEP_NAMES[currentSlug] || currentSlug,
       step_number: step,
       variant,
+      quiz_version: quizVersion,
     });
-  }, [currentSlug, step]);
+  }, [currentSlug, step, quizVersion]);
 
   const trackStepComplete = useCallback((answer?: { key: string; value: string }) => {
     const timeSpentMs = Date.now() - stepEnteredAt.current;
@@ -209,9 +213,10 @@ const QuizFunnel = () => {
       time_spent_ms: timeSpentMs,
       time_spent_seconds: Math.round(timeSpentMs / 1000),
       variant,
+      quiz_version: quizVersion,
       ...(answer ? { answer_key: answer.key, answer_value: answer.value } : {}),
     });
-  }, [currentSlug, step]);
+  }, [currentSlug, step, quizVersion]);
 
   const goNext = useCallback(() => {
     if (isNavigatingRef.current) return;
