@@ -205,7 +205,7 @@ export default function LiveAIAlerts() {
         .gte("created_at", todayISO);
 
       if (abSessions && abSessions.length > 0) {
-        const variantSessions: Record<string, Set<string>> = { A: new Set(), B: new Set(), C: new Set(), D: new Set() };
+        const variantSessions: Record<string, Set<string>> = { A: new Set(), B: new Set(), C: new Set(), D: new Set(), E: new Set() };
         abSessions.forEach((s: any) => {
           if (s.quiz_variant && variantSessions[s.quiz_variant]) {
             variantSessions[s.quiz_variant].add(s.session_id);
