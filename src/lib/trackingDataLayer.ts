@@ -52,8 +52,8 @@ declare global {
 
 const STORAGE_KEY = "tracking_data_layer";
 
-type QuizVariant = "A" | "B" | "C" | "D";
-const QUIZ_VARIANTS: QuizVariant[] = ["A", "B", "C", "D"];
+type QuizVariant = "A" | "B" | "C" | "D" | "E";
+const QUIZ_VARIANTS: QuizVariant[] = ["A", "B", "C", "D", "E"];
 
 const ensureSessionVariant = (): QuizVariant => {
   const winner = localStorage.getItem("quiz_variant_winner");

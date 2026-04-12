@@ -44,7 +44,8 @@ const Step1VariantE = ({ onNext }: Step1VariantEProps) => {
             style={{ border: "none" }}
             allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
             allowFullScreen
-            fetchPriority="high"
+            // @ts-ignore fetchPriority is valid HTML but not in React types yet
+            fetchPriority="high" as any
           />
         </div>
       </div>
