@@ -122,7 +122,7 @@ const TikTokEsQuizFunnel = () => {
   // Save attribution on step 1
   useEffect(() => {
     if (step === 1) {
-      void saveSessionAttribution(variant);
+      void saveSessionAttribution(variant as string);
       void saveVariantToAttribution(variant);
     }
   }, [step, variant]);

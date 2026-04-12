@@ -1,6 +1,7 @@
 /**
  * Global Tracking Data Layer
  * Centraliza todos os dados de rastreamento em window.trackingData
+ * Updated: variant E support
  */
 
 export interface TrackingData {
@@ -52,8 +53,8 @@ declare global {
 
 const STORAGE_KEY = "tracking_data_layer";
 
-type QuizVariant = "A" | "B" | "C" | "D";
-const QUIZ_VARIANTS: QuizVariant[] = ["A", "B", "C", "D"];
+type QuizVariant = "A" | "B" | "C" | "D" | "E";
+const QUIZ_VARIANTS: QuizVariant[] = ["A", "B", "C", "D", "E"];
 
 const ensureSessionVariant = (): QuizVariant => {
   const winner = localStorage.getItem("quiz_variant_winner");
@@ -340,15 +341,14 @@ export const ensureUrlHasTrackingParams = (): void => {
  * Save session attribution to the database (once per session).
  * Called on funnel entry to create an independent source of truth.
  */
-export const saveSessionAttribution = async (quizVariant?: QuizVariant): Promise<void> => {
+export const saveSessionAttribution = async (quizVariant?: string): Promise<void> => {
   try {
     const data = getTrackingData();
     const sessionId = data.session_id;
     if (!sessionId || sessionStorage.getItem("attribution_saved")) return;
 
-    // GUARANTEE variant is never null
-    let resolvedVariant = quizVariant ?? ensureSessionVariant();
-    if (!resolvedVariant || !QUIZ_VARIANTS.includes(resolvedVariant)) {
+    let resolvedVariant: string = quizVariant ?? ensureSessionVariant();
+    if (!resolvedVariant || !QUIZ_VARIANTS.includes(resolvedVariant as QuizVariant)) {
       resolvedVariant = QUIZ_VARIANTS[Math.floor(Math.random() * QUIZ_VARIANTS.length)];
       localStorage.setItem("quiz_variant", resolvedVariant);
     }

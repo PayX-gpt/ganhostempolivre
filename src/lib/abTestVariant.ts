@@ -1,16 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getTrackingData } from "./trackingDataLayer";
 
-export type QuizVariant = "A" | "B" | "C" | "D";
+export type QuizVariant = "A" | "B" | "C" | "D" | "E";
 
 const VARIANT_KEY = "quiz_variant";
-const ALL_VARIANTS: QuizVariant[] = ["A", "B", "C", "D"];
+const ALL_VARIANTS: QuizVariant[] = ["A", "B", "C", "D", "E"];
 
 /**
  * Active variants for the current test.
  * Change this array to control traffic split (equal weight).
  */
-const ACTIVE_VARIANTS: QuizVariant[] = ["A"];
+const ACTIVE_VARIANTS: QuizVariant[] = ["A", "E"];
 
 /**
  * Get or assign a variant for the current visitor.
