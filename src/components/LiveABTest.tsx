@@ -73,7 +73,6 @@ const VARIANT_INFO: Record<string, { angle: string; headline: string; cta: strin
     cta: "QUERO COMEÇAR AGORA →",
     description: "3 cards de pessoas reais (Maria 52, José 34, Amanda 28) com ganhos diários e semanais. Estrelas 5/5. Prova social pesada antes da promessa. Alerta visual: 'Última turma com vagas'. Foco em identificação com pessoas comuns.",
   },
-};
   E: {
     angle: "Vídeo Direto — VSL Panda",
     headline: "Vídeo vertical (9:16) com VSL do mentor",
