@@ -8,8 +8,9 @@ import { toast } from "sonner";
 import {
   FlaskConical, TrendingUp, TrendingDown, Users, ShoppingCart,
   DollarSign, Target, ArrowRight, Clock, BarChart3, Minus,
-  CheckCircle2, AlertTriangle, Loader2, Eye, Zap, Power, PowerOff,
-  Trophy, Settings2, ToggleLeft, ToggleRight
+  CheckCircle2, AlertTriangle, Loader2, Eye, Zap, Power,
+  Trophy, Settings2, ToggleLeft, ToggleRight, ArrowUpRight,
+  ArrowDownRight, X, Sparkles, GitCompare
 } from "lucide-react";
 import {
   getV2Split, setV2Split, isTestActive, setTestActive,
@@ -57,44 +58,143 @@ const STEP_LABELS: Record<string, string> = {
 const V2_REMOVED = ["step-10", "step-11", "step-12"];
 
 const fmtBRL = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmtPct = (v: number) => `${v.toFixed(1)}%`;
+const fmtNum = (v: number) => v.toLocaleString("pt-BR");
 
-const StatCard = ({ label, v1, v2, format = "number", higherIsBetter = true }: {
-  label: string; v1: number; v2: number; format?: "number" | "pct" | "brl" | "rpv"; higherIsBetter?: boolean;
+// ── Big KPI Card ──
+const BigKPI = ({ label, v1, v2, format, icon: Icon, highlight }: {
+  label: string; v1: number; v2: number;
+  format: "brl" | "pct" | "number";
+  icon: React.ElementType;
+  highlight?: boolean;
 }) => {
+  const fmt = (v: number) => format === "brl" ? fmtBRL(v) : format === "pct" ? fmtPct(v) : fmtNum(v);
   const diff = v2 - v1;
-  const diffPct = v1 > 0 ? ((diff / v1) * 100).toFixed(1) : v2 > 0 ? "+∞" : "0.0";
-  const isPositive = higherIsBetter ? diff > 0 : diff < 0;
+  const diffPct = v1 > 0 ? (diff / v1) * 100 : v2 > 0 ? 100 : 0;
+  const isPositive = diff > 0;
   const isNeutral = diff === 0;
 
-  const fmt = (v: number) => {
-    if (format === "pct") return `${v.toFixed(1)}%`;
-    if (format === "brl" || format === "rpv") return fmtBRL(v);
-    return v.toLocaleString("pt-BR");
-  };
-
   return (
-    <div className="rounded-xl p-3 bg-[#141414] border border-[#2a2a2a]">
-      <p className="text-[10px] text-[#666] font-medium mb-2 uppercase tracking-wider">{label}</p>
+    <div className={cn(
+      "rounded-xl p-3 sm:p-4 border transition-all",
+      highlight
+        ? "bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20"
+        : "bg-card/50 border-border/50"
+    )}>
+      <div className="flex items-center gap-2 mb-3">
+        <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+        <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{label}</span>
+      </div>
+      
+      {/* V1 vs V2 side by side */}
       <div className="flex items-end justify-between gap-2">
-        <div className="space-y-1">
+        <div className="space-y-1.5 min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <Badge className="text-[9px] bg-[#2a2a2a] text-[#888] border-0 px-1.5">V1</Badge>
-            <span className="text-sm text-white/70 tabular-nums">{fmt(v1)}</span>
+            <span className="text-[9px] font-medium text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">V1</span>
+            <span className="text-sm text-foreground/70 tabular-nums truncate">{fmt(v1)}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Badge className="text-[9px] bg-emerald-500/20 text-emerald-400 border-0 px-1.5">V2</Badge>
-            <span className="text-sm text-white font-semibold tabular-nums">{fmt(v2)}</span>
+            <span className="text-[9px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">V2</span>
+            <span className="text-base sm:text-lg font-bold text-foreground tabular-nums truncate">{fmt(v2)}</span>
           </div>
         </div>
-        {!isNeutral && (
-          <div className={cn("flex items-center gap-0.5 text-[11px] font-medium tabular-nums",
-            isPositive ? "text-emerald-400" : "text-red-400"
-          )}>
-            {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-            {typeof diffPct === "string" ? diffPct : `${diffPct}%`}
-          </div>
-        )}
-        {isNeutral && <Minus className="w-3 h-3 text-[#444]" />}
+        
+        {/* Delta badge */}
+        <div className={cn(
+          "flex flex-col items-center justify-center rounded-lg px-2 py-1.5 min-w-[48px]",
+          isNeutral ? "bg-muted/30" : isPositive ? "bg-emerald-500/10" : "bg-red-500/10"
+        )}>
+          {isNeutral ? (
+            <Minus className="w-3.5 h-3.5 text-muted-foreground" />
+          ) : (
+            <>
+              {isPositive
+                ? <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
+                : <ArrowDownRight className="w-3.5 h-3.5 text-red-400" />
+              }
+              <span className={cn(
+                "text-[11px] font-bold tabular-nums",
+                isPositive ? "text-emerald-400" : "text-red-400"
+              )}>
+                {isPositive ? "+" : ""}{diffPct.toFixed(0)}%
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Step row for mobile-friendly funnel ──
+const StepRow = ({ slug, s1, s2, isRemoved, prevV1Views, prevV2Views }: {
+  slug: string;
+  s1?: StepFunnel;
+  s2?: StepFunnel;
+  isRemoved: boolean;
+  prevV1Views: number;
+  prevV2Views: number;
+}) => {
+  const dropV1 = s1 && s1.views > 0 ? (1 - s1.completions / s1.views) * 100 : 0;
+  const dropV2 = s2 && s2.views > 0 ? (1 - s2.completions / s2.views) * 100 : 0;
+  const retV1 = prevV1Views > 0 && s1 ? (s1.views / prevV1Views) * 100 : (s1?.views ?? 0) > 0 ? 100 : 0;
+  const retV2 = prevV2Views > 0 && s2 ? (s2.views / prevV2Views) * 100 : (s2?.views ?? 0) > 0 ? 100 : 0;
+  const timeV1 = s1 ? (s1.avg_time_ms / 1000).toFixed(1) : "-";
+  const timeV2 = s2 ? (s2.avg_time_ms / 1000).toFixed(1) : "-";
+  const stepNum = slug.replace("step-", "");
+
+  if (isRemoved) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/5 border border-red-500/10">
+        <span className="text-[10px] text-red-400/60 font-mono w-5">{stepNum}</span>
+        <span className="text-[11px] text-red-400/60 line-through flex-1 truncate">
+          {STEP_LABELS[slug]}
+        </span>
+        <Badge className="text-[8px] bg-red-500/15 text-red-400 border-0 px-1.5 shrink-0">
+          <X className="w-2.5 h-2.5 mr-0.5" />REMOVIDO
+        </Badge>
+      </div>
+    );
+  }
+
+  const v1Better = dropV1 < dropV2;
+  const v2Better = dropV2 < dropV1;
+
+  return (
+    <div className="px-3 py-2 rounded-lg hover:bg-muted/30 transition-colors">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-[10px] text-muted-foreground font-mono w-5">{stepNum}</span>
+        <span className="text-[11px] sm:text-xs text-foreground/90 font-medium flex-1 truncate">
+          {STEP_LABELS[slug]}
+        </span>
+        <span className="text-[9px] text-muted-foreground tabular-nums">
+          {s1?.views ?? 0}/{isRemoved ? "-" : (s2?.views ?? 0)} views
+        </span>
+      </div>
+      {/* Visual bar comparison */}
+      <div className="flex gap-1.5 items-center">
+        <span className="text-[8px] text-muted-foreground w-6 text-right shrink-0">V1</span>
+        <div className="flex-1 h-3.5 bg-muted/30 rounded-full overflow-hidden relative">
+          <div
+            className={cn("h-full rounded-full transition-all", dropV1 > 40 ? "bg-red-500/50" : dropV1 > 20 ? "bg-amber-500/40" : "bg-foreground/20")}
+            style={{ width: `${Math.max(2, 100 - dropV1)}%` }}
+          />
+          <span className="absolute inset-0 flex items-center justify-center text-[8px] font-medium text-foreground/60 tabular-nums">
+            {s1 ? `${(100 - dropV1).toFixed(0)}% ret · ${timeV1}s` : "—"}
+          </span>
+        </div>
+      </div>
+      <div className="flex gap-1.5 items-center mt-0.5">
+        <span className="text-[8px] text-emerald-400 w-6 text-right shrink-0">V2</span>
+        <div className="flex-1 h-3.5 bg-emerald-500/5 rounded-full overflow-hidden relative">
+          <div
+            className={cn("h-full rounded-full transition-all", dropV2 > 40 ? "bg-red-500/50" : dropV2 > 20 ? "bg-amber-500/40" : "bg-emerald-500/25")}
+            style={{ width: `${Math.max(2, 100 - dropV2)}%` }}
+          />
+          <span className="absolute inset-0 flex items-center justify-center text-[8px] font-medium text-emerald-400/60 tabular-nums">
+            {s2 ? `${(100 - dropV2).toFixed(0)}% ret · ${timeV2}s` : "—"}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -107,9 +207,7 @@ export default function LiveQuizVersionAB() {
     answer_distribution: AnswerDist[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Controls state
-  const [active, setActive] = useState(isTestActive());
+  const [active, setActiveState] = useState(isTestActive());
   const [split, setSplit] = useState(getV2Split());
   const [winner, setWinner] = useState(getDeclaredWinner());
   const [showControls, setShowControls] = useState(false);
@@ -134,28 +232,27 @@ export default function LiveQuizVersionAB() {
   const handleToggleActive = () => {
     const newActive = !active;
     setTestActive(newActive);
-    setActive(newActive);
-    toast.success(newActive ? "Teste V1/V2 ativado! Novos visitantes receberão versão aleatória." : "Teste V1/V2 desativado! Novos visitantes receberão V1.");
+    setActiveState(newActive);
+    toast.success(newActive ? "Teste V1/V2 ativado!" : "Teste V1/V2 desativado — todo tráfego vai para V1.");
   };
 
   const handleSplitChange = (val: number[]) => {
-    const v = val[0];
-    setSplit(v);
-    setV2Split(v);
+    setSplit(val[0]);
+    setV2Split(val[0]);
   };
 
   const handleDeclareWinner = (version: "V1" | "V2") => {
     declareVersionWinner(version);
     setWinner(version);
-    setActive(false);
-    toast.success(`${version} declarado vencedor! 100% do tráfego será direcionado para ${version}.`);
+    setActiveState(false);
+    toast.success(`${version} declarado vencedor! 100% do tráfego vai para ${version}.`);
   };
 
   const handleClearWinner = () => {
     clearVersionWinner();
     setWinner(null);
     setTestActive(true);
-    setActive(true);
+    setActiveState(true);
     toast.success("Vencedor removido. Teste reativado.");
   };
 
@@ -176,164 +273,131 @@ export default function LiveQuizVersionAB() {
     front_sales: 0, front_revenue: 0, upsell_sales: 0, upsell_revenue: 0, total_sales: 0, total_revenue: 0,
   };
 
+  const calc = (num: number, den: number) => den > 0 ? (num / den) * 100 : 0;
   const v1RPV = v1.visitors > 0 ? v1.total_revenue / v1.visitors : 0;
   const v2RPV = v2.visitors > 0 ? v2.total_revenue / v2.visitors : 0;
-  const v1ConvRate = v1.visitors > 0 ? (v1.front_sales / v1.visitors) * 100 : 0;
-  const v2ConvRate = v2.visitors > 0 ? (v2.front_sales / v2.visitors) * 100 : 0;
-  const v1ICRate = v1.visitors > 0 ? (v1.checkouts / v1.visitors) * 100 : 0;
-  const v2ICRate = v2.visitors > 0 ? (v2.checkouts / v2.visitors) * 100 : 0;
-  const v1QuizRate = v1.visitors > 0 ? (v1.quiz_complete / v1.visitors) * 100 : 0;
-  const v2QuizRate = v2.visitors > 0 ? (v2.quiz_complete / v2.visitors) * 100 : 0;
-  const v1CTARate = v1.visitors > 0 ? (v1.cta_clicks / v1.visitors) * 100 : 0;
-  const v2CTARate = v2.visitors > 0 ? (v2.cta_clicks / v2.visitors) * 100 : 0;
-  const v1UpsellRate = v1.front_sales > 0 ? (v1.upsell_sales / v1.front_sales) * 100 : 0;
-  const v2UpsellRate = v2.front_sales > 0 ? (v2.upsell_sales / v2.front_sales) * 100 : 0;
-  const v1TicketAvg = v1.total_sales > 0 ? v1.total_revenue / v1.total_sales : 0;
-  const v2TicketAvg = v2.total_sales > 0 ? v2.total_revenue / v2.total_sales : 0;
+  const v1Conv = calc(v1.front_sales, v1.visitors);
+  const v2Conv = calc(v2.front_sales, v2.visitors);
+  const v1IC = calc(v1.checkouts, v1.visitors);
+  const v2IC = calc(v2.checkouts, v2.visitors);
+  const v1Quiz = calc(v1.quiz_complete, v1.visitors);
+  const v2Quiz = calc(v2.quiz_complete, v2.visitors);
+  const v1CTA = calc(v1.cta_clicks, v1.visitors);
+  const v2CTA = calc(v2.cta_clicks, v2.visitors);
+  const v1Upsell = calc(v1.upsell_sales, v1.front_sales);
+  const v2Upsell = calc(v2.upsell_sales, v2.front_sales);
+  const v1Ticket = v1.total_sales > 0 ? v1.total_revenue / v1.total_sales : 0;
+  const v2Ticket = v2.total_sales > 0 ? v2.total_revenue / v2.total_sales : 0;
 
   const minSample = 100;
   const totalVisitors = v1.visitors + v2.visitors;
   const hasEnoughData = v1.visitors >= minSample && v2.visitors >= minSample;
-  const rpvWinner = v1RPV > v2RPV ? "V1" : v2RPV > v1RPV ? "V2" : null;
-  const convWinner = v1ConvRate > v2ConvRate ? "V1" : v2ConvRate > v1ConvRate ? "V2" : null;
 
   const v1Steps = (data?.step_funnel || []).filter(s => s.version === "V1");
   const v2Steps = (data?.step_funnel || []).filter(s => s.version === "V2");
-  const allStepSlugs = Array.from(new Set([...v1Steps.map(s => s.step), ...v2Steps.map(s => s.step)]))
-    .sort((a, b) => parseInt(a.replace("step-", "")) - parseInt(b.replace("step-", "")));
+  const QUIZ_STEPS = Array.from({ length: 17 }, (_, i) => `step-${i + 1}`);
+  const allStepSlugs = QUIZ_STEPS.filter(slug =>
+    v1Steps.some(s => s.step === slug) || v2Steps.some(s => s.step === slug) || V2_REMOVED.includes(slug)
+  );
 
   const v1Answers = (data?.answer_distribution || []).filter(a => a.version === "V1");
   const v2Answers = (data?.answer_distribution || []).filter(a => a.version === "V2");
 
+  // Build verdict
+  const verdictItems: string[] = [];
+  if (v2RPV > v1RPV && v1RPV > 0) verdictItems.push(`RPV +${((v2RPV - v1RPV) / v1RPV * 100).toFixed(0)}% (V2 gera ${fmtBRL(v2RPV - v1RPV)} a mais por visitante)`);
+  else if (v1RPV > v2RPV && v2RPV > 0) verdictItems.push(`RPV -${((v1RPV - v2RPV) / v1RPV * 100).toFixed(0)}% (V1 gera ${fmtBRL(v1RPV - v2RPV)} a mais por visitante)`);
+  if (v2Conv > v1Conv) verdictItems.push(`Conversão V2 ${(v2Conv - v1Conv).toFixed(1)}pp maior`);
+  else if (v1Conv > v2Conv) verdictItems.push(`Conversão V1 ${(v1Conv - v2Conv).toFixed(1)}pp maior`);
+  if (v2Quiz > v1Quiz) verdictItems.push(`Conclusão do quiz V2 ${(v2Quiz - v1Quiz).toFixed(1)}pp maior (menos etapas = menos abandono)`);
+
   return (
     <div className="space-y-4">
-      {/* Header + Controls */}
-      <div className="rounded-xl bg-gradient-to-r from-violet-500/10 to-emerald-500/10 border border-violet-500/20 p-4">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-violet-500/20 border border-violet-500/30">
-              <FlaskConical className="w-5 h-5 text-violet-400" />
+      {/* ═══ HEADER + STATUS ═══ */}
+      <div className="rounded-xl bg-gradient-to-br from-violet-500/8 to-emerald-500/8 border border-violet-500/15 p-3 sm:p-4">
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 rounded-lg bg-violet-500/15 border border-violet-500/20 shrink-0">
+              <FlaskConical className="w-4 h-4 sm:w-5 sm:h-5 text-violet-400" />
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-white">Teste Quiz V1 vs V2</h2>
-              <p className="text-[11px] text-[#888]">
-                V1: Original (17 etapas) • V2: Otimizado (14 etapas, -3 steps, respostas melhoradas)
+            <div className="min-w-0">
+              <h2 className="text-sm font-bold text-foreground">Teste V1 vs V2</h2>
+              <p className="text-[10px] text-muted-foreground truncate">
+                V1: 17 etapas • V2: 14 etapas (otimizado)
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             {winner && (
-              <Badge className="text-[10px] bg-amber-500/20 text-amber-400 border-0 px-2 py-1">
-                <Trophy className="w-3 h-3 mr-1" />
-                Vencedor: {winner}
+              <Badge className="text-[9px] bg-amber-500/15 text-amber-400 border-0 px-1.5">
+                <Trophy className="w-3 h-3 mr-0.5" />{winner}
               </Badge>
             )}
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-[11px] border-[#333] bg-[#1a1a1a] hover:bg-[#222] text-white"
+              className="h-7 text-[10px] border-border/50 bg-card/50 hover:bg-card text-foreground px-2"
               onClick={() => setShowControls(!showControls)}
             >
               <Settings2 className="w-3 h-3 mr-1" />
-              Controles
+              {showControls ? "Fechar" : "Controles"}
             </Button>
           </div>
         </div>
 
         {/* Controls panel */}
         {showControls && (
-          <div className="mt-3 p-4 rounded-lg bg-[#0d0d0d] border border-[#2a2a2a] space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-white">Status do Teste</p>
-                <p className="text-[10px] text-[#666]">
-                  {winner
-                    ? `Vencedor declarado: ${winner}. Todo tráfego vai para ${winner}.`
-                    : active
-                      ? "Ativo — novos visitantes são divididos entre V1 e V2"
-                      : "Inativo — novos visitantes recebem V1"
-                  }
+          <div className="mt-2 p-3 rounded-lg bg-background/80 border border-border/50 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-foreground">Status</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {winner ? `Vencedor: ${winner} — 100% tráfego` : active ? "Ativo — dividindo tráfego" : "Inativo — 100% V1"}
                 </p>
               </div>
               {!winner ? (
                 <Button
                   size="sm"
-                  className={cn("h-8 text-[11px] gap-1.5",
-                    active
-                      ? "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30"
-                      : "bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
-                  )}
                   variant="outline"
+                  className={cn("h-7 text-[10px] gap-1 shrink-0",
+                    active
+                      ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20"
+                      : "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20"
+                  )}
                   onClick={handleToggleActive}
                 >
-                  {active ? <><ToggleRight className="w-4 h-4" /> Ativo</> : <><ToggleLeft className="w-4 h-4" /> Inativo</>}
+                  {active ? <><ToggleRight className="w-3.5 h-3.5" />Ativo</> : <><ToggleLeft className="w-3.5 h-3.5" />Off</>}
                 </Button>
               ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 text-[11px] border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
-                  onClick={handleClearWinner}
-                >
-                  Reativar Teste
+                <Button size="sm" variant="outline" className="h-7 text-[10px] border-amber-500/20 text-amber-400" onClick={handleClearWinner}>
+                  Reativar
                 </Button>
               )}
             </div>
 
-            {/* Traffic split slider */}
             {!winner && active && (
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-white">Divisão de Tráfego</p>
-                  <div className="flex items-center gap-2 text-[11px]">
-                    <Badge className="bg-[#2a2a2a] text-[#888] border-0">V1: {100 - split}%</Badge>
-                    <Badge className="bg-emerald-500/20 text-emerald-400 border-0">V2: {split}%</Badge>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-foreground font-medium">Tráfego V2</span>
+                  <div className="flex gap-1.5">
+                    <Badge className="bg-muted/50 text-muted-foreground border-0 text-[9px]">V1: {100 - split}%</Badge>
+                    <Badge className="bg-emerald-500/15 text-emerald-400 border-0 text-[9px]">V2: {split}%</Badge>
                   </div>
                 </div>
-                <Slider
-                  value={[split]}
-                  onValueChange={handleSplitChange}
-                  max={100}
-                  min={0}
-                  step={5}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-[9px] text-[#555]">
-                  <span>100% V1</span>
-                  <span>50/50</span>
-                  <span>100% V2</span>
-                </div>
-                <p className="text-[10px] text-[#555]">
-                  ⚠️ Alterações afetam apenas <strong>novos visitantes</strong>. Quem já recebeu uma versão mantém a mesma.
-                </p>
+                <Slider value={[split]} onValueChange={handleSplitChange} max={100} min={0} step={5} className="w-full" />
+                <p className="text-[9px] text-muted-foreground">Afeta apenas novos visitantes.</p>
               </div>
             )}
 
-            {/* Declare winner */}
             {!winner && hasEnoughData && (
-              <div className="pt-2 border-t border-[#222]">
-                <p className="text-xs font-medium text-white mb-2">Declarar Vencedor</p>
-                <p className="text-[10px] text-[#666] mb-3">
-                  Ao declarar um vencedor, 100% do tráfego será direcionado para essa versão. O teste será encerrado.
-                </p>
+              <div className="pt-2 border-t border-border/30">
+                <p className="text-[10px] text-muted-foreground mb-2">Declarar vencedor (encerra teste permanentemente)</p>
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-[11px] border-[#333] hover:bg-[#222] text-white flex-1"
-                    onClick={() => handleDeclareWinner("V1")}
-                  >
-                    <Trophy className="w-3 h-3 mr-1 text-amber-400" />
-                    V1 é o Vencedor
+                  <Button size="sm" variant="outline" className="h-7 text-[10px] flex-1 border-border/50 text-foreground" onClick={() => handleDeclareWinner("V1")}>
+                    <Trophy className="w-3 h-3 mr-1 text-amber-400" />V1 Vence
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-[11px] border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400 flex-1"
-                    onClick={() => handleDeclareWinner("V2")}
-                  >
-                    <Trophy className="w-3 h-3 mr-1 text-emerald-400" />
-                    V2 é o Vencedor
+                  <Button size="sm" variant="outline" className="h-7 text-[10px] flex-1 border-emerald-500/30 text-emerald-400" onClick={() => handleDeclareWinner("V2")}>
+                    <Trophy className="w-3 h-3 mr-1" />V2 Vence
                   </Button>
                 </div>
               </div>
@@ -341,154 +405,130 @@ export default function LiveQuizVersionAB() {
           </div>
         )}
 
-        {/* Confidence banner */}
-        <div className={cn("flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] mt-3",
+        {/* Sample size bar */}
+        <div className={cn("flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] mt-2",
           hasEnoughData
-            ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-            : "bg-amber-500/10 border border-amber-500/20 text-amber-400"
+            ? "bg-emerald-500/8 border border-emerald-500/15 text-emerald-400"
+            : "bg-amber-500/8 border border-amber-500/15 text-amber-400"
         )}>
-          {hasEnoughData ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
-          {hasEnoughData
-            ? `Dados suficientes para decisão (${totalVisitors} sessões, ${v1.visitors} V1 + ${v2.visitors} V2)`
-            : `Coletando dados... ${totalVisitors} de ${minSample * 2} sessões necessárias (${v1.visitors} V1 + ${v2.visitors} V2)`
-          }
+          {hasEnoughData ? <CheckCircle2 className="w-3 h-3 shrink-0" /> : <AlertTriangle className="w-3 h-3 shrink-0" />}
+          <span className="truncate">
+            {hasEnoughData
+              ? `${totalVisitors} sessões (${v1.visitors} V1 + ${v2.visitors} V2) — dados confiáveis`
+              : `${totalVisitors}/${minSample * 2} sessões (${v1.visitors} V1 + ${v2.visitors} V2)`
+            }
+          </span>
         </div>
       </div>
 
-      {/* Main KPI Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="RPV (Receita/Visitante)" v1={v1RPV} v2={v2RPV} format="rpv" />
-        <StatCard label="Conversão Front" v1={v1ConvRate} v2={v2ConvRate} format="pct" />
-        <StatCard label="Taxa IC" v1={v1ICRate} v2={v2ICRate} format="pct" />
-        <StatCard label="Receita Total" v1={v1.total_revenue} v2={v2.total_revenue} format="brl" />
+      {/* ═══ MAIN KPIs ═══ */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+        <BigKPI label="RPV" v1={v1RPV} v2={v2RPV} format="brl" icon={DollarSign} highlight />
+        <BigKPI label="Conversão Front" v1={v1Conv} v2={v2Conv} format="pct" icon={Target} highlight />
+        <BigKPI label="Taxa IC" v1={v1IC} v2={v2IC} format="pct" icon={ShoppingCart} />
+        <BigKPI label="Receita Total" v1={v1.total_revenue} v2={v2.total_revenue} format="brl" icon={DollarSign} />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Visitantes" v1={v1.visitors} v2={v2.visitors} />
-        <StatCard label="CTA Rate" v1={v1CTARate} v2={v2CTARate} format="pct" />
-        <StatCard label="Quiz Completo %" v1={v1QuizRate} v2={v2QuizRate} format="pct" />
-        <StatCard label="Ticket Médio" v1={v1TicketAvg} v2={v2TicketAvg} format="brl" />
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+        <BigKPI label="Visitantes" v1={v1.visitors} v2={v2.visitors} format="number" icon={Users} />
+        <BigKPI label="Quiz Completo %" v1={v1Quiz} v2={v2Quiz} format="pct" icon={CheckCircle2} />
+        <BigKPI label="CTA Rate" v1={v1CTA} v2={v2CTA} format="pct" icon={Zap} />
+        <BigKPI label="Ticket Médio" v1={v1Ticket} v2={v2Ticket} format="brl" icon={DollarSign} />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Vendas Front" v1={v1.front_sales} v2={v2.front_sales} />
-        <StatCard label="Receita Front" v1={v1.front_revenue} v2={v2.front_revenue} format="brl" />
-        <StatCard label="Upsell Take Rate" v1={v1UpsellRate} v2={v2UpsellRate} format="pct" />
-        <StatCard label="Receita Upsell" v1={v1.upsell_revenue} v2={v2.upsell_revenue} format="brl" />
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+        <BigKPI label="Vendas Front" v1={v1.front_sales} v2={v2.front_sales} format="number" icon={ShoppingCart} />
+        <BigKPI label="Receita Front" v1={v1.front_revenue} v2={v2.front_revenue} format="brl" icon={DollarSign} />
+        <BigKPI label="Upsell Take Rate" v1={v1Upsell} v2={v2Upsell} format="pct" icon={ArrowUpRight} />
+        <BigKPI label="Receita Upsell" v1={v1.upsell_revenue} v2={v2.upsell_revenue} format="brl" icon={DollarSign} />
       </div>
 
-      {/* Verdict */}
-      {hasEnoughData && (rpvWinner || convWinner) && (
-        <div className="rounded-xl p-4 bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
+      {/* ═══ VERDICT ═══ */}
+      {hasEnoughData && verdictItems.length > 0 && (
+        <div className="rounded-xl p-3 sm:p-4 bg-gradient-to-br from-emerald-500/8 to-emerald-600/5 border border-emerald-500/15">
           <div className="flex items-center gap-2 mb-2">
-            <Zap className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-sm font-bold text-emerald-400">Diagnóstico</h3>
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-xs sm:text-sm font-bold text-emerald-400">Diagnóstico Automático</h3>
           </div>
-          <div className="space-y-1 text-[12px] text-white/80">
-            {rpvWinner && (
-              <p>• RPV: <span className="font-bold text-emerald-400">{rpvWinner}</span> está gerando{" "}
-                {fmtBRL(Math.abs(v2RPV - v1RPV))} {rpvWinner === "V2" ? "a mais" : "a menos"} por visitante
+          <div className="space-y-1.5">
+            {verdictItems.map((item, i) => (
+              <p key={i} className="text-[11px] sm:text-xs text-foreground/80 flex items-start gap-1.5">
+                <ArrowRight className="w-3 h-3 text-emerald-400 shrink-0 mt-0.5" />
+                <span>{item}</span>
               </p>
-            )}
-            {convWinner && (
-              <p>• Conversão: <span className="font-bold text-emerald-400">{convWinner}</span> converte{" "}
-                {Math.abs(v2ConvRate - v1ConvRate).toFixed(1)}pp {convWinner === "V2" ? "a mais" : "a menos"}
-              </p>
-            )}
+            ))}
           </div>
         </div>
       )}
 
-      {/* Step-by-step funnel comparison */}
-      <div className="rounded-xl bg-[#141414] border border-[#2a2a2a] p-4">
-        <div className="flex items-center gap-2 mb-4">
+      {/* ═══ FUNNEL PER STEP (mobile-friendly) ═══ */}
+      <div className="rounded-xl bg-card/50 border border-border/50 p-3 sm:p-4">
+        <div className="flex items-center gap-2 mb-3">
           <BarChart3 className="w-4 h-4 text-violet-400" />
-          <h3 className="text-sm font-bold text-white">Funil por Etapa (V1 vs V2)</h3>
+          <h3 className="text-xs sm:text-sm font-bold text-foreground">Retenção por Etapa</h3>
         </div>
         <div className="space-y-1">
-          <div className="grid grid-cols-[1fr_80px_80px_80px_80px_80px_80px] gap-1 text-[9px] text-[#555] font-medium px-2 py-1">
-            <span>Etapa</span>
-            <span className="text-center">Views V1</span>
-            <span className="text-center">Views V2</span>
-            <span className="text-center">Drop V1</span>
-            <span className="text-center">Drop V2</span>
-            <span className="text-center">Tempo V1</span>
-            <span className="text-center">Tempo V2</span>
-          </div>
-          {allStepSlugs.map((slug) => {
+          {allStepSlugs.map((slug, i) => {
             const s1 = v1Steps.find(s => s.step === slug);
             const s2 = v2Steps.find(s => s.step === slug);
             const isRemoved = V2_REMOVED.includes(slug);
-            const dropV1 = s1 && s1.views > 0 ? ((1 - s1.completions / s1.views) * 100).toFixed(1) : "-";
-            const dropV2 = s2 && s2.views > 0 ? ((1 - s2.completions / s2.views) * 100).toFixed(1) : "-";
-            const timeV1 = s1 ? `${(s1.avg_time_ms / 1000).toFixed(1)}s` : "-";
-            const timeV2 = s2 ? `${(s2.avg_time_ms / 1000).toFixed(1)}s` : "-";
+            const prevSlug = i > 0 ? allStepSlugs[i - 1] : null;
+            const prevV1 = prevSlug ? v1Steps.find(s => s.step === prevSlug) : null;
+            const prevV2 = prevSlug ? v2Steps.find(s => s.step === prevSlug) : null;
 
             return (
-              <div key={slug} className={cn(
-                "grid grid-cols-[1fr_80px_80px_80px_80px_80px_80px] gap-1 px-2 py-1.5 rounded-lg text-[11px]",
-                isRemoved ? "bg-red-500/5 border border-red-500/10" : "hover:bg-[#1a1a1a]"
-              )}>
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className={cn("truncate", isRemoved ? "text-red-400/60 line-through" : "text-white/80")}>
-                    {STEP_LABELS[slug] || slug}
-                  </span>
-                  {isRemoved && <Badge className="text-[8px] bg-red-500/20 text-red-400 border-0 px-1 flex-shrink-0">Removido V2</Badge>}
-                </div>
-                <span className="text-center text-white/60 tabular-nums">{s1?.views ?? 0}</span>
-                <span className="text-center text-white/60 tabular-nums">{isRemoved ? "-" : (s2?.views ?? 0)}</span>
-                <span className={cn("text-center tabular-nums",
-                  dropV1 !== "-" && parseFloat(dropV1) > 30 ? "text-red-400" : "text-white/60"
-                )}>{dropV1}{dropV1 !== "-" ? "%" : ""}</span>
-                <span className={cn("text-center tabular-nums",
-                  dropV2 !== "-" && parseFloat(dropV2) > 30 ? "text-red-400" : "text-white/60"
-                )}>{isRemoved ? "-" : `${dropV2}${dropV2 !== "-" ? "%" : ""}`}</span>
-                <span className="text-center text-[#666] tabular-nums">{timeV1}</span>
-                <span className="text-center text-[#666] tabular-nums">{isRemoved ? "-" : timeV2}</span>
-              </div>
+              <StepRow
+                key={slug}
+                slug={slug}
+                s1={s1}
+                s2={s2}
+                isRemoved={isRemoved}
+                prevV1Views={prevV1?.views ?? 0}
+                prevV2Views={prevV2?.views ?? 0}
+              />
             );
           })}
         </div>
       </div>
 
-      {/* Answer distribution for changed steps */}
+      {/* ═══ ANSWER DISTRIBUTION ═══ */}
       {(v1Answers.length > 0 || v2Answers.length > 0) && (
-        <div className="rounded-xl bg-[#141414] border border-[#2a2a2a] p-4">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="rounded-xl bg-card/50 border border-border/50 p-3 sm:p-4">
+          <div className="flex items-center gap-2 mb-3">
             <Target className="w-4 h-4 text-amber-400" />
-            <h3 className="text-sm font-bold text-white">Distribuição de Respostas (Steps Modificados)</h3>
+            <h3 className="text-xs sm:text-sm font-bold text-foreground">Respostas Modificadas</h3>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="space-y-4">
             {["step-5", "step-7"].map((stepSlug) => {
-              const s5v1 = v1Answers.filter(a => a.step === stepSlug);
-              const s5v2 = v2Answers.filter(a => a.step === stepSlug);
-              if (s5v1.length === 0 && s5v2.length === 0) return null;
-              const totalV1 = s5v1.reduce((s, a) => s + a.count, 0);
-              const totalV2 = s5v2.reduce((s, a) => s + a.count, 0);
+              const sv1 = v1Answers.filter(a => a.step === stepSlug);
+              const sv2 = v2Answers.filter(a => a.step === stepSlug);
+              if (sv1.length === 0 && sv2.length === 0) return null;
+              const totalV1 = sv1.reduce((s, a) => s + a.count, 0);
+              const totalV2 = sv2.reduce((s, a) => s + a.count, 0);
 
               return (
-                <div key={stepSlug} className="rounded-lg bg-[#0d0d0d] border border-[#222] p-3">
-                  <p className="text-xs font-medium text-white/80 mb-2">{STEP_LABELS[stepSlug] || stepSlug}</p>
+                <div key={stepSlug} className="rounded-lg bg-background/50 border border-border/30 p-3">
+                  <p className="text-[11px] font-medium text-foreground/80 mb-2">{STEP_LABELS[stepSlug]}</p>
                   <div className="space-y-2">
                     <div>
-                      <p className="text-[9px] text-[#555] mb-1">V1 (Original)</p>
-                      {s5v1.map(a => (
+                      <p className="text-[9px] text-muted-foreground mb-1">V1 (Original)</p>
+                      {sv1.map(a => (
                         <div key={a.answer} className="flex items-center gap-2 mb-1">
-                          <div className="flex-1 h-4 bg-[#1a1a1a] rounded-full overflow-hidden">
-                            <div className="h-full bg-[#333] rounded-full" style={{ width: `${totalV1 > 0 ? (a.count / totalV1) * 100 : 0}%` }} />
+                          <div className="flex-1 h-4 bg-muted/20 rounded-full overflow-hidden">
+                            <div className="h-full bg-foreground/15 rounded-full" style={{ width: `${totalV1 > 0 ? (a.count / totalV1) * 100 : 0}%` }} />
                           </div>
-                          <span className="text-[10px] text-[#888] tabular-nums w-16 text-right">{a.answer} ({a.count})</span>
+                          <span className="text-[9px] text-muted-foreground tabular-nums shrink-0">{a.answer} ({a.count})</span>
                         </div>
                       ))}
                     </div>
                     <div>
-                      <p className="text-[9px] text-emerald-400/60 mb-1">V2 (Otimizado)</p>
-                      {s5v2.map(a => (
+                      <p className="text-[9px] text-emerald-400/70 mb-1">V2 (Otimizado)</p>
+                      {sv2.map(a => (
                         <div key={a.answer} className="flex items-center gap-2 mb-1">
-                          <div className="flex-1 h-4 bg-[#1a1a1a] rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500/30 rounded-full" style={{ width: `${totalV2 > 0 ? (a.count / totalV2) * 100 : 0}%` }} />
+                          <div className="flex-1 h-4 bg-emerald-500/5 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500/25 rounded-full" style={{ width: `${totalV2 > 0 ? (a.count / totalV2) * 100 : 0}%` }} />
                           </div>
-                          <span className="text-[10px] text-emerald-400/80 tabular-nums w-16 text-right">{a.answer} ({a.count})</span>
+                          <span className="text-[9px] text-emerald-400/70 tabular-nums shrink-0">{a.answer} ({a.count})</span>
                         </div>
                       ))}
                     </div>
@@ -500,33 +540,34 @@ export default function LiveQuizVersionAB() {
         </div>
       )}
 
-      {/* Changes summary */}
-      <div className="rounded-xl bg-[#141414] border border-[#2a2a2a] p-4">
+      {/* ═══ CHANGES SUMMARY ═══ */}
+      <div className="rounded-xl bg-card/50 border border-border/50 p-3 sm:p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Eye className="w-4 h-4 text-sky-400" />
-          <h3 className="text-sm font-bold text-white">Mudanças no V2</h3>
+          <GitCompare className="w-4 h-4 text-sky-400" />
+          <h3 className="text-xs sm:text-sm font-bold text-foreground">O que mudou no V2</h3>
         </div>
-        <div className="space-y-2 text-[12px] text-white/70">
-          <div className="flex items-start gap-2">
-            <Badge className="text-[9px] bg-red-500/20 text-red-400 border-0 mt-0.5">Removido</Badge>
-            <span>Step 10 (Disponibilidade "Sim/Não") — dado inútil, não acionava nenhuma lógica</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <Badge className="text-[9px] bg-red-500/20 text-red-400 border-0 mt-0.5">Removido</Badge>
-            <span>Step 11 (Demo Plataforma) — componente pesado de 595 linhas, movido para VSL</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <Badge className="text-[9px] bg-red-500/20 text-red-400 border-0 mt-0.5">Removido</Badge>
-            <span>Step 12 (WhatsApp Proof) — redundante com Step 4 (prova social vídeo)</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-0 mt-0.5">Alterado</Badge>
-            <span>Step 5: "Sim, tenho experiência" → "Sim, mas caí em golpe" | "Nunca tentei" → "Tenho medo de tecnologia"</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-0 mt-0.5">Alterado</Badge>
-            <span>Step 7: "Falta de tempo" → "Já fui enganado antes"</span>
-          </div>
+        <div className="space-y-2">
+          {[
+            { type: "removed", text: "Step 10 (Disponibilidade) — pergunta binária sem impacto na personalização" },
+            { type: "removed", text: "Step 11 (Demo Plataforma) — componente pesado, conteúdo movido para VSL" },
+            { type: "removed", text: "Step 12 (WhatsApp Proof) — redundante com Step 4 (prova social)" },
+            { type: "changed", text: "Step 5: respostas genéricas → gatilhos emocionais (\"Caí em golpe\", \"Medo de tecnologia\")" },
+            { type: "changed", text: "Step 7: obstáculos genéricos → âncoras de confiança (\"Já fui enganado antes\")" },
+          ].map((item, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <Badge className={cn("text-[8px] border-0 mt-0.5 shrink-0 px-1.5",
+                item.type === "removed" ? "bg-red-500/10 text-red-400" : "bg-amber-500/10 text-amber-400"
+              )}>
+                {item.type === "removed" ? "Removido" : "Alterado"}
+              </Badge>
+              <span className="text-[11px] text-foreground/70 leading-relaxed">{item.text}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 pt-2 border-t border-border/20">
+          <p className="text-[10px] text-muted-foreground">
+            Hipótese: menos etapas = menos abandono + gatilhos emocionais = maior engajamento e conversão.
+          </p>
         </div>
       </div>
     </div>
