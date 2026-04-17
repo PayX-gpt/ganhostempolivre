@@ -31,6 +31,48 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Force base path in vite.config.ts (resilience vs. upstream reverts)
+        run: |
+          # If vite.config.ts has `const base = "/";` (Lovable's default),
+          # rewrite it to the GitHub Pages subpath so assets resolve correctly.
+          if grep -q 'const base = "/"' vite.config.ts; then
+            sed -i 's|const base = "/"|const base = mode === "production" ? "/ganhostempolivre/" : "/"|' vite.config.ts
+            echo "Patched vite.config.ts to use /ganhostempolivre/ base in production."
+          else
+            echo "vite.config.ts already has subpath base logic. No patch needed."
+          fi
+          grep -n "const base" vite.config.ts
+
+      - name: Ensure SPA 404 decoder is present in index.html
+        run: |
+          if ! grep -q "pathSegmentsToKeep\|SPA" index.html 2>/dev/null; then
+            echo "SPA decoder missing in index.html, injecting it..."
+            python3 - <<'PY'
+          import re
+          with open('index.html', 'r') as f:
+              content = f.read()
+          snippet = """    <!-- Single Page Apps for GitHub Pages: decode redirect from 404.html. -->
+              <script>
+                (function(l) {
+                  if (l.search[1] === '/') {
+                    var decoded = l.search.slice(1).split('&').map(function(s) {
+                      return s.replace(/~and~/g, '&');
+                    }).join('?');
+                    window.history.replaceState(null, null,
+                      l.pathname.slice(0, -1) + decoded + l.hash
+                    );
+                  }
+                }(window.location))
+              </script>
+          """
+          content = re.sub(r'(<body>\s*)', r'\1\n' + snippet, content, count=1)
+          with open('index.html', 'w') as f:
+              f.write(content)
+          PY
+          else
+            echo "SPA decoder already present in index.html."
+          fi
+
       - name: Build
         run: bun run build
 
