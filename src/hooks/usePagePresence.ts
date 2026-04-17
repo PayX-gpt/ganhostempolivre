@@ -75,8 +75,14 @@ const detectTrafficSource = (): string => {
 
 const trackPresence = (pageId: string) => {
   const currentPath = window.location.pathname.toLowerCase();
-  if (currentPath.includes('/live') || currentPath.includes('/admin')) return;
-  if (isDevSession()) return;
+  if (currentPath.includes('/live') || currentPath.includes('/admin')) {
+    console.log('[Presence] SKIP /live or /admin', pageId);
+    return;
+  }
+  if (isDevSession()) {
+    console.log('[Presence] SKIP isDevSession', window.location.hostname);
+    return;
+  }
 
   const sessionId = getOrCreateSessionId();
   const channel = getOrCreateChannel(sessionId);
@@ -84,14 +90,16 @@ const trackPresence = (pageId: string) => {
   const trafficSource = detectTrafficSource();
 
   if (subscribedStatus === "subscribed") {
-    channel.track({
+    const result = channel.track({
       session_id: sessionId,
       page_id: pageId,
       lead_name: name,
       traffic_source: trafficSource,
       joined_at: new Date().toISOString(),
     });
+    console.log('[Presence] TRACK', pageId, 'session=', sessionId, 'name=', name, 'result=', result);
   } else {
+    console.log('[Presence] PENDING (not subscribed yet)', pageId, 'status=', subscribedStatus);
     pendingPageId = pageId;
   }
 };
