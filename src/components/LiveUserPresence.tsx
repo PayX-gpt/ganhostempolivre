@@ -44,6 +44,13 @@ interface RecentPurchase {
   funnel_step: string | null;
 }
 
+interface AuditPresenceRow {
+  session_id: string;
+  page_id: string | null;
+  created_at: string;
+  metadata?: Record<string, unknown> | null;
+}
+
 interface LiveUserPresenceProps {
   onTotalChange?: (total: number) => void;
   campaignFilter?: CampaignFilterState;
@@ -112,6 +119,22 @@ const FUNNEL_STEP_LABELS: Record<string, string> = {
   blindagem: "UP3", circulo_interno: "UP4", safety_pro: "UP5", forex_mentoria: "UP6", downsell_guia: "DS",
 };
 
+const PRESENCE_FALLBACK_WINDOW_MS = 90_000;
+
+const normalizeTrafficSource = (value?: string | null): string => {
+  const source = (value || "").toLowerCase();
+  if (!source) return "organic";
+  if (source.includes("tiktok")) return "tiktok";
+  if (source.includes("facebook") || source.includes("instagram") || source.includes("meta") || source === "fb") return "meta";
+  if (source.includes("google")) return "google";
+  return source;
+};
+
+const inferTrafficSourceFromMetadata = (metadata?: Record<string, unknown> | null): string => {
+  const utmSource = typeof metadata?.utm_source === "string" ? metadata.utm_source : null;
+  return normalizeTrafficSource(utmSource);
+};
+
 const toStepId = (page: string): string | null => {
   const p = page.toLowerCase();
   // TikTok ES funnel routes (check before PT to avoid false match)
@@ -164,6 +187,8 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
   const onTotalChangeRef = useRef(onTotalChange);
   onTotalChangeRef.current = onTotalChange;
   const allPresenceDataRef = useRef<{ counts: Record<string, number>; users: OnlineUser[]; stepSources: Record<string, Set<string>>; total: number } | null>(null);
+  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const auditPresenceRef = useRef<Record<string, AuditPresenceRow>>({});
 
   // Fetch session → campaign mapping
   const fetchSessionCampaigns = useCallback(async () => {
@@ -192,9 +217,7 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
     if (data) setRecentPurchases(data as RecentPurchase[]);
   }, []);
 
-  // Core presence handler - stores ALL users (unfiltered)
-  const handlePresenceSync = useCallback((channel: ReturnType<typeof supabase.channel>) => {
-    const state = channel.presenceState<PresencePayload>();
+  const applyPresenceSnapshot = useCallback((channel: ReturnType<typeof supabase.channel> | null) => {
     const counts: Record<string, number> = {};
     ALL_STEPS.forEach(s => { counts[s.id] = 0; });
 
@@ -203,35 +226,101 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
     const stepSources: Record<string, Set<string>> = {};
     ALL_STEPS.forEach(s => { stepSources[s.id] = new Set(); });
 
-    Object.entries(state).forEach(([sessionKey, presences]) => {
-      if (!presences || presences.length === 0) return;
-      const latest = presences[presences.length - 1];
-      const pageId = latest.page_id || "";
-      if (shouldSkip(pageId, sessionKey)) return;
-      const stepId = toStepId(pageId);
-      if (stepId && counts[stepId] !== undefined) {
-        counts[stepId]++;
-        total++;
-        const source = latest.traffic_source || "organic";
-        stepSources[stepId].add(source);
+    const mergedUsers = new Map<string, OnlineUser & { stepId: string; timestamp: number }>();
+
+    if (channel) {
+      const state = channel.presenceState<PresencePayload>();
+
+      Object.entries(state).forEach(([sessionKey, presences]) => {
+        if (!presences || presences.length === 0) return;
+        const latest = presences[presences.length - 1];
+        const pageId = latest.page_id || "";
+        if (shouldSkip(pageId, sessionKey)) return;
+
+        const stepId = toStepId(pageId);
+        if (!stepId || counts[stepId] === undefined) return;
+
         const stepLabel = ALL_STEPS.find(s => s.id === stepId)?.label || pageId;
-        users.push({
+        const timestamp = new Date(latest.joined_at).getTime();
+
+        mergedUsers.set(latest.session_id || sessionKey, {
           session_id: latest.session_id,
           name: latest.lead_name || "Visitante",
           page: stepLabel,
-          traffic_source: source,
+          traffic_source: normalizeTrafficSource(latest.traffic_source),
           joined_at: latest.joined_at,
+          stepId,
+          timestamp: Number.isFinite(timestamp) ? timestamp : Date.now(),
+        });
+      });
+    }
+
+    const cutoff = Date.now() - PRESENCE_FALLBACK_WINDOW_MS;
+    Object.values(auditPresenceRef.current).forEach((row) => {
+      if (!row.page_id || shouldSkip(row.page_id, row.session_id)) return;
+
+      const timestamp = new Date(row.created_at).getTime();
+      if (!Number.isFinite(timestamp) || timestamp < cutoff) return;
+
+      const stepId = toStepId(row.page_id);
+      if (!stepId || counts[stepId] === undefined) return;
+
+      const existing = mergedUsers.get(row.session_id);
+      if (existing && existing.timestamp >= timestamp) return;
+
+      const stepLabel = ALL_STEPS.find(s => s.id === stepId)?.label || row.page_id;
+      mergedUsers.set(row.session_id, {
+        session_id: row.session_id,
+        name: existing?.name && existing.name !== "Visitante" ? existing.name : "Visitante",
+        page: stepLabel,
+        traffic_source: existing?.traffic_source || inferTrafficSourceFromMetadata(row.metadata),
+        joined_at: row.created_at,
+        stepId,
+        timestamp,
+      });
+    });
+
+    mergedUsers.forEach((user) => {
+      if (counts[user.stepId] !== undefined) {
+        counts[user.stepId]++;
+        total++;
+        stepSources[user.stepId].add(user.traffic_source || "organic");
+        users.push({
+          session_id: user.session_id,
+          name: user.name,
+          page: user.page,
+          traffic_source: user.traffic_source,
+          joined_at: user.joined_at,
         });
       }
     });
 
-    // Store all unfiltered data
     allPresenceDataRef.current = { counts, users, stepSources, total };
     setAllOnlineUsers(users);
     setLastUpdated(new Date());
-    
-    // Apply will be called by the effect below
   }, []);
+
+  const fetchRecentAuditPresence = useCallback(async () => {
+    const sinceIso = new Date(Date.now() - PRESENCE_FALLBACK_WINDOW_MS).toISOString();
+    const { data } = await supabase
+      .from("funnel_audit_logs")
+      .select("session_id, page_id, created_at, metadata")
+      .eq("event_type", "page_loaded")
+      .gte("created_at", sinceIso)
+      .order("created_at", { ascending: false })
+      .limit(200);
+
+    const next: Record<string, AuditPresenceRow> = {};
+    (data || []).forEach((row) => {
+      const typedRow = row as AuditPresenceRow;
+      if (typedRow.session_id && !next[typedRow.session_id]) {
+        next[typedRow.session_id] = typedRow;
+      }
+    });
+
+    auditPresenceRef.current = next;
+    applyPresenceSnapshot(presenceChannelRef.current);
+  }, [applyPresenceSnapshot]);
 
   // Apply campaign filter to presence data
   const selectedCampaigns = campaignFilter?.selectedCampaigns || new Set<string>();
@@ -305,13 +394,15 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
     setIsLoading(true);
     fetchRecentPurchases();
     fetchSessionCampaigns();
+    fetchRecentAuditPresence();
 
     const ADMIN_OBSERVER_KEY = `admin_observer_${Date.now()}`;
     const channel = supabase.channel("funnel-presence", {
       config: { presence: { key: ADMIN_OBSERVER_KEY } },
     });
+    presenceChannelRef.current = channel;
 
-    const sync = () => handlePresenceSync(channel);
+    const sync = () => applyPresenceSnapshot(channel);
 
     channel
       .on("presence", { event: "sync" }, sync)
@@ -326,6 +417,16 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
 
     const purchaseInterval = setInterval(fetchRecentPurchases, 30_000);
     const campaignInterval = setInterval(fetchSessionCampaigns, 30_000);
+    const auditFallbackInterval = setInterval(() => {
+      const cutoff = Date.now() - PRESENCE_FALLBACK_WINDOW_MS;
+      auditPresenceRef.current = Object.fromEntries(
+        Object.entries(auditPresenceRef.current).filter(([, row]) => {
+          const ts = new Date(row.created_at).getTime();
+          return Number.isFinite(ts) && ts >= cutoff;
+        })
+      );
+      applyPresenceSnapshot(channel);
+    }, 10_000);
 
     const purchaseChannel = supabase
       .channel("presence-purchase-feed")
@@ -333,13 +434,40 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
         () => fetchRecentPurchases())
       .subscribe();
 
+    const auditChannel = supabase
+      .channel("presence-audit-fallback")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "funnel_audit_logs", filter: "event_type=eq.page_loaded" },
+        (payload) => {
+          const row = payload.new as AuditPresenceRow;
+          if (!row.session_id || !row.page_id) return;
+
+          const existing = auditPresenceRef.current[row.session_id];
+          const existingTs = existing ? new Date(existing.created_at).getTime() : 0;
+          const nextTs = new Date(row.created_at).getTime();
+
+          if (!existing || nextTs >= existingTs) {
+            auditPresenceRef.current = {
+              ...auditPresenceRef.current,
+              [row.session_id]: row,
+            };
+            applyPresenceSnapshot(channel);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
+      presenceChannelRef.current = null;
       supabase.removeChannel(channel);
       supabase.removeChannel(purchaseChannel);
+      supabase.removeChannel(auditChannel);
       clearInterval(purchaseInterval);
       clearInterval(campaignInterval);
+      clearInterval(auditFallbackInterval);
     };
-  }, [handlePresenceSync, fetchRecentPurchases, fetchSessionCampaigns]);
+  }, [applyPresenceSnapshot, fetchRecentPurchases, fetchSessionCampaigns, fetchRecentAuditPresence]);
 
   const purchaseBySession = recentPurchases.reduce<Record<string, RecentPurchase>>((acc, p) => {
     if (p.session_id) acc[p.session_id] = p;
