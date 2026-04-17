@@ -34,6 +34,33 @@ let sharedSessionId: string | null = null;
 let subscribedStatus: "pending" | "subscribed" = "pending";
 let pendingPageId: string | null = null;
 
+const resetSharedChannel = () => {
+  sharedChannel = null;
+  sharedSessionId = null;
+  subscribedStatus = "pending";
+};
+
+const buildPresencePayload = (sessionId: string, pageId: string) => ({
+  session_id: sessionId,
+  page_id: pageId,
+  lead_name: getLeadName(),
+  traffic_source: detectTrafficSource(),
+  joined_at: new Date().toISOString(),
+});
+
+const trackOnChannel = async (
+  channel: ReturnType<typeof supabase.channel>,
+  sessionId: string,
+  pageId: string,
+): Promise<void> => {
+  try {
+    await channel.track(buildPresencePayload(sessionId, pageId));
+  } catch {
+    pendingPageId = pageId;
+    resetSharedChannel();
+  }
+};
+
 const getOrCreateChannel = (sessionId: string): ReturnType<typeof supabase.channel> => {
   if (sharedChannel) return sharedChannel;
 
@@ -47,15 +74,14 @@ const getOrCreateChannel = (sessionId: string): ReturnType<typeof supabase.chann
       subscribedStatus = "subscribed";
       // Track pending page if any
       if (pendingPageId) {
-        sharedChannel!.track({
-          session_id: sessionId,
-          page_id: pendingPageId,
-          lead_name: getLeadName(),
-          traffic_source: detectTrafficSource(),
-          joined_at: new Date().toISOString(),
-        });
+        void trackOnChannel(sharedChannel!, sessionId, pendingPageId);
         pendingPageId = null;
       }
+      return;
+    }
+
+    if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+      resetSharedChannel();
     }
   });
 
@@ -86,20 +112,10 @@ const trackPresence = (pageId: string) => {
 
   const sessionId = getOrCreateSessionId();
   const channel = getOrCreateChannel(sessionId);
-  const name = getLeadName();
-  const trafficSource = detectTrafficSource();
 
   if (subscribedStatus === "subscribed") {
-    const result = channel.track({
-      session_id: sessionId,
-      page_id: pageId,
-      lead_name: name,
-      traffic_source: trafficSource,
-      joined_at: new Date().toISOString(),
-    });
-    console.log('[Presence] TRACK', pageId, 'session=', sessionId, 'name=', name, 'result=', result);
+    void trackOnChannel(channel, sessionId, pageId);
   } else {
-    console.log('[Presence] PENDING (not subscribed yet)', pageId, 'status=', subscribedStatus);
     pendingPageId = pageId;
   }
 };
@@ -160,8 +176,14 @@ export const usePagePresence = (pageId: string): void => {
       }
     }, 2000);
 
+    // Heartbeat keeps realtime presence alive on longer steps and recovers after brief socket hiccups
+    const heartbeat = setInterval(() => {
+      trackPresence(pageId);
+    }, 15000);
+
     return () => {
       clearInterval(interval);
+      clearInterval(heartbeat);
       window.removeEventListener("quiz_name_updated", handleNameEvent);
     };
   }, [pageId]);
