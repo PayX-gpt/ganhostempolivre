@@ -181,10 +181,29 @@ export const usePagePresence = (pageId: string): void => {
       trackPresence(pageId);
     }, 15000);
 
+    // Safari/iOS pauses WebSockets in background tabs — when user returns, force re-track
+    // and reset channel if needed. This fixes the "disappears from /live after switching tabs" bug.
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        // Force fresh subscription if channel was paused
+        if (subscribedStatus !== "subscribed") {
+          resetSharedChannel();
+        }
+        trackPresence(pageId);
+      }
+    };
+    const handleFocus = () => trackPresence(pageId);
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("pageshow", handleFocus);
+
     return () => {
       clearInterval(interval);
       clearInterval(heartbeat);
       window.removeEventListener("quiz_name_updated", handleNameEvent);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("pageshow", handleFocus);
     };
   }, [pageId]);
 
