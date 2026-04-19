@@ -66,6 +66,7 @@ Deno.serve(async (req) => {
       { id: Deno.env.get("FB_PIXEL_ID"), token: Deno.env.get("FB_ACCESS_TOKEN") },
       { id: "952975541025077", token: Deno.env.get("FB_ACCESS_TOKEN_2") },
       { id: "1595773305052852", token: Deno.env.get("FB_ACCESS_TOKEN_3") },
+      { id: "2870322186504976", token: Deno.env.get("FB_ACCESS_TOKEN_4") },
     ].filter(p => p.id && p.token);
 
     if (pixels.length === 0) {
