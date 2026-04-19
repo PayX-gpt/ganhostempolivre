@@ -38,6 +38,7 @@ export async function sendCAPIInitiateCheckout(params: {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      keepalive: true,
     });
 
     const result = await resp.json();
