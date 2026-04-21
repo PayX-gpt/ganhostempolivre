@@ -11,6 +11,7 @@ import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
 import { trackMetaInitiateCheckout } from "@/lib/metaPixel";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 
 interface Step11Props {
   onNext: () => void;
@@ -143,30 +144,55 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   // when user clicks the in-video CTA button. Generic player messages are ignored.
   useEffect(() => {
     const handlePandaMessage = (event: MessageEvent) => {
-      if (icFiredRef.current) return;
-
-      // Panda CTA click events have specific message structures:
-      // 1. { type: "buttonClick" } — Panda external button API
-      // 2. { message_type: "smartplayer_cta_click" } — SmartPlayer CTA
-      // 3. { type: "panda:ctaClick" } — newer Panda API
       const d = event.data;
       if (!d || typeof d !== "object") return;
 
+      // Panda CTA click events come in several shapes:
+      // { type: "buttonClick", url } | { type: "panda:ctaClick", url }
+      // { message_type: "smartplayer_cta_click", redirectUrl }
+      // { action: "redirect", url }
       const isRealCtaClick =
         d.type === "buttonClick" ||
         d.type === "panda:ctaClick" ||
+        d.type === "panda:buttonClick" ||
         d.message_type === "smartplayer_cta_click" ||
-        (d.type === "panda:buttonClick") ||
         (d.action === "redirect" && typeof d.url === "string");
 
-      if (isRealCtaClick) {
-        icFiredRef.current = true;
-        console.log("[Step17] ✅ Panda CTA click detected:", d.type || d.message_type || d.action);
-        saveFunnelEventReliable("checkout_click", { context: "panda_cta_step17", product: "chave_token_chatgpt", amount: offerAmount });
-        sendCAPIInitiateCheckout({ amount: offerAmount });
-        trackTikTokInitiateCheckout({ amount: offerAmount });
-        trackMetaInitiateCheckout({ amount: offerAmount });
+      if (!isRealCtaClick) return;
+
+      // Extract the destination URL Panda would navigate to.
+      const destUrl: string | undefined =
+        d.url || d.redirectUrl || d.href || d.target_url || d.targetUrl;
+
+      // ✅ Append OUR UTMs to whatever URL Panda is opening. The Panda dashboard
+      // button is configured with a bare Kirvano URL — without this enrichment,
+      // Kirvano + Utmify receive the sale with NO campaign attribution.
+      if (destUrl && /^https?:\/\//i.test(destUrl)) {
+        try {
+          const url = new URL(destUrl);
+          const trackingQs = buildTrackingQueryString();
+          if (trackingQs) {
+            const trackingParams = new URLSearchParams(trackingQs.slice(1));
+            trackingParams.forEach((value, key) => {
+              if (!url.searchParams.has(key)) url.searchParams.set(key, value);
+            });
+          }
+          window.open(url.toString(), "_blank", "noopener");
+          console.log("[Step17] ✅ Opened Kirvano with UTMs:", url.toString());
+        } catch (err) {
+          console.warn("[Step17] Failed to enrich Panda CTA URL:", err);
+        }
+      } else {
+        console.warn("[Step17] Panda CTA click had no destination URL — Kirvano will receive no UTMs. Payload:", d);
       }
+
+      if (icFiredRef.current) return;
+      icFiredRef.current = true;
+      console.log("[Step17] ✅ Panda CTA click detected:", d.type || d.message_type || d.action);
+      saveFunnelEventReliable("checkout_click", { context: "panda_cta_step17", product: "chave_token_chatgpt", amount: offerAmount, dest_url: destUrl });
+      sendCAPIInitiateCheckout({ amount: offerAmount });
+      trackTikTokInitiateCheckout({ amount: offerAmount });
+      trackMetaInitiateCheckout({ amount: offerAmount });
     };
 
     // Only fire IC on page hide if user has been on page for 3+ minutes
