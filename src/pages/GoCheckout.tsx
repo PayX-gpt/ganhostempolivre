@@ -74,44 +74,46 @@ const GoCheckout = () => {
     const baseUrl = PLAN_URLS[planKey];
 
     if (!baseUrl) {
-      window.location.replace(import.meta.env.BASE_URL || "/");
+      console.warn("[GoCheckout] Unknown plan:", planKey);
+      window.location.replace("/");
       return;
     }
 
+    // 🔥 CRITICAL: Build the final URL FIRST and schedule a HARD redirect immediately.
+    // Everything else (pixels, CAPI, DB writes) runs in parallel and MUST NOT block
+    // the redirect. If anything throws or hangs, the user still gets to Kirvano.
+    let finalUrl = baseUrl;
+    try {
+      finalUrl = buildCheckoutUrl(planKey) || baseUrl;
+    } catch (err) {
+      console.warn("[GoCheckout] buildCheckoutUrl failed, using bare URL:", err);
+    }
+
+    // Hard fallback: redirect after 600ms NO MATTER WHAT
+    const hardTimer = window.setTimeout(() => {
+      console.log("[GoCheckout] Redirecting to:", finalUrl);
+      window.location.replace(finalUrl);
+    }, 600);
+
+    // Fire-and-forget tracking — wrapped in try/catch so nothing here can block redirect.
     const amount = PLAN_AMOUNTS[planKey] || 47;
+    try {
+      getTrackingData();
+      void saveSessionAttribution().catch(() => {});
+      saveFunnelEventReliable("checkout_click", {
+        context: "go_direct_checkout",
+        plan: planKey,
+        amount,
+        product: planKey,
+      });
+      try { trackMetaInitiateCheckout({ amount, contentId: planKey }); } catch {}
+      try { trackTikTokInitiateCheckout({ amount, contentId: planKey }); } catch {}
+      void sendCAPIInitiateCheckout({ amount, plan: planKey }).catch(() => {});
+    } catch (err) {
+      console.warn("[GoCheckout] Tracking error (non-blocking):", err);
+    }
 
-    // 1. Seed tracking data layer (captures UTMs, fbclid → fbc, generates session_id)
-    getTrackingData();
-
-    // 2. Persist session_attribution so Kirvano webhook can correlate the purchase
-    void saveSessionAttribution();
-
-    // 3. funnel_events row — uses keepalive, survives page unload
-    saveFunnelEventReliable("checkout_click", {
-      context: "go_direct_checkout",
-      plan: planKey,
-      amount,
-      product: planKey,
-    });
-
-    // 4. Meta Pixel IC (browser-side, fires to all pixel IDs in index.html)
-    trackMetaInitiateCheckout({ amount, contentId: planKey });
-
-    // 5. TikTok Pixel IC
-    trackTikTokInitiateCheckout({ amount, contentId: planKey });
-
-    // 6. Facebook CAPI IC (server-side via Supabase edge function)
-    void sendCAPIInitiateCheckout({ amount, plan: planKey });
-
-    // 7. Short grace period (~200ms) so Pixel fbq/ttq can flush their internal
-    //    queue before the browser navigates. CAPI uses keepalive internally,
-    //    so its fetch survives the unload even if it didn't finish yet.
-    const finalUrl = buildCheckoutUrl(planKey);
-    const timer = window.setTimeout(() => {
-      if (finalUrl) window.location.replace(finalUrl);
-    }, 200);
-
-    return () => window.clearTimeout(timer);
+    return () => window.clearTimeout(hardTimer);
   }, [plan]);
 
   return (
@@ -123,8 +125,16 @@ const GoCheckout = () => {
       background: "#0f1117",
       color: "#fff",
       fontFamily: "system-ui, sans-serif",
+      flexDirection: "column",
+      gap: 16,
     }}>
-      <p style={{ fontSize: 18, opacity: 0.7 }}>Redirecionando para o checkout...</p>
+      <div style={{
+        width: 40, height: 40, border: "3px solid #FFD600",
+        borderTopColor: "transparent", borderRadius: "50%",
+        animation: "spin 0.8s linear infinite",
+      }} />
+      <p style={{ fontSize: 16, opacity: 0.8 }}>Abrindo checkout seguro...</p>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 };
