@@ -204,7 +204,17 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       }
     };
     window.addEventListener('message', handlePandaReady);
-    return () => window.removeEventListener('message', handlePandaReady);
+
+    // 🛡️ Safety net: reveal CTA after 8:25 absolute page time
+    // (in case Panda API/postMessage tracking ever fails)
+    const safetyTimer = window.setTimeout(() => {
+      revealCustomCta("page_timer");
+    }, 505_000);
+
+    return () => {
+      window.removeEventListener('message', handlePandaReady);
+      window.clearTimeout(safetyTimer);
+    };
   }, [videoId]);
 
   // Listen for Panda Video CTA click — only fires on REAL button click
