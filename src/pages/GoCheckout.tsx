@@ -79,9 +79,8 @@ const GoCheckout = () => {
       return;
     }
 
-    // 🔥 CRITICAL: Build the final URL FIRST and schedule a HARD redirect immediately.
-    // Everything else (pixels, CAPI, DB writes) runs in parallel and MUST NOT block
-    // the redirect. If anything throws or hangs, the user still gets to Kirvano.
+    // 🔥 CRITICAL: Build URL & fire tracking SYNCHRONOUSLY, then redirect IMMEDIATELY.
+    // All tracking uses keepalive/sendBeacon so it survives the page unload.
     let finalUrl = baseUrl;
     try {
       finalUrl = buildCheckoutUrl(planKey) || baseUrl;
@@ -89,13 +88,7 @@ const GoCheckout = () => {
       console.warn("[GoCheckout] buildCheckoutUrl failed, using bare URL:", err);
     }
 
-    // Hard fallback: redirect after 600ms NO MATTER WHAT
-    const hardTimer = window.setTimeout(() => {
-      console.log("[GoCheckout] Redirecting to:", finalUrl);
-      window.location.replace(finalUrl);
-    }, 600);
-
-    // Fire-and-forget tracking — wrapped in try/catch so nothing here can block redirect.
+    // Fire tracking synchronously BEFORE redirect — relies on keepalive fetch.
     const amount = PLAN_AMOUNTS[planKey] || 47;
     try {
       getTrackingData();
@@ -113,7 +106,9 @@ const GoCheckout = () => {
       console.warn("[GoCheckout] Tracking error (non-blocking):", err);
     }
 
-    return () => window.clearTimeout(hardTimer);
+    // Redirect IMMEDIATELY — no artificial delay.
+    console.log("[GoCheckout] Redirecting to:", finalUrl);
+    window.location.replace(finalUrl);
   }, [plan]);
 
   return (
