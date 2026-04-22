@@ -90,6 +90,26 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const young = isYoungProfile(userAge);
   const pandaBtnRef = useRef<HTMLDivElement>(null);
   const [showCustomCta, setShowCustomCta] = useState(false);
+  const ctaShownLoggedRef = useRef(false);
+
+  // Logs which path revealed the CTA + saves to /live dashboard
+  const revealCustomCta = (source: "panda_api" | "panda_postmessage" | "page_timer") => {
+    setShowCustomCta((prev) => {
+      if (prev) return prev;
+      if (!ctaShownLoggedRef.current) {
+        ctaShownLoggedRef.current = true;
+        console.log(`[Step17] 🟡 Custom CTA shown via ${source} at ${(performance.now() / 1000).toFixed(1)}s page time`);
+        try {
+          saveFunnelEventReliable("custom_cta_shown", {
+            context: "step17_custom_cta_825",
+            source,
+            page_time_s: Math.round(performance.now() / 1000),
+          });
+        } catch {}
+      }
+      return true;
+    });
+  };
 
   const icFiredRef = useRef(false);
   const customCtaFiredRef = useRef(false);
