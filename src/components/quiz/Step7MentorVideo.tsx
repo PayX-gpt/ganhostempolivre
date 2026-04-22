@@ -81,11 +81,10 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
         <div style={{ position: "relative", paddingTop: "177.77777777777777%" }}>
           <iframe
             id="panda-c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8"
-            src="https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8"
+            src="https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8&autoplay=true&muted=true&startTime=0"
             style={{ border: "none", position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
             allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
             allowFullScreen
-            
           />
         </div>
       </div>
