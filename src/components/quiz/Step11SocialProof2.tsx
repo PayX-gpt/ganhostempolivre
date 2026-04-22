@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StepContainer, StepTitle } from "./QuizUI";
 import { CheckCircle } from "lucide-react";
 import avatarJose from "@/assets/avatar-jose.jpg";
@@ -89,8 +89,47 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const t = texts[lang];
   const young = isYoungProfile(userAge);
   const pandaBtnRef = useRef<HTMLDivElement>(null);
+  const [showCustomCta, setShowCustomCta] = useState(false);
 
   const icFiredRef = useRef(false);
+  const customCtaFiredRef = useRef(false);
+
+  // Custom CTA copy per language
+  const customCtaText =
+    lang === "es"
+      ? "QUIERO MI CLAVE DE ACCESO AHORA →"
+      : lang === "en"
+      ? "I WANT MY ACCESS KEY NOW →"
+      : "QUERO MINHA CHAVE DE ACESSO AGORA →";
+
+  const handleCustomCtaClick = () => {
+    try {
+      const url = new URL("https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c");
+      const trackingQs = buildTrackingQueryString();
+      if (trackingQs) {
+        const trackingParams = new URLSearchParams(trackingQs.slice(1));
+        trackingParams.forEach((value, key) => {
+          if (!url.searchParams.has(key)) url.searchParams.set(key, value);
+        });
+      }
+      if (!customCtaFiredRef.current) {
+        customCtaFiredRef.current = true;
+        saveFunnelEventReliable("checkout_click", {
+          context: "custom_cta_step17_825",
+          product: "chave_token_chatgpt",
+          amount: offerAmount,
+          dest_url: url.toString(),
+        });
+        sendCAPIInitiateCheckout({ amount: offerAmount });
+        trackTikTokInitiateCheckout({ amount: offerAmount });
+        trackMetaInitiateCheckout({ amount: offerAmount });
+        icFiredRef.current = true;
+      }
+      window.open(url.toString(), "_blank", "noopener");
+    } catch (err) {
+      console.warn("[Step17] Custom CTA error:", err);
+    }
+  };
 
   const getCurrentOfferAmount = () => {
     try {
