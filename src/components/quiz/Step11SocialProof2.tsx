@@ -12,6 +12,7 @@ import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
 import { trackMetaInitiateCheckout } from "@/lib/metaPixel";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
+import { usePandaPreload } from "@/lib/usePandaPreload";
 
 interface Step11Props {
   onNext: () => void;
@@ -170,6 +171,8 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
   const pandaButtonId = customButtonId || "3e462562-4d30-4dd4-b759-de8c4f18b84e";
   const aspectPadding = videoAspectRatio === "16:9" ? "56.25%" : "177.77777777777777%";
+
+  usePandaPreload(videoId);
 
   // Inject Panda API script for external button + PANDA_CONTEXT listener
   useEffect(() => {

@@ -33,15 +33,19 @@ jobs:
 
       - name: Force base path in vite.config.ts (resilience vs. upstream reverts)
         run: |
-          # If vite.config.ts has `const base = "/";` (Lovable's default),
-          # rewrite it to the GitHub Pages subpath so assets resolve correctly.
-          if grep -q 'const base = "/"' vite.config.ts; then
+          # Lovable periodically resets vite.config.ts to have `base: "/"`.
+          # Match both inline and const-declared forms and rewrite them to the
+          # GitHub Pages subpath so asset URLs resolve correctly.
+          if grep -qE '^  base: "/",' vite.config.ts; then
+            sed -i 's|^  base: "/",|  base: mode === "production" ? "/ganhostempolivre/" : "/",|' vite.config.ts
+            echo "Patched inline base to /ganhostempolivre/."
+          elif grep -qE 'const base = "/"' vite.config.ts; then
             sed -i 's|const base = "/"|const base = mode === "production" ? "/ganhostempolivre/" : "/"|' vite.config.ts
-            echo "Patched vite.config.ts to use /ganhostempolivre/ base in production."
+            echo "Patched const base to /ganhostempolivre/."
           else
             echo "vite.config.ts already has subpath base logic. No patch needed."
           fi
-          grep -n "const base" vite.config.ts
+          grep -nE "base:.*ganhostempolivre|const base" vite.config.ts
 
       - name: Ensure SPA 404 decoder is present in index.html
         run: |

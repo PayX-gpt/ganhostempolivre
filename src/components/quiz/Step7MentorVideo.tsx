@@ -4,6 +4,7 @@ import { MessageSquare, Loader2 } from "lucide-react";
 import mentorPhoto from "@/assets/mentor-new.webp";
 import { isYoungProfile } from "@/lib/agePersonalization";
 import { useLanguage, type Language } from "@/lib/i18n";
+import { usePandaPreload } from "@/lib/usePandaPreload";
 
 interface Step7Props {
   onNext: () => void;
@@ -59,6 +60,8 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
   const videoRef = useRef<HTMLDivElement>(null);
   const young = isYoungProfile(userAge);
 
+  usePandaPreload("c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8");
+
   useEffect(() => { const timer = setTimeout(() => setShowCTA(true), 12_000); return () => clearTimeout(timer); }, []);
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, []);
 
@@ -81,10 +84,11 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
         <div style={{ position: "relative", paddingTop: "177.77777777777777%" }}>
           <iframe
             id="panda-c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8"
-            src="https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8&autoplay=true&muted=true&startTime=0"
+            src="https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8"
             style={{ border: "none", position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
             allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
             allowFullScreen
+            
           />
         </div>
       </div>

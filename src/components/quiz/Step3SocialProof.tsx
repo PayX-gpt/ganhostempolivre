@@ -5,6 +5,7 @@ import avatarRegina from "@/assets/avatar-regina.jpg";
 import avatarRafael from "@/assets/avatar-rafael.jpg";
 import { isYoungProfile } from "@/lib/agePersonalization";
 import { useLanguage, type Language } from "@/lib/i18n";
+import { usePandaPreload } from "@/lib/usePandaPreload";
 
 interface Step3Props {
   onNext: () => void;
@@ -73,6 +74,8 @@ const Step3SocialProof = ({ onNext, userAge, pandaVideoId }: Step3Props) => {
   const videoRef = useRef<HTMLDivElement>(null);
   const young = isYoungProfile(userAge);
 
+  usePandaPreload(pandaVideoId || "ec4b550c-ac32-42c4-b4ea-40a7a2c28d35");
+
   useEffect(() => { const timer = setTimeout(() => setShowCTA(true), 5000); return () => clearTimeout(timer); }, []);
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, []);
 
@@ -89,7 +92,7 @@ const Step3SocialProof = ({ onNext, userAge, pandaVideoId }: Step3Props) => {
         <div style={{ position: "relative", paddingTop: "56.25%" }}>
           <iframe
             id={`panda-${pandaVideoId || "ec4b550c-ac32-42c4-b4ea-40a7a2c28d35"}`}
-            src={`https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=${pandaVideoId || "ec4b550c-ac32-42c4-b4ea-40a7a2c28d35"}&autoplay=true&muted=true&startTime=0`}
+            src={`https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=${pandaVideoId || "ec4b550c-ac32-42c4-b4ea-40a7a2c28d35"}`}
             style={{ border: "none", position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
             allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
             allowFullScreen

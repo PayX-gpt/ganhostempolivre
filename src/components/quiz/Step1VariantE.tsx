@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { StepContainer, CTAButton } from "./QuizUI";
 import { useLanguage } from "@/lib/i18n";
+import { usePandaPreload } from "@/lib/usePandaPreload";
 
 interface Step1VariantEProps {
   onNext: () => void;
@@ -17,6 +18,8 @@ const Step1VariantE = ({ onNext }: Step1VariantEProps) => {
   const t = texts[lang];
   const iframeRef = useRef<HTMLDivElement>(null);
   const [showCta, setShowCta] = useState(false);
+
+  usePandaPreload("f97837c4-d33c-4e5a-8ae3-27f0e36f2b6d");
 
   useEffect(() => {
     const timer = setTimeout(() => setShowCta(true), 60000);

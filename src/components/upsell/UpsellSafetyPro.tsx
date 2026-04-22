@@ -8,6 +8,7 @@ import {
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
+import { usePandaPreload } from "@/lib/usePandaPreload";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
 
@@ -383,6 +384,8 @@ const UpsellSafetyPro = ({ name, onNext, onDecline }: Props) => {
   const [selectedPlan, setSelectedPlan] = useState("anual");
   const [loading, setLoading] = useState(false);
   const protectedOps = useLiveCounter(12847);
+
+  usePandaPreload("10c7a9a9-2f9e-4bee-8a47-43cb05709fdb");
 
   const activePlan = plans.find(p => p.id === selectedPlan)!;
 

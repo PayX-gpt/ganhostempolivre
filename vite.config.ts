@@ -4,7 +4,9 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
-  base: "/",
+  // GitHub Pages serves this repo at /ganhostempolivre/. Keep dev at root
+  // so `bun run dev` still works on localhost:8080/.
+  base: mode === "production" ? "/ganhostempolivre/" : "/",
   server: {
     host: "::",
     port: 8080,
