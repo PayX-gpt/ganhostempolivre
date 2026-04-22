@@ -90,6 +90,26 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const young = isYoungProfile(userAge);
   const pandaBtnRef = useRef<HTMLDivElement>(null);
   const [showCustomCta, setShowCustomCta] = useState(false);
+  const ctaShownLoggedRef = useRef(false);
+
+  // Logs which path revealed the CTA + saves to /live dashboard
+  const revealCustomCta = (source: "panda_api" | "panda_postmessage" | "page_timer") => {
+    setShowCustomCta((prev) => {
+      if (prev) return prev;
+      if (!ctaShownLoggedRef.current) {
+        ctaShownLoggedRef.current = true;
+        console.log(`[Step17] 🟡 Custom CTA shown via ${source} at ${(performance.now() / 1000).toFixed(1)}s page time`);
+        try {
+          saveFunnelEventReliable("custom_cta_shown", {
+            context: "step17_custom_cta_825",
+            source,
+            page_time_s: Math.round(performance.now() / 1000),
+          });
+        } catch {}
+      }
+      return true;
+    });
+  };
 
   const icFiredRef = useRef(false);
   const customCtaFiredRef = useRef(false);
@@ -169,7 +189,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
             p.onEvent(function (e: any) {
               if (e && (e.message === "panda_timeupdate" || e.message === "timeupdate")) {
                 const t = Number(e.currentTime ?? e.time ?? 0);
-                if (t >= 505) setShowCustomCta(true);
+                if (t >= 505) revealCustomCta("panda_api");
               }
             });
           } catch {}
@@ -184,7 +204,17 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       }
     };
     window.addEventListener('message', handlePandaReady);
-    return () => window.removeEventListener('message', handlePandaReady);
+
+    // 🛡️ Safety net: reveal CTA after 8:25 absolute page time
+    // (in case Panda API/postMessage tracking ever fails)
+    const safetyTimer = window.setTimeout(() => {
+      revealCustomCta("page_timer");
+    }, 505_000);
+
+    return () => {
+      window.removeEventListener('message', handlePandaReady);
+      window.clearTimeout(safetyTimer);
+    };
   }, [videoId]);
 
   // Listen for Panda Video CTA click — only fires on REAL button click
@@ -199,7 +229,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       const tuMsg = d.message === "panda_timeupdate" || d.message === "timeupdate" || d.type === "timeupdate";
       if (tuMsg) {
         const t = Number(d.currentTime ?? d.time ?? 0);
-        if (t >= 505) setShowCustomCta(true);
+        if (t >= 505) revealCustomCta("panda_postmessage");
       }
 
       // Panda CTA click events come in several shapes:
