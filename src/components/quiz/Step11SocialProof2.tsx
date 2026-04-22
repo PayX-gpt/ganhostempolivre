@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StepContainer, StepTitle } from "./QuizUI";
 import { CheckCircle } from "lucide-react";
 import avatarJose from "@/assets/avatar-jose.jpg";
@@ -89,8 +89,47 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const t = texts[lang];
   const young = isYoungProfile(userAge);
   const pandaBtnRef = useRef<HTMLDivElement>(null);
+  const [showCustomCta, setShowCustomCta] = useState(false);
 
   const icFiredRef = useRef(false);
+  const customCtaFiredRef = useRef(false);
+
+  // Custom CTA copy per language
+  const customCtaText =
+    lang === "es"
+      ? "QUIERO MI CLAVE DE ACCESO AHORA →"
+      : lang === "en"
+      ? "I WANT MY ACCESS KEY NOW →"
+      : "QUERO MINHA CHAVE DE ACESSO AGORA →";
+
+  const handleCustomCtaClick = () => {
+    try {
+      const url = new URL("https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c");
+      const trackingQs = buildTrackingQueryString();
+      if (trackingQs) {
+        const trackingParams = new URLSearchParams(trackingQs.slice(1));
+        trackingParams.forEach((value, key) => {
+          if (!url.searchParams.has(key)) url.searchParams.set(key, value);
+        });
+      }
+      if (!customCtaFiredRef.current) {
+        customCtaFiredRef.current = true;
+        saveFunnelEventReliable("checkout_click", {
+          context: "custom_cta_step17_825",
+          product: "chave_token_chatgpt",
+          amount: offerAmount,
+          dest_url: url.toString(),
+        });
+        sendCAPIInitiateCheckout({ amount: offerAmount });
+        trackTikTokInitiateCheckout({ amount: offerAmount });
+        trackMetaInitiateCheckout({ amount: offerAmount });
+        icFiredRef.current = true;
+      }
+      window.open(url.toString(), "_blank", "noopener");
+    } catch (err) {
+      console.warn("[Step17] Custom CTA error:", err);
+    }
+  };
 
   const getCurrentOfferAmount = () => {
     try {
@@ -124,7 +163,16 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     (window as any).pandascripttag.push(function () {
       const p = new (window as any).PandaPlayer(`panda-${videoId}`, {
         onReady() {
-          p.loadButtonInTime({ fetchApi: true });
+          try { p.loadButtonInTime({ fetchApi: true }); } catch {}
+          // Reveal custom CTA at 8:25 (505s)
+          try {
+            p.onEvent(function (e: any) {
+              if (e && (e.message === "panda_timeupdate" || e.message === "timeupdate")) {
+                const t = Number(e.currentTime ?? e.time ?? 0);
+                if (t >= 505) setShowCustomCta(true);
+              }
+            });
+          } catch {}
         },
       });
     });
@@ -146,6 +194,13 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     const handlePandaMessage = (event: MessageEvent) => {
       const d = event.data;
       if (!d || typeof d !== "object") return;
+
+      // Fallback: reveal custom CTA based on Panda timeupdate postMessage
+      const tuMsg = d.message === "panda_timeupdate" || d.message === "timeupdate" || d.type === "timeupdate";
+      if (tuMsg) {
+        const t = Number(d.currentTime ?? d.time ?? 0);
+        if (t >= 505) setShowCustomCta(true);
+      }
 
       // Panda CTA click events come in several shapes:
       // { type: "buttonClick", url } | { type: "panda:ctaClick", url }
@@ -248,6 +303,20 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
 
       {/* Panda external button container */}
       <div id={pandaButtonId} className="w-full flex justify-center" />
+
+      {/* Custom CTA — appears at 8:25 (505s) of VSL */}
+      {showCustomCta && (
+        <button
+          onClick={handleCustomCtaClick}
+          className="w-full py-4 px-6 rounded-xl font-extrabold text-[15px] sm:text-xl text-black uppercase tracking-wide animate-fade-in transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+          style={{
+            background: "linear-gradient(135deg, #FFD600 0%, #FFB300 100%)",
+            boxShadow: "0 4px 20px rgba(255, 214, 0, 0.4)",
+          }}
+        >
+          {customCtaText}
+        </button>
+      )}
 
       <div className="w-full space-y-1.5">
         {testimonials.map((tm, i) => (
