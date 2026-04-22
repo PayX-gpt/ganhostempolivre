@@ -5,10 +5,8 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
-  // GitHub Pages serves this repo from /ganhostempolivre/.
-  // Keep dev at root so `bun run dev` works normally on localhost.
-  const base = mode === "production" ? "/ganhostempolivre/" : "/";
+export default defineConfig(() => {
+  const base = "/";
 
   return ({
   base,
