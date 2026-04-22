@@ -195,6 +195,13 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       const d = event.data;
       if (!d || typeof d !== "object") return;
 
+      // Fallback: reveal custom CTA based on Panda timeupdate postMessage
+      const tuMsg = d.message === "panda_timeupdate" || d.message === "timeupdate" || d.type === "timeupdate";
+      if (tuMsg) {
+        const t = Number(d.currentTime ?? d.time ?? 0);
+        if (t >= 505) setShowCustomCta(true);
+      }
+
       // Panda CTA click events come in several shapes:
       // { type: "buttonClick", url } | { type: "panda:ctaClick", url }
       // { message_type: "smartplayer_cta_click", redirectUrl }
