@@ -30,6 +30,23 @@
 
   <!-- Early UTM Capture — MUST run before any other script -->
   <script>
+  // Kill switch: remove old Service Worker + caches that were causing white screen
+  (function(){
+    try{
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.getRegistrations().then(function(regs){
+          regs.forEach(function(r){ r.unregister(); });
+        }).catch(function(){});
+      }
+      if(window.caches && caches.keys){
+        caches.keys().then(function(keys){
+          keys.forEach(function(k){ caches.delete(k); });
+        }).catch(function(){});
+      }
+    }catch(e){}
+  })();
+  </script>
+  <script>
   (function(){
     try{
       var params=new URLSearchParams(window.location.search);
