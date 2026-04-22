@@ -163,7 +163,16 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     (window as any).pandascripttag.push(function () {
       const p = new (window as any).PandaPlayer(`panda-${videoId}`, {
         onReady() {
-          p.loadButtonInTime({ fetchApi: true });
+          try { p.loadButtonInTime({ fetchApi: true }); } catch {}
+          // Reveal custom CTA at 8:25 (505s)
+          try {
+            p.onEvent(function (e: any) {
+              if (e && (e.message === "panda_timeupdate" || e.message === "timeupdate")) {
+                const t = Number(e.currentTime ?? e.time ?? 0);
+                if (t >= 505) setShowCustomCta(true);
+              }
+            });
+          } catch {}
         },
       });
     });
