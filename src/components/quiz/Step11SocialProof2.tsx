@@ -304,6 +304,20 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       {/* Panda external button container */}
       <div id={pandaButtonId} className="w-full flex justify-center" />
 
+      {/* Custom CTA — appears at 8:25 (505s) of VSL */}
+      {showCustomCta && (
+        <button
+          onClick={handleCustomCtaClick}
+          className="w-full py-4 px-6 rounded-xl font-extrabold text-[15px] sm:text-xl text-black uppercase tracking-wide animate-fade-in transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+          style={{
+            background: "linear-gradient(135deg, #FFD600 0%, #FFB300 100%)",
+            boxShadow: "0 4px 20px rgba(255, 214, 0, 0.4)",
+          }}
+        >
+          {customCtaText}
+        </button>
+      )}
+
       <div className="w-full space-y-1.5">
         {testimonials.map((tm, i) => (
           <div key={i} className="funnel-card border-primary/25 bg-primary/5 py-2 px-2.5">
