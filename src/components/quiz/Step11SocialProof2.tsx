@@ -189,7 +189,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
             p.onEvent(function (e: any) {
               if (e && (e.message === "panda_timeupdate" || e.message === "timeupdate")) {
                 const t = Number(e.currentTime ?? e.time ?? 0);
-                if (t >= 505) setShowCustomCta(true);
+                if (t >= 505) revealCustomCta("panda_api");
               }
             });
           } catch {}
@@ -219,7 +219,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       const tuMsg = d.message === "panda_timeupdate" || d.message === "timeupdate" || d.type === "timeupdate";
       if (tuMsg) {
         const t = Number(d.currentTime ?? d.time ?? 0);
-        if (t >= 505) setShowCustomCta(true);
+        if (t >= 505) revealCustomCta("panda_postmessage");
       }
 
       // Panda CTA click events come in several shapes:
