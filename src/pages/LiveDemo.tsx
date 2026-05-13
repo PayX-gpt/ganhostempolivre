@@ -155,6 +155,73 @@ export default function LiveDemo() {
   const auditScrollRef = useRef<HTMLDivElement>(null);
   const simulatorRef = useRef(createRealtimeSimulator());
 
+  // ── Funnel presence map (fake online users per step) ───────
+  const QUIZ_STEPS = [
+    { key: "intro", label: "Intro", icon: "⚡" },
+    { key: "idade", label: "Idade", icon: "👤" },
+    { key: "nome", label: "Nome", icon: "👥" },
+    { key: "prova_social", label: "Prova Social", icon: "🎯" },
+    { key: "tentou_online", label: "Tentou Online", icon: "🌐" },
+    { key: "meta_renda", label: "Meta Renda", icon: "💰" },
+    { key: "obstaculo", label: "Obstáculo", icon: "🔓" },
+    { key: "video_mentor", label: "Video Mentor", icon: "👁" },
+    { key: "saldo", label: "Saldo", icon: "💳" },
+    { key: "disponibilidade", label: "Disponibilidade", icon: "⏰" },
+    { key: "demo", label: "Demo", icon: "👁" },
+    { key: "whatsapp", label: "WhatsApp", icon: "💬" },
+    { key: "contato", label: "Contato", icon: "💬" },
+    { key: "input", label: "Input", icon: "✉" },
+    { key: "analise", label: "Análise", icon: "⏳" },
+    { key: "projecao", label: "Projeção", icon: "👥" },
+    { key: "video_venda", label: "Vídeo Venda", icon: "⭐" },
+    { key: "checkout", label: "Checkout", icon: "🛒" },
+    { key: "thanks", label: "Thanks", icon: "✅" },
+    { key: "up1_acel", label: "UP1 Acel.", icon: "🚀" },
+    { key: "up2_multi", label: "UP2 Multi.", icon: "📊" },
+    { key: "up3_blind", label: "UP3 Blind.", icon: "🗄" },
+    { key: "up4_circ", label: "UP4 Circ.", icon: "🔄" },
+    { key: "up5_safety", label: "UP5 Safety", icon: "🛡" },
+    { key: "up6_forex", label: "UP6 FOREX", icon: "📈" },
+  ];
+  const TK_STEPS = [
+    { key: "tk_intro", label: "Intro", icon: "⚡" },
+    { key: "tk_idade", label: "Idade", icon: "👤" },
+    { key: "tk_prova", label: "Prova Social", icon: "⭐" },
+    { key: "tk_meta", label: "Meta Renda", icon: "🎯" },
+    { key: "tk_10min", label: "10 min?", icon: "⏰" },
+    { key: "tk_demo", label: "Demo", icon: "📱" },
+    { key: "tk_email", label: "E-mail", icon: "✉" },
+    { key: "tk_analise", label: "Análise", icon: "⏳" },
+    { key: "tk_projecao", label: "Projeção", icon: "👥" },
+    { key: "tk_oferta", label: "Oferta", icon: "⭐" },
+  ];
+  const TKES_STEPS = [
+    { key: "es_intro", label: "Intro", icon: "⚡" },
+    { key: "es_edad", label: "Edad", icon: "👤" },
+    { key: "es_prueba", label: "Prueba", icon: "⭐" },
+    { key: "es_meta", label: "Meta", icon: "🎯" },
+    { key: "es_10min", label: "10 min", icon: "⏰" },
+    { key: "es_contacto", label: "Contacto", icon: "✉" },
+    { key: "es_loading", label: "Loading", icon: "⏳" },
+    { key: "es_proyeccion", label: "Proyección", icon: "👥" },
+    { key: "es_oferta", label: "Oferta", icon: "⭐" },
+  ];
+
+  const initPresence = (steps: typeof QUIZ_STEPS, total: number, decay: number) => {
+    const result: Record<string, number> = {};
+    let remaining = total;
+    steps.forEach((s, i) => {
+      const base = Math.max(0, Math.round(remaining * (1 - decay + Math.random() * 0.02)));
+      result[s.key] = Math.max(0, Math.round(remaining - base + Math.random() * 3));
+      remaining = base;
+    });
+    return result;
+  };
+
+  const [quizPresence, setQuizPresence] = useState(() => initPresence(QUIZ_STEPS, 89, 0.12));
+  const [tkPresence, setTkPresence] = useState(() => initPresence(TK_STEPS, 31, 0.15));
+  const [tkesPresence, setTkesPresence] = useState(() => initPresence(TKES_STEPS, 7, 0.18));
+
   // ── Realtime intervals ─────────────────────────────────────
   useEffect(() => {
     const simulator = simulatorRef.current;
@@ -165,12 +232,23 @@ export default function LiveDemo() {
       setAuditLogs((prev) => [newLog, ...prev.slice(0, 99)]);
     }, 5000 + Math.random() * 3000);
 
-    // 2) Active users fluctuation every 5s
+    // 2) Active users + funnel presence fluctuation every 5s
     const usersInterval = setInterval(() => {
       setActiveUsers((prev) => {
-        const delta = Math.floor(Math.random() * 7) - 3; // -3 to +3
+        const delta = Math.floor(Math.random() * 7) - 3;
         return Math.max(90, Math.min(160, prev + delta));
       });
+      const fluctuate = (prev: Record<string, number>) => {
+        const next = { ...prev };
+        for (const k of Object.keys(next)) {
+          const d = Math.floor(Math.random() * 5) - 2;
+          next[k] = Math.max(0, next[k] + d);
+        }
+        return next;
+      };
+      setQuizPresence(fluctuate);
+      setTkPresence(fluctuate);
+      setTkesPresence(fluctuate);
     }, 5000);
 
     // 3) New sale every 30-60s
@@ -466,6 +544,91 @@ export default function LiveDemo() {
                     fill="url(#revGrad)" name="revenue" />
                 </AreaChart>
               </ResponsiveContainer>
+            </div>
+
+            {/* ── Mapa do Funil — Tempo Real ── */}
+            <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                  <Users className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Mapa do Funil — Tempo Real</h3>
+                  <p className="text-[10px] text-[#666]">Zero delay • Presença instantânea</p>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs">{activeUsers}</Badge>
+                </div>
+              </div>
+
+              {/* Quiz funnel grid */}
+              <div className="grid grid-cols-5 sm:grid-cols-7 lg:grid-cols-10 gap-2 mb-4">
+                {QUIZ_STEPS.map((s) => {
+                  const count = quizPresence[s.key] || 0;
+                  return (
+                    <div key={s.key} className={cn(
+                      "flex flex-col items-center justify-center rounded-xl border p-2 transition-all",
+                      count > 0 ? "border-emerald-500/20 bg-emerald-500/5" : "border-[#2a2a2a] bg-[#0d0d0d]"
+                    )}>
+                      <span className="text-sm mb-0.5">{s.icon}</span>
+                      <span className={cn("text-lg font-bold tabular-nums", count > 0 ? "text-white" : "text-[#555]")}>{count}</span>
+                      <span className="text-[9px] text-[#888] truncate w-full text-center">{s.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* TikTok funnel */}
+              <div className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3 mb-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-bold text-red-400 uppercase tracking-wider">FUNIL TIKTOK</span>
+                  <span className="text-[10px] text-[#666]">10 etapas</span>
+                </div>
+                <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+                  {TK_STEPS.map((s) => {
+                    const count = tkPresence[s.key] || 0;
+                    return (
+                      <div key={s.key} className={cn(
+                        "flex flex-col items-center justify-center rounded-xl border p-2",
+                        count > 0 ? "border-red-500/20 bg-red-500/5" : "border-[#2a2a2a] bg-[#111]"
+                      )}>
+                        <span className="text-sm mb-0.5">{s.icon}</span>
+                        <span className={cn("text-lg font-bold tabular-nums", count > 0 ? "text-white" : "text-[#555]")}>{count}</span>
+                        <span className="text-[9px] text-[#888] truncate w-full text-center">{s.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* TikTok ES funnel */}
+              <div className="rounded-xl border border-[#2a2a2a] bg-[#0d0d0d] p-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-bold text-red-400 uppercase tracking-wider">FUNIL TIKTOK ES</span>
+                  <span className="text-[10px] text-[#666]">9 etapas</span>
+                </div>
+                <div className="grid grid-cols-5 sm:grid-cols-9 gap-2">
+                  {TKES_STEPS.map((s) => {
+                    const count = tkesPresence[s.key] || 0;
+                    return (
+                      <div key={s.key} className={cn(
+                        "flex flex-col items-center justify-center rounded-xl border p-2",
+                        count > 0 ? "border-orange-500/20 bg-orange-500/5" : "border-[#2a2a2a] bg-[#111]"
+                      )}>
+                        <span className="text-sm mb-0.5">{s.icon}</span>
+                        <span className={cn("text-lg font-bold tabular-nums", count > 0 ? "text-white" : "text-[#555]")}>{count}</span>
+                        <span className="text-[9px] text-[#888] truncate w-full text-center">{s.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <p className="text-[10px] text-[#555] text-center mt-3">Atualizado: {new Date().toLocaleTimeString("pt-BR")}</p>
             </div>
 
             {/* Sales feed (live) */}
