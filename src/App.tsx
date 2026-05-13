@@ -6,8 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/lib/i18n";
 import Index from "./pages/Index";
 import Live from "./pages/Live";
-import { lazy, Suspense } from "react";
-const LiveDemo = lazy(() => import("./pages/LiveDemo"));
+import LiveDemo from "./pages/LiveDemo";
 import NotFound from "./pages/NotFound";
 import TikTokQuizFunnel from "./components/quiz/TikTokQuizFunnel";
 import TikTokEsQuizFunnel from "./components/quiz/TikTokEsQuizFunnel";
@@ -36,7 +35,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/live" element={<Live />} />
-            <Route path="/live-demo" element={<Suspense fallback={<div className="min-h-screen bg-[#0d0d0d]" />}><LiveDemo /></Suspense>} />
+            <Route path="/live-demo" element={<LiveDemo />} />
             <Route path="/oferta" element={<Oferta />} />
             <Route path="/go/:plan" element={<GoCheckout />} />
             <Route path="/tiktok" element={<TikTokQuizFunnel />} />
