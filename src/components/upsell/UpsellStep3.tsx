@@ -64,7 +64,7 @@ const plans = [
     btnBg: "linear-gradient(135deg, #FACC15, #EAB308)", btnColor: "#020617", btnBorder: "none",
     btnText: "ATIVAR MÁXIMO",
     badge: null,
-    checkoutUrl: "https://pay.kirvano.com/e8135deb-de2d-4cac-bbeb-1aed6610921c",
+    checkoutUrl: "https://pay.hub.la/jtBb2Jp1YSLGXlvg07iz",
   },
 ];
 
