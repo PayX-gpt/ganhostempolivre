@@ -4,6 +4,7 @@ import { saveFunnelEvent } from "@/lib/metricsClient";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, Users, MessageSquare } from "lucide-react";
 import { useLanguage, type Language } from "@/lib/i18n";
+import { trackMetaLead } from "@/lib/metaPixel";
 
 interface StepContactInputProps {
   method: string;
@@ -147,6 +148,7 @@ const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) =
             console.log(`📧 [Attribution] Email mapped: ${contactValue} → ${sessionId}`);
           }
         }
+        trackMetaLead();
         onNext(contactValue);
       }} disabled={!isValid}>
         {t.cta}

@@ -10,7 +10,7 @@ import { useLanguage, type Language } from "@/lib/i18n";
 import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
-import { trackMetaInitiateCheckout } from "@/lib/metaPixel";
+import { trackMetaInitiateCheckout, trackMetaViewContent, trackMetaAddToCart } from "@/lib/metaPixel";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import { usePandaPreload } from "@/lib/usePandaPreload";
 
@@ -107,6 +107,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
             page_time_s: Math.round(performance.now() / 1000),
           });
         } catch {}
+        trackMetaAddToCart({ amount: offerAmount });
       }
       return true;
     });
@@ -176,6 +177,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
 
   // Inject Panda API script for external button + PANDA_CONTEXT listener
   useEffect(() => {
+    trackMetaViewContent({});
     if (!document.querySelector('script[src^="https://player.pandavideo.com.br/api.v2.js"]')) {
       const s = document.createElement('script');
       s.src = 'https://player.pandavideo.com.br/api.v2.js';

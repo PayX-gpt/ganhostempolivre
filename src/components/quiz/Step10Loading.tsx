@@ -4,6 +4,7 @@ import { Search, Settings, BarChart3, Target, MapPin, Sparkles, CheckCircle, Squ
 import mentorPhoto from "@/assets/mentor-new.webp";
 import { isYoungProfile } from "@/lib/agePersonalization";
 import { useLanguage, type Language } from "@/lib/i18n";
+import { trackMetaCompleteRegistration } from "@/lib/metaPixel";
 
 interface Step10Props {
   onNext: () => void;
@@ -87,6 +88,7 @@ const Step10Loading = ({ onNext, userAge }: Step10Props) => {
   const young = isYoungProfile(userAge);
 
   useEffect(() => {
+    trackMetaCompleteRegistration();
     const stepInterval = setInterval(() => {
       setCurrentStep((prev) => {
         if (prev >= t.steps.length - 1) { clearInterval(stepInterval); setTimeout(() => setShowResult(true), 800); return prev; }
