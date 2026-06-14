@@ -2,9 +2,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Users, MessageCircle, Headphones, Sparkles } from "lucide-react";
 import { saveUpsellExtras } from "@/lib/upsellData";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { logAuditEvent } from "@/hooks/useAuditLog";
-import KirvanoOneClick from "./KirvanoOneClick";
 
 
 interface Props {
