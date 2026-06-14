@@ -18,5 +18,8 @@ verify_jwt = false
 [functions.whatsapp-ai-reply]
 verify_jwt = false
 
+[functions.facebook-capi-events]
+verify_jwt = false
+
 [functions.whatsapp-delayed-welcome]
 verify_jwt = false

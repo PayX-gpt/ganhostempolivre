@@ -8,7 +8,7 @@ import avatarCamila from "@/assets/avatar-camila.jpg";
 import { isYoungProfile } from "@/lib/agePersonalization";
 import { useLanguage, type Language } from "@/lib/i18n";
 import { saveFunnelEventReliable } from "@/lib/metricsClient";
-import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
+import { sendCAPIInitiateCheckout, sendCAPIEvent } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
 import { trackMetaInitiateCheckout, trackMetaViewContent, trackMetaAddToCart } from "@/lib/metaPixel";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
@@ -108,6 +108,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
           });
         } catch {}
         trackMetaAddToCart({ amount: offerAmount });
+        sendCAPIEvent("AddToCart", { amount: offerAmount });
       }
       return true;
     });
@@ -178,6 +179,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   // Inject Panda API script for external button + PANDA_CONTEXT listener
   useEffect(() => {
     trackMetaViewContent({});
+    sendCAPIEvent("ViewContent");
     if (!document.querySelector('script[src^="https://player.pandavideo.com.br/api.v2.js"]')) {
       const s = document.createElement('script');
       s.src = 'https://player.pandavideo.com.br/api.v2.js';

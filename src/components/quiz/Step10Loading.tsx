@@ -5,6 +5,7 @@ import mentorPhoto from "@/assets/mentor-new.webp";
 import { isYoungProfile } from "@/lib/agePersonalization";
 import { useLanguage, type Language } from "@/lib/i18n";
 import { trackMetaCompleteRegistration } from "@/lib/metaPixel";
+import { sendCAPIEvent } from "@/lib/facebookCAPI";
 
 interface Step10Props {
   onNext: () => void;
@@ -89,6 +90,7 @@ const Step10Loading = ({ onNext, userAge }: Step10Props) => {
 
   useEffect(() => {
     trackMetaCompleteRegistration();
+    sendCAPIEvent("CompleteRegistration");
     const stepInterval = setInterval(() => {
       setCurrentStep((prev) => {
         if (prev >= t.steps.length - 1) { clearInterval(stepInterval); setTimeout(() => setShowResult(true), 800); return prev; }
