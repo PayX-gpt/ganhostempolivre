@@ -51,3 +51,50 @@ export function trackMetaPurchase(params: {
     console.warn("[Meta Pixel] Purchase error:", err);
   }
 }
+
+export function trackMetaViewContent(params: {
+  contentId?: string;
+  contentName?: string;
+}) {
+  try {
+    if (window.fbq) {
+      window.fbq("track", "ViewContent", {
+        content_type: "product",
+        content_ids: [params.contentId || "chave_token_chatgpt"],
+        content_name: params.contentName || "VSL Ganhos Tempo Livre",
+      });
+    }
+  } catch {}
+}
+
+export function trackMetaAddToCart(params: {
+  amount?: number;
+  contentId?: string;
+}) {
+  try {
+    if (window.fbq) {
+      window.fbq("track", "AddToCart", {
+        content_type: "product",
+        content_ids: [params.contentId || "chave_token_chatgpt"],
+        value: params.amount || 0,
+        currency: "BRL",
+      });
+    }
+  } catch {}
+}
+
+export function trackMetaLead() {
+  try {
+    if (window.fbq) {
+      window.fbq("track", "Lead");
+    }
+  } catch {}
+}
+
+export function trackMetaCompleteRegistration() {
+  try {
+    if (window.fbq) {
+      window.fbq("track", "CompleteRegistration");
+    }
+  } catch {}
+}

@@ -485,8 +485,81 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ====== FACEBOOK CAPI — DISABLED ======
-    const capiSent = false;
+    // ====== FACEBOOK CAPI — PURCHASE EVENT ======
+    let capiSent = false;
+    if (normalizedStatus === "approved" && !alreadySentCAPI) {
+      try {
+        const pixels = [
+          { id: Deno.env.get("FB_PIXEL_ID"), token: Deno.env.get("FB_ACCESS_TOKEN") },
+          { id: "952975541025077", token: Deno.env.get("FB_ACCESS_TOKEN_2") },
+          { id: "1595773305052852", token: Deno.env.get("FB_ACCESS_TOKEN_3") },
+          { id: "1347337003982438", token: Deno.env.get("FB_ACCESS_TOKEN_4") },
+        ].filter(p => p.id && p.token);
+
+        if (pixels.length > 0) {
+          const userData: Record<string, string> = {};
+          if (normalizedEmail) {
+            userData.em = await hashSHA256(normalizedEmail);
+          }
+          if (phone) {
+            userData.ph = await hashSHA256(phone.replace(/\D/g, ""));
+          }
+          if (resolvedFbc) userData.fbc = resolvedFbc;
+          else if (resolvedFbclid) userData.fbc = `fb.1.${Date.now()}.${resolvedFbclid}`;
+          if (resolvedFbp) userData.fbp = resolvedFbp;
+          if (clientIp) userData.client_ip_address = clientIp;
+          const userAgent = req.headers.get("user-agent");
+          if (userAgent) userData.client_user_agent = userAgent;
+
+          const eventId = `purchase_${transactionId || Date.now()}_${Date.now()}`;
+
+          const eventData = {
+            event_name: "Purchase",
+            event_time: Math.floor(Date.now() / 1000),
+            event_id: eventId,
+            action_source: "website",
+            user_data: userData,
+            custom_data: { currency: "BRL", value: amount },
+          };
+
+          const results = await Promise.allSettled(
+            pixels.map(async (p) => {
+              const url = `https://graph.facebook.com/v21.0/${p.id}/events?access_token=${p.token}`;
+              const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ data: [eventData] }),
+              });
+              const result = await response.json();
+              if (!response.ok) throw new Error(`Pixel ${p.id}: ${JSON.stringify(result)}`);
+              return { pixelId: p.id, result };
+            })
+          );
+
+          const anySuccess = results.some(r => r.status === "fulfilled");
+          results.forEach((r, i) => {
+            if (r.status === "rejected") console.warn(`⚠️ [CAPI-Purchase] Pixel ${pixels[i].id} failed:`, r.reason);
+          });
+
+          if (anySuccess) {
+            capiSent = true;
+            if (recordId) {
+              await supabase
+                .from("purchase_tracking")
+                .update({ conversion_api_sent: true })
+                .eq("id", recordId);
+            }
+            console.log(`✅ [CAPI-Purchase] Sent for ${normalizedEmail} to ${pixels.length} pixels (event_id: ${eventId})`);
+          } else {
+            console.error(`❌ [CAPI-Purchase] All pixels failed for ${normalizedEmail}`);
+          }
+        } else {
+          console.warn("⚠️ [CAPI-Purchase] No FB pixel credentials configured");
+        }
+      } catch (capiErr) {
+        console.warn("⚠️ [CAPI-Purchase] Error:", capiErr);
+      }
+    }
 
     // ====== TIKTOK EVENTS API ======
     let tiktokSent = false;
@@ -507,7 +580,7 @@ Deno.serve(async (req) => {
               ttp: resolvedTtp,
               ip: clientIp,
               user_agent: req.headers.get("user-agent"),
-              source_url: "https://ganhostempolivre.lovable.app",
+              source_url: "https://payx-gpt.github.io/ganhostempolivre",
               session_id: sessionId,
             }),
           });
