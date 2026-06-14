@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.kirvano-webhook]
 verify_jwt = false
 
+[functions.hubla-webhook]
+verify_jwt = false
+
 [functions.tiktok-capi]
 verify_jwt = false
 
