@@ -345,7 +345,7 @@ const QuizFunnel = () => {
           />
         );
       case "step-15":
-        return <Step10Loading onNext={goNext} userAge={answers.age} />;
+        return <Step10Loading onNext={goNext} userAge={answers.age} userName={answers.name} />;
       case "step-16":
         return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} />;
       case "step-17":
