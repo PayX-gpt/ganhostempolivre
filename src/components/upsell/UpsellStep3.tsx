@@ -25,7 +25,7 @@ const plans = [
     btnBg: "transparent", btnColor: "#22C55E", btnBorder: "1.5px solid #22C55E",
     btnText: "ATIVAR BÁSICO",
     badge: null,
-    checkoutUrl: "https://pay.kirvano.com/863c8fe9-ca48-452f-9fa4-22e14df182cf",
+    checkoutUrl: "https://pay.hub.la/3DwufFnFQxVTIWQkvQur",
   },
   {
     id: "duplo" as const,
