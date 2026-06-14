@@ -37,7 +37,7 @@ const plans = [
     btnBorder: "1.5px solid #94A3B8",
     btnText: "ATIVAR MULTIPLICAÇÃO 5X",
     badge: null,
-    checkoutUrl: "https://pay.kirvano.com/b61b6335-9325-4ecb-9b87-8214d948e90e",
+    checkoutUrl: "https://pay.hub.la/29ZZKVwoLFdjOBMfTU5m",
   },
   {
     id: "ouro",
@@ -58,7 +58,7 @@ const plans = [
     btnBorder: "none",
     btnText: "ATIVAR MULTIPLICAÇÃO 10X",
     badge: "MAIS ESCOLHIDO",
-    checkoutUrl: "https://pay.kirvano.com/2f8e1d23-b71c-4c4b-9da1-672a6ca75c9b",
+    checkoutUrl: "https://pay.hub.la/ZYxQAEQCbxi4EtRF1eyT",
   },
   {
     id: "diamante",
@@ -79,7 +79,7 @@ const plans = [
     btnBorder: "none",
     btnText: "ATIVAR MULTIPLICAÇÃO ILIMITADA",
     badge: null,
-    checkoutUrl: "https://pay.kirvano.com/e7d1995f-9b55-47d0-a1c4-762b07721162",
+    checkoutUrl: "https://pay.hub.la/Cdv7kyEGq33tYpSKqQ07",
   },
 ];
 
