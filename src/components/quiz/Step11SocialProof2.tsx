@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { StepContainer, StepTitle } from "./QuizUI";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Users, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import avatarJose from "@/assets/avatar-jose.jpg";
 import avatarLucia from "@/assets/avatar-lucia.jpg";
 import avatarRafael from "@/assets/avatar-rafael.jpg";
