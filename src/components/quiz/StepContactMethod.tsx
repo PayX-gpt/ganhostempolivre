@@ -1,4 +1,5 @@
 import { StepContainer, StepTitle, StepSubtitle, OptionCard, TrustBadge } from "./QuizUI";
+import GuaranteeBadge from "./GuaranteeBadge";
 import { PartyPopper, Mail, Smartphone, Users, MessageSquare } from "lucide-react";
 import { useLanguage, type Language } from "@/lib/i18n";
 
@@ -66,6 +67,7 @@ const StepContactMethod = ({ userName, onNext }: StepContactMethodProps) => {
 
       <StepTitle>{t.title}</StepTitle>
       <StepSubtitle>{t.subtitle}</StepSubtitle>
+      <GuaranteeBadge />
 
       <div className="w-full funnel-card border-accent/20 bg-accent/5 py-2 text-center">
         <div className="flex items-center justify-center gap-2">

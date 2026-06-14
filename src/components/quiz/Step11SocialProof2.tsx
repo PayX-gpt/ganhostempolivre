@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { StepContainer, StepTitle } from "./QuizUI";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Users, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import avatarJose from "@/assets/avatar-jose.jpg";
 import avatarLucia from "@/assets/avatar-lucia.jpg";
 import avatarRafael from "@/assets/avatar-rafael.jpg";
@@ -114,6 +115,52 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
 
   const icFiredRef = useRef(false);
   const customCtaFiredRef = useRef(false);
+
+  // Vacancy counter (urgency) — decreases slowly to feel real
+  const [vacancies, setVacancies] = useState(() => 17 + Math.floor(Math.random() * 4));
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setVacancies((v) => (v > 5 ? v - 1 : v));
+    }, 45_000 + Math.random() * 30_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  // Social proof toasts — Brazilian/local names buying during VSL
+  useEffect(() => {
+    const buyers = lang === "es"
+      ? [
+          { n: "María, 52", l: "Buenos Aires" }, { n: "Roberto, 47", l: "Córdoba" },
+          { n: "Lucía, 58", l: "Rosario" }, { n: "Carlos, 63", l: "Mendoza" },
+          { n: "Patricia, 49", l: "La Plata" }, { n: "Jorge, 55", l: "Salta" },
+        ]
+      : lang === "en"
+      ? [
+          { n: "Mary, 52", l: "TX" }, { n: "Robert, 47", l: "FL" },
+          { n: "Linda, 58", l: "CA" }, { n: "James, 63", l: "NY" },
+          { n: "Patricia, 49", l: "OH" }, { n: "George, 55", l: "GA" },
+        ]
+      : [
+          { n: "Maria de Fátima, 52", l: "MG" }, { n: "Antônio Carlos, 47", l: "SP" },
+          { n: "Cláudia, 58", l: "RJ" }, { n: "José Roberto, 63", l: "BA" },
+          { n: "Rosângela, 49", l: "PR" }, { n: "Sebastião, 55", l: "GO" },
+          { n: "Marlene, 61", l: "RS" }, { n: "Paulo Henrique, 44", l: "PE" },
+        ];
+    const verb = lang === "es" ? "acaba de garantizar el acceso" : lang === "en" ? "just secured the access" : "acabou de garantir o acesso";
+    let i = 0;
+    let timer: number;
+    const schedule = () => {
+      const delay = 35_000 + Math.random() * 20_000;
+      timer = window.setTimeout(() => {
+        const b = buyers[i % buyers.length];
+        i++;
+        toast(`${b.n} — ${b.l}`, { description: verb, duration: 4500 });
+        schedule();
+      }, delay);
+    };
+    schedule();
+    return () => window.clearTimeout(timer);
+  }, [lang]);
+
 
   // Custom CTA copy per language
   const customCtaText =
@@ -315,8 +362,25 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
 
   return (
     <StepContainer>
+      {/* Urgency bar — vacancy counter + guarantee */}
+      <div className="w-full flex items-center justify-between gap-2 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Users className="w-3.5 h-3.5 text-accent shrink-0" />
+          <span className="text-[11px] sm:text-xs font-bold text-foreground truncate">
+            {lang === "es" ? `Quedan ${vacancies} vacantes hoy` : lang === "en" ? `${vacancies} spots left today` : `Restam ${vacancies} vagas hoje`}
+          </span>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+          <span className="text-[10px] sm:text-[11px] font-semibold text-foreground/80">
+            {lang === "es" ? "Garantía 30d" : lang === "en" ? "30-day guarantee" : "Garantia 30 dias"}
+          </span>
+        </div>
+      </div>
+
       <StepTitle>{t.title1}<span className="text-gradient-green">{t.titleHL}</span></StepTitle>
       <p className="text-[11px] sm:text-sm text-muted-foreground text-center -mt-1">{young ? t.subtitleYoung : t.subtitleMature}</p>
+
 
       <div className="w-full funnel-card border-accent/30 bg-accent/5 text-center py-2 px-2.5">
         <p className="text-[12px] sm:text-sm text-foreground font-bold leading-snug">{young ? t.headlineYoung : t.headlineMature}</p>
@@ -330,7 +394,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
             style={{ border: "none", position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
             allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
             allowFullScreen
-            fetchPriority="high"
+            {...({ fetchpriority: "high" } as any)}
           />
         </div>
       </div>

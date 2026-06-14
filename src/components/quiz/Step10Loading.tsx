@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { StepContainer } from "./QuizUI";
+import GuaranteeBadge from "./GuaranteeBadge";
 import { Search, Settings, BarChart3, Target, MapPin, Sparkles, CheckCircle, Square, Lock, Loader2 } from "lucide-react";
 import mentorPhoto from "@/assets/mentor-new.webp";
 import { isYoungProfile } from "@/lib/agePersonalization";
@@ -8,6 +9,7 @@ import { useLanguage, type Language } from "@/lib/i18n";
 interface Step10Props {
   onNext: () => void;
   userAge?: string;
+  userName?: string;
 }
 
 const texts = {
@@ -78,13 +80,21 @@ const texts = {
 
 const stepIcons = [Search, Settings, BarChart3, Target, MapPin, Sparkles];
 
-const Step10Loading = ({ onNext, userAge }: Step10Props) => {
+const Step10Loading = ({ onNext, userAge, userName }: Step10Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const young = isYoungProfile(userAge);
+  const firstName = userName?.split(" ")[0] || "";
+  const personalizedDoneSubtitle = firstName
+    ? lang === "es"
+      ? `${firstName}, ¡tu perfil es altamente compatible!`
+      : lang === "en"
+      ? `${firstName}, your profile is highly compatible!`
+      : `${firstName}, seu perfil é altamente compatível!`
+    : t.doneSubtitle;
 
   useEffect(() => {
     const stepInterval = setInterval(() => {
@@ -116,7 +126,7 @@ const Step10Loading = ({ onNext, userAge }: Step10Props) => {
             <Sparkles className="w-6 h-6 text-accent" />
             <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground leading-snug">{t.doneTitle}</h2>
           </div>
-          <p className="text-lg text-primary font-semibold">{t.doneSubtitle}</p>
+          <p className="text-lg text-primary font-semibold">{personalizedDoneSubtitle}</p>
           <p className="text-base text-muted-foreground leading-relaxed">{t.doneBody}</p>
         </div>
       ) : (
@@ -167,6 +177,7 @@ const Step10Loading = ({ onNext, userAge }: Step10Props) => {
           <p className="text-xs text-muted-foreground">{t.trust}</p>
         </div>
       </div>
+      <GuaranteeBadge className="mt-1" />
     </StepContainer>
   );
 };
