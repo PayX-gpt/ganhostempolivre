@@ -44,7 +44,7 @@ const plans = [
     btnBg: "linear-gradient(135deg, #16A34A, #15803D)", btnColor: "#fff", btnBorder: "none",
     btnText: "ATIVAR DUPLO — MAIS ESCOLHIDO",
     badge: "⚡ RECOMENDADO",
-    checkoutUrl: "https://pay.kirvano.com/59a5cba3-f876-46a8-b0e4-6e2c72cf725a",
+    checkoutUrl: "https://pay.hub.la/edISNnk1TnW2yX1dFRdv",
   },
   {
     id: "maximo" as const,
