@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { StepContainer, StepTitle, StepSubtitle, CTAButton, TrustBadge } from "./QuizUI";
+import GuaranteeBadge from "./GuaranteeBadge";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, Users, MessageSquare } from "lucide-react";
@@ -104,6 +105,8 @@ const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) =
           <p className="text-sm font-bold text-accent">{t.timerLabel(formatTime(timeLeft))}</p>
         </div>
       </div>
+
+      <GuaranteeBadge />
 
       <div className="w-full mt-1">
         <label className="text-[13px] text-muted-foreground font-medium mb-1.5 block">
