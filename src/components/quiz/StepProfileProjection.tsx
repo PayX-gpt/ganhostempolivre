@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { QuizAnswers } from "./QuizUI";
 import { StepContainer } from "./QuizUI";
+import GuaranteeBadge from "./GuaranteeBadge";
 import avatarAntonio from "@/assets/avatar-antonio.jpg";
 import avatarClaudia from "@/assets/avatar-claudia.jpg";
 import avatarJose from "@/assets/avatar-jose.jpg";
@@ -237,6 +238,9 @@ const StepProfileProjection = ({ onNext, userName, answers, isTiktok }: Props) =
           <span className="text-primary font-bold">+{alumniCount} alunos</span> para criar uma estratégia sob medida.
         </p>
       </motion.div>
+
+      <GuaranteeBadge />
+
 
       {/* ── Profile Analysis Card ── */}
       <motion.div
