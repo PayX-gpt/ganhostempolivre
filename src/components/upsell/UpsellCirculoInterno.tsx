@@ -38,19 +38,21 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
 
   // Kirvano variables handled by KirvanoOneClick component
 
+  const CHECKOUT_URL = "https://pay.hub.la/ohmiVtFTnX4tPAamywRl";
+
   const handleBuy = () => {
+    setLoading(true);
     saveUpsellExtras("circulo", { price: 29.9 });
-    saveFunnelEvent("upsell_oneclick_buy", { page: "/upsell4", product: "circulo", price: 29.9 });
-    logAuditEvent({ eventType: "upsell_oneclick_buy", pageId: "/upsell4", metadata: { product: "circulo", price: 29.9 } });
+    saveFunnelEvent("upsell_buy_click", { page: "/upsell4", product: "circulo", price: 29.9 });
+    logAuditEvent({ eventType: "upsell_buy_click", pageId: "/upsell4", metadata: { product: "circulo", price: 29.9 } });
+    const utmQs = buildTrackingQueryString();
+    const separator = CHECKOUT_URL.includes("?") ? "&" : "?";
+    const fullUrl = utmQs ? `${CHECKOUT_URL}${separator}${utmQs.slice(1)}` : CHECKOUT_URL;
+    window.open(fullUrl, "_blank");
+    setTimeout(() => setLoading(false), 3000);
   };
 
   return (
-    <>
-    <KirvanoOneClick
-      offer="67e759ec-598c-43c6-890e-b993901712b7"
-      nextPageURL="https://ganhostempolivre.lovable.app/upsell5"
-      refusePageURL={null}
-    />
     <div className="flex flex-col gap-5 pt-4">
       {/* Header */}
       <div className="text-center">
