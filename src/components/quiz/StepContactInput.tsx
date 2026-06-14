@@ -5,7 +5,8 @@ import { saveFunnelEvent } from "@/lib/metricsClient";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, Users, MessageSquare } from "lucide-react";
 import { useLanguage, type Language } from "@/lib/i18n";
-import { trackMetaLead } from "@/lib/metaPixel";
+import { trackMetaLead, setMetaAdvancedMatching } from "@/lib/metaPixel";
+import { sendCAPIEvent } from "@/lib/facebookCAPI";
 
 interface StepContactInputProps {
   method: string;
@@ -151,7 +152,15 @@ const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) =
             console.log(`📧 [Attribution] Email mapped: ${contactValue} → ${sessionId}`);
           }
         }
+        setMetaAdvancedMatching({
+          email: isEmail ? contactValue : undefined,
+          phone: !isEmail ? contactValue : undefined,
+        });
         trackMetaLead();
+        sendCAPIEvent("Lead", {
+          email: isEmail ? contactValue : undefined,
+          phone: !isEmail ? contactValue : undefined,
+        });
         onNext(contactValue);
       }} disabled={!isValid}>
         {t.cta}

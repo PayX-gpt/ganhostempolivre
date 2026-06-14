@@ -98,3 +98,30 @@ export function trackMetaCompleteRegistration() {
     }
   } catch {}
 }
+
+export function setMetaAdvancedMatching(params: {
+  email?: string;
+  phone?: string;
+}) {
+  try {
+    if (!window.fbq) return;
+    const userData: Record<string, string> = {};
+    if (params.email) userData.em = params.email.trim().toLowerCase();
+    if (params.phone) {
+      const clean = params.phone.replace(/\D/g, "");
+      if (clean.length >= 10) userData.ph = clean;
+    }
+    if (Object.keys(userData).length === 0) return;
+    // Re-init each pixel with user data for Advanced Matching
+    const pixelIds = [
+      "1247938693657822", "915957744475091", "1626600228462998",
+      "952975541025077", "1595773305052852", "1347337003982438",
+    ];
+    pixelIds.forEach((id) => {
+      window.fbq("init", id, userData);
+    });
+    console.log("[Meta Pixel] ✅ Advanced Matching set:", Object.keys(userData).join(", "));
+  } catch (err) {
+    console.warn("[Meta Pixel] Advanced Matching error:", err);
+  }
+}

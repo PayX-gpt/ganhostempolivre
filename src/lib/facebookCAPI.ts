@@ -48,3 +48,34 @@ export async function sendCAPIInitiateCheckout(params: {
     // Don't block checkout flow
   }
 }
+
+export async function sendCAPIEvent(eventName: string, params: {
+  email?: string;
+  phone?: string;
+  amount?: number;
+  contentId?: string;
+} = {}): Promise<void> {
+  try {
+    const tracking = getTrackingData();
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    if (!projectId) return;
+
+    const url = `https://${projectId}.supabase.co/functions/v1/facebook-capi-events`;
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event_name: eventName,
+        session_id: tracking.session_id,
+        fbclid: tracking.fbclid,
+        fbp: tracking.fbp,
+        fbc: tracking.fbc,
+        email: params.email || null,
+        phone: params.phone || null,
+        amount: params.amount || null,
+        content_id: params.contentId || null,
+      }),
+      keepalive: true,
+    });
+  } catch {}
+}
