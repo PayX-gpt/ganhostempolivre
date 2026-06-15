@@ -144,7 +144,7 @@ function mapHublaStatus(event: unknown, rawStatus: string | null): string {
   const eventText = typeof event === "string" ? event.toLowerCase() : "";
   if (eventText.includes("abandoned")) return "abandoned_cart";
   if (eventText.includes("pending")) return "pending";
-  if (eventText.includes("payment_succeeded") || eventText.includes("approved") || eventText.includes("paid") || eventText.includes("activated")) return "approved";
+  if (eventText.includes("newsale") || eventText.includes("payment_succeeded") || eventText.includes("approved") || eventText.includes("paid") || eventText.includes("activated")) return "approved";
   if (eventText.includes("refunded")) return "refunded";
   if (eventText.includes("chargeback")) return "chargeback";
   if (eventText.includes("canceled") || eventText.includes("cancelled")) return "canceled";
@@ -257,6 +257,14 @@ Deno.serve(async (req) => {
 
     // Funnel step identification
     const funnelStep = identifyFunnelStep(productId, offerId, offerName, productName, amount);
+
+    if (!transactionId && amount === null) {
+      console.log(`[Hub.la] Ignored non-purchase event without transaction/amount: ${event}`);
+      return new Response(JSON.stringify({ success: true, ignored: true, reason: "non_purchase_event", event }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Buyer info — Hub.la uses data.buyer, flat fallback
     const email = buyerData.email || eventData.userEmail || payerData.email || body.email || body.buyer_email || body.customer?.email || body.cliente_email || null;
