@@ -95,7 +95,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const ctaShownLoggedRef = useRef(false);
 
   // Logs which path revealed the CTA + saves to /live dashboard
-  const revealCustomCta = (source: "panda_api" | "panda_postmessage" | "page_timer") => {
+  const revealCustomCta = (source: "panda_button_shown" | "panda_api" | "panda_postmessage" | "page_timer") => {
     setShowCustomCta((prev) => {
       if (prev) return prev;
       if (!ctaShownLoggedRef.current) {
@@ -103,7 +103,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
         console.log(`[Step17] 🟡 Custom CTA shown via ${source} at ${(performance.now() / 1000).toFixed(1)}s page time`);
         try {
           saveFunnelEventReliable("custom_cta_shown", {
-            context: "step17_custom_cta_825",
+            context: "step17_custom_cta_panda_time",
             source,
             page_time_s: Math.round(performance.now() / 1000),
           });
@@ -238,12 +238,21 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       const p = new (window as any).PandaPlayer(`panda-${videoId}`, {
         onReady() {
           try { p.loadButtonInTime({ fetchApi: true }); } catch {}
-          // Reveal custom CTA at 8:25 (505s)
+          // Reveal custom CTA when Panda's native button is shown (respects
+          // the time configured in the Panda dashboard for this video).
           try {
             p.onEvent(function (e: any) {
-              if (e && (e.message === "panda_timeupdate" || e.message === "timeupdate")) {
-                const t = Number(e.currentTime ?? e.time ?? 0);
-                if (t >= 505) revealCustomCta("panda_api");
+              if (!e) return;
+              const msg = e.message || e.type;
+              if (
+                msg === "panda_buttonShow" ||
+                msg === "panda_buttonShown" ||
+                msg === "panda_loadbutton" ||
+                msg === "panda_showbutton" ||
+                msg === "buttonShow" ||
+                msg === "buttonShown"
+              ) {
+                revealCustomCta("panda_button_shown");
               }
             });
           } catch {}
@@ -259,27 +268,8 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     };
     window.addEventListener('message', handlePandaReady);
 
-    // 🛡️ Safety net: reveal CTA after 8:25 absolute page time
-    // (in case Panda API/postMessage tracking ever fails)
-    const safetyTimer = window.setTimeout(() => {
-      revealCustomCta("page_timer");
-    }, 505_000);
-
-    // 🛡️ Extra safety: poll the Panda iframe for currentTime every 2s
-    // Some Panda builds don't emit timeupdate postMessages reliably
-    const pollTimer = window.setInterval(() => {
-      try {
-        const iframe = document.getElementById(`panda-${videoId}`) as HTMLIFrameElement | null;
-        if (iframe?.contentWindow) {
-          iframe.contentWindow.postMessage({ type: "getCurrentTime" }, "*");
-        }
-      } catch {}
-    }, 2000);
-
     return () => {
       window.removeEventListener('message', handlePandaReady);
-      window.clearTimeout(safetyTimer);
-      window.clearInterval(pollTimer);
     };
   }, [videoId]);
 
@@ -291,12 +281,18 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       const d = event.data;
       if (!d || typeof d !== "object") return;
 
-      // Reveal CTA based on Panda time events (multiple formats)
-      const hasTime = d.currentTime !== undefined || d.time !== undefined || d.current_time !== undefined || d.progress?.seconds !== undefined;
-      const tuMsg = d.message === "panda_timeupdate" || d.message === "timeupdate" || d.type === "timeupdate" || d.type === "panda_timeupdate" || d.type === "progress" || (d.type === "currentTime" && hasTime) || hasTime;
-      if (tuMsg) {
-        const t = Number(d.currentTime ?? d.time ?? d.current_time ?? d.progress?.seconds ?? 0);
-        if (t >= 505) revealCustomCta("panda_postmessage");
+      // Reveal custom CTA when Panda fires its native "button shown" event
+      // (respects the timestamp configured in the Panda dashboard).
+      const msg = d.message || d.type;
+      if (
+        msg === "panda_buttonShow" ||
+        msg === "panda_buttonShown" ||
+        msg === "panda_loadbutton" ||
+        msg === "panda_showbutton" ||
+        msg === "buttonShow" ||
+        msg === "buttonShown"
+      ) {
+        revealCustomCta("panda_postmessage");
       }
 
       // Panda CTA click events come in several shapes:
