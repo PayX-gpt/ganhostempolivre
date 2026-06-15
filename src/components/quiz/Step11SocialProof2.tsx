@@ -281,12 +281,18 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       const d = event.data;
       if (!d || typeof d !== "object") return;
 
-      // Reveal CTA based on Panda time events (multiple formats)
-      const hasTime = d.currentTime !== undefined || d.time !== undefined || d.current_time !== undefined || d.progress?.seconds !== undefined;
-      const tuMsg = d.message === "panda_timeupdate" || d.message === "timeupdate" || d.type === "timeupdate" || d.type === "panda_timeupdate" || d.type === "progress" || (d.type === "currentTime" && hasTime) || hasTime;
-      if (tuMsg) {
-        const t = Number(d.currentTime ?? d.time ?? d.current_time ?? d.progress?.seconds ?? 0);
-        if (t >= 505) revealCustomCta("panda_postmessage");
+      // Reveal custom CTA when Panda fires its native "button shown" event
+      // (respects the timestamp configured in the Panda dashboard).
+      const msg = d.message || d.type;
+      if (
+        msg === "panda_buttonShow" ||
+        msg === "panda_buttonShown" ||
+        msg === "panda_loadbutton" ||
+        msg === "panda_showbutton" ||
+        msg === "buttonShow" ||
+        msg === "buttonShown"
+      ) {
+        revealCustomCta("panda_postmessage");
       }
 
       // Panda CTA click events come in several shapes:
