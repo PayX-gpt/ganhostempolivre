@@ -1,0 +1,32 @@
+{
+  "name": "GTL Live Dashboard",
+  "short_name": "GTL Live",
+  "description": "Painel ao vivo de métricas Ganhos Tempo Livre",
+  "start_url": "/live",
+  "scope": "/live",
+  "id": "/live",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1319",
+  "theme_color": "#0f1319",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
