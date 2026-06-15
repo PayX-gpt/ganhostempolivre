@@ -238,12 +238,21 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       const p = new (window as any).PandaPlayer(`panda-${videoId}`, {
         onReady() {
           try { p.loadButtonInTime({ fetchApi: true }); } catch {}
-          // Reveal custom CTA at 8:25 (505s)
+          // Reveal custom CTA when Panda's native button is shown (respects
+          // the time configured in the Panda dashboard for this video).
           try {
             p.onEvent(function (e: any) {
-              if (e && (e.message === "panda_timeupdate" || e.message === "timeupdate")) {
-                const t = Number(e.currentTime ?? e.time ?? 0);
-                if (t >= 505) revealCustomCta("panda_api");
+              if (!e) return;
+              const msg = e.message || e.type;
+              if (
+                msg === "panda_buttonShow" ||
+                msg === "panda_buttonShown" ||
+                msg === "panda_loadbutton" ||
+                msg === "panda_showbutton" ||
+                msg === "buttonShow" ||
+                msg === "buttonShown"
+              ) {
+                revealCustomCta("panda_button_shown");
               }
             });
           } catch {}
@@ -259,27 +268,8 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     };
     window.addEventListener('message', handlePandaReady);
 
-    // 🛡️ Safety net: reveal CTA after 8:25 absolute page time
-    // (in case Panda API/postMessage tracking ever fails)
-    const safetyTimer = window.setTimeout(() => {
-      revealCustomCta("page_timer");
-    }, 505_000);
-
-    // 🛡️ Extra safety: poll the Panda iframe for currentTime every 2s
-    // Some Panda builds don't emit timeupdate postMessages reliably
-    const pollTimer = window.setInterval(() => {
-      try {
-        const iframe = document.getElementById(`panda-${videoId}`) as HTMLIFrameElement | null;
-        if (iframe?.contentWindow) {
-          iframe.contentWindow.postMessage({ type: "getCurrentTime" }, "*");
-        }
-      } catch {}
-    }, 2000);
-
     return () => {
       window.removeEventListener('message', handlePandaReady);
-      window.clearTimeout(safetyTimer);
-      window.clearInterval(pollTimer);
     };
   }, [videoId]);
 
