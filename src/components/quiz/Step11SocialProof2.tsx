@@ -185,7 +185,9 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const young = isYoungProfile(userAge);
   const pandaBtnRef = useRef<HTMLDivElement>(null);
   const pandaPlayerRef = useRef<PandaPlayerInstance | null>(null);
-  const [showCustomCta, setShowCustomCta] = useState(false);
+  // Preview override: append ?previewCta=1 to force-show the CTA for visual QA
+  const previewCtaForced = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("previewCta") === "1";
+  const [showCustomCta, setShowCustomCta] = useState(previewCtaForced);
   const ctaShownLoggedRef = useRef(false);
   const maxVideoSecondsRef = useRef(0);
   const offerAmount = getCurrentOfferAmount();
