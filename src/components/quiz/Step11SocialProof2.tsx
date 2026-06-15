@@ -89,6 +89,27 @@ const texts = {
 const CUSTOM_CTA_UNLOCK_SECONDS = 8 * 60 + 45;
 const DEFAULT_PANDA_BUTTON_ID = "13bd9202-db00-4418-b590-7e294239fe77";
 
+interface PandaPlayerInstance {
+  currentTime?: number | string | (() => number | string);
+  getCurrentTime?: () => number | string;
+  loadButtonInTime?: (options: { fetchApi?: boolean }) => void;
+  onEvent?: (handler: (event: unknown) => void) => void;
+}
+
+type PandaWindow = Window & typeof globalThis & {
+  pandascripttag?: Array<() => void> & { push: (...callbacks: Array<() => void>) => number };
+  PandaPlayer?: new (elementId: string, options: { onReady?: () => void }) => PandaPlayerInstance;
+};
+
+const parsePandaPayload = (payload: unknown): unknown => {
+  if (typeof payload !== "string") return payload;
+  try { return JSON.parse(payload) as unknown; } catch { return payload; }
+};
+
+const asPandaRecord = (value: unknown): Record<string, unknown> | null => (
+  typeof value === "object" && value !== null ? value as Record<string, unknown> : null
+);
+
 const normalizePandaSeconds = (value: unknown): number | null => {
   if (typeof value === "string" && value.includes(":")) {
     const parts = value.split(":").map((part) => Number(part));
@@ -102,25 +123,27 @@ const normalizePandaSeconds = (value: unknown): number | null => {
   return numericValue > 10_000 ? numericValue / 1000 : numericValue;
 };
 
-const readPandaVideoSeconds = (payload: any): number | null => {
-  const data = typeof payload === "string" ? (() => {
-    try { return JSON.parse(payload); } catch { return payload; }
-  })() : payload;
+const readPandaVideoSeconds = (payload: unknown): number | null => {
+  const data = parsePandaPayload(payload);
+  const record = asPandaRecord(data);
+  if (!record) return normalizePandaSeconds(data);
+  const dataRecord = asPandaRecord(record.data);
+  const eventRecord = asPandaRecord(record.event);
 
   const candidates = [
-    data?.currentTime,
-    data?.current_time,
-    data?.time,
-    data?.seconds,
-    data?.playedSeconds,
-    data?.video_time,
-    data?.videoTime,
-    data?.data?.currentTime,
-    data?.data?.current_time,
-    data?.data?.time,
-    data?.data?.seconds,
-    data?.event?.currentTime,
-    data?.event?.current_time,
+    record.currentTime,
+    record.current_time,
+    record.time,
+    record.seconds,
+    record.playedSeconds,
+    record.video_time,
+    record.videoTime,
+    dataRecord?.currentTime,
+    dataRecord?.current_time,
+    dataRecord?.time,
+    dataRecord?.seconds,
+    eventRecord?.currentTime,
+    eventRecord?.current_time,
   ];
 
   for (const candidate of candidates) {
@@ -131,15 +154,13 @@ const readPandaVideoSeconds = (payload: any): number | null => {
   return null;
 };
 
-const getPandaEventName = (payload: any): string => {
-  const data = typeof payload === "string" ? (() => {
-    try { return JSON.parse(payload); } catch { return payload; }
-  })() : payload;
-  const raw = data?.message || data?.type || data?.event || data?.eventName || data?.name || data?.message_type || data?.action || "";
+const getPandaEventName = (payload: unknown): string => {
+  const record = asPandaRecord(parsePandaPayload(payload));
+  const raw = record?.message || record?.type || record?.event || record?.eventName || record?.name || record?.message_type || record?.action || "";
   return typeof raw === "string" ? raw : "";
 };
 
-const isPandaButtonShownEvent = (payload: any): boolean => {
+const isPandaButtonShownEvent = (payload: unknown): boolean => {
   const msg = getPandaEventName(payload).toLowerCase();
   return ["panda_buttonshow", "panda_buttonshown", "panda_loadbutton", "panda_showbutton", "buttonshow", "buttonshown"].includes(msg);
 };
