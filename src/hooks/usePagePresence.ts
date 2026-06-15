@@ -133,6 +133,8 @@ export const usePagePresence = (pageId: string): void => {
     if (!pageId || isDevSession()) return;
     const currentPath = window.location.pathname.toLowerCase();
     if (currentPath.includes('/live') || currentPath.includes('/admin')) return;
+    // Block any host other than the real funnel app (e.g. payx-gpt.github.io)
+    if (!isAllowedHost()) return;
 
     const sessionId = getOrCreateSessionId();
     const isNewPage = lastPageRef.current !== pageId;
