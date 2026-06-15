@@ -369,7 +369,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       pandaPlayerRef.current = null;
       window.removeEventListener('message', handlePandaReady);
     };
-  }, [videoId, offerAmount]);
+  }, [videoId, offerAmount, revealCustomCta, updateVideoProgress]);
 
   // Listen for Panda Video CTA click — only fires on REAL button click
   // Panda sends postMessage with type "buttonClick" or "smartplayer_cta_click"
@@ -455,7 +455,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       window.removeEventListener("message", handlePandaMessage);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [videoId, offerAmount]);
+  }, [videoId, offerAmount, revealCustomCta, updateVideoProgress]);
 
   const testimonials = young ? t.youngTestimonials : t.matureTestimonials;
   const avatarsYoung = [avatarRafael, avatarCamila];
