@@ -188,21 +188,29 @@ export const usePagePresence = (pageId: string): void => {
       trackPresence(pageId);
     }, 15000);
 
-    // Safari/iOS pauses WebSockets in background tabs — when user returns, force re-track
-    // and reset channel if needed. This fixes the "disappears from /live after switching tabs" bug.
+    // Safari/iOS pauses WebSockets in background tabs — when user returns, force re-track.
+    // When user hides the tab/switches app, untrack IMMEDIATELY so /live reflects "saiu" in real time.
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
-        // Force fresh subscription if channel was paused
-        if (subscribedStatus !== "subscribed") {
-          resetSharedChannel();
-        }
+        if (subscribedStatus !== "subscribed") resetSharedChannel();
         trackPresence(pageId);
+      } else {
+        // hidden → leave presence right away
+        if (sharedChannel) {
+          try { void sharedChannel.untrack(); } catch {}
+        }
       }
     };
     const handleFocus = () => trackPresence(pageId);
+    const handlePageHide = () => {
+      if (sharedChannel) {
+        try { void sharedChannel.untrack(); } catch {}
+      }
+    };
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("focus", handleFocus);
     window.addEventListener("pageshow", handleFocus);
+    window.addEventListener("pagehide", handlePageHide);
 
     return () => {
       clearInterval(interval);
@@ -211,14 +219,15 @@ export const usePagePresence = (pageId: string): void => {
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("pageshow", handleFocus);
+      window.removeEventListener("pagehide", handlePageHide);
     };
   }, [pageId]);
 
-  // Cleanup only on full unmount (tab close)
+  // Cleanup on full unmount / tab close
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (sharedChannel) {
-        sharedChannel.untrack();
+        try { void sharedChannel.untrack(); } catch {}
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
