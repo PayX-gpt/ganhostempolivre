@@ -222,24 +222,34 @@ Deno.serve(async (req) => {
     const offerData = body.data?.offer || {};
     const trackingData = body.data?.tracking || {};
     const checkoutData = body.data?.checkout || {};
+    const eventData = body.event || {};
+    const subscriptionData = eventData.subscription || {};
+    const invoiceData = eventData.lastInvoice || subscriptionData.lastInvoice || {};
+    const payerData = eventData.user || subscriptionData.payer || {};
+    const firstPaymentSession = subscriptionData.firstPaymentSession || {};
+    const firstPaymentUrl = firstPaymentSession.url || null;
+    const eventProductData = eventData.product || eventData.products?.[0] || {};
+    const eventOfferData = eventProductData.offers?.[0] || {};
+    const sessionUtm = firstPaymentSession.utm || {};
+    const sessionCookies = firstPaymentSession.cookies || {};
 
     // Event & status
     // IMPORTANT: Hub.la v2 payloads put the event NAME in `body.type` (string)
     // and use `body.event` as an OBJECT container. Prefer string fields first.
     const eventCandidates = [body.type, body.tipo_evento, body.event_name, body.event];
     const event = eventCandidates.find((v) => typeof v === "string" && v.length > 0) || "purchase";
-    const rawStatus = saleData.status || body.status || body.purchase_status || body.payment_status || null;
+    const rawStatus = saleData.status || invoiceData.status || subscriptionData.status || body.status || body.purchase_status || body.payment_status || null;
     const normalizedStatus = mapHublaStatus(event, rawStatus);
 
     // Transaction & IDs
-    const transactionId = saleData.id || body.id || body.sale_id || body.transaction_id || null;
+    const transactionId = saleData.id || invoiceData.id || eventData.transactionId || body.id || body.sale_id || body.transaction_id || null;
     const checkoutId = checkoutData.id || body.checkout_id || null;
 
     // Product info
-    const productId = productData.id || body.product_id || body.produto_id || null;
-    const productName = productData.name || body.product_name || body.produto || null;
-    const offerId = offerData.id || body.offer_id || null;
-    const offerName = offerData.name || body.offer_name || null;
+    const productId = productData.id || eventProductData.id || eventData.groupId || body.product_id || body.produto_id || null;
+    const productName = productData.name || eventProductData.name || eventData.groupName || body.product_name || body.produto || null;
+    const offerId = offerData.id || eventOfferData.id || body.offer_id || null;
+    const offerName = offerData.name || eventOfferData.name || body.offer_name || null;
     const planId = productId || body.plan_id || body.plan || null;
 
     // Amount (Hub.la sends cents — extractAmount handles division)
@@ -249,32 +259,33 @@ Deno.serve(async (req) => {
     const funnelStep = identifyFunnelStep(productId, offerId, offerName, productName, amount);
 
     // Buyer info — Hub.la uses data.buyer, flat fallback
-    const email = buyerData.email || body.email || body.buyer_email || body.customer?.email || body.cliente_email || null;
+    const email = buyerData.email || eventData.userEmail || payerData.email || body.email || body.buyer_email || body.customer?.email || body.cliente_email || null;
     const normalizedEmail = typeof email === "string" ? email.toLowerCase().trim() : null;
-    const buyerName = buyerData.name || body.buyer_name || body.customer?.name || body.nome || null;
-    const phone = buyerData.phone || body.phone || body.customer?.phone_number || body.telefone || body.buyer_phone || null;
+    const payerName = [payerData.firstName, payerData.lastName].filter(Boolean).join(" ").trim();
+    const buyerName = buyerData.name || eventData.userName || payerName || body.buyer_name || body.customer?.name || body.nome || null;
+    const phone = buyerData.phone || eventData.userPhone || payerData.phone || body.phone || body.customer?.phone_number || body.telefone || body.buyer_phone || null;
 
     // Payment info
-    const paymentMethod = saleData.payment_method || body.payment_method || body.payment?.method || null;
+    const paymentMethod = saleData.payment_method || invoiceData.paymentMethod || subscriptionData.paymentMethod || eventData.paymentMethod || body.payment_method || body.payment?.method || null;
     const paymentId = saleData.payment_id || body.payment_id || null;
-    const currency = saleData.currency || body.currency || "BRL";
+    const currency = saleData.currency || invoiceData.currency || body.currency || "BRL";
 
     // UTMs — Hub.la uses data.tracking, flat fallback
-    const utmSource = trackingData.utm_source || body.utm_source || null;
-    const utmMedium = trackingData.utm_medium || body.utm_medium || null;
-    const utmCampaign = trackingData.utm_campaign || body.utm_campaign || null;
-    const utmContent = trackingData.utm_content || body.utm_content || null;
-    const utmTerm = trackingData.utm_term || body.utm_term || null;
+    const utmSource = trackingData.utm_source || sessionUtm.source || body.utm_source || readQueryParam(firstPaymentUrl, "utm_source");
+    const utmMedium = trackingData.utm_medium || sessionUtm.medium || body.utm_medium || readQueryParam(firstPaymentUrl, "utm_medium");
+    const utmCampaign = trackingData.utm_campaign || sessionUtm.campaign || body.utm_campaign || readQueryParam(firstPaymentUrl, "utm_campaign");
+    const utmContent = trackingData.utm_content || sessionUtm.content || body.utm_content || readQueryParam(firstPaymentUrl, "utm_content");
+    const utmTerm = trackingData.utm_term || sessionUtm.term || body.utm_term || readQueryParam(firstPaymentUrl, "utm_term");
     const sck = trackingData.sck || body.sck || null;
-    const src = trackingData.src || body.src || null;
-    const gtlSid = trackingData.gtl_sid || body.gtl_sid || null;
-    const fbclid = trackingData.fbclid || body.cookies?.fbclid || body.fbclid || null;
-    const gclid = trackingData.gclid || body.cookies?.gclid || body.gclid || null;
-    const fbp = trackingData.fbp || body.cookies?.fbp || null;
-    const fbc = trackingData.fbc || body.cookies?.fbc || null;
-    const ttclid = trackingData.ttclid || body.cookies?.ttclid || body.ttclid || null;
-    const ttp = trackingData.ttp || body.cookies?.ttp || body.ttp || null;
-    const clientIp = body.ip || body.data?.ip || null;
+    const src = trackingData.src || body.src || readQueryParam(firstPaymentUrl, "src");
+    const gtlSid = trackingData.gtl_sid || body.gtl_sid || readQueryParam(firstPaymentUrl, "gtl_sid") || readQueryParam(firstPaymentUrl, "session_id");
+    const fbclid = trackingData.fbclid || sessionCookies.fbclid || body.cookies?.fbclid || body.fbclid || readQueryParam(firstPaymentUrl, "fbclid");
+    const gclid = trackingData.gclid || sessionCookies.gclid || body.cookies?.gclid || body.gclid || readQueryParam(firstPaymentUrl, "gclid");
+    const fbp = trackingData.fbp || sessionCookies.fbp || body.cookies?.fbp || null;
+    const fbc = trackingData.fbc || sessionCookies.fbc || readQueryParam(firstPaymentUrl, "fbc") || body.cookies?.fbc || null;
+    const ttclid = trackingData.ttclid || sessionCookies.ttclid || body.cookies?.ttclid || body.ttclid || readQueryParam(firstPaymentUrl, "ttclid");
+    const ttp = trackingData.ttp || sessionCookies.ttp || body.cookies?.ttp || null;
+    const clientIp = body.ip || body.data?.ip || firstPaymentSession.ip || null;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
