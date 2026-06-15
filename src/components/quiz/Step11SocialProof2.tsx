@@ -186,24 +186,10 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const pandaBtnRef = useRef<HTMLDivElement>(null);
   const customCtaRef = useRef<HTMLButtonElement>(null);
   const pandaPlayerRef = useRef<PandaPlayerInstance | null>(null);
-  // Preview override: force-show CTA inside Lovable/dev preview for visual QA only.
-  const previewCtaForced = typeof window !== "undefined" && (() => {
-    const params = new URLSearchParams(window.location.search);
-    const isPreviewHost = window.location.hostname.includes("id-preview--") || window.location.hostname.includes("localhost");
-    return params.get("previewCta") === "1" || ((import.meta.env.DEV || isPreviewHost) && window.location.pathname === "/step-17");
-  })();
-  const [showCustomCta, setShowCustomCta] = useState(previewCtaForced);
+  const [showCustomCta, setShowCustomCta] = useState(false);
   const ctaShownLoggedRef = useRef(false);
   const maxVideoSecondsRef = useRef(0);
   const offerAmount = getCurrentOfferAmount();
-
-  useEffect(() => {
-    if (!previewCtaForced || !showCustomCta) return;
-    const timer = window.setTimeout(() => {
-      customCtaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 700);
-    return () => window.clearTimeout(timer);
-  }, [previewCtaForced, showCustomCta]);
 
   // Logs which path revealed the CTA + saves to /live dashboard
   const revealCustomCta = useCallback((source: "panda_button_shown" | "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll" | "page_timer", videoSeconds?: number) => {
