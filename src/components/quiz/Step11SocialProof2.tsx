@@ -185,8 +185,12 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const young = isYoungProfile(userAge);
   const pandaBtnRef = useRef<HTMLDivElement>(null);
   const pandaPlayerRef = useRef<PandaPlayerInstance | null>(null);
-  // Preview override: append ?previewCta=1 to force-show the CTA for visual QA
-  const previewCtaForced = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("previewCta") === "1";
+  // Preview override: force-show CTA inside Lovable/dev preview for visual QA only.
+  const previewCtaForced = typeof window !== "undefined" && (() => {
+    const params = new URLSearchParams(window.location.search);
+    const isPreviewHost = window.location.hostname.includes("id-preview--") || window.location.hostname.includes("localhost");
+    return params.get("previewCta") === "1" || ((import.meta.env.DEV || isPreviewHost) && window.location.pathname === "/step-17");
+  })();
   const [showCustomCta, setShowCustomCta] = useState(previewCtaForced);
   const ctaShownLoggedRef = useRef(false);
   const maxVideoSecondsRef = useRef(0);
