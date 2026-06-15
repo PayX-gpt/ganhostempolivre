@@ -232,7 +232,11 @@ export default function AdminFunnelAudit() {
     const icSessions = allICSessionIds;
     setFrontendICs(icSessions.size);
 
-    const { data: purchaseData } = await supabase.from("purchase_tracking").select("amount, status, email, funnel_step").gte("created_at", todayISO);
+    const { data: purchaseData } = await supabase.from("purchase_tracking")
+      .select("amount, status, email, funnel_step, transaction_id")
+      .gt("amount", 0)
+      .not("transaction_id", "is", null)
+      .gte("created_at", todayISO);
 
     // Fix 2: Apenas 'approved' = venda confirmada
     const approvedPurchases = purchaseData?.filter(r => r.status === "approved") || [];
