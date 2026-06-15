@@ -82,12 +82,18 @@ function parseCurrency(value: unknown): number | null {
  */
 function extractAmount(body: any): number | null {
   const saleData = body.data?.sale || {};
+  const eventData = body.event || {};
+  const subscriptionData = eventData.subscription || {};
+  const invoiceData = eventData.lastInvoice || subscriptionData.lastInvoice || {};
+  const invoiceAmount = invoiceData.amount || {};
 
   // Hub.la primary fields — amounts in CENTS
   const centsCandidates: unknown[] = [
     saleData.total,
     saleData.amount,
     saleData.value,
+    invoiceAmount.totalCents,
+    invoiceAmount.subtotalCents,
   ];
 
   for (const candidate of centsCandidates) {
@@ -110,6 +116,7 @@ function extractAmount(body: any): number | null {
     body.price,
     body.preco,
     body.value,
+    eventData.totalAmount,
   ];
 
   for (const candidate of flatCandidates) {
@@ -134,6 +141,14 @@ async function hashSHA256(value: string): Promise<string> {
  *                subscription.created, subscription.canceled, etc.
  */
 function mapHublaStatus(event: unknown, rawStatus: string | null): string {
+  const eventText = typeof event === "string" ? event.toLowerCase() : "";
+  if (eventText.includes("abandoned")) return "abandoned_cart";
+  if (eventText.includes("pending")) return "pending";
+  if (eventText.includes("payment_succeeded") || eventText.includes("approved") || eventText.includes("paid") || eventText.includes("activated")) return "approved";
+  if (eventText.includes("refunded")) return "refunded";
+  if (eventText.includes("chargeback")) return "chargeback";
+  if (eventText.includes("canceled") || eventText.includes("cancelled")) return "canceled";
+
   // Try to extract status from event name (e.g. "sale.approved" -> "approved")
   if (typeof event === "string" && event.includes(".")) {
     const parts = event.split(".");
@@ -159,7 +174,7 @@ function mapHublaStatus(event: unknown, rawStatus: string | null): string {
   if (rawStatus) {
     const statusMap: Record<string, string> = {
       approved: "approved", aprovado: "approved", paid: "approved", pago: "approved",
-      completed: "approved", completo: "approved",
+      completed: "approved", completo: "approved", active: "approved",
       refused: "refused", recusado: "refused",
       refunded: "refunded", reembolsado: "refunded",
       chargeback: "chargeback",
@@ -172,7 +187,16 @@ function mapHublaStatus(event: unknown, rawStatus: string | null): string {
     return statusMap[rawStatus.toLowerCase()] || rawStatus;
   }
 
-  return "approved";
+  return "pending";
+}
+
+function readQueryParam(rawUrl: unknown, key: string): string | null {
+  if (typeof rawUrl !== "string" || !rawUrl) return null;
+  try {
+    return new URL(rawUrl).searchParams.get(key);
+  } catch {
+    return null;
+  }
 }
 
 // ====== MAIN HANDLER ======
