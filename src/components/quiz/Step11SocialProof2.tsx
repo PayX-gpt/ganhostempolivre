@@ -329,31 +329,29 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       s.async = true;
       document.head.appendChild(s);
     }
-    (window as any).pandascripttag = (window as any).pandascripttag || [];
-    (window as any).pandascripttag.push(function () {
-      const p = new (window as any).PandaPlayer(`panda-${videoId}`, {
+    const pandaWindow = window as PandaWindow;
+    pandaWindow.pandascripttag = pandaWindow.pandascripttag || [];
+    pandaWindow.pandascripttag.push(function () {
+      if (!pandaWindow.PandaPlayer) return;
+      const p = new pandaWindow.PandaPlayer(`panda-${videoId}`, {
         onReady() {
           pandaPlayerRef.current = p;
-          try { p.loadButtonInTime({ fetchApi: true }); } catch {}
+          p.loadButtonInTime?.({ fetchApi: true });
           pollTimer = window.setInterval(() => {
-            try {
-              const rawTime = typeof p.getCurrentTime === "function"
-                ? p.getCurrentTime()
-                : typeof p.currentTime === "function"
-                ? p.currentTime()
-                : p.currentTime;
-              updateVideoProgress(normalizePandaSeconds(rawTime), "panda_poll");
-            } catch {}
+            const rawTime = typeof p.getCurrentTime === "function"
+              ? p.getCurrentTime()
+              : typeof p.currentTime === "function"
+              ? p.currentTime()
+              : p.currentTime;
+            updateVideoProgress(normalizePandaSeconds(rawTime), "panda_poll");
           }, 1000);
-          try {
-            p.onEvent(function (e: any) {
-              if (!e) return;
-              updateVideoProgress(readPandaVideoSeconds(e), "panda_timeupdate");
-              if (isPandaButtonShownEvent(e) && maxVideoSecondsRef.current >= CUSTOM_CTA_UNLOCK_SECONDS) {
-                revealCustomCta("panda_button_shown", maxVideoSecondsRef.current);
-              }
-            });
-          } catch {}
+          p.onEvent?.(function (e: unknown) {
+            if (!e) return;
+            updateVideoProgress(readPandaVideoSeconds(e), "panda_timeupdate");
+            if (isPandaButtonShownEvent(e) && maxVideoSecondsRef.current >= CUSTOM_CTA_UNLOCK_SECONDS) {
+              revealCustomCta("panda_button_shown", maxVideoSecondsRef.current);
+            }
+          });
         },
       });
     });
