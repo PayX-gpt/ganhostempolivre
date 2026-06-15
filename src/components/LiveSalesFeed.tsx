@@ -95,6 +95,8 @@ export default function LiveSalesfeed() {
       .from("purchase_tracking")
       .select("id, buyer_name, email, amount, product_name, funnel_step, status, created_at, session_id, utm_source, utm_campaign, utm_term, fbclid")
       .eq("status", "approved")
+      .gt("amount", 0)
+      .not("transaction_id", "is", null)
       .gte("created_at", todayUTC.toISOString())
       .order("created_at", { ascending: false })
       .limit(20);
