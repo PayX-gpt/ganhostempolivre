@@ -310,10 +310,30 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
       .order("created_at", { ascending: false })
       .limit(200);
 
+    // Only count logs originating from the funnel app itself.
+    // External LPs (e.g. payx-gpt.github.io) also insert audit logs and would
+    // otherwise falsely show as "online users inside the funnel".
+    const ALLOWED_HOSTS = ["ganhostempolivre.lovable.app"];
+    const isAllowedUrl = (rawUrl: unknown): boolean => {
+      if (typeof rawUrl !== "string" || !rawUrl) return false;
+      try {
+        const host = new URL(rawUrl).hostname.toLowerCase();
+        return ALLOWED_HOSTS.some((s) => host === s || host.endsWith("." + s));
+      } catch {
+        return false;
+      }
+    };
+    const isValidPageId = (pid: string | null | undefined): boolean =>
+      !!pid && /^\/[a-z0-9/_-]+$/i.test(pid);
+
     const next: Record<string, AuditPresenceRow> = {};
     (data || []).forEach((row) => {
       const typedRow = row as AuditPresenceRow;
-      if (typedRow.session_id && !next[typedRow.session_id]) {
+      if (!typedRow.session_id) return;
+      if (!isValidPageId(typedRow.page_id)) return;
+      const url = (typedRow.metadata as Record<string, unknown> | null)?.url;
+      if (!isAllowedUrl(url)) return;
+      if (!next[typedRow.session_id]) {
         next[typedRow.session_id] = typedRow;
       }
     });
