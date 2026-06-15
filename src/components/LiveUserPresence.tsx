@@ -119,7 +119,7 @@ const FUNNEL_STEP_LABELS: Record<string, string> = {
   blindagem: "UP3", circulo_interno: "UP4", safety_pro: "UP5", forex_mentoria: "UP6", downsell_guia: "DS",
 };
 
-const PRESENCE_FALLBACK_WINDOW_MS = 90_000;
+const PRESENCE_FALLBACK_WINDOW_MS = 25_000;
 
 const normalizeTrafficSource = (value?: string | null): string => {
   const source = (value || "").toLowerCase();
