@@ -95,7 +95,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const ctaShownLoggedRef = useRef(false);
 
   // Logs which path revealed the CTA + saves to /live dashboard
-  const revealCustomCta = (source: "panda_api" | "panda_postmessage" | "page_timer") => {
+  const revealCustomCta = (source: "panda_button_shown" | "panda_api" | "panda_postmessage" | "page_timer") => {
     setShowCustomCta((prev) => {
       if (prev) return prev;
       if (!ctaShownLoggedRef.current) {
@@ -103,7 +103,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
         console.log(`[Step17] 🟡 Custom CTA shown via ${source} at ${(performance.now() / 1000).toFixed(1)}s page time`);
         try {
           saveFunnelEventReliable("custom_cta_shown", {
-            context: "step17_custom_cta_825",
+            context: "step17_custom_cta_panda_time",
             source,
             page_time_s: Math.round(performance.now() / 1000),
           });
