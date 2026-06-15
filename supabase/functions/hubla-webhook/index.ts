@@ -133,9 +133,9 @@ async function hashSHA256(value: string): Promise<string> {
  * Hub.la events: sale.approved, sale.refunded, sale.chargeback, sale.canceled,
  *                subscription.created, subscription.canceled, etc.
  */
-function mapHublaStatus(event: string | null, rawStatus: string | null): string {
+function mapHublaStatus(event: unknown, rawStatus: string | null): string {
   // Try to extract status from event name (e.g. "sale.approved" -> "approved")
-  if (event && event.includes(".")) {
+  if (typeof event === "string" && event.includes(".")) {
     const parts = event.split(".");
     const eventStatus = parts[parts.length - 1].toLowerCase();
     const eventMap: Record<string, string> = {
