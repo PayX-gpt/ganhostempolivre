@@ -218,9 +218,21 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       revealCustomCta("page_timer");
     }, 505_000);
 
+    // 🛡️ Extra safety: poll the Panda iframe for currentTime every 2s
+    // Some Panda builds don't emit timeupdate postMessages reliably
+    const pollTimer = window.setInterval(() => {
+      try {
+        const iframe = document.getElementById(`panda-${videoId}`) as HTMLIFrameElement | null;
+        if (iframe?.contentWindow) {
+          iframe.contentWindow.postMessage({ type: "getCurrentTime" }, "*");
+        }
+      } catch {}
+    }, 2000);
+
     return () => {
       window.removeEventListener('message', handlePandaReady);
       window.clearTimeout(safetyTimer);
+      window.clearInterval(pollTimer);
     };
   }, [videoId]);
 
@@ -232,10 +244,11 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       const d = event.data;
       if (!d || typeof d !== "object") return;
 
-      // Fallback: reveal custom CTA based on Panda timeupdate postMessage
-      const tuMsg = d.message === "panda_timeupdate" || d.message === "timeupdate" || d.type === "timeupdate";
+      // Reveal CTA based on Panda time events (multiple formats)
+      const hasTime = d.currentTime !== undefined || d.time !== undefined || d.current_time !== undefined || d.progress?.seconds !== undefined;
+      const tuMsg = d.message === "panda_timeupdate" || d.message === "timeupdate" || d.type === "timeupdate" || d.type === "panda_timeupdate" || d.type === "progress" || (d.type === "currentTime" && hasTime) || hasTime;
       if (tuMsg) {
-        const t = Number(d.currentTime ?? d.time ?? 0);
+        const t = Number(d.currentTime ?? d.time ?? d.current_time ?? d.progress?.seconds ?? 0);
         if (t >= 505) revealCustomCta("panda_postmessage");
       }
 
