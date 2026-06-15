@@ -299,6 +299,8 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   useEffect(() => {
     trackMetaViewContent({});
     sendCAPIEvent("ViewContent");
+    let pollTimer: number | undefined;
+
     if (!document.querySelector('script[src^="https://player.pandavideo.com.br/api.v2.js"]')) {
       const s = document.createElement('script');
       s.src = 'https://player.pandavideo.com.br/api.v2.js';
@@ -309,22 +311,24 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     (window as any).pandascripttag.push(function () {
       const p = new (window as any).PandaPlayer(`panda-${videoId}`, {
         onReady() {
+          pandaPlayerRef.current = p;
           try { p.loadButtonInTime({ fetchApi: true }); } catch {}
-          // Reveal custom CTA when Panda's native button is shown (respects
-          // the time configured in the Panda dashboard for this video).
+          pollTimer = window.setInterval(() => {
+            try {
+              const rawTime = typeof p.getCurrentTime === "function"
+                ? p.getCurrentTime()
+                : typeof p.currentTime === "function"
+                ? p.currentTime()
+                : p.currentTime;
+              updateVideoProgress(normalizePandaSeconds(rawTime), "panda_poll");
+            } catch {}
+          }, 1000);
           try {
             p.onEvent(function (e: any) {
               if (!e) return;
-              const msg = e.message || e.type;
-              if (
-                msg === "panda_buttonShow" ||
-                msg === "panda_buttonShown" ||
-                msg === "panda_loadbutton" ||
-                msg === "panda_showbutton" ||
-                msg === "buttonShow" ||
-                msg === "buttonShown"
-              ) {
-                revealCustomCta("panda_button_shown");
+              updateVideoProgress(readPandaVideoSeconds(e), "panda_timeupdate");
+              if (isPandaButtonShownEvent(e) && maxVideoSecondsRef.current >= CUSTOM_CTA_UNLOCK_SECONDS) {
+                revealCustomCta("panda_button_shown", maxVideoSecondsRef.current);
               }
             });
           } catch {}
@@ -341,9 +345,11 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     window.addEventListener('message', handlePandaReady);
 
     return () => {
+      if (pollTimer) window.clearInterval(pollTimer);
+      pandaPlayerRef.current = null;
       window.removeEventListener('message', handlePandaReady);
     };
-  }, [videoId]);
+  }, [videoId, offerAmount]);
 
   // Listen for Panda Video CTA click — only fires on REAL button click
   // Panda sends postMessage with type "buttonClick" or "smartplayer_cta_click"
