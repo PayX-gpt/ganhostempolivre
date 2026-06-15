@@ -86,6 +86,64 @@ const texts = {
   },
 };
 
+const CUSTOM_CTA_UNLOCK_SECONDS = 8 * 60 + 45;
+const DEFAULT_PANDA_BUTTON_ID = "13bd9202-db00-4418-b590-7e294239fe77";
+
+const normalizePandaSeconds = (value: unknown): number | null => {
+  if (typeof value === "string" && value.includes(":")) {
+    const parts = value.split(":").map((part) => Number(part));
+    if (parts.every(Number.isFinite)) {
+      return parts.reduce((total, part) => total * 60 + part, 0);
+    }
+  }
+
+  const numericValue = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(numericValue) || numericValue < 0) return null;
+  return numericValue > 10_000 ? numericValue / 1000 : numericValue;
+};
+
+const readPandaVideoSeconds = (payload: any): number | null => {
+  const data = typeof payload === "string" ? (() => {
+    try { return JSON.parse(payload); } catch { return payload; }
+  })() : payload;
+
+  const candidates = [
+    data?.currentTime,
+    data?.current_time,
+    data?.time,
+    data?.seconds,
+    data?.playedSeconds,
+    data?.video_time,
+    data?.videoTime,
+    data?.data?.currentTime,
+    data?.data?.current_time,
+    data?.data?.time,
+    data?.data?.seconds,
+    data?.event?.currentTime,
+    data?.event?.current_time,
+  ];
+
+  for (const candidate of candidates) {
+    const seconds = normalizePandaSeconds(candidate);
+    if (seconds !== null) return seconds;
+  }
+
+  return null;
+};
+
+const getPandaEventName = (payload: any): string => {
+  const data = typeof payload === "string" ? (() => {
+    try { return JSON.parse(payload); } catch { return payload; }
+  })() : payload;
+  const raw = data?.message || data?.type || data?.event || data?.eventName || data?.name || data?.message_type || data?.action || "";
+  return typeof raw === "string" ? raw : "";
+};
+
+const isPandaButtonShownEvent = (payload: any): boolean => {
+  const msg = getPandaEventName(payload).toLowerCase();
+  return ["panda_buttonshow", "panda_buttonshown", "panda_loadbutton", "panda_showbutton", "buttonshow", "buttonshown"].includes(msg);
+};
+
 const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: customButtonId, videoAspectRatio = "9:16" }: Step11Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
