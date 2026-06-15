@@ -359,18 +359,9 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       const d = event.data;
       if (!d || typeof d !== "object") return;
 
-      // Reveal custom CTA when Panda fires its native "button shown" event
-      // (respects the timestamp configured in the Panda dashboard).
-      const msg = d.message || d.type;
-      if (
-        msg === "panda_buttonShow" ||
-        msg === "panda_buttonShown" ||
-        msg === "panda_loadbutton" ||
-        msg === "panda_showbutton" ||
-        msg === "buttonShow" ||
-        msg === "buttonShown"
-      ) {
-        revealCustomCta("panda_postmessage");
+      updateVideoProgress(readPandaVideoSeconds(d), "panda_postmessage");
+      if (isPandaButtonShownEvent(d) && maxVideoSecondsRef.current >= CUSTOM_CTA_UNLOCK_SECONDS) {
+        revealCustomCta("panda_postmessage", maxVideoSecondsRef.current);
       }
 
       // Panda CTA click events come in several shapes:
@@ -403,7 +394,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
               if (!url.searchParams.has(key)) url.searchParams.set(key, value);
             });
           }
-          window.open(url.toString(), "_blank", "noopener");
+          window.location.href = url.toString();
           console.log("[Step17] ✅ Opened Kirvano with UTMs:", url.toString());
         } catch (err) {
           console.warn("[Step17] Failed to enrich Panda CTA URL:", err);
@@ -415,7 +406,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       if (icFiredRef.current) return;
       icFiredRef.current = true;
       console.log("[Step17] ✅ Panda CTA click detected:", d.type || d.message_type || d.action);
-      saveFunnelEventReliable("checkout_click", { context: "panda_cta_step17", product: "chave_token_chatgpt", amount: offerAmount, dest_url: destUrl });
+      saveFunnelEventReliable("checkout_click", { context: "panda_cta_step17", product: "chave_token_chatgpt", amount: offerAmount, video_time_s: Math.round(maxVideoSecondsRef.current), dest_url: destUrl });
       sendCAPIInitiateCheckout({ amount: offerAmount });
       trackTikTokInitiateCheckout({ amount: offerAmount });
       trackMetaInitiateCheckout({ amount: offerAmount });
