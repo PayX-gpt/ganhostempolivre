@@ -149,20 +149,24 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const t = texts[lang];
   const young = isYoungProfile(userAge);
   const pandaBtnRef = useRef<HTMLDivElement>(null);
+  const pandaPlayerRef = useRef<any>(null);
   const [showCustomCta, setShowCustomCta] = useState(false);
   const ctaShownLoggedRef = useRef(false);
+  const maxVideoSecondsRef = useRef(0);
 
   // Logs which path revealed the CTA + saves to /live dashboard
-  const revealCustomCta = (source: "panda_button_shown" | "panda_api" | "panda_postmessage" | "page_timer") => {
+  const revealCustomCta = (source: "panda_button_shown" | "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll" | "page_timer", videoSeconds?: number) => {
     setShowCustomCta((prev) => {
       if (prev) return prev;
       if (!ctaShownLoggedRef.current) {
         ctaShownLoggedRef.current = true;
-        console.log(`[Step17] 🟡 Custom CTA shown via ${source} at ${(performance.now() / 1000).toFixed(1)}s page time`);
+        console.log(`[Step17] 🟡 Custom CTA shown via ${source} at ${Math.round(videoSeconds ?? maxVideoSecondsRef.current)}s video time / ${(performance.now() / 1000).toFixed(1)}s page time`);
         try {
           saveFunnelEventReliable("custom_cta_shown", {
-            context: "step17_custom_cta_panda_time",
+            context: "step17_custom_cta_845_video_time",
             source,
+            video_time_s: Math.round(videoSeconds ?? maxVideoSecondsRef.current),
+            unlock_video_time_s: CUSTOM_CTA_UNLOCK_SECONDS,
             page_time_s: Math.round(performance.now() / 1000),
           });
         } catch {}
@@ -175,6 +179,14 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
 
   const icFiredRef = useRef(false);
   const customCtaFiredRef = useRef(false);
+
+  const updateVideoProgress = (seconds: number | null, source: "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll") => {
+    if (seconds === null) return;
+    maxVideoSecondsRef.current = Math.max(maxVideoSecondsRef.current, seconds);
+    if (seconds >= CUSTOM_CTA_UNLOCK_SECONDS) {
+      revealCustomCta(source, seconds);
+    }
+  };
 
   // Vacancy counter (urgency) — decreases slowly to feel real
   const [vacancies, setVacancies] = useState(() => 17 + Math.floor(Math.random() * 4));
