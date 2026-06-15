@@ -297,7 +297,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
 
   const handleCustomCtaClick = () => {
     try {
-      const url = new URL("https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c");
+      const url = new URL("https://pay.hub.la/CZkoWE2anpZgpwJDs3rx");
       const trackingQs = buildTrackingQueryString();
       if (trackingQs) {
         const trackingParams = new URLSearchParams(trackingQs.slice(1));
