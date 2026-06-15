@@ -378,13 +378,13 @@ export default function AdminFunnelAudit() {
   useEffect(() => {
     if (isLivePaused) return;
     const channel = supabase.channel("payment-failures-realtime")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "purchase_tracking" }, (payload) => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "purchase_tracking" }, (payload) => {
         const newPurchase = payload.new as { status: string; failure_reason: string | null; email: string | null };
         if (newPurchase.status === 'failed' && newPurchase.failure_reason && notificationsEnabled) {
           toast.error(`Pagamento Falhou${newPurchase.email ? `: ${newPurchase.email.split('@')[0]}...` : ''}`,
             { description: newPurchase.failure_reason.slice(0, 100), duration: 10000 });
         }
-        if (newPurchase.status === 'purchased' || newPurchase.status === 'completed') fetchData();
+        if (["approved", "purchased", "completed", "pending", "refused", "refunded", "canceled"].includes(newPurchase.status)) fetchData();
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [isLivePaused, notificationsEnabled, fetchData]);
