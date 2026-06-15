@@ -255,9 +255,11 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       if (!customCtaFiredRef.current) {
         customCtaFiredRef.current = true;
         saveFunnelEventReliable("checkout_click", {
-          context: "custom_cta_step17_825",
+          context: "custom_cta_step17_845",
           product: "chave_token_chatgpt",
           amount: offerAmount,
+          video_time_s: Math.round(maxVideoSecondsRef.current),
+          unlock_video_time_s: CUSTOM_CTA_UNLOCK_SECONDS,
           dest_url: url.toString(),
         });
         sendCAPIInitiateCheckout({ amount: offerAmount });
@@ -265,7 +267,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
         trackMetaInitiateCheckout({ amount: offerAmount });
         icFiredRef.current = true;
       }
-      window.open(url.toString(), "_blank", "noopener");
+      window.location.href = url.toString();
     } catch (err) {
       console.warn("[Step17] Custom CTA error:", err);
     }
@@ -288,7 +290,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const offerAmount = getCurrentOfferAmount();
 
   const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
-  const pandaButtonId = customButtonId || "3e462562-4d30-4dd4-b759-de8c4f18b84e";
+  const pandaButtonId = customButtonId || DEFAULT_PANDA_BUTTON_ID;
   const aspectPadding = videoAspectRatio === "16:9" ? "56.25%" : "177.77777777777777%";
 
   usePandaPreload(videoId);
