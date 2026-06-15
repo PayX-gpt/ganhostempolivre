@@ -311,22 +311,6 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     }
   };
 
-  const getCurrentOfferAmount = () => {
-    try {
-      const rawAnswers = sessionStorage.getItem("quiz_answers");
-      const answers = rawAnswers ? JSON.parse(rawAnswers) : {};
-      const balance = answers?.accountBalance as string | undefined;
-
-      if (balance === "menos100") return 37;
-      if (["500-2000", "2000-10000", "10000+"].includes(balance || "")) return 66.83;
-      return 47;
-    } catch {
-      return 47;
-    }
-  };
-
-  const offerAmount = getCurrentOfferAmount();
-
   const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
   const pandaButtonId = customButtonId || DEFAULT_PANDA_BUTTON_ID;
   const aspectPadding = videoAspectRatio === "16:9" ? "56.25%" : "177.77777777777777%";
