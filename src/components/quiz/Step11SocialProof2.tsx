@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StepContainer, StepTitle } from "./QuizUI";
 import { CheckCircle, Users, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -86,37 +86,145 @@ const texts = {
   },
 };
 
+const CUSTOM_CTA_UNLOCK_SECONDS = 8 * 60 + 45;
+const DEFAULT_PANDA_BUTTON_ID = "13bd9202-db00-4418-b590-7e294239fe77";
+
+interface PandaPlayerInstance {
+  currentTime?: number | string | (() => number | string);
+  getCurrentTime?: () => number | string;
+  loadButtonInTime?: (options: { fetchApi?: boolean }) => void;
+  onEvent?: (handler: (event: unknown) => void) => void;
+}
+
+type PandaWindow = Window & typeof globalThis & {
+  pandascripttag?: Array<() => void> & { push: (...callbacks: Array<() => void>) => number };
+  PandaPlayer?: new (elementId: string, options: { onReady?: () => void }) => PandaPlayerInstance;
+};
+
+const parsePandaPayload = (payload: unknown): unknown => {
+  if (typeof payload !== "string") return payload;
+  try { return JSON.parse(payload) as unknown; } catch { return payload; }
+};
+
+const asPandaRecord = (value: unknown): Record<string, unknown> | null => (
+  typeof value === "object" && value !== null ? value as Record<string, unknown> : null
+);
+
+const normalizePandaSeconds = (value: unknown): number | null => {
+  if (typeof value === "string" && value.includes(":")) {
+    const parts = value.split(":").map((part) => Number(part));
+    if (parts.every(Number.isFinite)) {
+      return parts.reduce((total, part) => total * 60 + part, 0);
+    }
+  }
+
+  const numericValue = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(numericValue) || numericValue < 0) return null;
+  return numericValue > 10_000 ? numericValue / 1000 : numericValue;
+};
+
+const readPandaVideoSeconds = (payload: unknown): number | null => {
+  const data = parsePandaPayload(payload);
+  const record = asPandaRecord(data);
+  if (!record) return normalizePandaSeconds(data);
+  const dataRecord = asPandaRecord(record.data);
+  const eventRecord = asPandaRecord(record.event);
+
+  const candidates = [
+    record.currentTime,
+    record.current_time,
+    record.time,
+    record.seconds,
+    record.playedSeconds,
+    record.video_time,
+    record.videoTime,
+    dataRecord?.currentTime,
+    dataRecord?.current_time,
+    dataRecord?.time,
+    dataRecord?.seconds,
+    eventRecord?.currentTime,
+    eventRecord?.current_time,
+  ];
+
+  for (const candidate of candidates) {
+    const seconds = normalizePandaSeconds(candidate);
+    if (seconds !== null) return seconds;
+  }
+
+  return null;
+};
+
+const getPandaEventName = (payload: unknown): string => {
+  const record = asPandaRecord(parsePandaPayload(payload));
+  const raw = record?.message || record?.type || record?.event || record?.eventName || record?.name || record?.message_type || record?.action || "";
+  return typeof raw === "string" ? raw : "";
+};
+
+const isPandaButtonShownEvent = (payload: unknown): boolean => {
+  const msg = getPandaEventName(payload).toLowerCase();
+  return ["panda_buttonshow", "panda_buttonshown", "panda_loadbutton", "panda_showbutton", "buttonshow", "buttonshown"].includes(msg);
+};
+
+const getCurrentOfferAmount = () => {
+  try {
+    const rawAnswers = sessionStorage.getItem("quiz_answers");
+    const answers = rawAnswers ? JSON.parse(rawAnswers) : {};
+    const balance = answers?.accountBalance as string | undefined;
+
+    if (balance === "menos100") return 37;
+    if (["500-2000", "2000-10000", "10000+"].includes(balance || "")) return 66.83;
+    return 47;
+  } catch {
+    return 47;
+  }
+};
+
 const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: customButtonId, videoAspectRatio = "9:16" }: Step11Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const young = isYoungProfile(userAge);
   const pandaBtnRef = useRef<HTMLDivElement>(null);
+  const pandaPlayerRef = useRef<PandaPlayerInstance | null>(null);
   const [showCustomCta, setShowCustomCta] = useState(false);
   const ctaShownLoggedRef = useRef(false);
+  const maxVideoSecondsRef = useRef(0);
+  const offerAmount = getCurrentOfferAmount();
 
   // Logs which path revealed the CTA + saves to /live dashboard
-  const revealCustomCta = (source: "panda_button_shown" | "panda_api" | "panda_postmessage" | "page_timer") => {
+  const revealCustomCta = useCallback((source: "panda_button_shown" | "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll" | "page_timer", videoSeconds?: number) => {
     setShowCustomCta((prev) => {
       if (prev) return prev;
       if (!ctaShownLoggedRef.current) {
         ctaShownLoggedRef.current = true;
-        console.log(`[Step17] 🟡 Custom CTA shown via ${source} at ${(performance.now() / 1000).toFixed(1)}s page time`);
+        console.log(`[Step17] 🟡 Custom CTA shown via ${source} at ${Math.round(videoSeconds ?? maxVideoSecondsRef.current)}s video time / ${(performance.now() / 1000).toFixed(1)}s page time`);
         try {
           saveFunnelEventReliable("custom_cta_shown", {
-            context: "step17_custom_cta_panda_time",
+            context: "step17_custom_cta_845_video_time",
             source,
+            video_time_s: Math.round(videoSeconds ?? maxVideoSecondsRef.current),
+            unlock_video_time_s: CUSTOM_CTA_UNLOCK_SECONDS,
             page_time_s: Math.round(performance.now() / 1000),
           });
-        } catch {}
+        } catch (error) {
+          console.warn("[Step17] Failed to save CTA shown event:", error);
+        }
         trackMetaAddToCart({ amount: offerAmount });
         sendCAPIEvent("AddToCart", { amount: offerAmount });
       }
       return true;
     });
-  };
+  }, [offerAmount]);
 
   const icFiredRef = useRef(false);
   const customCtaFiredRef = useRef(false);
+
+  const updateVideoProgress = useCallback((seconds: number | null, source: "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll") => {
+    if (seconds === null) return;
+    maxVideoSecondsRef.current = Math.max(maxVideoSecondsRef.current, seconds);
+    if (seconds >= CUSTOM_CTA_UNLOCK_SECONDS) {
+      revealCustomCta(source, seconds);
+    }
+  }, [revealCustomCta]);
 
   // Vacancy counter (urgency) — decreases slowly to feel real
   const [vacancies, setVacancies] = useState(() => 17 + Math.floor(Math.random() * 4));
@@ -185,9 +293,11 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       if (!customCtaFiredRef.current) {
         customCtaFiredRef.current = true;
         saveFunnelEventReliable("checkout_click", {
-          context: "custom_cta_step17_825",
+          context: "custom_cta_step17_845",
           product: "chave_token_chatgpt",
           amount: offerAmount,
+          video_time_s: Math.round(maxVideoSecondsRef.current),
+          unlock_video_time_s: CUSTOM_CTA_UNLOCK_SECONDS,
           dest_url: url.toString(),
         });
         sendCAPIInitiateCheckout({ amount: offerAmount });
@@ -195,30 +305,14 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
         trackMetaInitiateCheckout({ amount: offerAmount });
         icFiredRef.current = true;
       }
-      window.open(url.toString(), "_blank", "noopener");
+      window.location.href = url.toString();
     } catch (err) {
       console.warn("[Step17] Custom CTA error:", err);
     }
   };
 
-  const getCurrentOfferAmount = () => {
-    try {
-      const rawAnswers = sessionStorage.getItem("quiz_answers");
-      const answers = rawAnswers ? JSON.parse(rawAnswers) : {};
-      const balance = answers?.accountBalance as string | undefined;
-
-      if (balance === "menos100") return 37;
-      if (["500-2000", "2000-10000", "10000+"].includes(balance || "")) return 66.83;
-      return 47;
-    } catch {
-      return 47;
-    }
-  };
-
-  const offerAmount = getCurrentOfferAmount();
-
   const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
-  const pandaButtonId = customButtonId || "3e462562-4d30-4dd4-b759-de8c4f18b84e";
+  const pandaButtonId = customButtonId || DEFAULT_PANDA_BUTTON_ID;
   const aspectPadding = videoAspectRatio === "16:9" ? "56.25%" : "177.77777777777777%";
 
   usePandaPreload(videoId);
@@ -227,35 +321,37 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   useEffect(() => {
     trackMetaViewContent({});
     sendCAPIEvent("ViewContent");
+    let pollTimer: number | undefined;
+
     if (!document.querySelector('script[src^="https://player.pandavideo.com.br/api.v2.js"]')) {
       const s = document.createElement('script');
       s.src = 'https://player.pandavideo.com.br/api.v2.js';
       s.async = true;
       document.head.appendChild(s);
     }
-    (window as any).pandascripttag = (window as any).pandascripttag || [];
-    (window as any).pandascripttag.push(function () {
-      const p = new (window as any).PandaPlayer(`panda-${videoId}`, {
+    const pandaWindow = window as PandaWindow;
+    pandaWindow.pandascripttag = pandaWindow.pandascripttag || [];
+    pandaWindow.pandascripttag.push(function () {
+      if (!pandaWindow.PandaPlayer) return;
+      const p = new pandaWindow.PandaPlayer(`panda-${videoId}`, {
         onReady() {
-          try { p.loadButtonInTime({ fetchApi: true }); } catch {}
-          // Reveal custom CTA when Panda's native button is shown (respects
-          // the time configured in the Panda dashboard for this video).
-          try {
-            p.onEvent(function (e: any) {
-              if (!e) return;
-              const msg = e.message || e.type;
-              if (
-                msg === "panda_buttonShow" ||
-                msg === "panda_buttonShown" ||
-                msg === "panda_loadbutton" ||
-                msg === "panda_showbutton" ||
-                msg === "buttonShow" ||
-                msg === "buttonShown"
-              ) {
-                revealCustomCta("panda_button_shown");
-              }
-            });
-          } catch {}
+          pandaPlayerRef.current = p;
+          p.loadButtonInTime?.({ fetchApi: true });
+          pollTimer = window.setInterval(() => {
+            const rawTime = typeof p.getCurrentTime === "function"
+              ? p.getCurrentTime()
+              : typeof p.currentTime === "function"
+              ? p.currentTime()
+              : p.currentTime;
+            updateVideoProgress(normalizePandaSeconds(rawTime), "panda_poll");
+          }, 1000);
+          p.onEvent?.(function (e: unknown) {
+            if (!e) return;
+            updateVideoProgress(readPandaVideoSeconds(e), "panda_timeupdate");
+            if (isPandaButtonShownEvent(e) && maxVideoSecondsRef.current >= CUSTOM_CTA_UNLOCK_SECONDS) {
+              revealCustomCta("panda_button_shown", maxVideoSecondsRef.current);
+            }
+          });
         },
       });
     });
@@ -269,9 +365,11 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     window.addEventListener('message', handlePandaReady);
 
     return () => {
+      if (pollTimer) window.clearInterval(pollTimer);
+      pandaPlayerRef.current = null;
       window.removeEventListener('message', handlePandaReady);
     };
-  }, [videoId]);
+  }, [videoId, offerAmount, revealCustomCta, updateVideoProgress]);
 
   // Listen for Panda Video CTA click — only fires on REAL button click
   // Panda sends postMessage with type "buttonClick" or "smartplayer_cta_click"
@@ -281,18 +379,9 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       const d = event.data;
       if (!d || typeof d !== "object") return;
 
-      // Reveal custom CTA when Panda fires its native "button shown" event
-      // (respects the timestamp configured in the Panda dashboard).
-      const msg = d.message || d.type;
-      if (
-        msg === "panda_buttonShow" ||
-        msg === "panda_buttonShown" ||
-        msg === "panda_loadbutton" ||
-        msg === "panda_showbutton" ||
-        msg === "buttonShow" ||
-        msg === "buttonShown"
-      ) {
-        revealCustomCta("panda_postmessage");
+      updateVideoProgress(readPandaVideoSeconds(d), "panda_postmessage");
+      if (isPandaButtonShownEvent(d) && maxVideoSecondsRef.current >= CUSTOM_CTA_UNLOCK_SECONDS) {
+        revealCustomCta("panda_postmessage", maxVideoSecondsRef.current);
       }
 
       // Panda CTA click events come in several shapes:
@@ -325,7 +414,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
               if (!url.searchParams.has(key)) url.searchParams.set(key, value);
             });
           }
-          window.open(url.toString(), "_blank", "noopener");
+          window.location.href = url.toString();
           console.log("[Step17] ✅ Opened Kirvano with UTMs:", url.toString());
         } catch (err) {
           console.warn("[Step17] Failed to enrich Panda CTA URL:", err);
@@ -337,7 +426,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       if (icFiredRef.current) return;
       icFiredRef.current = true;
       console.log("[Step17] ✅ Panda CTA click detected:", d.type || d.message_type || d.action);
-      saveFunnelEventReliable("checkout_click", { context: "panda_cta_step17", product: "chave_token_chatgpt", amount: offerAmount, dest_url: destUrl });
+      saveFunnelEventReliable("checkout_click", { context: "panda_cta_step17", product: "chave_token_chatgpt", amount: offerAmount, video_time_s: Math.round(maxVideoSecondsRef.current), dest_url: destUrl });
       sendCAPIInitiateCheckout({ amount: offerAmount });
       trackTikTokInitiateCheckout({ amount: offerAmount });
       trackMetaInitiateCheckout({ amount: offerAmount });
@@ -366,7 +455,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       window.removeEventListener("message", handlePandaMessage);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [videoId, offerAmount]);
+  }, [videoId, offerAmount, revealCustomCta, updateVideoProgress]);
 
   const testimonials = young ? t.youngTestimonials : t.matureTestimonials;
   const avatarsYoung = [avatarRafael, avatarCamila];
@@ -407,15 +496,14 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
             style={{ border: "none", position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
             allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
             allowFullScreen
-            {...({ fetchpriority: "high" } as any)}
           />
         </div>
       </div>
 
       {/* Panda external button container */}
-      <div id={pandaButtonId} className="w-full flex justify-center" />
+      <div id={pandaButtonId} ref={pandaBtnRef} className="hidden" aria-hidden="true" />
 
-      {/* Custom CTA — appears at 8:25 (505s) of VSL */}
+      {/* Custom CTA — appears after 8:45 (525s) of real Panda video time */}
       {showCustomCta && (
         <button
           onClick={handleCustomCtaClick}
