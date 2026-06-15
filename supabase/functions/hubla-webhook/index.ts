@@ -133,9 +133,9 @@ async function hashSHA256(value: string): Promise<string> {
  * Hub.la events: sale.approved, sale.refunded, sale.chargeback, sale.canceled,
  *                subscription.created, subscription.canceled, etc.
  */
-function mapHublaStatus(event: string | null, rawStatus: string | null): string {
+function mapHublaStatus(event: unknown, rawStatus: string | null): string {
   // Try to extract status from event name (e.g. "sale.approved" -> "approved")
-  if (event && event.includes(".")) {
+  if (typeof event === "string" && event.includes(".")) {
     const parts = event.split(".");
     const eventStatus = parts[parts.length - 1].toLowerCase();
     const eventMap: Record<string, string> = {
@@ -200,7 +200,10 @@ Deno.serve(async (req) => {
     const checkoutData = body.data?.checkout || {};
 
     // Event & status
-    const event = body.event || body.tipo_evento || body.type || "purchase";
+    // IMPORTANT: Hub.la v2 payloads put the event NAME in `body.type` (string)
+    // and use `body.event` as an OBJECT container. Prefer string fields first.
+    const eventCandidates = [body.type, body.tipo_evento, body.event_name, body.event];
+    const event = eventCandidates.find((v) => typeof v === "string" && v.length > 0) || "purchase";
     const rawStatus = saleData.status || body.status || body.purchase_status || body.payment_status || null;
     const normalizedStatus = mapHublaStatus(event, rawStatus);
 
