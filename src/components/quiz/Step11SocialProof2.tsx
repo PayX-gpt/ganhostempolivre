@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StepContainer, StepTitle } from "./QuizUI";
 import { CheckCircle, Users, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -165,18 +165,33 @@ const isPandaButtonShownEvent = (payload: unknown): boolean => {
   return ["panda_buttonshow", "panda_buttonshown", "panda_loadbutton", "panda_showbutton", "buttonshow", "buttonshown"].includes(msg);
 };
 
+const getCurrentOfferAmount = () => {
+  try {
+    const rawAnswers = sessionStorage.getItem("quiz_answers");
+    const answers = rawAnswers ? JSON.parse(rawAnswers) : {};
+    const balance = answers?.accountBalance as string | undefined;
+
+    if (balance === "menos100") return 37;
+    if (["500-2000", "2000-10000", "10000+"].includes(balance || "")) return 66.83;
+    return 47;
+  } catch {
+    return 47;
+  }
+};
+
 const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: customButtonId, videoAspectRatio = "9:16" }: Step11Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const young = isYoungProfile(userAge);
   const pandaBtnRef = useRef<HTMLDivElement>(null);
-  const pandaPlayerRef = useRef<any>(null);
+  const pandaPlayerRef = useRef<PandaPlayerInstance | null>(null);
   const [showCustomCta, setShowCustomCta] = useState(false);
   const ctaShownLoggedRef = useRef(false);
   const maxVideoSecondsRef = useRef(0);
+  const offerAmount = getCurrentOfferAmount();
 
   // Logs which path revealed the CTA + saves to /live dashboard
-  const revealCustomCta = (source: "panda_button_shown" | "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll" | "page_timer", videoSeconds?: number) => {
+  const revealCustomCta = useCallback((source: "panda_button_shown" | "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll" | "page_timer", videoSeconds?: number) => {
     setShowCustomCta((prev) => {
       if (prev) return prev;
       if (!ctaShownLoggedRef.current) {
@@ -190,24 +205,26 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
             unlock_video_time_s: CUSTOM_CTA_UNLOCK_SECONDS,
             page_time_s: Math.round(performance.now() / 1000),
           });
-        } catch {}
+        } catch (error) {
+          console.warn("[Step17] Failed to save CTA shown event:", error);
+        }
         trackMetaAddToCart({ amount: offerAmount });
         sendCAPIEvent("AddToCart", { amount: offerAmount });
       }
       return true;
     });
-  };
+  }, [offerAmount]);
 
   const icFiredRef = useRef(false);
   const customCtaFiredRef = useRef(false);
 
-  const updateVideoProgress = (seconds: number | null, source: "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll") => {
+  const updateVideoProgress = useCallback((seconds: number | null, source: "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll") => {
     if (seconds === null) return;
     maxVideoSecondsRef.current = Math.max(maxVideoSecondsRef.current, seconds);
     if (seconds >= CUSTOM_CTA_UNLOCK_SECONDS) {
       revealCustomCta(source, seconds);
     }
-  };
+  }, [revealCustomCta]);
 
   // Vacancy counter (urgency) — decreases slowly to feel real
   const [vacancies, setVacancies] = useState(() => 17 + Math.floor(Math.random() * 4));
