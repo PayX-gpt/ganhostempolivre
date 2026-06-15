@@ -99,16 +99,21 @@ const detectTrafficSource = (): string => {
   return "organic";
 };
 
+const ALLOWED_PRESENCE_HOSTS = ["ganhostempolivre.lovable.app"];
+const isAllowedHost = (): boolean => {
+  const host = window.location.hostname.toLowerCase();
+  return ALLOWED_PRESENCE_HOSTS.some((h) => host === h || host.endsWith("." + h));
+};
+
 const trackPresence = (pageId: string) => {
   const currentPath = window.location.pathname.toLowerCase();
   if (currentPath.includes('/live') || currentPath.includes('/admin')) {
-    console.log('[Presence] SKIP /live or /admin', pageId);
     return;
   }
-  if (isDevSession()) {
-    console.log('[Presence] SKIP isDevSession', window.location.hostname);
-    return;
-  }
+  if (isDevSession()) return;
+  // Only the real funnel app may publish presence. External LPs (e.g.
+  // payx-gpt.github.io) running a mirrored bundle must NOT pollute /live.
+  if (!isAllowedHost()) return;
 
   const sessionId = getOrCreateSessionId();
   const channel = getOrCreateChannel(sessionId);
