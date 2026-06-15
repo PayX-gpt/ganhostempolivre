@@ -63,6 +63,15 @@ export default function LeadTimeline({ sessionId, onClose }: LeadTimelineProps) 
         } else if (e.event_name === "checkout_click" || e.event_name === "capi_ic_sent") {
           detail = "Clicou no checkout";
           icon = "checkout";
+        } else if (e.event_name === "button_click") {
+          const label = (ed?.label as string) || "(botão)";
+          const route = (ed?.route as string) || "";
+          const trackId = (ed?.track_id as string) || "";
+          detail = `Clicou: "${label}"${trackId ? ` [${trackId}]` : ""} em ${route}`;
+          icon = "action";
+        } else if (e.event_name === "upsell_step_view") {
+          const stepNum = ed?.step as number;
+          detail = `Visualizou Upsell ${stepNum ?? ""}`.trim();
         }
 
         timeline.push({ time: e.created_at, type: e.event_name, detail, icon });

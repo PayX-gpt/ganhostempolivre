@@ -1,4 +1,5 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
+import { initButtonTracker } from "@/lib/buttonTracker";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,7 +29,11 @@ const queryClient = new QueryClient();
 // (e.g. GitHub Pages at /ganhostempolivre/). In dev this resolves to "/".
 const routerBasename = import.meta.env.BASE_URL.replace(/\/+$/, "") || "/";
 
-const App = () => (
+const App = () => {
+  useEffect(() => {
+    initButtonTracker();
+  }, []);
+  return (
   <LanguageProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -59,6 +64,7 @@ const App = () => (
       </TooltipProvider>
     </QueryClientProvider>
   </LanguageProvider>
-);
+  );
+};
 
 export default App;
