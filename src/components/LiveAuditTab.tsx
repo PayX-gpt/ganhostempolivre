@@ -49,6 +49,8 @@ export default function LiveAuditTab() {
       const { data: purchases } = await supabase
         .from("purchase_tracking")
         .select("id, created_at, amount, email, buyer_name, status, session_id, funnel_step")
+        .gt("amount", 0)
+        .not("transaction_id", "is", null)
         .gte("created_at", todayISO)
         .order("created_at", { ascending: false });
 
