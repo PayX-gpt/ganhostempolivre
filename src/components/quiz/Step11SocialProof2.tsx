@@ -482,9 +482,9 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       </div>
 
       {/* Panda external button container */}
-      <div id={pandaButtonId} className="w-full flex justify-center" />
+      <div id={pandaButtonId} ref={pandaBtnRef} className="hidden" aria-hidden="true" />
 
-      {/* Custom CTA — appears at 8:25 (505s) of VSL */}
+      {/* Custom CTA — appears after 8:45 (525s) of real Panda video time */}
       {showCustomCta && (
         <button
           onClick={handleCustomCtaClick}
