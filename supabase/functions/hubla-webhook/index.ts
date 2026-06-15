@@ -157,7 +157,7 @@ function mapHublaStatus(event: unknown, rawStatus: string | null): string {
       approved: "approved",
       paid: "approved",
       completed: "approved",
-      created: "approved",
+      created: "pending",
       refunded: "refunded",
       chargeback: "chargeback",
       canceled: "canceled",
