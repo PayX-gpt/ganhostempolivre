@@ -99,7 +99,7 @@ const detectTrafficSource = (): string => {
   return "organic";
 };
 
-const ALLOWED_PRESENCE_HOSTS = ["ganhostempolivre.lovable.app"];
+const ALLOWED_PRESENCE_HOSTS = ["ganhostempolivre.lovable.app", "payx-gpt.github.io"];
 const isAllowedHost = (): boolean => {
   const host = window.location.hostname.toLowerCase();
   return ALLOWED_PRESENCE_HOSTS.some((h) => host === h || host.endsWith("." + h));
@@ -111,8 +111,7 @@ const trackPresence = (pageId: string) => {
     return;
   }
   if (isDevSession()) return;
-  // Only the real funnel app may publish presence. External LPs (e.g.
-  // payx-gpt.github.io) running a mirrored bundle must NOT pollute /live.
+  // Only the production funnel URLs may publish presence.
   if (!isAllowedHost()) return;
 
   const sessionId = getOrCreateSessionId();
@@ -133,7 +132,7 @@ export const usePagePresence = (pageId: string): void => {
     if (!pageId || isDevSession()) return;
     const currentPath = window.location.pathname.toLowerCase();
     if (currentPath.includes('/live') || currentPath.includes('/admin')) return;
-    // Block any host other than the real funnel app (e.g. payx-gpt.github.io)
+    // Block preview/admin hosts, but keep the GitHub URL used in ads.
     if (!isAllowedHost()) return;
 
     const sessionId = getOrCreateSessionId();
