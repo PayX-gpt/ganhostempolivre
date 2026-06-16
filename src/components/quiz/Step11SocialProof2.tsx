@@ -86,7 +86,7 @@ const texts = {
   },
 };
 
-const CUSTOM_CTA_UNLOCK_SECONDS = 8 * 60 + 45;
+const CUSTOM_CTA_UNLOCK_SECONDS = 8 * 60 + 20;
 const DEFAULT_PANDA_BUTTON_ID = "13bd9202-db00-4418-b590-7e294239fe77";
 
 interface PandaPlayerInstance {
