@@ -98,9 +98,10 @@ const STEP_ALIASES: Record<string, (typeof STEP_SLUGS)[number]> = {
 
 const normalizeSlug = (slug?: string) => {
   if (!slug) return "step-1";
-  const lower = slug.toLowerCase().replace(/\/+$/, "");
+  // Strip trailing slashes, dots, and other punctuation that some ad networks append
+  const lower = slug.toLowerCase().replace(/[\/.\s,;:!?]+$/, "");
   if (STEP_SLUGS.includes(lower as any)) return lower;
-  return STEP_ALIASES[lower] ?? slug;
+  return STEP_ALIASES[lower] ?? lower;
 };
 
 const QuizFunnel = () => {

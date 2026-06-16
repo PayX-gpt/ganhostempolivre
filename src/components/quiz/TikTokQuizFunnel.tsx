@@ -62,7 +62,7 @@ const STEP_NAMES: Record<string, string> = {
 
 const normalizeSlug = (slug?: string) => {
   if (!slug) return "step-1";
-  const lower = slug.toLowerCase().replace(/\/+$/, "");
+  const lower = slug.toLowerCase().replace(/[\/.\s,;:!?]+$/, "");
   if (TIKTOK_STEP_SLUGS.includes(lower as any)) return lower;
   return "step-1";
 };
