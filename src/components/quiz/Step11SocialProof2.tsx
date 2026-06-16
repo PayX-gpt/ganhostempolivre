@@ -312,7 +312,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     }
   };
 
-  const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
+  const videoId = pandaVideoId || "fa8e8d92-ad93-4c46-b171-7b1e971e2b83";
   const pandaButtonId = customButtonId || DEFAULT_PANDA_BUTTON_ID;
   const aspectPadding = videoAspectRatio === "16:9" ? "56.25%" : "177.77777777777777%";
 
