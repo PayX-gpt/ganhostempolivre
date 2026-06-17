@@ -183,91 +183,237 @@ const EVENT_TYPES = [
   "page_exit", "session_start", "lead_captured",
 ];
 
-// ─── 1. Static metrics ───────────────────────────────────────
+// ─── 1. Time-aware metrics ───────────────────────────────────
+//
+// Tudo aqui escala conforme o horário de São Paulo. O dia "cresce":
+// às 6h temos ~1% do total diário; às 23h59 temos ~100%. Cada data tem
+// um seed próprio, então hoje ≠ ontem ≠ anteontem. Recarregar a página
+// no mesmo minuto mostra basicamente o mesmo número (com micro-jitter),
+// mas em 10 minutos o valor já subiu de forma realista.
 
-export const DEMO_METRICS = {
+// Curva de tráfego brasileira (também usada em getDemoHourlyData)
+const HOURLY_WEIGHTS = [
+  0.4, 0.2, 0.1, 0.1, 0.1, 0.2, 0.5, 1.2,
+  2.5, 3.8, 5.8, 7.2, 7.5, 7.0, 5.2, 3.8,
+  3.2, 3.5, 4.8, 6.8, 7.8, 7.2, 5.0, 2.8,
+];
+const TOTAL_WEIGHT = HOURLY_WEIGHTS.reduce((a, b) => a + b, 0);
+
+function spClock(): { h: number; m: number; s: number; dateKey: string } {
+  const d = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
+  );
+  return {
+    h: d.getHours(),
+    m: d.getMinutes(),
+    s: d.getSeconds(),
+    dateKey: `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`,
+  };
+}
+
+/** Fração do dia já "rodada" (0..1) seguindo a curva de tráfego. */
+export function getDayProgress(): number {
+  const { h, m } = spClock();
+  let acc = 0;
+  for (let i = 0; i < h; i++) acc += HOURLY_WEIGHTS[i];
+  acc += HOURLY_WEIGHTS[h] * (m / 60);
+  return Math.min(1, acc / TOTAL_WEIGHT);
+}
+
+function hashSeed(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 100000) / 100000;
+}
+
+/** Multiplicador diário (0.85..1.18) — cada dia tem volume diferente. */
+function dayMultiplier(offsetDays = 0): number {
+  const { dateKey } = spClock();
+  const d = new Date(dateKey);
+  d.setDate(d.getDate() - offsetDays);
+  const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  return 0.85 + hashSeed(key) * 0.33;
+}
+
+/** Jitter minúsculo por minuto (±0.5%) p/ refresh não ficar idêntico. */
+function minuteJitter(salt: string): number {
+  const { dateKey, h, m } = spClock();
+  const r = hashSeed(`${dateKey}-${h}-${m}-${salt}`);
+  return 1 + (r - 0.5) * 0.01;
+}
+
+const FULL_DAY = {
   ticketMedio: 87,
-  totalSalesApproved: 957,
-  revenueToday: 83_259, // 957 × 87
-  totalPageviews: 25_184,
-  convPageviewToSale: 3.8,
-  pitchArrivalRate: 42,
-  leadsCapturados: 10_577,
-  checkoutInitiations: 3_280,
-  icToSaleRate: 29.2,
-  quizTrafficPct: 70,
-  quizTrafficAbs: 17_629,
-  vslTrafficPct: 30,
-  vslTrafficAbs: 7_555,
-  salesApproved: 957,
-  salesPending: 121,
-  salesRefused: 96,
-  salesRefunded: 46,
-  approvalRate: 79,
-  bounceStep1: 31,
-  activeUsersOnline: 127,
-  roas: 1.92,
-  cpa: 36.74,
+  sales: 957,
+  pageviews: 25_184,
+  leads: 10_577,
+  checkouts: 3_280,
   adSpend: 43_315,
-  chargebackRate: 0.2,
+  quizTrafficAbs: 17_629,
+  vslTrafficAbs: 7_555,
 };
 
-// ─── 2. Period comparison ────────────────────────────────────
+export interface DemoMetrics {
+  ticketMedio: number;
+  totalSalesApproved: number;
+  revenueToday: number;
+  totalPageviews: number;
+  convPageviewToSale: number;
+  pitchArrivalRate: number;
+  leadsCapturados: number;
+  checkoutInitiations: number;
+  icToSaleRate: number;
+  quizTrafficPct: number;
+  quizTrafficAbs: number;
+  vslTrafficPct: number;
+  vslTrafficAbs: number;
+  salesApproved: number;
+  salesPending: number;
+  salesRefused: number;
+  salesRefunded: number;
+  approvalRate: number;
+  bounceStep1: number;
+  activeUsersOnline: number;
+  roas: number;
+  cpa: number;
+  adSpend: number;
+  chargebackRate: number;
+  dayProgress: number;
+}
 
-export const DEMO_PERIOD_DATA = {
-  current: {
-    label: "Hoje",
-    revenue: 83_259,
-    sales: 957,
-    leads: 10_577,
-    pageviews: 25_184,
-    checkouts: 3_280,
-    adSpend: 43_315,
-    roas: 1.92,
-    cpa: 36.74,
-    ticketMedio: 87,
+export function getDemoMetrics(): DemoMetrics {
+  const progress = getDayProgress();
+  const dayMul = dayMultiplier(0);
+  const { h } = spClock();
+
+  const scale = (full: number, salt: string) =>
+    Math.round(full * dayMul * progress * minuteJitter(salt));
+
+  const sales = Math.max(1, scale(FULL_DAY.sales, "sales"));
+  const ticketMedio = FULL_DAY.ticketMedio;
+  const revenueToday = sales * ticketMedio;
+  const pageviews = scale(FULL_DAY.pageviews, "pv");
+  const leads = scale(FULL_DAY.leads, "leads");
+  const checkouts = scale(FULL_DAY.checkouts, "ic");
+  const adSpend = scale(FULL_DAY.adSpend, "spend");
+
+  const hourWeight = HOURLY_WEIGHTS[h];
+  const peakWeight = Math.max(...HOURLY_WEIGHTS);
+  const activeUsersOnline = Math.max(
+    8,
+    Math.round(160 * (hourWeight / peakWeight) * minuteJitter("au"))
+  );
+
+  const convPageviewToSale =
+    pageviews > 0 ? +((sales / pageviews) * 100).toFixed(2) : 0;
+  const icToSaleRate =
+    checkouts > 0 ? +((sales / checkouts) * 100).toFixed(1) : 0;
+  const roas = adSpend > 0 ? +(revenueToday / adSpend).toFixed(2) : 0;
+  const cpa = sales > 0 ? +(adSpend / sales).toFixed(2) : 0;
+
+  return {
+    ticketMedio,
+    totalSalesApproved: sales,
+    revenueToday,
+    totalPageviews: pageviews,
+    convPageviewToSale,
+    pitchArrivalRate: 42,
+    leadsCapturados: leads,
+    checkoutInitiations: checkouts,
+    icToSaleRate,
+    quizTrafficPct: 70,
+    quizTrafficAbs: scale(FULL_DAY.quizTrafficAbs, "qz"),
+    vslTrafficPct: 30,
+    vslTrafficAbs: scale(FULL_DAY.vslTrafficAbs, "vsl"),
+    salesApproved: sales,
+    salesPending: Math.max(0, Math.round(sales * 0.126)),
+    salesRefused: Math.max(0, Math.round(sales * 0.100)),
+    salesRefunded: Math.max(0, Math.round(sales * 0.048)),
     approvalRate: 79,
-    convRate: 3.8,
-    activeUsers: 127,
-  },
-  previous: {
-    label: "Ontem",
-    revenue: 74_820,
-    sales: 860,
-    leads: 9_481,
-    pageviews: 23_112,
-    checkouts: 2_980,
-    adSpend: 41_200,
-    roas: 1.82,
-    cpa: 38.60,
-    ticketMedio: 87,
-    approvalRate: 77,
-    convRate: 3.5,
-    activeUsers: 109,
-  },
-};
+    bounceStep1: 31,
+    activeUsersOnline,
+    roas,
+    cpa,
+    adSpend,
+    chargebackRate: 0.2,
+    dayProgress: +progress.toFixed(3),
+  };
+}
+
+export function getDemoPeriodData() {
+  const today = getDemoMetrics();
+  const yMul = dayMultiplier(1);
+  const ySales = Math.round(FULL_DAY.sales * yMul);
+  const yPageviews = Math.round(FULL_DAY.pageviews * yMul);
+  const yLeads = Math.round(FULL_DAY.leads * yMul);
+  const yCheckouts = Math.round(FULL_DAY.checkouts * yMul);
+  const ySpend = Math.round(FULL_DAY.adSpend * yMul);
+  const yRevenue = ySales * FULL_DAY.ticketMedio;
+
+  return {
+    current: {
+      label: "Hoje",
+      revenue: today.revenueToday,
+      sales: today.totalSalesApproved,
+      leads: today.leadsCapturados,
+      pageviews: today.totalPageviews,
+      checkouts: today.checkoutInitiations,
+      adSpend: today.adSpend,
+      roas: today.roas,
+      cpa: today.cpa,
+      ticketMedio: today.ticketMedio,
+      approvalRate: today.approvalRate,
+      convRate: today.convPageviewToSale,
+      activeUsers: today.activeUsersOnline,
+    },
+    previous: {
+      label: "Ontem",
+      revenue: yRevenue,
+      sales: ySales,
+      leads: yLeads,
+      pageviews: yPageviews,
+      checkouts: yCheckouts,
+      adSpend: ySpend,
+      roas: ySpend > 0 ? +(yRevenue / ySpend).toFixed(2) : 0,
+      cpa: ySales > 0 ? +(ySpend / ySales).toFixed(2) : 0,
+      ticketMedio: FULL_DAY.ticketMedio,
+      approvalRate: 77,
+      convRate:
+        yPageviews > 0 ? +((ySales / yPageviews) * 100).toFixed(2) : 0,
+      activeUsers: Math.round(today.activeUsersOnline * 0.86),
+    },
+  };
+}
+
+// Compat: snapshot inicial p/ qualquer código que ainda leia a constante.
+export const DEMO_METRICS = getDemoMetrics();
+export const DEMO_PERIOD_DATA = getDemoPeriodData();
 
 // ─── 3. Hourly revenue data ─────────────────────────────────
 
-/** Realistic Brazilian purchase curve (two peaks: lunch + evening). */
+/**
+ * Curva horária realista (dois picos: almoço + noite).
+ * Horas futuras (após a hora atual em SP) ficam zeradas, para que o
+ * gráfico do dia "cresça" durante o dia em vez de já mostrar tudo.
+ */
 export function getDemoHourlyData(): {
   hour: number;
   revenue: number;
   sales: number;
 }[] {
-  // Weight factors per hour (0-23). Peaks at 10-14h and 19-22h.
-  const weights = [
-    0.4, 0.2, 0.1, 0.1, 0.1, 0.2, 0.5, 1.2, // 0-7
-    2.5, 3.8, 5.8, 7.2, 7.5, 7.0, 5.2, 3.8, // 8-15
-    3.2, 3.5, 4.8, 6.8, 7.8, 7.2, 5.0, 2.8, // 16-23
-  ];
+  const { h: nowH, m: nowM } = spClock();
+  const dayMul = dayMultiplier(0);
+  const totalSales = Math.round(FULL_DAY.sales * dayMul);
+  const totalRevenue = totalSales * FULL_DAY.ticketMedio;
 
-  const totalWeight = weights.reduce((a, b) => a + b, 0);
-  const totalSales = 957;
-  const totalRevenue = 83_259;
+  return HOURLY_WEIGHTS.map((w, hour) => {
+    let fraction = w / TOTAL_WEIGHT;
+    if (hour > nowH) fraction = 0;
+    else if (hour === nowH) fraction *= nowM / 60;
 
-  return weights.map((w, hour) => {
-    const fraction = w / totalWeight;
     const sales = Math.round(totalSales * fraction);
     const revenue = Math.round(totalRevenue * fraction);
     return { hour, revenue, sales };
