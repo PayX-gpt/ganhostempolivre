@@ -433,28 +433,12 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       trackMetaInitiateCheckout({ amount: offerAmount });
     };
 
-    // Only fire IC on page hide if user has been on page for 3+ minutes
-    // AND has watched significant video — prevents false positives from tab-closers
-    const mountedAt = Date.now();
-    const handleVisibilityChange = () => {
-      if (document.hidden && !icFiredRef.current) {
-        const timeOnPage = Date.now() - mountedAt;
-        // Only count as IC if user spent 3+ min on this step (likely engaged with VSL)
-        if (timeOnPage < 180_000) return;
-        icFiredRef.current = true;
-        console.log("[Step17] ✅ IC fired on page hide (3min+ engaged)");
-        saveFunnelEventReliable("checkout_click", { context: "panda_cta_step17_pagehide", product: "chave_token_chatgpt", amount: offerAmount });
-        sendCAPIInitiateCheckout({ amount: offerAmount });
-        trackTikTokInitiateCheckout({ amount: offerAmount });
-        trackMetaInitiateCheckout({ amount: offerAmount });
-      }
-    };
-
+    // IC só dispara em clique real no CTA (botão ou Panda postMessage).
+    // Removido fallback de visibilitychange/pagehide — padrão de mercado
+    // exige clique explícito + redirecionamento ao checkout para InitiateCheckout.
     window.addEventListener("message", handlePandaMessage);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       window.removeEventListener("message", handlePandaMessage);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [videoId, offerAmount, revealCustomCta, updateVideoProgress]);
 
