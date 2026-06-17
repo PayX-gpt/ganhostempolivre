@@ -297,11 +297,14 @@ export const buildTrackingQueryString = (): string => {
   Object.entries(params).forEach(([key, value]) => {
     if (value) searchParams.set(key, value);
   });
-  // Kirvano forwards "src" in utm.src — use it to carry session_id
+  // Carry session_id in gtl_sid; preserve original `src` (campaign source) if present
   if (params.session_id) {
-    searchParams.set("src", params.session_id);
     searchParams.set("gtl_sid", params.session_id);
+    if (!searchParams.get("src")) {
+      searchParams.set("src", params.session_id);
+    }
   }
+
   const qs = searchParams.toString();
   return qs ? `?${qs}` : "";
 };
