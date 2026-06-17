@@ -288,10 +288,24 @@ export default function LiveDemo() {
       setTimeout(() => setRevenueFlash(false), 1500);
     }, 30000 + Math.random() * 30000);
 
+    // 4) Recompute time-aware metrics every 30s so the dashboard
+    //    "grows" through the day (revenue, leads, IC, gráfico horário).
+    const metricsInterval = setInterval(() => {
+      const next = getDemoMetrics();
+      setMetrics(next);
+      setPeriodData(getDemoPeriodData());
+      setHourlyData(getDemoHourlyData());
+      // Sobe baseline sem nunca recuar (sales simuladas continuam somando)
+      setRevenueToday((prev) => Math.max(prev, next.revenueToday));
+      setSalesToday((prev) => Math.max(prev, next.totalSalesApproved));
+      setActiveUsers(next.activeUsersOnline);
+    }, 30000);
+
     return () => {
       clearInterval(auditInterval);
       clearInterval(usersInterval);
       clearInterval(saleInterval);
+      clearInterval(metricsInterval);
     };
   }, []);
 
