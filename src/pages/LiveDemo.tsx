@@ -17,6 +17,8 @@ import {
 import {
   DEMO_METRICS, DEMO_PERIOD_DATA, getDemoHourlyData, getDemoFunnelSteps,
   getDemoTiktokFunnelSteps, getDemoCampaigns, getDemoCreatives,
+  getDemoMetrics, getDemoPeriodData,
+} from "@/lib/demoData";
   getDemoSalesFeed, getDemoAuditLogs, getDemoABData,
   createRealtimeSimulator, getDemoUpsellStats,
 } from "@/lib/demoData";
