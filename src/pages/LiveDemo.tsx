@@ -19,6 +19,7 @@ import {
   getDemoTiktokFunnelSteps, getDemoCampaigns, getDemoCreatives,
   getDemoSalesFeed, getDemoAuditLogs, getDemoABData,
   createRealtimeSimulator, getDemoUpsellStats,
+  getDemoMetrics, getDemoPeriodData,
 } from "@/lib/demoData";
 import type { Sale, AuditLog } from "@/lib/demoData";
 import { cn } from "@/lib/utils";
@@ -141,9 +142,12 @@ const DarkTooltip = ({ active, payload, label }: any) => {
 // ════════════════════════════════════════════════════════════════
 export default function LiveDemo() {
   // ── Mutable state for realtime simulation ──────────────────
-  const [activeUsers, setActiveUsers] = useState(DEMO_METRICS.activeUsersOnline);
-  const [revenueToday, setRevenueToday] = useState(DEMO_METRICS.revenueToday);
-  const [salesToday, setSalesToday] = useState(DEMO_METRICS.totalSalesApproved);
+  const [metrics, setMetrics] = useState(() => getDemoMetrics());
+  const [periodData, setPeriodData] = useState(() => getDemoPeriodData());
+  const [hourlyData, setHourlyData] = useState(() => getDemoHourlyData());
+  const [activeUsers, setActiveUsers] = useState(metrics.activeUsersOnline);
+  const [revenueToday, setRevenueToday] = useState(metrics.revenueToday);
+  const [salesToday, setSalesToday] = useState(metrics.totalSalesApproved);
   const [salesFeed, setSalesFeed] = useState<Sale[]>(() => getDemoSalesFeed());
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => getDemoAuditLogs());
   const [revenueFlash, setRevenueFlash] = useState(false);
@@ -284,15 +288,28 @@ export default function LiveDemo() {
       setTimeout(() => setRevenueFlash(false), 1500);
     }, 30000 + Math.random() * 30000);
 
+    // 4) Recompute time-aware metrics every 30s so the dashboard
+    //    "grows" through the day (revenue, leads, IC, gráfico horário).
+    const metricsInterval = setInterval(() => {
+      const next = getDemoMetrics();
+      setMetrics(next);
+      setPeriodData(getDemoPeriodData());
+      setHourlyData(getDemoHourlyData());
+      // Sobe baseline sem nunca recuar (sales simuladas continuam somando)
+      setRevenueToday((prev) => Math.max(prev, next.revenueToday));
+      setSalesToday((prev) => Math.max(prev, next.totalSalesApproved));
+      setActiveUsers(next.activeUsersOnline);
+    }, 30000);
+
     return () => {
       clearInterval(auditInterval);
       clearInterval(usersInterval);
       clearInterval(saleInterval);
+      clearInterval(metricsInterval);
     };
   }, []);
 
   // ── Static data (computed once) ────────────────────────────
-  const hourlyData = getDemoHourlyData();
   const funnelSteps = getDemoFunnelSteps();
   const tiktokFunnel = getDemoTiktokFunnelSteps();
   const campaigns = getDemoCampaigns();
@@ -300,8 +317,8 @@ export default function LiveDemo() {
   const abData = getDemoABData();
   const upsellStats = getDemoUpsellStats();
 
-  const { current: curr, previous: prev } = DEMO_PERIOD_DATA;
-  const m = DEMO_METRICS;
+  const { current: curr, previous: prev } = periodData;
+  const m = metrics;
 
   const revChange = pctChange(curr.revenue, prev.revenue);
   const salesChange = pctChange(curr.sales, prev.sales);
