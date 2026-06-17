@@ -296,7 +296,6 @@ export default function LiveDemo() {
   }, []);
 
   // ── Static data (computed once) ────────────────────────────
-  const hourlyData = getDemoHourlyData();
   const funnelSteps = getDemoFunnelSteps();
   const tiktokFunnel = getDemoTiktokFunnelSteps();
   const campaigns = getDemoCampaigns();
@@ -304,8 +303,8 @@ export default function LiveDemo() {
   const abData = getDemoABData();
   const upsellStats = getDemoUpsellStats();
 
-  const { current: curr, previous: prev } = DEMO_PERIOD_DATA;
-  const m = DEMO_METRICS;
+  const { current: curr, previous: prev } = periodData;
+  const m = metrics;
 
   const revChange = pctChange(curr.revenue, prev.revenue);
   const salesChange = pctChange(curr.sales, prev.sales);
