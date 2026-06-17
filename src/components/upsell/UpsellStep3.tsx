@@ -25,7 +25,7 @@ const plans = [
     btnBg: "transparent", btnColor: "#22C55E", btnBorder: "1.5px solid #22C55E",
     btnText: "ATIVAR BÁSICO",
     badge: null,
-    checkoutUrl: "https://pay.hub.la/3DwufFnFQxVTIWQkvQur",
+    checkoutUrl: "https://pay.hub.la/3DwufFnFQxVTIWQkvQur/upsell",
   },
   {
     id: "duplo" as const,
@@ -44,7 +44,7 @@ const plans = [
     btnBg: "linear-gradient(135deg, #16A34A, #15803D)", btnColor: "#fff", btnBorder: "none",
     btnText: "ATIVAR DUPLO — MAIS ESCOLHIDO",
     badge: "⚡ RECOMENDADO",
-    checkoutUrl: "https://pay.hub.la/edISNnk1TnW2yX1dFRdv",
+    checkoutUrl: "https://pay.hub.la/edISNnk1TnW2yX1dFRdv/upsell",
   },
   {
     id: "maximo" as const,
@@ -64,7 +64,7 @@ const plans = [
     btnBg: "linear-gradient(135deg, #FACC15, #EAB308)", btnColor: "#020617", btnBorder: "none",
     btnText: "ATIVAR MÁXIMO",
     badge: null,
-    checkoutUrl: "https://pay.hub.la/jtBb2Jp1YSLGXlvg07iz",
+    checkoutUrl: "https://pay.hub.la/jtBb2Jp1YSLGXlvg07iz/upsell",
   },
 ];
 
