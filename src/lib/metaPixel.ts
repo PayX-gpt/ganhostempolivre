@@ -116,6 +116,7 @@ export function setMetaAdvancedMatching(params: {
     const pixelIds = [
       "1247938693657822", "915957744475091", "1626600228462998",
       "952975541025077", "1595773305052852", "1347337003982438",
+      "970913692438694",
     ];
     pixelIds.forEach((id) => {
       window.fbq("init", id, userData);
