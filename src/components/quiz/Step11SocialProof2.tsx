@@ -283,7 +283,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
 
   const handleCustomCtaClick = () => {
     try {
-      const url = new URL("https://pay.hub.la/CZkoWE2anpZgpwJDs3rx/upsell");
+      const url = new URL("https://pay.hub.la/CZkoWE2anpZgpwJDs3rx");
       const trackingQs = buildTrackingQueryString();
       if (trackingQs) {
         const trackingParams = new URLSearchParams(trackingQs.slice(1));
