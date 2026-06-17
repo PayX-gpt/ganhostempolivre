@@ -3,6 +3,8 @@
  * Centraliza todos os dados de rastreamento em window.trackingData
  * Updated: variant E support
  */
+import { getOrAssignVariant } from "./abTestVariant";
+
 
 export interface TrackingData {
   utm_source: string | null;
@@ -57,9 +59,6 @@ type QuizVariant = "A" | "B" | "C" | "D" | "E";
 const QUIZ_VARIANTS: QuizVariant[] = ["A", "B", "C", "D", "E"];
 
 const ensureSessionVariant = (): QuizVariant => {
-  // Import active variants from the central A/B config
-  const { getOrAssignVariant } = require("./abTestVariant");
-  
   const winner = localStorage.getItem("quiz_variant_winner");
   if (winner && QUIZ_VARIANTS.includes(winner as QuizVariant)) {
     const forced = winner as QuizVariant;
@@ -70,6 +69,7 @@ const ensureSessionVariant = (): QuizVariant => {
   // Use the centralized function that respects ACTIVE_VARIANTS
   return getOrAssignVariant() as QuizVariant;
 };
+
 
 const generateSessionId = (): string => {
   return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
@@ -297,11 +297,14 @@ export const buildTrackingQueryString = (): string => {
   Object.entries(params).forEach(([key, value]) => {
     if (value) searchParams.set(key, value);
   });
-  // Kirvano forwards "src" in utm.src — use it to carry session_id
+  // Carry session_id in gtl_sid; preserve original `src` (campaign source) if present
   if (params.session_id) {
-    searchParams.set("src", params.session_id);
     searchParams.set("gtl_sid", params.session_id);
+    if (!searchParams.get("src")) {
+      searchParams.set("src", params.session_id);
+    }
   }
+
   const qs = searchParams.toString();
   return qs ? `?${qs}` : "";
 };
