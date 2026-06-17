@@ -142,9 +142,12 @@ const DarkTooltip = ({ active, payload, label }: any) => {
 // ════════════════════════════════════════════════════════════════
 export default function LiveDemo() {
   // ── Mutable state for realtime simulation ──────────────────
-  const [activeUsers, setActiveUsers] = useState(DEMO_METRICS.activeUsersOnline);
-  const [revenueToday, setRevenueToday] = useState(DEMO_METRICS.revenueToday);
-  const [salesToday, setSalesToday] = useState(DEMO_METRICS.totalSalesApproved);
+  const [metrics, setMetrics] = useState(() => getDemoMetrics());
+  const [periodData, setPeriodData] = useState(() => getDemoPeriodData());
+  const [hourlyData, setHourlyData] = useState(() => getDemoHourlyData());
+  const [activeUsers, setActiveUsers] = useState(metrics.activeUsersOnline);
+  const [revenueToday, setRevenueToday] = useState(metrics.revenueToday);
+  const [salesToday, setSalesToday] = useState(metrics.totalSalesApproved);
   const [salesFeed, setSalesFeed] = useState<Sale[]>(() => getDemoSalesFeed());
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => getDemoAuditLogs());
   const [revenueFlash, setRevenueFlash] = useState(false);
