@@ -37,7 +37,7 @@ const plans = [
     btnBorder: "1.5px solid #94A3B8",
     btnText: "ATIVAR MULTIPLICAÇÃO 5X",
     badge: null,
-    checkoutUrl: "https://pay.hub.la/29ZZKVwoLFdjOBMfTU5m",
+    checkoutUrl: "https://pay.hub.la/29ZZKVwoLFdjOBMfTU5m/upsell",
   },
   {
     id: "ouro",
@@ -58,7 +58,7 @@ const plans = [
     btnBorder: "none",
     btnText: "ATIVAR MULTIPLICAÇÃO 10X",
     badge: "MAIS ESCOLHIDO",
-    checkoutUrl: "https://pay.hub.la/ZYxQAEQCbxi4EtRF1eyT",
+    checkoutUrl: "https://pay.hub.la/ZYxQAEQCbxi4EtRF1eyT/upsell",
   },
   {
     id: "diamante",
@@ -79,7 +79,7 @@ const plans = [
     btnBorder: "none",
     btnText: "ATIVAR MULTIPLICAÇÃO ILIMITADA",
     badge: null,
-    checkoutUrl: "https://pay.hub.la/Cdv7kyEGq33tYpSKqQ07",
+    checkoutUrl: "https://pay.hub.la/Cdv7kyEGq33tYpSKqQ07/upsell",
   },
 ];
 

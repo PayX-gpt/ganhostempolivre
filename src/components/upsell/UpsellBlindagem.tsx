@@ -32,7 +32,7 @@ const plans = [
     missing: ["Atualizações futuras", "Suporte prioritário", "Recursos antecipados"],
     warning: "Expira de novo após 18 meses",
     color: "#64748B",
-    checkoutUrl: "https://pay.hub.la/1T9zui48JRCr0Ge9GNdi",
+    checkoutUrl: "https://pay.hub.la/1T9zui48JRCr0Ge9GNdi/upsell",
   },
   {
     id: "vitalicio" as const,
@@ -45,7 +45,7 @@ const plans = [
     missing: ["Suporte prioritário", "Recursos antecipados"],
     warning: null,
     color: "#22C55E",
-    checkoutUrl: "https://pay.hub.la/qHq3HlOA1K2RNfZFvOMI",
+    checkoutUrl: "https://pay.hub.la/qHq3HlOA1K2RNfZFvOMI/upsell",
   },
   {
     id: "vip" as const,
@@ -58,7 +58,7 @@ const plans = [
     missing: [],
     warning: null,
     color: "#FACC15",
-    checkoutUrl: "https://pay.hub.la/OxD5DOYvWQLNLM42biVJ",
+    checkoutUrl: "https://pay.hub.la/OxD5DOYvWQLNLM42biVJ/upsell",
   },
 ];
 
