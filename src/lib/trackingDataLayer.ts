@@ -3,6 +3,8 @@
  * Centraliza todos os dados de rastreamento em window.trackingData
  * Updated: variant E support
  */
+import { getOrAssignVariant } from "./abTestVariant";
+
 
 export interface TrackingData {
   utm_source: string | null;
