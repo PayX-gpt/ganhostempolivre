@@ -38,7 +38,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
 
   // Kirvano variables handled by KirvanoOneClick component
 
-  const CHECKOUT_URL = "https://pay.hub.la/ohmiVtFTnX4tPAamywRl/upsell";
+  const CHECKOUT_URL = "https://pay.kirvano.com/67e759ec-598c-43c6-890e-b993901712b7";
 
   const handleBuy = () => {
     setLoading(true);
