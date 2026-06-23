@@ -189,6 +189,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const [showCustomCta, setShowCustomCta] = useState(false);
   const ctaShownLoggedRef = useRef(false);
   const maxVideoSecondsRef = useRef(0);
+  const pageStartedAtRef = useRef(Date.now());
   const offerAmount = getCurrentOfferAmount();
 
   // Logs which path revealed the CTA + saves to /live dashboard
@@ -236,12 +237,27 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     return () => window.clearInterval(interval);
   }, []);
 
-  // Fallback: garante que o CTA apareça após 8:20 mesmo se a API do Panda falhar
+  // Fallback forte: garante que o CTA apareça após 8:20 mesmo se a API do Panda falhar
+  // e mesmo quando o navegador atrasa/pausa setTimeout em aba, iframe ou preview.
   useEffect(() => {
-    const fallback = window.setTimeout(() => {
-      revealCustomCta("page_timer", CUSTOM_CTA_UNLOCK_SECONDS);
-    }, CUSTOM_CTA_UNLOCK_SECONDS * 1000);
-    return () => window.clearTimeout(fallback);
+    const revealIfElapsed = () => {
+      const elapsedSeconds = Math.floor((Date.now() - pageStartedAtRef.current) / 1000);
+      if (elapsedSeconds >= CUSTOM_CTA_UNLOCK_SECONDS) {
+        revealCustomCta("page_timer", Math.max(CUSTOM_CTA_UNLOCK_SECONDS, maxVideoSecondsRef.current));
+      }
+    };
+
+    const fallback = window.setTimeout(revealIfElapsed, CUSTOM_CTA_UNLOCK_SECONDS * 1000);
+    const watchdog = window.setInterval(revealIfElapsed, 5_000);
+    window.addEventListener("focus", revealIfElapsed);
+    document.addEventListener("visibilitychange", revealIfElapsed);
+
+    return () => {
+      window.clearTimeout(fallback);
+      window.clearInterval(watchdog);
+      window.removeEventListener("focus", revealIfElapsed);
+      document.removeEventListener("visibilitychange", revealIfElapsed);
+    };
   }, [revealCustomCta]);
 
   // Social proof toasts — Brazilian/local names buying during VSL
@@ -496,19 +512,36 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       {/* Panda external button container */}
       <div id={pandaButtonId} ref={pandaBtnRef} className="hidden" aria-hidden="true" />
 
-      {/* Custom CTA — appears after 8:45 (525s) of real Panda video time */}
+      {/* Custom CTA — appears after 8:20 (500s) of video/page time */}
       {showCustomCta && (
-        <button
-          ref={customCtaRef}
-          onClick={handleCustomCtaClick}
-          className="w-full py-4 px-6 rounded-xl font-extrabold text-[15px] sm:text-xl text-black uppercase tracking-wide animate-fade-in transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
-          style={{
-            background: "linear-gradient(135deg, #FFD600 0%, #FFB300 100%)",
-            boxShadow: "0 4px 20px rgba(255, 214, 0, 0.4)",
-          }}
-        >
-          {customCtaText}
-        </button>
+        <>
+          <button
+            ref={customCtaRef}
+            onClick={handleCustomCtaClick}
+            className="w-full py-4 px-6 rounded-xl font-extrabold text-[15px] sm:text-xl text-black uppercase tracking-wide animate-fade-in transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+            style={{
+              background: "linear-gradient(135deg, #FFD600 0%, #FFB300 100%)",
+              boxShadow: "0 4px 20px rgba(255, 214, 0, 0.4)",
+            }}
+          >
+            {customCtaText}
+          </button>
+
+          <div className="fixed inset-x-0 bottom-0 z-[9999] px-3 pt-3 pb-[calc(env(safe-area-inset-bottom)+12px)] bg-background/95 border-t border-accent/30 backdrop-blur-md animate-fade-in">
+            <div className="mx-auto max-w-lg">
+              <button
+                onClick={handleCustomCtaClick}
+                className="w-full py-4 px-5 rounded-xl font-extrabold text-[14px] sm:text-lg text-black uppercase tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  background: "linear-gradient(135deg, #FFD600 0%, #FFB300 100%)",
+                  boxShadow: "0 6px 24px rgba(255, 214, 0, 0.45)",
+                }}
+              >
+                {customCtaText}
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       <div className="w-full space-y-1.5">
