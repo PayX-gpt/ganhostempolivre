@@ -1194,7 +1194,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   useEffect(() => {
     const cleanup = initBehaviorTracker(
       answers ? { age: answers.age, incomeGoal: answers.incomeGoal, obstacle: answers.obstacle, device: answers.device, financialDream: answers.financialDream, contactMethod: answers.contactMethod, accountBalance: answers.accountBalance, triedOnline: answers.triedOnline, availability: answers.availability } : {},
-      getPricing(answers?.accountBalance),
+      getPricing(),
       answers?.accountBalance
     );
     return cleanup;
@@ -1210,7 +1210,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
         financialDream: answers.financialDream, contactMethod: answers.contactMethod,
         accountBalance: answers.accountBalance,
       } : {},
-      dynamic_price: getPricing(answers?.accountBalance).price,
+      dynamic_price: getPricing().price,
     });
     const timer = setTimeout(() => {
       setShowCTA(true);
@@ -1247,7 +1247,7 @@ const Step13Offer = ({ userName, answers }: Step13Props) => {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const firstName = userName?.split(" ")[0] || "";
-  const pricing = getPricing(answers?.accountBalance);
+  const pricing = getPricing();
 
   const bonuses = [
     { title: "Modo Auto-Lucro Inteligente", value: "R$997", description: "Ative e o sistema escolhe o melhor ativo, horário e valor por operação baseado no seu saldo. Você só clica em 'ativar'." },
