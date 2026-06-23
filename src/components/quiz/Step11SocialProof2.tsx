@@ -236,6 +236,14 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     return () => window.clearInterval(interval);
   }, []);
 
+  // Fallback: garante que o CTA apareça após 8:20 mesmo se a API do Panda falhar
+  useEffect(() => {
+    const fallback = window.setTimeout(() => {
+      revealCustomCta("page_timer", CUSTOM_CTA_UNLOCK_SECONDS);
+    }, CUSTOM_CTA_UNLOCK_SECONDS * 1000);
+    return () => window.clearTimeout(fallback);
+  }, [revealCustomCta]);
+
   // Social proof toasts — Brazilian/local names buying during VSL
   useEffect(() => {
     const buyers = lang === "es"
@@ -283,7 +291,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
 
   const handleCustomCtaClick = () => {
     try {
-      const url = new URL("https://pay.hub.la/CZkoWE2anpZgpwJDs3rx");
+      const url = new URL("https://pay.kirvano.com/a404a378-2a59-4efd-86a8-dc57363c054c");
       const trackingQs = buildTrackingQueryString();
       if (trackingQs) {
         const trackingParams = new URLSearchParams(trackingQs.slice(1));
