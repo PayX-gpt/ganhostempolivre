@@ -21,9 +21,27 @@ const Step1VariantE = ({ onNext }: Step1VariantEProps) => {
 
   usePandaPreload("f97837c4-d33c-4e5a-8ae3-27f0e36f2b6d");
 
+  // CTA appears 60s after page load — watchdog based on absolute time so it
+  // still fires if the tab was throttled/backgrounded or the player fails.
   useEffect(() => {
-    const timer = setTimeout(() => setShowCta(true), 60000);
-    return () => clearTimeout(timer);
+    const startedAt = Date.now();
+    const reveal = () => setShowCta(true);
+    const timer = setTimeout(reveal, 60000);
+    const watchdog = setInterval(() => {
+      if (Date.now() - startedAt >= 60000) {
+        reveal();
+        clearInterval(watchdog);
+      }
+    }, 1000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && Date.now() - startedAt >= 60000) reveal();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(watchdog);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 
   // Send parent context to Panda iframe
