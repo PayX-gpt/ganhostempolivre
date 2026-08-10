@@ -42,7 +42,7 @@ const FUNNEL_STEPS = [
   { route: "/step-14", label: "Input" },
   { route: "/step-15", label: "Análise" },
   { route: "/step-16", label: "Projeção" },
-  { route: "/step-17", label: "Oferta (Vturb)" },
+  { route: "/step-17", label: "Oferta (VSL)" },
   { route: "/upsell1", label: "UP1 Acel." },
   { route: "/upsell2", label: "UP2 Multi." },
   { route: "/upsell3", label: "UP3 Blind." },
