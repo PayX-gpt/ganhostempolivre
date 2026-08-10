@@ -267,20 +267,23 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
       const stepId = toStepId(row.page_id);
       if (!stepId || counts[stepId] === undefined) return;
 
-      const existing = mergedUsers.get(row.session_id);
-      if (existing && existing.timestamp >= timestamp) return;
+      // Realtime presence is always authoritative: the audit log only fills in
+      // sessions that are NOT currently connected via websocket (avoids showing
+      // a lead on an old step for up to 25s after he already advanced).
+      if (mergedUsers.has(row.session_id)) return;
 
       const stepLabel = ALL_STEPS.find(s => s.id === stepId)?.label || row.page_id;
       mergedUsers.set(row.session_id, {
         session_id: row.session_id,
-        name: existing?.name && existing.name !== "Visitante" ? existing.name : "Visitante",
+        name: "Visitante",
         page: stepLabel,
-        traffic_source: existing?.traffic_source || inferTrafficSourceFromMetadata(row.metadata),
+        traffic_source: inferTrafficSourceFromMetadata(row.metadata),
         joined_at: row.created_at,
         stepId,
         timestamp,
       });
     });
+
 
     mergedUsers.forEach((user) => {
       if (counts[user.stepId] !== undefined) {

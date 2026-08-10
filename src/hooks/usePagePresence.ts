@@ -189,7 +189,7 @@ export const usePagePresence = (pageId: string): void => {
     // Heartbeat keeps realtime presence alive on longer steps and recovers after brief socket hiccups
     const heartbeat = setInterval(() => {
       trackPresence(pageId);
-    }, 15000);
+    }, 8000);
 
     // Safari/iOS pauses WebSockets in background tabs — when user returns, force re-track.
     // Hiding the tab (switching apps, checking the /live panel on the same phone) does NOT
