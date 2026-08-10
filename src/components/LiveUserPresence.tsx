@@ -315,7 +315,11 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
     // Only count logs originating from the funnel app itself.
     // External LPs (e.g. payx-gpt.github.io) also insert audit logs and would
     // otherwise falsely show as "online users inside the funnel".
-    const ALLOWED_HOSTS = ["ganhostempolivre.lovable.app", "payx-gpt.github.io"];
+    const ALLOWED_HOSTS = [
+      "ganhostempolivre.lovable.app",
+      "tempolivreganhos.lovable.app",
+      "payx-gpt.github.io",
+    ];
     const isAllowedUrl = (rawUrl: unknown): boolean => {
       if (typeof rawUrl !== "string" || !rawUrl) return false;
       try {

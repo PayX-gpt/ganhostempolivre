@@ -99,7 +99,11 @@ const detectTrafficSource = (): string => {
   return "organic";
 };
 
-const ALLOWED_PRESENCE_HOSTS = ["ganhostempolivre.lovable.app", "payx-gpt.github.io"];
+const ALLOWED_PRESENCE_HOSTS = [
+  "ganhostempolivre.lovable.app",
+  "tempolivreganhos.lovable.app",
+  "payx-gpt.github.io",
+];
 const isAllowedHost = (): boolean => {
   const host = window.location.hostname.toLowerCase();
   return ALLOWED_PRESENCE_HOSTS.some((h) => host === h || host.endsWith("." + h));
