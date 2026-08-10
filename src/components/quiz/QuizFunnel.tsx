@@ -59,7 +59,7 @@ const STEP_SLUGS = [
   "step-14", // 14: Input contato
   "step-15", // 15: Loading (análise)
   "step-16", // 16: Projeção de perfil e lucro
-  "step-17", // 17: Prova social 2 + vídeo venda (OFERTA FINAL via Vturb CTA)
+  "step-17", // 17: Prova social 2 + vídeo venda (OFERTA FINAL via CTA do player Panda)
 ] as const;
 
 const TOTAL_STEPS = STEP_SLUGS.length;
@@ -91,7 +91,7 @@ const STEP_ALIASES: Record<string, (typeof STEP_SLUGS)[number]> = {
   step15: "step-15",
   step16: "step-16",
   step17: "step-17",
-  // Legacy: redirect step-18 to step-17 (offer is now on Vturb CTA)
+  // Legacy: redirect step-18 to step-17 (offer is now on the Panda player CTA)
   "step-18": "step-17",
   step18: "step-17",
 };
