@@ -227,8 +227,10 @@ export const usePagePresence = (pageId: string): void => {
     window.addEventListener("pagehide", handlePageHide);
 
     return () => {
+      clearHiddenTimer();
       clearInterval(interval);
       clearInterval(heartbeat);
+
       window.removeEventListener("quiz_name_updated", handleNameEvent);
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("focus", handleFocus);
