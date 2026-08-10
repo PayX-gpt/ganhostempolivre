@@ -43,8 +43,9 @@ const resetSharedChannel = () => {
 const buildPresencePayload = (sessionId: string, pageId: string) => ({
   session_id: sessionId,
   page_id: pageId,
-  lead_name: getLeadName(),
-  traffic_source: detectTrafficSource(),
+  lead_name: isDevSession() ? `[TESTE] ${getLeadName()}` : getLeadName(),
+  traffic_source: isDevSession() ? "preview" : detectTrafficSource(),
+  is_preview: isDevSession(),
   joined_at: new Date().toISOString(),
 });
 
@@ -114,9 +115,9 @@ const trackPresence = (pageId: string) => {
   if (currentPath.includes('/live') || currentPath.includes('/admin')) {
     return;
   }
-  if (isDevSession()) return;
-  // Only the production funnel URLs may publish presence.
-  if (!isAllowedHost()) return;
+  // Realtime presence is published from production funnel URLs AND from
+  // preview/dev sessions (flagged as [TESTE]) so the operator can see himself live.
+  if (!isAllowedHost() && !isDevSession()) return;
 
   const sessionId = getOrCreateSessionId();
   const channel = getOrCreateChannel(sessionId);
@@ -133,11 +134,10 @@ export const usePagePresence = (pageId: string): void => {
   const lastNameRef = useRef<string>("Visitante");
 
   useEffect(() => {
-    if (!pageId || isDevSession()) return;
+    if (!pageId) return;
     const currentPath = window.location.pathname.toLowerCase();
     if (currentPath.includes('/live') || currentPath.includes('/admin')) return;
-    // Block preview/admin hosts, but keep the GitHub URL used in ads.
-    if (!isAllowedHost()) return;
+    if (!isAllowedHost() && !isDevSession()) return;
 
     const sessionId = getOrCreateSessionId();
     const isNewPage = lastPageRef.current !== pageId;
@@ -148,8 +148,8 @@ export const usePagePresence = (pageId: string): void => {
       trackPresence(pageId);
     }
 
-    // Audit log (fire and forget) — only on page change
-    if (isNewPage) {
+    // Audit log (fire and forget) — production only, never from preview/dev
+    if (isNewPage && !isDevSession() && isAllowedHost()) {
       const trackingData = getTrackingData();
       supabase.from("funnel_audit_logs").insert([{
         session_id: sessionId,
