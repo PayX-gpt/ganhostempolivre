@@ -192,32 +192,45 @@ export const usePagePresence = (pageId: string): void => {
     }, 15000);
 
     // Safari/iOS pauses WebSockets in background tabs — when user returns, force re-track.
-    // When user hides the tab/switches app, untrack IMMEDIATELY so /live reflects "saiu" in real time.
+    // Hiding the tab (switching apps, checking the /live panel on the same phone) does NOT
+    // remove presence immediately: we wait a grace period so the user keeps showing as online.
+    let hiddenTimer: ReturnType<typeof setTimeout> | null = null;
+    const clearHiddenTimer = () => {
+      if (hiddenTimer) { clearTimeout(hiddenTimer); hiddenTimer = null; }
+    };
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
+        clearHiddenTimer();
         if (subscribedStatus !== "subscribed") resetSharedChannel();
         trackPresence(pageId);
       } else {
-        // hidden → leave presence right away
-        if (sharedChannel) {
-          try { void sharedChannel.untrack(); } catch {}
-        }
+        clearHiddenTimer();
+        hiddenTimer = setTimeout(() => {
+          if (document.visibilityState === "hidden" && sharedChannel) {
+            try { void sharedChannel.untrack(); } catch {}
+          }
+        }, 90000);
       }
     };
-    const handleFocus = () => trackPresence(pageId);
-    const handlePageHide = () => {
+    const handleFocus = () => { clearHiddenTimer(); trackPresence(pageId); };
+    const handlePageHide = (e: PageTransitionEvent) => {
+      // Only leave when the page is really going away (not bfcache/tab switch)
+      if (e.persisted) return;
       if (sharedChannel) {
         try { void sharedChannel.untrack(); } catch {}
       }
     };
+
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("focus", handleFocus);
     window.addEventListener("pageshow", handleFocus);
     window.addEventListener("pagehide", handlePageHide);
 
     return () => {
+      clearHiddenTimer();
       clearInterval(interval);
       clearInterval(heartbeat);
+
       window.removeEventListener("quiz_name_updated", handleNameEvent);
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("focus", handleFocus);
