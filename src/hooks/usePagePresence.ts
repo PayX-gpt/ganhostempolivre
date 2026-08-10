@@ -43,8 +43,9 @@ const resetSharedChannel = () => {
 const buildPresencePayload = (sessionId: string, pageId: string) => ({
   session_id: sessionId,
   page_id: pageId,
-  lead_name: getLeadName(),
-  traffic_source: detectTrafficSource(),
+  lead_name: isDevSession() ? `[TESTE] ${getLeadName()}` : getLeadName(),
+  traffic_source: isDevSession() ? "preview" : detectTrafficSource(),
+  is_preview: isDevSession(),
   joined_at: new Date().toISOString(),
 });
 
