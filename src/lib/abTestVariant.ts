@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getTrackingData } from "./trackingDataLayer";
+import { getABConfig, saveABConfig } from "./abConfigServer";
 
 export type QuizVariant = "A" | "B" | "C" | "D" | "E";
 
@@ -7,23 +8,28 @@ const VARIANT_KEY = "quiz_variant";
 const ALL_VARIANTS: QuizVariant[] = ["A", "B", "C", "D", "E"];
 
 /**
- * Active variants for the current test.
- * Change this array to control traffic split (equal weight).
+ * Variantes ativas do teste — agora vêm do config SERVER-SIDE (painel /live),
+ * valendo para TODOS os visitantes. Fallback para ["A","E"] se vier vazio.
  */
-const ACTIVE_VARIANTS: QuizVariant[] = ["A", "E"];
+function getActiveVariants(): QuizVariant[] {
+  const fromCfg = (getABConfig().variant_active_variants || [])
+    .filter((v): v is QuizVariant => (ALL_VARIANTS as string[]).includes(v));
+  return fromCfg.length > 0 ? fromCfg : ["A", "E"];
+}
 
 /**
  * Get or assign a variant for the current visitor.
  * Persists in localStorage so returning visitors see the same variant.
  */
 export function getOrAssignVariant(): QuizVariant {
+  const active = getActiveVariants();
   const stored = localStorage.getItem(VARIANT_KEY);
   // If stored variant is still active, keep it
-  if (stored && ACTIVE_VARIANTS.includes(stored as QuizVariant)) {
+  if (stored && active.includes(stored as QuizVariant)) {
     return stored as QuizVariant;
   }
-  // Re-assign to an active variant (handles old B/D users too)
-  const variant = ACTIVE_VARIANTS[Math.floor(Math.random() * ACTIVE_VARIANTS.length)];
+  // Re-assign to an active variant (handles old/removed variant users too)
+  const variant = active[Math.floor(Math.random() * active.length)];
   localStorage.setItem(VARIANT_KEY, variant);
   return variant;
 }
@@ -47,18 +53,19 @@ export async function saveVariantToAttribution(variant: QuizVariant): Promise<vo
 }
 
 /**
- * Force 100% traffic to a specific variant (when a winner is declared).
+ * Declara vencedor SERVER-SIDE: 100% do tráfego (todos os visitantes) passa a
+ * ver essa variante. Retorna se salvou. Passe null para limpar o vencedor.
  */
-export function declareWinner(variant: QuizVariant): void {
-  localStorage.setItem("quiz_variant_winner", variant);
+export async function declareWinner(variant: QuizVariant | null): Promise<boolean> {
+  return saveABConfig({ variant_winner: variant });
 }
 
 /**
- * Check if a winner has been declared. If so, override the assignment.
+ * Variante efetiva: se há vencedor declarado (server) usa ele; senão atribui.
  */
 export function getEffectiveVariant(): QuizVariant {
-  const winner = localStorage.getItem("quiz_variant_winner");
-  if (winner && ACTIVE_VARIANTS.includes(winner as QuizVariant)) {
+  const winner = getABConfig().variant_winner;
+  if (winner && (ALL_VARIANTS as string[]).includes(winner)) {
     return winner as QuizVariant;
   }
   return getOrAssignVariant();

@@ -5,69 +5,64 @@
  * Traffic split is configurable via localStorage.
  */
 
+import { getABConfig, saveABConfig } from "./abConfigServer";
+
 export type QuizVersion = "V1" | "V2";
 
 const VERSION_KEY = "quiz_version";
-const SPLIT_KEY = "quiz_version_split"; // 0-100, percentage going to V2
-const TEST_ACTIVE_KEY = "quiz_version_test_active"; // "true" or "false"
-const WINNER_KEY = "quiz_version_winner"; // "V1" or "V2" when declared
 
 /**
- * Get the current V2 traffic percentage (0-100). Default: 50.
+ * % de tráfego para V2 (0-100) — agora vem do config SERVER-SIDE (painel /live),
+ * valendo para TODOS os visitantes.
  */
 export function getV2Split(): number {
-  const stored = localStorage.getItem(SPLIT_KEY);
-  if (stored !== null) {
-    const val = parseInt(stored, 10);
-    if (!isNaN(val) && val >= 0 && val <= 100) return val;
-  }
+  const val = getABConfig().version_v2_split;
+  if (typeof val === "number" && val >= 0 && val <= 100) return val;
   return 50;
 }
 
 /**
- * Set the V2 traffic percentage (0-100).
+ * Define o % de V2 (0-100) no servidor — vale para todos. Retorna sucesso.
  */
-export function setV2Split(pct: number): void {
-  localStorage.setItem(SPLIT_KEY, String(Math.max(0, Math.min(100, Math.round(pct)))));
+export function setV2Split(pct: number): Promise<boolean> {
+  return saveABConfig({ version_v2_split: Math.max(0, Math.min(100, Math.round(pct))) });
 }
 
 /**
- * Check if the test is active.
+ * Teste ativo? (server-side). Vencedor declarado encerra o teste.
  */
 export function isTestActive(): boolean {
-  const winner = localStorage.getItem(WINNER_KEY);
-  if (winner === "V1" || winner === "V2") return false; // winner declared, test over
-  const stored = localStorage.getItem(TEST_ACTIVE_KEY);
-  if (stored === "false") return false;
-  return true; // default active
+  const cfg = getABConfig();
+  if (cfg.version_winner === "V1" || cfg.version_winner === "V2") return false;
+  return cfg.version_test_active !== false;
 }
 
 /**
- * Activate or deactivate the test.
+ * Liga/desliga o teste no servidor — vale para todos. Retorna sucesso.
  */
-export function setTestActive(active: boolean): void {
-  localStorage.setItem(TEST_ACTIVE_KEY, active ? "true" : "false");
+export function setTestActive(active: boolean): Promise<boolean> {
+  return saveABConfig({ version_test_active: active });
 }
 
 /**
- * Declare a winner version. All traffic goes to winner.
+ * Declara vencedor no servidor: todo o tráfego passa a ver essa versão.
  */
-export function declareVersionWinner(version: QuizVersion): void {
-  localStorage.setItem(WINNER_KEY, version);
+export function declareVersionWinner(version: QuizVersion): Promise<boolean> {
+  return saveABConfig({ version_winner: version });
 }
 
 /**
- * Clear winner declaration to re-enable testing.
+ * Limpa o vencedor no servidor, reativando o teste.
  */
-export function clearVersionWinner(): void {
-  localStorage.removeItem(WINNER_KEY);
+export function clearVersionWinner(): Promise<boolean> {
+  return saveABConfig({ version_winner: null });
 }
 
 /**
- * Get the declared winner, if any.
+ * Vencedor declarado (server), se houver.
  */
 export function getDeclaredWinner(): QuizVersion | null {
-  const w = localStorage.getItem(WINNER_KEY);
+  const w = getABConfig().version_winner;
   if (w === "V1" || w === "V2") return w;
   return null;
 }

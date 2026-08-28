@@ -16,6 +16,7 @@ import {
   getV2Split, setV2Split, isTestActive, setTestActive,
   getDeclaredWinner, declareVersionWinner, clearVersionWinner
 } from "@/lib/quizVersionAB";
+import { loadABConfig } from "@/lib/abConfigServer";
 
 interface VersionData {
   version: string;
@@ -229,31 +230,60 @@ export default function LiveQuizVersionAB() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const handleToggleActive = () => {
+  // Sincroniza os controles com o config SERVER-SIDE ao abrir o painel.
+  useEffect(() => {
+    void loadABConfig().then(() => {
+      setActiveState(isTestActive());
+      setSplit(getV2Split());
+      setWinner(getDeclaredWinner());
+    });
+  }, []);
+
+  const handleToggleActive = async () => {
     const newActive = !active;
-    setTestActive(newActive);
-    setActiveState(newActive);
-    toast.success(newActive ? "Teste V1/V2 ativado!" : "Teste V1/V2 desativado — todo tráfego vai para V1.");
+    setActiveState(newActive); // otimista
+    const ok = await setTestActive(newActive);
+    if (ok) {
+      toast.success(newActive ? "Teste V1/V2 ativado (todos os visitantes)!" : "Teste V1/V2 desativado — todo tráfego vai para V1.");
+    } else {
+      setActiveState(!newActive);
+      toast.error("Não consegui salvar no servidor. Tente de novo.");
+    }
   };
 
-  const handleSplitChange = (val: number[]) => {
-    setSplit(val[0]);
-    setV2Split(val[0]);
+  const handleSplitChange = async (val: number[]) => {
+    const prev = split;
+    setSplit(val[0]); // otimista
+    const ok = await setV2Split(val[0]);
+    if (ok) {
+      toast.success(`Split salvo: ${val[0]}% para V2 (vale para todos os visitantes).`);
+    } else {
+      setSplit(prev);
+      toast.error("Não consegui salvar o split no servidor.");
+    }
   };
 
-  const handleDeclareWinner = (version: "V1" | "V2") => {
-    declareVersionWinner(version);
-    setWinner(version);
-    setActiveState(false);
-    toast.success(`${version} declarado vencedor! 100% do tráfego vai para ${version}.`);
+  const handleDeclareWinner = async (version: "V1" | "V2") => {
+    const ok = await declareVersionWinner(version);
+    if (ok) {
+      setWinner(version);
+      setActiveState(false);
+      toast.success(`${version} declarado vencedor! 100% do tráfego vai para ${version}.`);
+    } else {
+      toast.error("Não consegui declarar o vencedor no servidor.");
+    }
   };
 
-  const handleClearWinner = () => {
-    clearVersionWinner();
-    setWinner(null);
-    setTestActive(true);
-    setActiveState(true);
-    toast.success("Vencedor removido. Teste reativado.");
+  const handleClearWinner = async () => {
+    const ok = await clearVersionWinner();
+    if (ok) {
+      setWinner(null);
+      await setTestActive(true);
+      setActiveState(true);
+      toast.success("Vencedor removido. Teste reativado (todos os visitantes).");
+    } else {
+      toast.error("Não consegui remover o vencedor no servidor.");
+    }
   };
 
   if (loading && !data) {

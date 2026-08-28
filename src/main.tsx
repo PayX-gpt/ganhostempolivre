@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { loadABConfig } from "./lib/abConfigServer";
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -32,8 +33,16 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-createRoot(document.getElementById("root")!).render(
-  <ErrorBoundary>
-    <App />
-  </ErrorBoundary>
-);
+function mount() {
+  createRoot(document.getElementById("root")!).render(
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+}
+
+// Carrega a config A/B (server-side) ANTES de renderizar o funil, para que
+// novos visitantes já caiam no split/vencedor definido no painel /live.
+// Corre contra um timeout curto para NUNCA bloquear a página (cai no cache).
+const abTimeout = new Promise<void>((resolve) => setTimeout(resolve, 800));
+Promise.race([loadABConfig().then(() => undefined), abTimeout]).finally(mount);

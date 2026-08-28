@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { saveABConfig } from "@/lib/abConfigServer";
 
 /* ── Types ── */
 interface VariantRaw {
@@ -419,9 +420,14 @@ export default function LiveABTest() {
   const second = ranked[1] || null;
   const confianca = data.length > 0 ? getConfianca(data) : null;
 
-  const declareWinner = (variant: string) => {
-    localStorage.setItem("quiz_variant_winner", variant);
-    toast.success(`Variação ${variant} declarada vencedora! 100% do tráfego será direcionado.`);
+  const declareWinner = async (variant: string) => {
+    // Server-side: vale para TODOS os visitantes (não só este navegador).
+    const ok = await saveABConfig({ variant_winner: variant });
+    if (ok) {
+      toast.success(`Variação ${variant} declarada vencedora! 100% do tráfego (todos os visitantes) será direcionado.`);
+    } else {
+      toast.error("Não consegui salvar o vencedor no servidor. Tente de novo.");
+    }
   };
 
   if (isLoading && data.length === 0) {
