@@ -484,6 +484,10 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
       applyPresenceSnapshot(channel);
     }, 10_000);
 
+    // Poda frequente: reavalia o mapa sticky para remover quem saiu assim que
+    // passa o período de graça (mesmo sem novos eventos chegando).
+    const stickyPruneInterval = setInterval(() => applyPresenceSnapshot(channel), 3_000);
+
     const purchaseChannel = supabase
       .channel("presence-purchase-feed")
       .on("postgres_changes", { event: "*", schema: "public", table: "purchase_tracking" },
@@ -522,6 +526,7 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
       clearInterval(purchaseInterval);
       clearInterval(campaignInterval);
       clearInterval(auditFallbackInterval);
+      clearInterval(stickyPruneInterval);
     };
   }, [applyPresenceSnapshot, fetchRecentPurchases, fetchSessionCampaigns, fetchRecentAuditPresence]);
 
