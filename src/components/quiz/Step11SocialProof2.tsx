@@ -189,6 +189,9 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   const [showCustomCta, setShowCustomCta] = useState(false);
   const ctaShownLoggedRef = useRef(false);
   const maxVideoSecondsRef = useRef(0);
+  // Momento (ms) em que o tempo do vídeo AVANÇOU pela última vez. Usado para
+  // saber se o player está realmente reportando/progredindo (qualquer device).
+  const lastProgressAtRef = useRef(0);
   const pageStartedAtRef = useRef(Date.now());
   const offerAmount = getCurrentOfferAmount();
 
@@ -222,7 +225,13 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
 
   const updateVideoProgress = useCallback((seconds: number | null, source: "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll") => {
     if (seconds === null) return;
-    maxVideoSecondsRef.current = Math.max(maxVideoSecondsRef.current, seconds);
+    // Só marca "progresso" quando o tempo do vídeo REALMENTE avança (não quando
+    // fica parado em 0 por autoplay bloqueado ou pausa). Isso diferencia
+    // "player vivo e rodando" de "player travado/sem suporte".
+    if (seconds > maxVideoSecondsRef.current) {
+      maxVideoSecondsRef.current = seconds;
+      lastProgressAtRef.current = Date.now();
+    }
     if (seconds >= CUSTOM_CTA_UNLOCK_SECONDS) {
       revealCustomCta(source, seconds);
     }
@@ -244,24 +253,48 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   // de tempo real de página — assim o botão surge no ponto certo, não no fim.
   useEffect(() => {
     const DEFAULT_PLAYBACK_RATE = 1.1;
+    // Tempo real equivalente a 8:20 DE VÍDEO em reprodução contínua a 1.1x.
     const unlockRealSeconds = Math.round(CUSTOM_CTA_UNLOCK_SECONDS / DEFAULT_PLAYBACK_RATE);
-    const revealIfElapsed = () => {
-      const elapsedSeconds = (Date.now() - pageStartedAtRef.current) / 1000;
-      if (elapsedSeconds >= unlockRealSeconds) {
+    // Se o player não reporta progresso há mais que isso, tratamos como travado.
+    const VIDEO_STALE_MS = 8_000;
+    // Rede de segurança absoluta: o botão JAMAIS fica escondido além disso.
+    const HARD_SAFETY_SECONDS = 20 * 60;
+
+    const check = () => {
+      const elapsed = (Date.now() - pageStartedAtRef.current) / 1000;
+      const progressing =
+        lastProgressAtRef.current > 0 &&
+        Date.now() - lastProgressAtRef.current < VIDEO_STALE_MS;
+
+      // Caminho EXATO: enquanto o player está vivo e progredindo, deixamos o
+      // próprio tempo do vídeo (updateVideoProgress) revelar aos 8:20 — não
+      // forçamos nada aqui, pra bater no minuto certo do vídeo em qualquer device.
+      //
+      // BACKSTOP: se o player não está reportando progresso (API bloqueada,
+      // sem suporte, autoplay travado em 0) e já passou o tempo-alvo, revela
+      // assim mesmo. "De maneira nenhuma pode deixar de aparecer."
+      if (
+        maxVideoSecondsRef.current < CUSTOM_CTA_UNLOCK_SECONDS &&
+        !progressing &&
+        elapsed >= unlockRealSeconds
+      ) {
         revealCustomCta("page_timer", Math.max(CUSTOM_CTA_UNLOCK_SECONDS, maxVideoSecondsRef.current));
+      }
+
+      // Segurança final absoluta (edge extremo — vídeo pausado eternamente etc.).
+      if (elapsed >= HARD_SAFETY_SECONDS) {
+        revealCustomCta("page_timer", CUSTOM_CTA_UNLOCK_SECONDS);
       }
     };
 
-    const fallback = window.setTimeout(revealIfElapsed, unlockRealSeconds * 1000);
-    const watchdog = window.setInterval(revealIfElapsed, 3_000);
-    window.addEventListener("focus", revealIfElapsed);
-    document.addEventListener("visibilitychange", revealIfElapsed);
+    const watchdog = window.setInterval(check, 2_000);
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", check);
 
     return () => {
-      window.clearTimeout(fallback);
       window.clearInterval(watchdog);
-      window.removeEventListener("focus", revealIfElapsed);
-      document.removeEventListener("visibilitychange", revealIfElapsed);
+      window.removeEventListener("focus", check);
+      document.removeEventListener("visibilitychange", check);
     };
   }, [revealCustomCta]);
 
