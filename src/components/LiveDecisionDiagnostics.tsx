@@ -126,6 +126,12 @@ export default function LiveDecisionDiagnostics() {
     .map(st => ({ step: st, label: PERSONA_LABELS[st] || st, rows: (data?.persona || []).filter(p => p.step === st).sort((a, b) => b.count - a.count) }))
     .filter(g => g.rows.length > 0);
 
+  // Funil por criativo/campanha — ordena por receita, depois vendas, depois alcance
+  const campaigns = (data?.campaigns || []).slice()
+    .filter(c => c.visitors >= 1)
+    .sort((a, b) => (b.revenue - a.revenue) || (b.sales - a.sales) || (b.reached - a.reached) || (b.visitors - a.visitors))
+    .slice(0, 12);
+
   // Auto verdict
   const verdicts: { icon: any; color: string; text: string }[] = [];
   if (leak.dropPct >= 40 && leak.from >= 2) {
@@ -327,6 +333,48 @@ export default function LiveDecisionDiagnostics() {
             })}
           </div>
           <div className="text-[9px] text-[#555] mt-2">Distribuição das respostas no período — use pra alinhar copy/oferta com a persona real (idade, dor, meta).</div>
+        </div>
+      )}
+
+      {/* Funil por criativo/campanha */}
+      {campaigns.length > 0 && (
+        <div className="rounded-xl bg-[#111] border border-[#2a2a2a] p-4">
+          <div className="flex items-center gap-2 mb-3"><Flag className="w-4 h-4 text-amber-400" /><h4 className="text-xs font-bold text-white">Funil por Criativo/Campanha — onde colocar verba</h4></div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[10px] min-w-[560px]">
+              <thead>
+                <tr className="text-[#777] text-left border-b border-[#2a2a2a]">
+                  <th className="py-1.5 pr-2 font-medium">Campanha / Origem</th>
+                  <th className="py-1.5 px-1.5 text-right font-medium">Visit.</th>
+                  <th className="py-1.5 px-1.5 text-right font-medium">Chegou oferta</th>
+                  <th className="py-1.5 px-1.5 text-right font-medium">Clicou</th>
+                  <th className="py-1.5 px-1.5 text-right font-medium">Vendas</th>
+                  <th className="py-1.5 pl-1.5 text-right font-medium">RPV</th>
+                </tr>
+              </thead>
+              <tbody>
+                {campaigns.map((c, i) => {
+                  const reachRate = pct(c.reached, c.visitors);
+                  const crpv = c.visitors > 0 ? c.revenue / c.visitors : 0;
+                  const isBest = i === 0 && (c.revenue > 0 || c.sales > 0);
+                  return (
+                    <tr key={i} className={cn("border-b border-[#1a1a1a]", isBest && "bg-emerald-500/5")}>
+                      <td className="py-1.5 pr-2">
+                        <div className="text-[#ddd] truncate max-w-[240px]">{isBest && "🏆 "}{prettyCampaign(c.campaign)}</div>
+                        <div className="text-[#666] text-[9px]">{c.source}</div>
+                      </td>
+                      <td className="py-1.5 px-1.5 text-right text-white tabular-nums">{c.visitors}</td>
+                      <td className="py-1.5 px-1.5 text-right tabular-nums"><span className="text-sky-400">{c.reached}</span> <span className="text-[#666]">({reachRate.toFixed(0)}%)</span></td>
+                      <td className="py-1.5 px-1.5 text-right text-amber-400 tabular-nums">{c.clicks}</td>
+                      <td className="py-1.5 px-1.5 text-right text-emerald-400 tabular-nums">{c.sales}</td>
+                      <td className={cn("py-1.5 pl-1.5 text-right font-bold tabular-nums", crpv > 0 ? "text-emerald-400" : "text-[#666]")}>R${crpv.toFixed(2)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="text-[9px] text-[#555] mt-2">Ordenado por receita/RPV. "Chegou oferta" = quem o anúncio traz que realmente vê a VSL. Compare RPV entre criativos: escale os de RPV alto, corte os de RPV zero com muitos visitantes.</div>
         </div>
       )}
 
