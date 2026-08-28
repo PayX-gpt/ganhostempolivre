@@ -192,6 +192,8 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   // Momento (ms) em que o tempo do vídeo AVANÇOU pela última vez. Usado para
   // saber se o player está realmente reportando/progredindo (qualquer device).
   const lastProgressAtRef = useRef(0);
+  // Marcos de minuto da VSL já registrados (para a curva de abandono no /live).
+  const vslMilestonesRef = useRef<Set<number>>(new Set());
   const pageStartedAtRef = useRef(Date.now());
   const offerAmount = getCurrentOfferAmount();
 
@@ -231,6 +233,15 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     if (seconds > maxVideoSecondsRef.current) {
       maxVideoSecondsRef.current = seconds;
       lastProgressAtRef.current = Date.now();
+      // Curva de abandono da VSL: registra 1x cada marco de minuto atingido,
+      // para o painel /live mostrar EM QUE MINUTO as pessoas abandonam o vídeo.
+      const minute = Math.floor(seconds / 60);
+      if (minute >= 1 && minute <= 20 && !vslMilestonesRef.current.has(minute)) {
+        vslMilestonesRef.current.add(minute);
+        try {
+          saveFunnelEventReliable("vsl_progress", { minute, second: Math.round(seconds) });
+        } catch { /* nunca bloqueia o funil */ }
+      }
     }
     if (seconds >= CUSTOM_CTA_UNLOCK_SECONDS) {
       revealCustomCta(source, seconds);
