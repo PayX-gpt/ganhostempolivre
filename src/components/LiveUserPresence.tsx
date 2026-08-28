@@ -120,6 +120,10 @@ const FUNNEL_STEP_LABELS: Record<string, string> = {
 };
 
 const PRESENCE_FALLBACK_WINDOW_MS = 25_000;
+// Período de graça anti-piscar: uma sessão continua visível por até este tempo
+// depois que some de TODAS as fontes (realtime + audit). Some sozinha só quando
+// realmente sai. Evita o "flick" causado por soluços de socket / ciclos de fetch.
+const PRESENCE_STICKY_MS = 8_000;
 
 const normalizeTrafficSource = (value?: string | null): string => {
   const source = (value || "").toLowerCase();
@@ -189,6 +193,8 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
   const allPresenceDataRef = useRef<{ counts: Record<string, number>; users: OnlineUser[]; stepSources: Record<string, Set<string>>; total: number } | null>(null);
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const auditPresenceRef = useRef<Record<string, AuditPresenceRow>>({});
+  // Mapa "grudento" de presença: session_id -> último estado visto + lastSeen.
+  const stickyPresenceRef = useRef<Map<string, { user: OnlineUser; stepId: string; lastSeen: number }>>(new Map());
 
   // Fetch session → campaign mapping
   const fetchSessionCampaigns = useCallback(async () => {
@@ -285,18 +291,39 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
     });
 
 
-    mergedUsers.forEach((user) => {
-      if (counts[user.stepId] !== undefined) {
-        counts[user.stepId]++;
+    // ── Presença "grudenta" (anti-piscar) ─────────────────────────────────
+    // Atualiza o "visto por último" de quem está presente AGORA (realtime OU
+    // audit) e só remove quem sumiu de TODAS as fontes por mais de
+    // PRESENCE_STICKY_MS. Um sumiço de 1 ciclo (soluço de socket / janela de
+    // fetch) NÃO apaga o usuário: ele fica estável enquanto está no funil e
+    // some sozinho pouco depois de sair de verdade. A ordem do Map é preservada,
+    // então os cards não reordenam/piscam entre atualizações.
+    const now = Date.now();
+    const sticky = stickyPresenceRef.current;
+    mergedUsers.forEach((u, sid) => {
+      sticky.set(sid, {
+        user: {
+          session_id: u.session_id,
+          name: u.name,
+          page: u.page,
+          traffic_source: u.traffic_source,
+          joined_at: u.joined_at,
+        },
+        stepId: u.stepId,
+        lastSeen: now,
+      });
+    });
+
+    sticky.forEach((entry, sid) => {
+      if (now - entry.lastSeen > PRESENCE_STICKY_MS) {
+        sticky.delete(sid);
+        return;
+      }
+      if (counts[entry.stepId] !== undefined) {
+        counts[entry.stepId]++;
         total++;
-        stepSources[user.stepId].add(user.traffic_source || "organic");
-        users.push({
-          session_id: user.session_id,
-          name: user.name,
-          page: user.page,
-          traffic_source: user.traffic_source,
-          joined_at: user.joined_at,
-        });
+        stepSources[entry.stepId].add(entry.user.traffic_source || "organic");
+        users.push(entry.user);
       }
     });
 
