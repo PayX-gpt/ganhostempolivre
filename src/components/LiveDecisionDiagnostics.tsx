@@ -146,6 +146,14 @@ export default function LiveDecisionDiagnostics() {
   if (clicked > 0 && closeRate < 20) {
     verdicts.push({ icon: ShoppingCart, color: "text-amber-400", text: `${fmtPct(closeRate)} de quem clica realmente compra. Verifique o checkout (Kirvano): preço, fricção, meios de pagamento.` });
   }
+  const worstCamp = campaigns.find(c => c.visitors >= 20 && c.reached === 0);
+  if (worstCamp) {
+    verdicts.push({ icon: AlertTriangle, color: "text-red-400", text: `"${prettyCampaign(worstCamp.campaign)}" (${worstCamp.source}) trouxe ${worstCamp.visitors} visitantes e 0 chegaram na oferta — tráfego de baixa qualidade. Considere pausar/ajustar segmentação e criativo.` });
+  }
+  const bestCamp = campaigns.find(c => c.revenue > 0);
+  if (bestCamp) {
+    verdicts.push({ icon: Trophy, color: "text-emerald-400", text: `Melhor criativo: "${prettyCampaign(bestCamp.campaign)}" — RPV R$${(bestCamp.revenue / Math.max(1, bestCamp.visitors)).toFixed(2)}. Escale esse.` });
+  }
   if (bestHour && (bestHour.clicks > 0 || bestHour.sales > 0)) {
     verdicts.push({ icon: Clock, color: "text-sky-400", text: `Melhor horário até agora: ${String(bestHour.hour).padStart(2, "0")}h (mais cliques/vendas). Concentre budget de anúncio e postagens nesse pico.` });
   }
