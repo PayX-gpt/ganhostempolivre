@@ -37,6 +37,7 @@ import LiveBuyerProfile from "@/components/LiveBuyerProfile";
 import LiveAuditTab from "@/components/LiveAuditTab";
 import LivePricingMonitor from "@/components/LivePricingMonitor";
 import LiveQuizVersionAB from "@/components/LiveQuizVersionAB";
+import LiveDecisionDiagnostics from "@/components/LiveDecisionDiagnostics";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import SessionLogsDialog from "@/components/SessionLogsDialog";
