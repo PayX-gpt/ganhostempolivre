@@ -237,18 +237,23 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
     return () => window.clearInterval(interval);
   }, []);
 
-  // Fallback forte: garante que o CTA apareça após 8:20 mesmo se a API do Panda falhar
-  // e mesmo quando o navegador atrasa/pausa setTimeout em aba, iframe ou preview.
+  // Fallback GARANTIDO: o botão aparece aos 8:20 DO VÍDEO mesmo que o Panda
+  // não envie NENHUM evento (API/postMessage bloqueados, iframe cross-origin,
+  // preview, aba em segundo plano, etc.). Não depende do player em nada.
+  // Obs: o player roda a 1.1x por padrão, então 8:20 de vídeo ≈ (500 / 1.1) s
+  // de tempo real de página — assim o botão surge no ponto certo, não no fim.
   useEffect(() => {
+    const DEFAULT_PLAYBACK_RATE = 1.1;
+    const unlockRealSeconds = Math.round(CUSTOM_CTA_UNLOCK_SECONDS / DEFAULT_PLAYBACK_RATE);
     const revealIfElapsed = () => {
-      const elapsedSeconds = Math.floor((Date.now() - pageStartedAtRef.current) / 1000);
-      if (elapsedSeconds >= CUSTOM_CTA_UNLOCK_SECONDS) {
+      const elapsedSeconds = (Date.now() - pageStartedAtRef.current) / 1000;
+      if (elapsedSeconds >= unlockRealSeconds) {
         revealCustomCta("page_timer", Math.max(CUSTOM_CTA_UNLOCK_SECONDS, maxVideoSecondsRef.current));
       }
     };
 
-    const fallback = window.setTimeout(revealIfElapsed, CUSTOM_CTA_UNLOCK_SECONDS * 1000);
-    const watchdog = window.setInterval(revealIfElapsed, 5_000);
+    const fallback = window.setTimeout(revealIfElapsed, unlockRealSeconds * 1000);
+    const watchdog = window.setInterval(revealIfElapsed, 3_000);
     window.addEventListener("focus", revealIfElapsed);
     document.addEventListener("visibilitychange", revealIfElapsed);
 
