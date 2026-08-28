@@ -411,8 +411,11 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
           p.onEvent?.(function (e: unknown) {
             if (!e) return;
             updateVideoProgress(readPandaVideoSeconds(e), "panda_timeupdate");
-            if (isPandaButtonShownEvent(e) && maxVideoSecondsRef.current >= CUSTOM_CTA_UNLOCK_SECONDS) {
-              revealCustomCta("panda_button_shown", maxVideoSecondsRef.current);
+            // Quando o próprio Panda decide mostrar o botão dele, ESSE é o sinal
+            // de "chegou a hora" — revela o CTA do app na mesma hora, mesmo que
+            // o tempo do vídeo não tenha sido lido (ex: Safari/iOS).
+            if (isPandaButtonShownEvent(e)) {
+              revealCustomCta("panda_button_shown", Math.max(CUSTOM_CTA_UNLOCK_SECONDS, maxVideoSecondsRef.current));
             }
           });
         },
@@ -443,8 +446,10 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
       if (!d || typeof d !== "object") return;
 
       updateVideoProgress(readPandaVideoSeconds(d), "panda_postmessage");
-      if (isPandaButtonShownEvent(d) && maxVideoSecondsRef.current >= CUSTOM_CTA_UNLOCK_SECONDS) {
-        revealCustomCta("panda_postmessage", maxVideoSecondsRef.current);
+      // Botão do Panda apareceu (via postMessage) → revela o CTA do app junto,
+      // sem exigir a leitura do tempo do vídeo (corrige Safari/iOS).
+      if (isPandaButtonShownEvent(d)) {
+        revealCustomCta("panda_postmessage", Math.max(CUSTOM_CTA_UNLOCK_SECONDS, maxVideoSecondsRef.current));
       }
 
       // Panda CTA click events come in several shapes:
