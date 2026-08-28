@@ -10,6 +10,7 @@ interface StepRow { step: string; step_num: number; views: number; completions: 
 interface VslRow { minute: number; sessions: number; }
 interface HourRow { hour: number; reached: number; clicks: number; sales: number; }
 interface PersonaRow { step: string; answer: string; count: number; }
+interface CampaignRow { campaign: string; source: string; visitors: number; reached: number; clicks: number; sales: number; revenue: number; }
 interface Diag {
   period_days: number;
   visitors: number;
@@ -22,7 +23,16 @@ interface Diag {
   vsl_curve: VslRow[];
   hourly: HourRow[];
   persona: PersonaRow[];
+  campaigns: CampaignRow[];
 }
+
+// Decodifica e encurta nomes de campanha (vêm URL-encoded, com |id no fim).
+const prettyCampaign = (raw: string): string => {
+  let s = raw || "";
+  try { s = decodeURIComponent(s); } catch { /* keep */ }
+  s = s.split("|")[0];
+  return s.length > 42 ? s.slice(0, 42) + "…" : s;
+};
 
 const PERSONA_LABELS: Record<string, string> = {
   "step-2": "Idade", "step-5": "Já tentou online?", "step-6": "Meta de renda/dia", "step-7": "Maior obstáculo",
