@@ -628,6 +628,9 @@ export default function AdminFunnelAudit() {
               <TabsTrigger value="overview" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
                 <LayoutDashboard className="w-3.5 h-3.5 mr-1.5" />Visao Geral
               </TabsTrigger>
+              <TabsTrigger value="decisao" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
+                <Target className="w-3.5 h-3.5 mr-1.5" />Diagnóstico
+              </TabsTrigger>
               <TabsTrigger value="abtest" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
                 <FlaskConical className="w-3.5 h-3.5 mr-1.5" />Teste A/B
               </TabsTrigger>
@@ -654,6 +657,11 @@ export default function AdminFunnelAudit() {
               </TabsTrigger>
             </TabsList>
           </div>
+
+          {/* TAB: DIAGNOSTICO DE DECISAO */}
+          <TabsContent value="decisao" className="space-y-4 mt-4">
+            <LiveDecisionDiagnostics />
+          </TabsContent>
 
           {/* TAB: VISAO GERAL */}
           <TabsContent value="overview" className="space-y-4 mt-4">
