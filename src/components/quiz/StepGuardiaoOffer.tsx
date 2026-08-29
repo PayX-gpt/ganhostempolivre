@@ -14,6 +14,12 @@ import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
 import { trackMetaInitiateCheckout, trackMetaViewContent, trackMetaAddToCart } from "@/lib/metaPixel";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
 import { usePandaPreload } from "@/lib/usePandaPreload";
+import { getLeadName } from "@/lib/upsellData";
+
+// Oferta Guardião: preço com desconto exclusivo mostrado na revelação do botão.
+// No vídeo o valor "cheio" é R$247; quem chega até o pitch libera R$147.
+const GUARDIAO_PRICE = 147;
+const GUARDIAO_PRICE_OLD = 247;
 
 interface Step11Props {
   onNext: () => void;
@@ -165,20 +171,6 @@ const isPandaButtonShownEvent = (payload: unknown): boolean => {
   return ["panda_buttonshow", "panda_buttonshown", "panda_loadbutton", "panda_showbutton", "buttonshow", "buttonshown"].includes(msg);
 };
 
-const getCurrentOfferAmount = () => {
-  try {
-    const rawAnswers = sessionStorage.getItem("quiz_answers");
-    const answers = rawAnswers ? JSON.parse(rawAnswers) : {};
-    const balance = answers?.accountBalance as string | undefined;
-
-    if (balance === "menos100") return 37;
-    if (["500-2000", "2000-10000", "10000+"].includes(balance || "")) return 66.83;
-    return 47;
-  } catch {
-    return 47;
-  }
-};
-
 const StepGuardiaoOffer = ({ onNext, userAge, pandaVideoId, pandaButtonId: customButtonId, videoAspectRatio = "9:16" }: Step11Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
@@ -195,7 +187,34 @@ const StepGuardiaoOffer = ({ onNext, userAge, pandaVideoId, pandaButtonId: custo
   // Marcos de minuto da VSL já registrados (para a curva de abandono no /live).
   const vslMilestonesRef = useRef<Set<number>>(new Set());
   const pageStartedAtRef = useRef(Date.now());
-  const offerAmount = getCurrentOfferAmount();
+  const offerAmount = GUARDIAO_PRICE;
+
+  // Personalização / exclusividade: primeiro nome do lead + nº de seleção estável.
+  const [leadFirstName] = useState(() => {
+    try {
+      const n = (getLeadName() || "").trim();
+      if (!n || n.toLowerCase() === "visitante") return "";
+      return n.split(/\s+/)[0];
+    } catch { return ""; }
+  });
+  const [selectionNumber] = useState(() => {
+    try {
+      const k = "guardiao_sel_num";
+      const saved = localStorage.getItem(k);
+      if (saved) return saved;
+      const num = String(1200 + Math.floor(Math.random() * 800));
+      localStorage.setItem(k, num);
+      return num;
+    } catch { return "1487"; }
+  });
+  // Contagem regressiva do desconto — começa quando o botão é revelado.
+  const [discountSeconds, setDiscountSeconds] = useState(9 * 60 + 59);
+  useEffect(() => {
+    if (!showCustomCta) return;
+    const id = window.setInterval(() => setDiscountSeconds((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => window.clearInterval(id);
+  }, [showCustomCta]);
+  const discountMMSS = `${Math.floor(discountSeconds / 60)}:${String(discountSeconds % 60).padStart(2, "0")}`;
 
   // Logs which path revealed the CTA + saves to /live dashboard
   const revealCustomCta = useCallback((source: "panda_button_shown" | "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll" | "page_timer", videoSeconds?: number) => {
@@ -569,6 +588,46 @@ const StepGuardiaoOffer = ({ onNext, userAge, pandaVideoId, pandaButtonId: custo
       {/* Custom CTA — appears after 8:20 (500s) of video/page time */}
       {showCustomCta && (
         <>
+          {/* Oportunidade única — personalização + desconto exclusivo + escassez */}
+          <div className="w-full rounded-2xl border-2 border-accent/60 bg-gradient-to-br from-accent/15 to-primary/10 p-3.5 animate-fade-in shadow-[0_0_24px_rgba(0,200,83,0.25)]">
+            <div className="flex items-center justify-center gap-1.5 mb-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
+              </span>
+              <span className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-accent">
+                {lang === "es" ? "Oportunidad Única" : lang === "en" ? "One-Time Opportunity" : "Oportunidade Única"}
+              </span>
+            </div>
+
+            <p className="text-center text-sm sm:text-base font-extrabold text-foreground leading-snug">
+              {leadFirstName ? `${leadFirstName}, ` : ""}
+              <span className="text-gradient-green">
+                {lang === "es" ? "fuiste seleccionado(a)!" : lang === "en" ? "you were selected!" : "você foi selecionado(a)!"}
+              </span>
+            </p>
+
+            <p className="text-center text-[11px] sm:text-[13px] text-foreground/85 mt-1 leading-snug">
+              {lang === "es" ? <>Sos la persona <span className="font-bold text-accent">nº {selectionNumber}</span> que miró el video hasta el final y <span className="font-bold">desbloqueó un descuento exclusivo</span> — que no aparece para nadie más.</>
+                : lang === "en" ? <>You are person <span className="font-bold text-accent">no. {selectionNumber}</span> who watched the video to the end and <span className="font-bold">unlocked an exclusive discount</span> — shown to no one else.</>
+                : <>Você é a pessoa <span className="font-bold text-accent">nº {selectionNumber}</span> que assistiu o vídeo até o fim e <span className="font-bold">desbloqueou um desconto exclusivo</span> — que não aparece pra mais ninguém.</>}
+            </p>
+
+            <div className="mt-2.5 flex items-center justify-center gap-2">
+              <span className="text-muted-foreground line-through text-sm sm:text-base font-semibold">R${GUARDIAO_PRICE_OLD}</span>
+              <span className="text-2xl sm:text-3xl font-black text-gradient-green leading-none">R${GUARDIAO_PRICE}</span>
+              <span className="text-[10px] sm:text-xs font-bold text-accent leading-tight">
+                {lang === "es" ? "al contado, solo ahora" : lang === "en" ? "one-time, now only" : "à vista, só agora"}
+              </span>
+            </div>
+
+            <p className="text-center text-[10px] sm:text-[11px] text-foreground/70 mt-1.5 leading-snug">
+              {lang === "es" ? <>En el video el valor es <span className="line-through">R${GUARDIAO_PRICE_OLD}</span>. Por haber llegado hasta aquí, tu acceso sale por <span className="font-bold text-foreground">R${GUARDIAO_PRICE}</span> — <span className="font-bold text-accent">expira en {discountMMSS}</span>.</>
+                : lang === "en" ? <>In the video the price is <span className="line-through">R${GUARDIAO_PRICE_OLD}</span>. For making it this far, your access is <span className="font-bold text-foreground">R${GUARDIAO_PRICE}</span> — <span className="font-bold text-accent">expires in {discountMMSS}</span>.</>
+                : <>No vídeo o valor é <span className="line-through">R${GUARDIAO_PRICE_OLD}</span>. Por ter chegado até aqui, seu acesso sai por <span className="font-bold text-foreground">R${GUARDIAO_PRICE}</span> — <span className="font-bold text-accent">expira em {discountMMSS}</span>.</>}
+            </p>
+          </div>
+
           <button
             ref={customCtaRef}
             onClick={handleCustomCtaClick}
@@ -583,6 +642,13 @@ const StepGuardiaoOffer = ({ onNext, userAge, pandaVideoId, pandaButtonId: custo
 
           <div className="fixed inset-x-0 bottom-0 z-[9999] px-3 pt-3 pb-[calc(env(safe-area-inset-bottom)+12px)] bg-background/95 border-t border-accent/30 backdrop-blur-md animate-fade-in">
             <div className="mx-auto max-w-lg">
+              <div className="flex items-center justify-center gap-2 mb-1.5 text-[11px] sm:text-xs">
+                <span className="text-muted-foreground line-through font-semibold">R${GUARDIAO_PRICE_OLD}</span>
+                <span className="font-black text-gradient-green text-sm sm:text-base">R${GUARDIAO_PRICE}</span>
+                <span className="font-bold text-accent">
+                  {lang === "es" ? `expira en ${discountMMSS}` : lang === "en" ? `expires in ${discountMMSS}` : `expira em ${discountMMSS}`}
+                </span>
+              </div>
               <button
                 onClick={handleCustomCtaClick}
                 className="w-full py-4 px-5 rounded-xl font-extrabold text-[14px] sm:text-lg text-black uppercase tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
