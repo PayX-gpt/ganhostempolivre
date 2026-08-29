@@ -32,7 +32,7 @@ const plans = [
     missing: ["Atualizações futuras", "Suporte prioritário", "Recursos antecipados"],
     warning: "Expira de novo após 18 meses",
     color: "#64748B",
-    checkoutUrl: "https://pay.hub.la/0Q77oXAu8QkVUTwHYm20/upsell",
+    checkoutUrl: "https://pay.kirvano.com/5efbb9e7-6033-4281-bd6d-6b5830e7145d",
   },
   {
     id: "vitalicio" as const,
@@ -45,7 +45,7 @@ const plans = [
     missing: ["Suporte prioritário", "Recursos antecipados"],
     warning: null,
     color: "#22C55E",
-    checkoutUrl: "https://pay.hub.la/uAAU42mMeJpoJYyfwbzb/upsell",
+    checkoutUrl: "https://pay.kirvano.com/8b821768-dfb9-487d-a6a6-8beb9a9cdb20",
   },
   {
     id: "vip" as const,
@@ -58,7 +58,7 @@ const plans = [
     missing: [],
     warning: null,
     color: "#FACC15",
-    checkoutUrl: "https://pay.hub.la/VsknPAXdimoqr8jsOW03/upsell",
+    checkoutUrl: "https://pay.kirvano.com/a7cfdcbf-849f-4060-b660-b850f46a0e52",
   },
 ];
 
