@@ -216,6 +216,23 @@ const StepGuardiaoOffer = ({ onNext, userAge, pandaVideoId, pandaButtonId: custo
   }, [showCustomCta]);
   const discountMMSS = `${Math.floor(discountSeconds / 60)}:${String(discountSeconds % 60).padStart(2, "0")}`;
 
+  // Popup de presente — aparece na frente quando o botão libera, SEM parar o
+  // vídeo (o iframe continua tocando atrás; a pessoa segue ouvindo). O botão
+  // "pegar" apenas fecha o popup e volta pro vídeo/oferta.
+  const [showGift, setShowGift] = useState(false);
+  const giftShownRef = useRef(false);
+  useEffect(() => {
+    if (showCustomCta && !giftShownRef.current) {
+      giftShownRef.current = true;
+      setShowGift(true);
+    }
+  }, [showCustomCta]);
+  const closeGift = useCallback(() => {
+    setShowGift(false);
+    // leva o olhar pra oferta/CTA sem interromper o áudio do vídeo
+    try { customCtaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); } catch { /* ignore */ }
+  }, []);
+
   // Logs which path revealed the CTA + saves to /live dashboard
   const revealCustomCta = useCallback((source: "panda_button_shown" | "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll" | "page_timer", videoSeconds?: number) => {
     setShowCustomCta((prev) => {
@@ -686,6 +703,61 @@ const StepGuardiaoOffer = ({ onNext, userAge, pandaVideoId, pandaButtonId: custo
           {young ? t.emotionalYoung : t.emotionalMature}
         </p>
       </div>
+
+      {/* Popup de presente — overlay na frente da tela, vídeo continua tocando atrás */}
+      {showGift && (
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center px-4 bg-black/75 backdrop-blur-sm animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          onClick={closeGift}
+        >
+          <div
+            className="relative w-full max-w-sm rounded-3xl border-2 border-accent/70 bg-gradient-to-br from-[#0b1a11] to-[#0a0a0a] p-6 pt-8 text-center animate-gift-pop animate-gift-glow"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* faíscas */}
+            <span className="pointer-events-none absolute top-3 left-5 text-xl animate-gift-sparkle">✨</span>
+            <span className="pointer-events-none absolute top-4 right-6 text-lg animate-gift-sparkle" style={{ animationDelay: "0.4s" }}>⭐</span>
+            <span className="pointer-events-none absolute bottom-24 right-5 text-base animate-gift-sparkle" style={{ animationDelay: "0.8s" }}>✨</span>
+
+            <div className="text-[64px] leading-none mb-1 inline-block animate-gift-wiggle">🎁</div>
+
+            <p className="text-[11px] font-black uppercase tracking-[0.15em] text-accent mb-1">
+              {lang === "es" ? "¡Ganaste un regalo!" : lang === "en" ? "You won a gift!" : "Você ganhou um presente!"}
+            </p>
+            <h3 className="text-[22px] font-black text-foreground leading-tight">
+              {leadFirstName ? `${leadFirstName}, ` : ""}
+              <span className="text-gradient-green">
+                {lang === "es" ? "¡descuento liberado!" : lang === "en" ? "discount unlocked!" : "desconto liberado!"}
+              </span>
+            </h3>
+
+            <p className="text-[13px] text-foreground/85 mt-2 leading-snug">
+              {lang === "es" ? <>Fuiste la persona <span className="font-bold text-accent">nº {selectionNumber}</span> seleccionada. Tu acceso al Guardião bajó de <span className="line-through">R${GUARDIAO_PRICE_OLD}</span> a <span className="font-black text-gradient-green">R${GUARDIAO_PRICE}</span>.</>
+                : lang === "en" ? <>You were person <span className="font-bold text-accent">no. {selectionNumber}</span> selected. Your Guardião access dropped from <span className="line-through">R${GUARDIAO_PRICE_OLD}</span> to <span className="font-black text-gradient-green">R${GUARDIAO_PRICE}</span>.</>
+                : <>Você foi a pessoa <span className="font-bold text-accent">nº {selectionNumber}</span> selecionada. Seu acesso ao Guardião caiu de <span className="line-through">R${GUARDIAO_PRICE_OLD}</span> para <span className="font-black text-gradient-green">R${GUARDIAO_PRICE}</span>.</>}
+            </p>
+
+            <button
+              onClick={closeGift}
+              className="mt-5 w-full py-4 px-5 rounded-xl font-black text-[15px] sm:text-lg text-black uppercase tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+              style={{
+                background: "linear-gradient(135deg, #00E676 0%, #00C853 100%)",
+                boxShadow: "0 6px 24px rgba(0, 200, 83, 0.5)",
+              }}
+            >
+              {lang === "es" ? "🎁 AGARRAR MI REGALO" : lang === "en" ? "🎁 GRAB MY GIFT" : "🎁 PEGAR MEU PRESENTE"}
+            </button>
+            <button
+              onClick={closeGift}
+              className="mt-2.5 text-[12px] text-muted-foreground underline underline-offset-2 hover:text-foreground"
+            >
+              {lang === "es" ? "seguir viendo el video" : lang === "en" ? "keep watching the video" : "continuar assistindo o vídeo"}
+            </button>
+          </div>
+        </div>
+      )}
     </StepContainer>
   );
 };
