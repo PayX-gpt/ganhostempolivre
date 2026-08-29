@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { StepContainer } from "./QuizUI";
+import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
+import { saveFunnelEventReliable } from "@/lib/metricsClient";
+import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
+import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
+import { trackMetaInitiateCheckout } from "@/lib/metaPixel";
 
 /**
  * Etapa de VÍDEO (ConverteAI / vturb smartplayer) com BOTÃO temporizado embaixo.
@@ -18,6 +23,12 @@ interface Props {
   buttonText: string;
   revealSeconds: number;
   onClick: () => void;
+  /** Se definido, o botão VAI DIRETO pro checkout (com UTMs + pixels), em vez de onClick. */
+  checkoutUrl?: string;
+  /** Valor da oferta (pra pixels/CAPI). Padrão 47. */
+  amount?: number;
+  /** Contexto do evento (pro /live). */
+  eventContext?: string;
   /** Texto pequeno abaixo do botão (opcional). */
   note?: string;
 }
@@ -27,10 +38,32 @@ const isPreview = () => {
   catch { return false; }
 };
 
-export default function VturbVideoStep({ playerId, headline, subheadline, buttonText, revealSeconds, onClick, note }: Props) {
+export default function VturbVideoStep({ playerId, headline, subheadline, buttonText, revealSeconds, onClick, checkoutUrl, amount = 47, eventContext = "b_video_cta", note }: Props) {
   const [revealed, setRevealed] = useState(false);
   const mountedAt = useRef(Date.now());
   const containerRef = useRef<HTMLDivElement>(null);
+  const firedRef = useRef(false);
+
+  // Clique do botão: vai pro checkout (com UTMs + pixels) OU transição.
+  const handleClick = () => {
+    if (!checkoutUrl) { onClick(); return; }
+    if (isPreview()) { onClick?.(); return; } // no Studio não navega pro checkout
+    try {
+      const url = new URL(checkoutUrl);
+      const qs = buildTrackingQueryString();
+      if (qs) {
+        new URLSearchParams(qs.slice(1)).forEach((v, k) => { if (!url.searchParams.has(k)) url.searchParams.set(k, v); });
+      }
+      if (!firedRef.current) {
+        firedRef.current = true;
+        try { saveFunnelEventReliable("checkout_click", { context: eventContext, product: "chave_token_chatgpt", amount, dest_url: url.toString() }); } catch { /* */ }
+        try { sendCAPIInitiateCheckout({ amount }); } catch { /* */ }
+        try { trackTikTokInitiateCheckout({ amount }); } catch { /* */ }
+        try { trackMetaInitiateCheckout({ amount }); } catch { /* */ }
+      }
+      window.location.href = url.toString();
+    } catch { window.location.href = checkoutUrl; }
+  };
 
   // Injeta o smartplayer (element + script), 1x por player.
   useEffect(() => {
@@ -74,7 +107,7 @@ export default function VturbVideoStep({ playerId, headline, subheadline, button
 
       {revealed ? (
         <button
-          onClick={onClick}
+          onClick={handleClick}
           className="w-full max-w-md mx-auto py-4 px-6 rounded-xl font-extrabold text-[15px] sm:text-xl text-black uppercase tracking-wide animate-fade-in transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
           style={{ background: "linear-gradient(135deg, #FFD600 0%, #FFB300 100%)", boxShadow: "0 4px 20px rgba(255,214,0,0.4)" }}
         >

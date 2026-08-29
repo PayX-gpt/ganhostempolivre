@@ -366,11 +366,17 @@ const QuizFunnelB = () => {
       case "step-17":
         return <Step10Loading onNext={goNext} userAge={answers.age} userName={answers.name} />;
       case "step-18":
-        // 🎥 VÍDEO 4 — Como vai funcionar (transição pré-oferta)
-        return <VturbVideoStep playerId="6a07a12e86b03df313b90694" revealSeconds={30}
-          headline={<>Pra entender <span className="text-gradient-green">como vai funcionar</span></>}
-          subheadline="Último passo antes de liberar seu acesso."
-          buttonText="Ver minha oferta →" onClick={goNext} />;
+        // 🎥 VÍDEO 4 — PITCH + APROVAÇÃO disfarçado. O botão vai DIRETO pro checkout,
+        // aparecendo aos 366s (= 40s antes do fim do vídeo de ~406s). NÃO passa pela
+        // oferta antiga do "senhor".
+        return <VturbVideoStep playerId="6a07a12e86b03df313b90694" revealSeconds={366}
+          headline={<>Você foi <span className="text-gradient-green">APROVADO</span>. Assista até o fim e destrave sua renda de <span className="text-gradient-green">R$50 a R$300 por dia</span>.</>}
+          subheadline="Nos próximos minutos você vê, passo a passo, como pessoas comuns (até 60, 70 anos) já estão pagando as contas com tranquilidade — e como garantir o SEU acesso hoje, antes de fechar."
+          buttonText="GARANTIR MEU ACESSO AGORA →"
+          checkoutUrl="https://pay.kirvano.com/4630333d-d5d1-4591-b767-2151f77c6b13"
+          amount={47}
+          eventContext="b_video4_pitch_checkout"
+          onClick={goNext} />;
       case "step-19":
         return <Step11SocialProof2 onNext={() => {}} userAge={answers.age} />;
       default:
