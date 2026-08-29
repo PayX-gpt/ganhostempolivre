@@ -12,6 +12,7 @@ import Step1VariantD from "./Step1VariantD";
 import Step1VariantE from "./Step1VariantE";
 import { getEffectiveVariant, saveVariantToAttribution, type QuizVariant } from "@/lib/abTestVariant";
 import { getEffectiveQuizVersion, shouldSkipStep, saveQuizVersionToAttribution, type QuizVersion } from "@/lib/quizVersionAB";
+import { saveEditionToAttribution } from "@/lib/quizEdition";
 import Step2Age from "./Step2Age";
 import StepName from "./StepName";
 import Step3SocialProof from "./Step3SocialProof";
@@ -104,7 +105,12 @@ const normalizeSlug = (slug?: string) => {
   return STEP_ALIASES[lower] ?? lower;
 };
 
-const QuizFunnel = () => {
+// ─────────────────────────────────────────────────────────────────────────
+// QUIZ B — Edição paralela (teste A/B de funil completo).
+// Começa como cópia EXATA do Quiz A. As mudanças que você pedir (etapas extras,
+// remover etapas, trocar vídeos, copy) são feitas AQUI — o Quiz A não é tocado.
+// ─────────────────────────────────────────────────────────────────────────
+const QuizFunnelB = () => {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const { lang } = useLanguage();
@@ -195,6 +201,7 @@ const QuizFunnel = () => {
       void saveSessionAttribution(variant as string);
       void saveVariantToAttribution(variant);
       void saveQuizVersionToAttribution(quizVersion);
+      void saveEditionToAttribution("B");
     }
   }, [step, variant, quizVersion]);
 
@@ -209,6 +216,7 @@ const QuizFunnel = () => {
       step_number: step,
       variant,
       quiz_version: quizVersion,
+      edition: "B",
     });
   }, [currentSlug, step, quizVersion]);
 
@@ -223,6 +231,7 @@ const QuizFunnel = () => {
       time_spent_seconds: Math.round(timeSpentMs / 1000),
       variant,
       quiz_version: quizVersion,
+      edition: "B",
       ...(answer ? { answer_key: answer.key, answer_value: answer.value } : {}),
     });
   }, [currentSlug, step, quizVersion]);
@@ -402,4 +411,4 @@ const QuizFunnel = () => {
   );
 };
 
-export default QuizFunnel;
+export default QuizFunnelB;

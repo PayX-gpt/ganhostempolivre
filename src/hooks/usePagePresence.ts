@@ -129,11 +129,12 @@ const trackPresence = (pageId: string) => {
   }
 };
 
-export const usePagePresence = (pageId: string): void => {
+export const usePagePresence = (pageId: string, enabled: boolean = true): void => {
   const lastPageRef = useRef<string | null>(null);
   const lastNameRef = useRef<string>("Visitante");
 
   useEffect(() => {
+    if (!enabled) return; // modo preview do Studio: não registra presença
     if (!pageId) return;
     const currentPath = window.location.pathname.toLowerCase();
     if (currentPath.includes('/live') || currentPath.includes('/admin')) return;
