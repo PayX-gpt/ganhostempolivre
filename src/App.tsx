@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 const Live = lazy(() => import("./pages/Live"));
 const LiveDemo = lazy(() => import("./pages/LiveDemo"));
 const Studio = lazy(() => import("./pages/Studio"));
+const PreviewOfertaAntiga = lazy(() => import("./pages/PreviewOfertaAntiga"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const TikTokQuizFunnel = lazy(() => import("./components/quiz/TikTokQuizFunnel"));
 const TikTokEsQuizFunnel = lazy(() => import("./components/quiz/TikTokEsQuizFunnel"));
@@ -46,6 +47,7 @@ const App = () => {
             <Route path="/live" element={<Suspense fallback={LazyFallback}><Live /></Suspense>} />
             <Route path="/live-demo" element={<Suspense fallback={LazyFallback}><LiveDemo /></Suspense>} />
             <Route path="/studio" element={<Suspense fallback={LazyFallback}><Studio /></Suspense>} />
+            <Route path="/oferta-antiga" element={<Suspense fallback={LazyFallback}><PreviewOfertaAntiga /></Suspense>} />
             <Route path="/oferta" element={<Suspense fallback={LazyFallback}><Oferta /></Suspense>} />
             <Route path="/go/:plan" element={<Suspense fallback={LazyFallback}><GoCheckout /></Suspense>} />
             <Route path="/tiktok" element={<Suspense fallback={LazyFallback}><TikTokQuizFunnel /></Suspense>} />
