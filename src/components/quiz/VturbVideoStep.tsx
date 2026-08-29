@@ -47,7 +47,7 @@ export default function VturbVideoStep({ playerId, headline, subheadline, button
   // Clique do botão: vai pro checkout (com UTMs + pixels) OU transição.
   const handleClick = () => {
     if (!checkoutUrl) { onClick(); return; }
-    if (isPreview()) { onClick?.(); return; } // no Studio não navega pro checkout
+    if (isPreview()) { window.open(checkoutUrl, "_blank"); return; } // no Studio: abre o checkout numa aba nova pra conferir
     try {
       const url = new URL(checkoutUrl);
       const qs = buildTrackingQueryString();

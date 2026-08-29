@@ -22,7 +22,7 @@ const STEPS_B: StepDef[] = [
   { n: 11, label: "🎥 Vídeo 2 — 15-30 min", video: true }, { n: 12, label: "IA Liberada / Demo" },
   { n: 13, label: "🎥 Vídeo 3 — Operar e sacar", video: true }, { n: 14, label: "WhatsApp" },
   { n: 15, label: "Contato" }, { n: 16, label: "Input contato" }, { n: 17, label: "Loading" },
-  { n: 18, label: "🎥 Vídeo 4 — Como funciona", video: true }, { n: 19, label: "Oferta / Pitch", video: true },
+  { n: 18, label: "🎥 Vídeo 4 — Pitch + Checkout", video: true },
 ];
 const stepsOf = (e: Ed) => (e === "A" ? STEPS_A : STEPS_B);
 

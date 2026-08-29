@@ -63,8 +63,7 @@ const STEP_SLUGS = [
   "step-15",  // 15: Método de contato
   "step-16",  // 16: Input de contato
   "step-17",  // 17: Analisando (loading)
-  "step-18",  // 18: 🎥 VÍDEO 4 — Como vai funcionar (vturb)
-  "step-19",  // 19: OFERTA / PITCH (VSL + checkout)
+  "step-18",  // 18: 🎥 VÍDEO 4 — PITCH + APROVAÇÃO → botão vai DIRETO pro checkout (etapa final do Quiz B)
 ] as const;
 
 const TOTAL_STEPS = STEP_SLUGS.length;
@@ -75,14 +74,14 @@ const STEP_NAMES: Record<string, string> = {
   "step-8": "b_video1_como_funciona", "step-9": "b_saldo", "step-10": "b_disponibilidade",
   "step-11": "b_video2_tempo", "step-12": "b_ia_liberada", "step-13": "b_video3_saque",
   "step-14": "b_prova_social2", "step-15": "b_metodo_contato", "step-16": "b_input_contato",
-  "step-17": "b_loading", "step-18": "b_video4_funcionar", "step-19": "b_oferta_pitch",
+  "step-17": "b_loading", "step-18": "b_video4_pitch",
 };
 
 const STEP_ALIASES: Record<string, (typeof STEP_SLUGS)[number]> = {
   step1: "step-1", step2: "step-2", step3: "step-3", step4: "step-4", step5: "step-5",
   step6: "step-6", step7: "step-7", step8: "step-8", step9: "step-9", step10: "step-10",
   step11: "step-11", step12: "step-12", step13: "step-13", step14: "step-14", step15: "step-15",
-  step16: "step-16", step17: "step-17", step18: "step-18", step19: "step-19",
+  step16: "step-16", step17: "step-17", step18: "step-18",
 };
 
 const normalizeSlug = (slug?: string) => {
@@ -377,8 +376,6 @@ const QuizFunnelB = () => {
           amount={47}
           eventContext="b_video4_pitch_checkout"
           onClick={goNext} />;
-      case "step-19":
-        return <Step11SocialProof2 onNext={() => {}} userAge={answers.age} />;
       default:
         return null;
     }
