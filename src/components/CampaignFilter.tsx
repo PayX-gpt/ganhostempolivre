@@ -11,7 +11,9 @@ const CAMPAIGN_COLORS = [
 
 const cleanCampaignName = (name: string): string => {
   if (!name) return "Direto";
-  const clean = name.split("|")[0].trim();
+  // Descarta o |ID e URL-decodifica (%5B→[, %2F→/, + →espaço, %E2%80%94→—).
+  let clean = name.split("|")[0].trim();
+  try { clean = decodeURIComponent(clean.replace(/\+/g, " ")); } catch { /* mantém cru */ }
   return clean.length > 25 ? clean.substring(0, 22) + "…" : clean;
 };
 
