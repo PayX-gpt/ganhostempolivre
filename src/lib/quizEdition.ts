@@ -12,15 +12,15 @@
 import { getABConfig } from "./abConfigServer";
 import { supabase } from "@/integrations/supabase/client";
 
-export type QuizEdition = "A" | "B";
+export type QuizEdition = "A" | "B" | "C";
 
 const EDITION_KEY = "quiz_edition";
 
-/** Lê override explícito por URL (?edition=A|B) — usado no Studio/testes. */
+/** Lê override explícito por URL (?edition=A|B|C) — usado no Studio/testes. */
 function urlEdition(): QuizEdition | null {
   try {
     const e = new URLSearchParams(window.location.search).get("edition")?.toUpperCase();
-    if (e === "A" || e === "B") return e;
+    if (e === "A" || e === "B" || e === "C") return e;
   } catch { /* ignore */ }
   return null;
 }
@@ -29,14 +29,21 @@ function urlEdition(): QuizEdition | null {
 function assignEdition(): QuizEdition {
   const cfg = getABConfig();
   // Vencedor declarado manda em tudo.
-  if (cfg.edition_winner === "A" || cfg.edition_winner === "B") return cfg.edition_winner;
-  // Teste desligado ou sem split → sempre Quiz A (padrão seguro).
-  if (!cfg.edition_test_active || cfg.edition_b_split <= 0) return "A";
+  if (cfg.edition_winner === "A" || cfg.edition_winner === "B" || cfg.edition_winner === "C") return cfg.edition_winner;
+
+  const bSplit = Math.max(0, cfg.edition_b_split);
+  const cSplit = Math.max(0, cfg.edition_c_split);
+  // Teste desligado ou sem nenhum split → sempre Quiz A (padrão seguro).
+  if (!cfg.edition_test_active || (bSplit <= 0 && cSplit <= 0)) return "A";
 
   const stored = localStorage.getItem(EDITION_KEY);
-  if (stored === "A" || stored === "B") return stored;
+  if (stored === "A" || stored === "B" || stored === "C") return stored;
 
-  const edition: QuizEdition = Math.random() * 100 < cfg.edition_b_split ? "B" : "A";
+  // Sorteio: [0, bSplit) → B; [bSplit, bSplit+cSplit) → C; resto → A.
+  const r = Math.random() * 100;
+  let edition: QuizEdition = "A";
+  if (r < bSplit) edition = "B";
+  else if (r < bSplit + cSplit) edition = "C";
   try { localStorage.setItem(EDITION_KEY, edition); } catch { /* ignore */ }
   return edition;
 }

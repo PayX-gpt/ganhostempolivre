@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Monitor, Smartphone, RefreshCw, ExternalLink, LayoutGrid, Columns2, Eye, X, Film } from "lucide-react";
 
-type Ed = "A" | "B";
+type Ed = "A" | "B" | "C";
 interface StepDef { n: number; label: string; video?: boolean; }
 
 const STEPS_A: StepDef[] = [
@@ -24,7 +24,9 @@ const STEPS_B: StepDef[] = [
   { n: 15, label: "Contato" }, { n: 16, label: "Input contato" }, { n: 17, label: "Loading" },
   { n: 18, label: "🎥 Vídeo 4 — Pitch + Checkout", video: true },
 ];
-const stepsOf = (e: Ed) => (e === "A" ? STEPS_A : STEPS_B);
+// Quiz C começa como cópia do Quiz A (mesma estrutura). Quando divergir, é só editar aqui.
+const STEPS_C: StepDef[] = STEPS_A;
+const stepsOf = (e: Ed) => (e === "A" ? STEPS_A : e === "B" ? STEPS_B : STEPS_C);
 
 const LANGS = ["pt", "en", "es"] as const;
 type Lang = typeof LANGS[number];
@@ -106,6 +108,7 @@ export default function Studio() {
               <div className="flex bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-0.5">
                 <Toggle active={galleryEd === "A"} onClick={() => setGalleryEd("A")}>Quiz A</Toggle>
                 <Toggle active={galleryEd === "B"} onClick={() => setGalleryEd("B")}>Quiz B</Toggle>
+                <Toggle active={galleryEd === "C"} onClick={() => setGalleryEd("C")}>Quiz C</Toggle>
               </div>
             )}
             {/* Idioma */}
@@ -127,7 +130,7 @@ export default function Studio() {
         {mode === "gallery" ? (
           <>
             <div className="flex items-center gap-2 mb-3">
-              <span className={cn("text-xs font-black px-2 py-0.5 rounded", galleryEd === "A" ? "bg-sky-500/20 text-sky-300" : "bg-violet-500/20 text-violet-300")}>QUIZ {galleryEd}</span>
+              <span className={cn("text-xs font-black px-2 py-0.5 rounded", galleryEd === "A" ? "bg-sky-500/20 text-sky-300" : galleryEd === "B" ? "bg-violet-500/20 text-violet-300" : "bg-amber-500/20 text-amber-300")}>QUIZ {galleryEd}</span>
               <span className="text-[11px] text-[#888]">{stepsOf(galleryEd).length} telas · clique no <Eye className="w-3 h-3 inline" /> para abrir grande</span>
             </div>
             {/* Galeria de miniaturas enfileiradas */}
@@ -157,19 +160,21 @@ export default function Studio() {
           </>
         ) : mode === "vs" ? (
           <>
-            <div className="text-[11px] text-[#888] mb-3">Cada etapa: <span className="text-sky-300 font-bold">Quiz A</span> à esquerda, <span className="text-violet-300 font-bold">Quiz B</span> à direita — desça comparando. Clique no <Eye className="w-3 h-3 inline" /> pra abrir grande.</div>
+            <div className="text-[11px] text-[#888] mb-3">Cada etapa lado a lado: <span className="text-sky-300 font-bold">Quiz A</span> · <span className="text-violet-300 font-bold">Quiz B</span> · <span className="text-amber-300 font-bold">Quiz C</span> — desça comparando. Clique no <Eye className="w-3 h-3 inline" /> pra abrir grande.</div>
             <div className="space-y-4">
               {Array.from({ length: Math.max(STEPS_A.length, STEPS_B.length) }, (_, i) => i + 1).map(n => {
                 const a = STEPS_A.find(s => s.n === n);
                 const b = STEPS_B.find(s => s.n === n);
+                const c = STEPS_C.find(s => s.n === n);
+                const col: Record<Ed, string> = { A: "text-sky-300", B: "text-violet-300", C: "text-amber-300" };
                 return (
                   <div key={n} className="rounded-xl border border-[#2a2a2a] bg-[#0f1319] p-3">
                     <div className="text-[11px] text-[#aaa] font-bold mb-2">Etapa {n}</div>
-                    <div className="grid grid-cols-2 gap-3">
-                      {([["A", a, true], ["B", b, false]] as const).map(([ed, sd, isA]) => (
+                    <div className="grid grid-cols-3 gap-3">
+                      {([["A", a], ["B", b], ["C", c]] as [Ed, StepDef | undefined][]).map(([ed, sd]) => (
                         <div key={ed} className="relative rounded-lg overflow-hidden border border-[#2a2a2a] bg-[#0f1319]">
                           <div className="flex items-center justify-between px-2 py-1 border-b border-[#2a2a2a] gap-1">
-                            <span className={cn("text-[9px] font-black truncate", isA ? "text-sky-300" : "text-violet-300")}>{ed} · {sd ? sd.label.replace("🎥 ", "") : "—"}</span>
+                            <span className={cn("text-[9px] font-black truncate", col[ed])}>{ed} · {sd ? sd.label.replace("🎥 ", "") : "—"}</span>
                             {sd && <button onClick={() => setOpen({ ed, step: n })} className="text-[#888] hover:text-emerald-400 shrink-0"><Eye className="w-3.5 h-3.5" /></button>}
                           </div>
                           <div className="relative overflow-hidden" style={{ height: 210 }}>
@@ -204,12 +209,13 @@ export default function Studio() {
               </div>
             </div>
             <div className="flex flex-wrap gap-6 justify-center items-start">
-              {(["A", "B"] as Ed[]).map(ed => {
+              {(["A", "B", "C"] as Ed[]).map(ed => {
                 const sdef = stepsOf(ed).find(s => s.n === step);
+                const badge: Record<Ed, string> = { A: "bg-sky-500/20 text-sky-300", B: "bg-violet-500/20 text-violet-300", C: "bg-amber-500/20 text-amber-300" };
                 return (
                   <div key={ed} className="flex flex-col items-center">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={cn("text-xs font-black px-2 py-0.5 rounded", ed === "A" ? "bg-sky-500/20 text-sky-300" : "bg-violet-500/20 text-violet-300")}>QUIZ {ed}</span>
+                      <span className={cn("text-xs font-black px-2 py-0.5 rounded", badge[ed])}>QUIZ {ed}</span>
                       <span className="text-[10px] text-[#666]">{sdef ? sdef.label : "— (não existe nesta edição)"}</span>
                     </div>
                     <div className="rounded-2xl overflow-hidden border border-[#2a2a2a] bg-black shadow-xl" style={{ width: w }}>
@@ -236,7 +242,7 @@ export default function Studio() {
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setOpen(null)}>
           <div className="relative" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-2">
-              <span className={cn("text-xs font-black px-2 py-0.5 rounded", open.ed === "A" ? "bg-sky-500/20 text-sky-300" : "bg-violet-500/20 text-violet-300")}>QUIZ {open.ed} — {stepsOf(open.ed).find(s => s.n === open.step)?.label}</span>
+              <span className={cn("text-xs font-black px-2 py-0.5 rounded", open.ed === "A" ? "bg-sky-500/20 text-sky-300" : open.ed === "B" ? "bg-violet-500/20 text-violet-300" : "bg-amber-500/20 text-amber-300")}>QUIZ {open.ed} — {stepsOf(open.ed).find(s => s.n === open.step)?.label}</span>
               <button onClick={() => setOpen(null)} className="text-white/70 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
             <div className="rounded-2xl overflow-hidden border border-[#333] bg-black shadow-2xl" style={{ width: 390 }}>

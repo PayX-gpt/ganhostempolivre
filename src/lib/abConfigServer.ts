@@ -19,8 +19,9 @@ export interface ABConfig {
   version_test_active: boolean;      // teste V1/V2 ligado?
   version_winner: string | null;     // 'V1' | 'V2' quando vencedor declarado
   edition_b_split: number;           // 0-100, % de tráfego para o Quiz B (funil completo)
-  edition_test_active: boolean;      // teste de EDIÇÃO (Quiz A vs B) ligado?
-  edition_winner: string | null;     // 'A' | 'B' quando vencedor declarado
+  edition_c_split: number;           // 0-100, % de tráfego para o Quiz C
+  edition_test_active: boolean;      // teste de EDIÇÃO (Quiz A vs B vs C) ligado?
+  edition_winner: string | null;     // 'A' | 'B' | 'C' quando vencedor declarado
 }
 
 export const AB_DEFAULTS: ABConfig = {
@@ -30,6 +31,7 @@ export const AB_DEFAULTS: ABConfig = {
   version_test_active: true,
   version_winner: null,
   edition_b_split: 0,        // padrão: NENHUM tráfego pro Quiz B (só o quiz principal roda)
+  edition_c_split: 0,        // padrão: NENHUM tráfego pro Quiz C
   edition_test_active: false,
   edition_winner: null,
 };
@@ -67,7 +69,7 @@ export async function loadABConfig(): Promise<ABConfig> {
     // Cast para any: a tabela ab_config não está nos tipos gerados do Supabase
     // (mesmo padrão já usado no projeto para tabelas/RPCs novas).
     const { data, error } = await (supabase as any).from("ab_config")
-      .select("variant_active_variants,variant_winner,version_v2_split,version_test_active,version_winner,edition_b_split,edition_test_active,edition_winner")
+      .select("variant_active_variants,variant_winner,version_v2_split,version_test_active,version_winner,edition_b_split,edition_c_split,edition_test_active,edition_winner")
       .eq("id", 1)
       .maybeSingle();
     if (!error && data) {
@@ -84,6 +86,8 @@ export async function loadABConfig(): Promise<ABConfig> {
         version_winner: data.version_winner ?? null,
         edition_b_split:
           typeof data.edition_b_split === "number" ? data.edition_b_split : AB_DEFAULTS.edition_b_split,
+        edition_c_split:
+          typeof data.edition_c_split === "number" ? data.edition_c_split : AB_DEFAULTS.edition_c_split,
         edition_test_active:
           typeof data.edition_test_active === "boolean" ? data.edition_test_active : AB_DEFAULTS.edition_test_active,
         edition_winner: data.edition_winner ?? null,
