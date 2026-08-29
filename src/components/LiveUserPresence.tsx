@@ -26,6 +26,7 @@ interface PresencePayload {
   page_id: string;
   lead_name?: string;
   traffic_source?: string;
+  edition?: string;
   joined_at: string;
 }
 
@@ -34,8 +35,21 @@ interface OnlineUser {
   name: string;
   page: string;
   traffic_source: string;
+  edition: string;
   joined_at: string;
 }
+
+// Cores por edição de quiz (A/B/C) — batem com o painel A/B/C.
+const EDITION_META: Record<string, { label: string; dot: string; text: string; bg: string; border: string }> = {
+  A: { label: "A", dot: "bg-sky-400", text: "text-sky-300", bg: "bg-sky-500/15", border: "border-sky-500/40" },
+  B: { label: "B", dot: "bg-violet-400", text: "text-violet-300", bg: "bg-violet-500/15", border: "border-violet-500/40" },
+  C: { label: "C", dot: "bg-amber-400", text: "text-amber-300", bg: "bg-amber-500/15", border: "border-amber-500/40" },
+};
+const editionMeta = (e?: string) => EDITION_META[(e || "A").toUpperCase()] || EDITION_META.A;
+const normalizeEdition = (value?: string | null): string => {
+  const e = (value || "").toUpperCase();
+  return e === "A" || e === "B" || e === "C" ? e : "A";
+};
 
 interface RecentPurchase {
   session_id: string | null;
@@ -256,6 +270,7 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
           name: latest.lead_name || "Visitante",
           page: stepLabel,
           traffic_source: normalizeTrafficSource(latest.traffic_source),
+          edition: normalizeEdition(latest.edition),
           joined_at: latest.joined_at,
           stepId,
           timestamp: Number.isFinite(timestamp) ? timestamp : Date.now(),
@@ -279,11 +294,13 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
       if (mergedUsers.has(row.session_id)) return;
 
       const stepLabel = ALL_STEPS.find(s => s.id === stepId)?.label || row.page_id;
+      const auditEdition = normalizeEdition(typeof row.metadata?.edition === "string" ? row.metadata.edition : undefined);
       mergedUsers.set(row.session_id, {
         session_id: row.session_id,
         name: "Visitante",
         page: stepLabel,
         traffic_source: inferTrafficSourceFromMetadata(row.metadata),
+        edition: auditEdition,
         joined_at: row.created_at,
         stepId,
         timestamp,
@@ -307,6 +324,7 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
           name: u.name,
           page: u.page,
           traffic_source: u.traffic_source,
+          edition: u.edition,
           joined_at: u.joined_at,
         },
         stepId: u.stepId,
@@ -552,6 +570,19 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
     return null;
   };
 
+  // Presença por edição (A/B/C) — para colorir o mapa em tempo real.
+  const editionTotals: Record<string, number> = { A: 0, B: 0, C: 0 };
+  const editionByStep: Record<string, Record<string, number>> = {};
+  onlineUsers.forEach((u) => {
+    const e = normalizeEdition(u.edition);
+    editionTotals[e] = (editionTotals[e] || 0) + 1;
+    const sid = ALL_STEPS.find(s => s.label === u.page)?.id;
+    if (sid) {
+      if (!editionByStep[sid]) editionByStep[sid] = {};
+      editionByStep[sid][e] = (editionByStep[sid][e] || 0) + 1;
+    }
+  });
+
   return (
     <div className="rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] p-5">
       <div className="flex items-center justify-between mb-4">
@@ -581,6 +612,23 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
         </div>
       </div>
 
+      {/* Legenda A/B/C — qual quiz cada lead está vivendo, em tempo real */}
+      <div className="flex items-center flex-wrap gap-2 mb-3">
+        <span className="text-[9px] text-[#666] uppercase tracking-wider">Quiz:</span>
+        {(["A", "B", "C"] as const).map((e) => {
+          const m = EDITION_META[e];
+          const n = editionTotals[e] || 0;
+          return (
+            <span key={e} className={cn("flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded-full border",
+              n > 0 ? cn(m.bg, m.border, m.text) : "border-[#2a2a2a] text-[#555]")}>
+              <span className={cn("w-2 h-2 rounded-full", n > 0 ? m.dot : "bg-[#333]")} />
+              {e === "A" ? "A (principal)" : e === "C" ? "C (Guardião)" : "B"}
+              <span className="font-bold tabular-nums">{n}</span>
+            </span>
+          );
+        })}
+      </div>
+
       {/* Original Funnel */}
       <div className="grid grid-cols-7 sm:grid-cols-11 gap-1.5 sm:gap-2">
         {funnelSteps.filter(s => !s.id.startsWith("tk_") && !s.id.startsWith("tkes_")).map((step) => {
@@ -608,12 +656,21 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
               <Icon className={cn("w-3.5 h-3.5 mb-0.5 flex-shrink-0", iconColor)} />
               <span className={cn("text-sm sm:text-lg font-bold tabular-nums leading-none", hasUsers ? "text-white" : "text-[#444]")}>{step.count}</span>
               <span className="text-[7px] sm:text-[9px] text-[#666] text-center leading-tight truncate w-full">{step.label}</span>
-              {hasUsers && (hasTiktok || hasMeta) && (
-                <div className="flex items-center gap-0.5 mt-0.5">
-                  {hasTiktok && <span className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.7)]" title="TikTok" />}
-                  {hasMeta && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.7)]" title="Meta" />}
-                </div>
-              )}
+              {hasUsers && (() => {
+                const eb = editionByStep[step.id] || {};
+                const present = (["A", "B", "C"] as const).filter(e => (eb[e] || 0) > 0);
+                if (present.length === 0) return null;
+                return (
+                  <div className="flex items-center justify-center gap-0.5 mt-0.5 flex-wrap">
+                    {present.map((e) => (
+                      <span key={e} title={`Quiz ${e}: ${eb[e]}`}
+                        className={cn("flex items-center gap-0.5 text-[7px] font-bold leading-none px-1 py-0.5 rounded-full", editionMeta(e).bg, editionMeta(e).text)}>
+                        <span className={cn("w-1 h-1 rounded-full", editionMeta(e).dot)} />{e}{eb[e]! > 1 ? eb[e] : ""}
+                      </span>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
@@ -711,8 +768,10 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
               const isTiktok = user.traffic_source === "tiktok";
               const isTiktokEs = user.page?.includes("/tiktok-es/");
               const isMeta = user.traffic_source === "meta";
-              const dotColor = isTiktok ? (isTiktokEs ? "bg-orange-500" : "bg-red-500") : isMeta ? "bg-emerald-400" : "bg-gray-400";
-              const dotGlow = dotColor;
+              const em = editionMeta(user.edition);
+              // A bolinha agora indica QUAL QUIZ (A/B/C) o lead está vivendo, em tempo real.
+              const dotColor = em.dot;
+              const dotGlow = em.dot;
               const userCampaign = sessionCampaignMap[user.session_id];
               return (
                 <div key={user.session_id} className={cn(
@@ -728,6 +787,10 @@ export default function LiveUserPresence({ onTotalChange, campaignFilter }: Live
                   </span>
                   <span className={cn("font-medium truncate flex-1", isVisitante ? "text-[#666] italic" : "text-white")}>
                     {user.name}
+                  </span>
+                  <span className={cn("text-[8px] px-1.5 py-0.5 rounded-full border font-bold shrink-0", em.bg, em.border, em.text)}
+                    title={`Quiz ${normalizeEdition(user.edition)}`}>
+                    {normalizeEdition(user.edition)}
                   </span>
                   {isTiktokEs && (
                     <span className="text-[8px] bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full border border-orange-500/30 font-bold shrink-0 shadow-[0_0_6px_rgba(249,115,22,0.3)]">

@@ -2,6 +2,12 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getTrackingData } from "@/lib/trackingDataLayer";
 import { getLeadName } from "@/lib/upsellData";
+import { getEffectiveEdition } from "@/lib/quizEdition";
+
+/** Edição travada do visitante (A/B/C), lida sem custo do localStorage. Nunca lança. */
+const currentEdition = (): string => {
+  try { return getEffectiveEdition(); } catch { return "A"; }
+};
 
 const PRESENCE_CHANNEL = "funnel-presence";
 
@@ -46,6 +52,7 @@ const buildPresencePayload = (sessionId: string, pageId: string) => ({
   lead_name: isDevSession() ? `[TESTE] ${getLeadName()}` : getLeadName(),
   traffic_source: isDevSession() ? "preview" : detectTrafficSource(),
   is_preview: isDevSession(),
+  edition: currentEdition(),
   joined_at: new Date().toISOString(),
 });
 
@@ -163,6 +170,7 @@ export const usePagePresence = (pageId: string, enabled: boolean = true): void =
           utm_source: trackingData.utm_source || null,
           utm_medium: trackingData.utm_medium || null,
           utm_campaign: trackingData.utm_campaign || null,
+          edition: currentEdition(),
           is_production: true,
         },
       }]).then(() => {});
