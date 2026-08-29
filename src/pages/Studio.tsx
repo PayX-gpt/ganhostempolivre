@@ -32,7 +32,7 @@ const frameUrl = (e: Ed, step: number, lang: Lang) =>
   `${import.meta.env.BASE_URL}step-${step}?edition=${e}&preview=1&lang=${lang}`;
 
 export default function Studio() {
-  const [mode, setMode] = useState<"compare" | "gallery">("gallery");
+  const [mode, setMode] = useState<"compare" | "gallery" | "vs">("gallery");
   const [galleryEd, setGalleryEd] = useState<Ed>("B");
   const [step, setStep] = useState(1);
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
@@ -67,8 +67,9 @@ export default function Studio() {
           <div className="flex items-center gap-2 flex-wrap">
             {/* Modo */}
             <div className="flex bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-0.5">
-              <Toggle active={mode === "gallery"} onClick={() => setMode("gallery")} title="Galeria"><LayoutGrid className="w-3.5 h-3.5 inline mr-1" />Galeria</Toggle>
-              <Toggle active={mode === "compare"} onClick={() => setMode("compare")} title="Comparar A|B"><Columns2 className="w-3.5 h-3.5 inline mr-1" />Comparar</Toggle>
+              <Toggle active={mode === "gallery"} onClick={() => setMode("gallery")} title="Galeria de 1 quiz"><LayoutGrid className="w-3.5 h-3.5 inline mr-1" />Galeria</Toggle>
+              <Toggle active={mode === "vs"} onClick={() => setMode("vs")} title="A vs B etapa por etapa"><Columns2 className="w-3.5 h-3.5 inline mr-1" />A vs B</Toggle>
+              <Toggle active={mode === "compare"} onClick={() => setMode("compare")} title="Comparar 1 etapa em tela cheia"><Eye className="w-3.5 h-3.5 inline mr-1" />Tela cheia</Toggle>
             </div>
             {/* Edição (galeria) */}
             {mode === "gallery" && (
@@ -128,6 +129,40 @@ export default function Studio() {
                   </div>
                 </div>
               ))}
+            </div>
+          </>
+        ) : mode === "vs" ? (
+          <>
+            <div className="text-[11px] text-[#888] mb-3">Cada etapa: <span className="text-sky-300 font-bold">Quiz A</span> à esquerda, <span className="text-violet-300 font-bold">Quiz B</span> à direita — desça comparando. Clique no <Eye className="w-3 h-3 inline" /> pra abrir grande.</div>
+            <div className="space-y-4">
+              {Array.from({ length: Math.max(STEPS_A.length, STEPS_B.length) }, (_, i) => i + 1).map(n => {
+                const a = STEPS_A.find(s => s.n === n);
+                const b = STEPS_B.find(s => s.n === n);
+                return (
+                  <div key={n} className="rounded-xl border border-[#2a2a2a] bg-[#0f1319] p-3">
+                    <div className="text-[11px] text-[#aaa] font-bold mb-2">Etapa {n}</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {([["A", a, true], ["B", b, false]] as const).map(([ed, sd, isA]) => (
+                        <div key={ed} className="relative rounded-lg overflow-hidden border border-[#2a2a2a] bg-[#0f1319]">
+                          <div className="flex items-center justify-between px-2 py-1 border-b border-[#2a2a2a] gap-1">
+                            <span className={cn("text-[9px] font-black truncate", isA ? "text-sky-300" : "text-violet-300")}>{ed} · {sd ? sd.label.replace("🎥 ", "") : "—"}</span>
+                            {sd && <button onClick={() => setOpen({ ed, step: n })} className="text-[#888] hover:text-emerald-400 shrink-0"><Eye className="w-3.5 h-3.5" /></button>}
+                          </div>
+                          <div className="relative overflow-hidden" style={{ height: 210 }}>
+                            {sd ? (
+                              <>
+                                <iframe key={`vs-${ed}-${n}-${lang}-${reloadKey}`} src={frameUrl(ed, n, lang)} title={`${ed} ${n}`} loading="lazy"
+                                  style={{ width: 390, height: 640, border: "none", transformOrigin: "top left", transform: "scale(0.5)", pointerEvents: "none", background: "#0f1319" }} />
+                                <button onClick={() => setOpen({ ed, step: n })} className="absolute inset-0 hover:bg-black/30 transition-colors" />
+                              </>
+                            ) : <div className="flex items-center justify-center h-full text-[#555] text-[10px]">não existe no Quiz {ed}</div>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </>
         ) : (
