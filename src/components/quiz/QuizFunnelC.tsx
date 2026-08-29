@@ -25,6 +25,7 @@ import Step9Availability from "./Step9Availability";
 import StepPlatformDemo from "./StepPlatformDemo";
 import Step10Loading from "./Step10Loading";
 import Step11SocialProof2 from "./Step11SocialProof2";
+import StepGuardiaoOffer from "./StepGuardiaoOffer";
 import StepWhatsAppProof from "./StepWhatsAppProof";
 import StepContactMethod from "./StepContactMethod";
 import StepContactInput from "./StepContactInput";
@@ -367,7 +368,8 @@ const QuizFunnelC = () => {
       case "step-16":
         return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} />;
       case "step-17":
-        return <Step11SocialProof2 onNext={() => {}} userAge={answers.age} />;
+        // Quiz C: VSL da GUARDIÃO (Panda 420b6580) — botão aos 824s (13:44) → checkout Hubla R$147
+        return <StepGuardiaoOffer onNext={() => {}} userAge={answers.age} />;
       default:
         return null;
     }

@@ -385,7 +385,7 @@ const StepGuardiaoOffer = ({ onNext, userAge, pandaVideoId, pandaButtonId: custo
     }
   };
 
-  const videoId = pandaVideoId || "daa037ca-64f0-4637-97dc-c0278d1f6df6";
+  const videoId = pandaVideoId || "420b6580-d846-4015-bf7d-a0ba99316d1c";
   const pandaButtonId = customButtonId || DEFAULT_PANDA_BUTTON_ID;
   const aspectPadding = videoAspectRatio === "16:9" ? "56.25%" : "177.77777777777777%";
 
@@ -624,4 +624,4 @@ const StepGuardiaoOffer = ({ onNext, userAge, pandaVideoId, pandaButtonId: custo
   );
 };
 
-export default Step11SocialProof2;
+export default StepGuardiaoOffer;
