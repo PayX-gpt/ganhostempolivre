@@ -31,13 +31,15 @@ function assignEdition(): QuizEdition {
   // Vencedor declarado manda em tudo.
   if (cfg.edition_winner === "A" || cfg.edition_winner === "B" || cfg.edition_winner === "C") return cfg.edition_winner;
 
+  // Edição já TRAVADA (veio de link de campanha ?edition= ou de sorteio anterior)
+  // tem prioridade — persiste em recargas/navegação, mesmo com o teste desligado.
+  const stored = localStorage.getItem(EDITION_KEY);
+  if (stored === "A" || stored === "B" || stored === "C") return stored;
+
   const bSplit = Math.max(0, cfg.edition_b_split);
   const cSplit = Math.max(0, cfg.edition_c_split);
   // Teste desligado ou sem nenhum split → sempre Quiz A (padrão seguro).
   if (!cfg.edition_test_active || (bSplit <= 0 && cSplit <= 0)) return "A";
-
-  const stored = localStorage.getItem(EDITION_KEY);
-  if (stored === "A" || stored === "B" || stored === "C") return stored;
 
   // Sorteio: [0, bSplit) → B; [bSplit, bSplit+cSplit) → C; resto → A.
   const r = Math.random() * 100;
@@ -50,7 +52,14 @@ function assignEdition(): QuizEdition {
 
 /** Edição efetiva do visitante (URL override > sorteio/trava). */
 export function getEffectiveEdition(): QuizEdition {
-  return urlEdition() ?? assignEdition();
+  const fromUrl = urlEdition();
+  if (fromUrl) {
+    // Link de campanha (?edition=B|C): trava a edição no navegador para não
+    // perder em recarga ou ao avançar de etapa (a query some da URL no goNext).
+    try { localStorage.setItem(EDITION_KEY, fromUrl); } catch { /* ignore */ }
+    return fromUrl;
+  }
+  return assignEdition();
 }
 
 /** Salva a edição no session_attribution para o painel poder comparar A vs B. */

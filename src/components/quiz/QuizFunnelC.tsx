@@ -304,7 +304,7 @@ const QuizFunnelC = () => {
         return <StepName onNext={(name) => updateAndNext("name", name)} />;
       case "step-4":
         // Quiz C: 1º vídeo trocado pelo vídeo enviado (Panda ac92e48a)
-        return <Step3SocialProof onNext={goNext} userAge={answers.age} pandaVideoId="ac92e48a-5f66-4819-a432-abaa15da7be8" />;
+        return <Step3SocialProof onNext={goNext} userAge={answers.age} />;
       case "step-5":
         return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} userName={answers.name} userAge={answers.age} quizVersion={quizVersion} />;
       case "step-6":
@@ -312,7 +312,7 @@ const QuizFunnelC = () => {
       case "step-7":
         return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} userName={answers.name} userAge={answers.age} quizVersion={quizVersion} />;
       case "step-8":
-        return <Step7MentorVideo onNext={goNext} userAge={answers.age} />;
+        return <Step7MentorVideo onNext={goNext} userAge={answers.age} videoId="ac92e48a-5f66-4819-a432-abaa15da7be8" mentorName="Vitor Santos" mentorPhotoSrc={logoGuardiao} />;
       case "step-9":
         return <StepAccountBalance onNext={(v) => updateAndNext("accountBalance", v)} userName={answers.name} userAge={answers.age} />;
       case "step-10":

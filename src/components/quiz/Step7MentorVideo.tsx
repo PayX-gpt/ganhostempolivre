@@ -9,7 +9,13 @@ import { usePandaPreload } from "@/lib/usePandaPreload";
 interface Step7Props {
   onNext: () => void;
   userAge?: string;
+  /** Overrides p/ Quiz C (Guardião). Sem eles = comportamento idêntico ao Quiz A. */
+  videoId?: string;
+  mentorName?: string;
+  mentorPhotoSrc?: string;
 }
+
+const DEFAULT_VIDEO_ID = "c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8";
 
 const texts = {
   pt: {
@@ -53,14 +59,21 @@ const texts = {
   },
 } as const;
 
-const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
+const Step7MentorVideo = ({ onNext, userAge, videoId, mentorName, mentorPhotoSrc }: Step7Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const [showCTA, setShowCTA] = useState(false);
   const videoRef = useRef<HTMLDivElement>(null);
   const young = isYoungProfile(userAge);
 
-  usePandaPreload("c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8");
+  // Overrides do Quiz C (Guardião). Sem props → tudo igual ao Quiz A.
+  const vid = videoId || DEFAULT_VIDEO_ID;
+  const name = mentorName || t.mentorName;
+  const first = name.split(" ")[0];
+  const photo = mentorPhotoSrc || mentorPhoto;
+  const rep = (s: string) => s.replace(/Ricardo Almeida/g, name).replace(/Ricardo/g, first);
+
+  usePandaPreload(vid);
 
   useEffect(() => { const timer = setTimeout(() => setShowCTA(true), 12_000); return () => clearTimeout(timer); }, []);
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, []);
@@ -70,21 +83,21 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
   return (
     <StepContainer>
       <div className="flex items-center gap-2.5 w-full">
-        <img src={mentorPhoto} alt={t.mentorName} className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-primary/40 shrink-0" />
+        <img src={photo} alt={name} className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-primary/40 shrink-0" />
         <div className="min-w-0">
-          <p className="font-bold text-foreground text-[13px] sm:text-base">{t.mentorName}</p>
+          <p className="font-bold text-foreground text-[13px] sm:text-base">{name}</p>
           <p className="text-[11px] sm:text-sm text-muted-foreground">{t.mentorRole}</p>
         </div>
       </div>
 
       <StepTitle>{t.title1}<span className="text-gradient-green">{t.titleHL}</span>{t.title2}</StepTitle>
-      <StepSubtitle>{young ? t.subtitleYoung : t.subtitleMature}</StepSubtitle>
+      <StepSubtitle>{rep(young ? t.subtitleYoung : t.subtitleMature)}</StepSubtitle>
 
       <div className="w-full rounded-2xl overflow-hidden border border-border scroll-mt-24" ref={videoRef}>
         <div style={{ position: "relative", paddingTop: "177.77777777777777%" }}>
           <iframe
-            id="panda-c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8"
-            src="https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8"
+            id={`panda-${vid}`}
+            src={`https://player-vz-350772d9-cdc.tv.pandavideo.com.br/embed/?v=${vid}`}
             style={{ border: "none", position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
             allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
             allowFullScreen
@@ -105,7 +118,7 @@ const Step7MentorVideo = ({ onNext, userAge }: Step7Props) => {
         <div className="flex items-start gap-2">
           <MessageSquare className="w-4 h-4 text-primary shrink-0 mt-0.5" />
           <p className="text-sm text-foreground/80 text-center leading-relaxed italic">
-            {young ? t.quoteYoung : t.quoteMature}
+            {rep(young ? t.quoteYoung : t.quoteMature)}
           </p>
         </div>
       </div>
