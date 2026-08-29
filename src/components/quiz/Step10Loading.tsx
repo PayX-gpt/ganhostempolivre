@@ -12,6 +12,8 @@ interface Step10Props {
   onNext: () => void;
   userAge?: string;
   userName?: string;
+  /** Override da foto (Quiz C usa a logo do Guardião). Sem prop = igual ao Quiz A. */
+  photoSrc?: string;
 }
 
 const texts = {
@@ -82,7 +84,7 @@ const texts = {
 
 const stepIcons = [Search, Settings, BarChart3, Target, MapPin, Sparkles];
 
-const Step10Loading = ({ onNext, userAge, userName }: Step10Props) => {
+const Step10Loading = ({ onNext, userAge, userName, photoSrc }: Step10Props) => {
   const { lang } = useLanguage();
   const t = texts[lang];
   const [currentStep, setCurrentStep] = useState(0);
@@ -121,7 +123,7 @@ const Step10Loading = ({ onNext, userAge, userName }: Step10Props) => {
     <StepContainer>
       <div className="relative mx-auto">
         <div className={`w-20 h-20 sm:w-28 sm:h-28 rounded-full border-4 ${showResult ? "border-primary" : "border-primary/30 border-t-primary animate-spin"} absolute inset-0`} />
-        <img src={mentorPhoto} alt="Especialista" className="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover relative z-10 border-4 border-transparent" />
+        <img src={photoSrc || mentorPhoto} alt="Especialista" className="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover relative z-10 border-4 border-transparent" />
       </div>
 
       {showResult ? (
