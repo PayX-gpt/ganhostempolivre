@@ -135,6 +135,21 @@
     background-clip: text;
   }
 
+  /* ── Tema GUARDIÃO — SÓ no Quiz C (escopado, não afeta A/B) ──
+     Marca AMARELA (#FFD700) no lugar do verde + botão de ação VERDE (#00D96D). */
+  .quiz-c-theme {
+    --primary: 51 100% 50%;        /* #FFD700 — marca amarela */
+    --primary-foreground: 0 0% 6%;
+    --accent: 150 100% 43%;        /* #00D96D — ação/CTA verde (contraste com o amarelo) */
+    --accent-foreground: 0 0% 100%;
+  }
+  .quiz-c-theme .text-gradient-green {
+    background: linear-gradient(135deg, hsl(51 100% 55%), hsl(45 100% 50%)); /* highlight todo amarelo */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   .text-trust {
     color: hsl(var(--funnel-trust));
   }

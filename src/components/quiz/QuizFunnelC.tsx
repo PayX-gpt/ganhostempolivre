@@ -26,6 +26,7 @@ import StepPlatformDemo from "./StepPlatformDemo";
 import Step10Loading from "./Step10Loading";
 import Step11SocialProof2 from "./Step11SocialProof2";
 import StepGuardiaoOffer from "./StepGuardiaoOffer";
+import logoGuardiao from "@/assets/logo-guardiao.png";
 import StepWhatsAppProof from "./StepWhatsAppProof";
 import StepContactMethod from "./StepContactMethod";
 import StepContactInput from "./StepContactInput";
@@ -302,7 +303,8 @@ const QuizFunnelC = () => {
       case "step-3":
         return <StepName onNext={(name) => updateAndNext("name", name)} />;
       case "step-4":
-        return <Step3SocialProof onNext={goNext} userAge={answers.age} />;
+        // Quiz C: 1º vídeo trocado pelo vídeo enviado (Panda ac92e48a)
+        return <Step3SocialProof onNext={goNext} userAge={answers.age} pandaVideoId="ac92e48a-5f66-4819-a432-abaa15da7be8" />;
       case "step-5":
         return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} userName={answers.name} userAge={answers.age} quizVersion={quizVersion} />;
       case "step-6":
@@ -382,18 +384,19 @@ const QuizFunnelC = () => {
   const progressTotal = TOTAL_STEPS - 2;
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col">
+    <div className="quiz-c-theme min-h-[100dvh] bg-background flex flex-col">
       <header className="w-full bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-lg mx-auto px-3 py-2 sm:py-3 flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <h1 className="font-bold text-foreground tracking-tight whitespace-nowrap text-sm sm:text-lg">
-              <span className="text-gradient-green font-extrabold">
-                {lang === "pt" ? "GTL" : lang === "en" ? "FTE" : "GTL"}
-              </span>
-              <span className="text-foreground/80 font-semibold ml-1.5 text-[11px] sm:text-sm uppercase tracking-wider">
+          <div className="flex items-center gap-2 min-w-0">
+            <img src={logoGuardiao} alt="Guardião" className="w-7 h-7 sm:w-9 sm:h-9 shrink-0 rounded-md" />
+            <div className="min-w-0 leading-tight">
+              <div className="font-display font-extrabold tracking-tight text-gradient-green text-base sm:text-xl">
+                GUARDIÃO
+              </div>
+              <div className="text-foreground/70 font-semibold text-[9px] sm:text-[11px] uppercase tracking-wider truncate">
                 {lang === "pt" ? "Ganhos com Tempo Livre" : lang === "en" ? "Free Time Earnings" : "Ganancias Tiempo Libre"}
-              </span>
-            </h1>
+              </div>
+            </div>
           </div>
           <LanguageSelector />
         </div>

@@ -25,12 +25,12 @@ interface Step11Props {
 
 const texts = {
   pt: {
-    title1: "Ótima notícia: seu perfil é ",
-    titleHL: "compatível!",
-    subtitleYoung: "Pessoas com o mesmo perfil que o seu já estão construindo resultados reais com nosso método.",
-    subtitleMature: "Pessoas com o mesmo perfil que o seu já estão tendo resultados reais.",
-    headlineYoung: <>Prepare-se! Em apenas <span className="text-accent">30 SEGUNDOS</span>, vou te mostrar como gerar de <span className="text-gradient-green">R$200 a R$1.000</span> de renda extra, dedicando apenas <span className="text-accent">10 MINUTOS DO SEU DIA</span>!</>,
-    headlineMature: <>Nos próximos <span className="text-accent">30 SEGUNDOS</span> vou te explicar como ganhar com apenas <span className="text-accent">10 MIN DO SEU TEMPO LIVRE</span> de <span className="text-gradient-green">R$200 a R$1.000</span> reais!</>,
+    title1: "Parabéns — seu perfil foi ",
+    titleHL: "APROVADO!",
+    subtitleYoung: <>Você <span className="text-gradient-green">não precisa</span> ganhar R$10 mil/mês pra virar o jogo. Precisa de <span className="text-gradient-green">R$100 a R$300 por dia</span> — todo dia.</>,
+    subtitleMature: <>Você <span className="text-gradient-green">não precisa</span> ganhar R$10 mil/mês pra sair do vermelho. Precisa de <span className="text-gradient-green">R$100 a R$300 por dia</span> — todo dia. E é exatamente isso que o Guardião faz por você.</>,
+    headlineYoung: <>Assista até o fim: veja como pessoas comuns estão colocando <span className="text-gradient-green">R$100 a R$300 por dia</span> no bolso com <span className="text-accent">poucos minutos por dia</span> — e como liberar o <span className="text-accent">SEU acesso hoje</span>.</>,
+    headlineMature: <>Assista até o fim: veja como pessoas comuns (até <span className="text-accent">60, 70 anos</span>) estão colocando <span className="text-gradient-green">R$100 a R$300 por dia</span> no bolso com poucos minutos — e como liberar o <span className="text-accent">SEU acesso hoje</span>, com segurança.</>,
     cta: "QUERO MEU ACESSO →",
     watchToUnlock: "Assista o vídeo para continuar...",
     youngTestimonials: [
@@ -574,8 +574,8 @@ const StepGuardiaoOffer = ({ onNext, userAge, pandaVideoId, pandaButtonId: custo
             onClick={handleCustomCtaClick}
             className="w-full py-4 px-6 rounded-xl font-extrabold text-[15px] sm:text-xl text-black uppercase tracking-wide animate-fade-in transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
             style={{
-              background: "linear-gradient(135deg, #FFD600 0%, #FFB300 100%)",
-              boxShadow: "0 4px 20px rgba(255, 214, 0, 0.4)",
+              background: "linear-gradient(135deg, #00E676 0%, #00C853 100%)",
+              boxShadow: "0 4px 20px rgba(0, 200, 83, 0.45)",
             }}
           >
             {customCtaText}
@@ -587,8 +587,8 @@ const StepGuardiaoOffer = ({ onNext, userAge, pandaVideoId, pandaButtonId: custo
                 onClick={handleCustomCtaClick}
                 className="w-full py-4 px-5 rounded-xl font-extrabold text-[14px] sm:text-lg text-black uppercase tracking-wide transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 style={{
-                  background: "linear-gradient(135deg, #FFD600 0%, #FFB300 100%)",
-                  boxShadow: "0 6px 24px rgba(255, 214, 0, 0.45)",
+                  background: "linear-gradient(135deg, #00E676 0%, #00C853 100%)",
+                  boxShadow: "0 6px 24px rgba(0, 200, 83, 0.45)",
                 }}
               >
                 {customCtaText}
