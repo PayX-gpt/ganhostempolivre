@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Monitor, Smartphone, RefreshCw, ExternalLink, LayoutGrid, Columns2, Eye, X, Film } from "lucide-react";
@@ -30,6 +30,36 @@ const LANGS = ["pt", "en", "es"] as const;
 type Lang = typeof LANGS[number];
 const frameUrl = (e: Ed, step: number, lang: Lang) =>
   `${import.meta.env.BASE_URL}step-${step}?edition=${e}&preview=1&lang=${lang}`;
+
+/**
+ * Miniatura que só monta o iframe quando entra na tela (IntersectionObserver).
+ * Evita carregar 19–38 iframes pesados de uma vez (o que deixava as telas de
+ * baixo em branco). Cada miniatura carrega sozinha ao rolar até ela.
+ */
+function LazyThumb({ src, frameKey }: { src: string; frameKey: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => { if (entries[0]?.isIntersecting) { setShow(true); io.disconnect(); } },
+      { rootMargin: "400px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [frameKey]);
+  return (
+    <div ref={ref} className="w-full h-full">
+      {show ? (
+        <iframe key={frameKey} src={src} title={frameKey}
+          style={{ width: 390, height: 640, border: "none", transformOrigin: "top left", transform: "scale(0.5)", pointerEvents: "none", background: "#0f1319" }} />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-[#555] text-[10px] animate-pulse">carregando…</div>
+      )}
+    </div>
+  );
+}
 
 export default function Studio() {
   const [mode, setMode] = useState<"compare" | "gallery" | "vs">("gallery");
@@ -106,13 +136,7 @@ export default function Studio() {
                 <div key={s.n} className="group relative rounded-xl overflow-hidden border border-[#2a2a2a] bg-[#0f1319]">
                   {/* Miniatura (iframe reduzido) */}
                   <div className="relative overflow-hidden" style={{ height: 230 }}>
-                    <iframe
-                      key={`thumb-${galleryEd}-${s.n}-${lang}-${reloadKey}`}
-                      src={frameUrl(galleryEd, s.n, lang)}
-                      title={`thumb ${s.n}`}
-                      loading="lazy"
-                      style={{ width: 390, height: 640, border: "none", transformOrigin: "top left", transform: "scale(0.5)", pointerEvents: "none", background: "#0f1319" }}
-                    />
+                    <LazyThumb src={frameUrl(galleryEd, s.n, lang)} frameKey={`thumb-${galleryEd}-${s.n}-${lang}-${reloadKey}`} />
                     {/* Overlay clique olhinho */}
                     <button onClick={() => setOpen({ ed: galleryEd, step: s.n })}
                       className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/40 transition-colors">
@@ -151,8 +175,7 @@ export default function Studio() {
                           <div className="relative overflow-hidden" style={{ height: 210 }}>
                             {sd ? (
                               <>
-                                <iframe key={`vs-${ed}-${n}-${lang}-${reloadKey}`} src={frameUrl(ed, n, lang)} title={`${ed} ${n}`} loading="lazy"
-                                  style={{ width: 390, height: 640, border: "none", transformOrigin: "top left", transform: "scale(0.5)", pointerEvents: "none", background: "#0f1319" }} />
+                                <LazyThumb src={frameUrl(ed, n, lang)} frameKey={`vs-${ed}-${n}-${lang}-${reloadKey}`} />
                                 <button onClick={() => setOpen({ ed, step: n })} className="absolute inset-0 hover:bg-black/30 transition-colors" />
                               </>
                             ) : <div className="flex items-center justify-center h-full text-[#555] text-[10px]">não existe no Quiz {ed}</div>}
