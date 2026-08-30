@@ -362,6 +362,13 @@ export const saveSessionAttribution = async (quizVariant?: string, quizEdition?:
       ? quizEdition
       : (localStorage.getItem("quiz_edition") || "A");
 
+    // Localização aproximada p/ o mapa de vendas — via fuso horário + idioma do
+    // navegador (sem API externa, sem IP). Ex.: "America/Sao_Paulo", "pt-BR".
+    let geoTz: string | null = null;
+    let geoLang: string | null = null;
+    try { geoTz = Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch { /* ignore */ }
+    try { geoLang = navigator.language || null; } catch { /* ignore */ }
+
     // Also read early-captured UTMs as fallback
     const earlyUtm: Record<string, string> = (() => {
       try { return JSON.parse(localStorage.getItem('lead_utm') || '{}'); } catch { return {}; }
@@ -373,6 +380,8 @@ export const saveSessionAttribution = async (quizVariant?: string, quizEdition?:
       quiz_variant: resolvedVariant,
       quiz_version: quizVersion,
       quiz_edition: edition,
+      geo_tz: geoTz,
+      geo_lang: geoLang,
       utm_source: data.utm_source || earlyUtm.utm_source || null,
       utm_medium: data.utm_medium || earlyUtm.utm_medium || null,
       utm_campaign: data.utm_campaign || earlyUtm.utm_campaign || null,

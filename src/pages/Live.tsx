@@ -16,6 +16,7 @@ import {
   Megaphone, Palette, Receipt, ShieldCheck, Beaker, Trophy
 } from "lucide-react";
 import LiveRevenueChart from "@/components/LiveRevenueChart";
+import LiveSalesWorldMap from "@/components/LiveSalesWorldMap";
 import LiveUserPresence from "@/components/LiveUserPresence";
 import LiveIntelligence from "@/components/LiveIntelligence";
 import LiveFunnelAnalytics from "@/components/LiveFunnelAnalytics";
@@ -768,6 +769,7 @@ export default function AdminFunnelAudit() {
             <LiveAIAlerts />
             <LiveAISuggestions />
             <LiveUserPresence onTotalChange={handlePresenceTotalChange} campaignFilter={campaignFilterState} />
+            <LiveSalesWorldMap />
             <LiveRevenueChart usdToBrl={1} />
             <LiveComparisonMode />
             <LiveIntelligence />

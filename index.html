@@ -45,6 +45,27 @@
       }
     }catch(e){}
   })();
+  // Auto-recuperação de bundle velho: se um chunk falha ao carregar (index.html
+  // em cache no celular apontando p/ um JS que já não existe após deploy), recarrega
+  // uma vez p/ pegar a versão nova. Evita "tela branca / zero informações" no mobile.
+  (function(){
+    var KEY='__chunk_reloaded__';
+    function recover(){
+      try{
+        if(!sessionStorage.getItem(KEY)){
+          sessionStorage.setItem(KEY, String(Date.now()));
+          window.location.reload();
+        }
+      }catch(_){ window.location.reload(); }
+    }
+    window.addEventListener('vite:preloadError', function(e){ if(e&&e.preventDefault)e.preventDefault(); recover(); });
+    window.addEventListener('error', function(e){
+      var m=(e&&e.message)||''; var t=e&&e.target;
+      var badScript = t && t.tagName==='SCRIPT' && /\/assets\/.*\.js/.test(t.src||'');
+      if(badScript || /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(m)) recover();
+    }, true);
+    window.addEventListener('load', function(){ setTimeout(function(){ try{ sessionStorage.removeItem(KEY); }catch(_){}} , 5000); });
+  })();
   </script>
   <script>
   (function(){
