@@ -144,7 +144,9 @@ export default function AdminFunnelAudit() {
   const [icToSalesRatio, setIcToSalesRatio] = useState("0:0");
   const [hotmartApproved, setHotmartApproved] = useState(0);
   const [hotmartRefunded, setHotmartRefunded] = useState(0);
-  const [refundSummary, setRefundSummary] = useState<{ refunds_qtd: number; refunds_valor: number; refunds_hoje_qtd: number; refunds_hoje_valor: number; rate_qtd: number; rate_valor: number } | null>(null);
+  const [refundSummary, setRefundSummary] = useState<{ refunds_qtd: number; refunds_valor: number; sales_qtd: number; sales_valor: number; rate_qtd: number; rate_valor: number } | null>(null);
+  const [refundDays, setRefundDays] = useState(7);   // padrão: últimos 7 dias
+  const [refundDate, setRefundDate] = useState("");  // "" = período; "YYYY-MM-DD" = data específica
   const [hotmartPending, setHotmartPending] = useState(0);
   const [hotmartRefused, setHotmartRefused] = useState(0);
   const [hotmartApprovalRate, setHotmartApprovalRate] = useState(0);
@@ -259,11 +261,6 @@ export default function AdminFunnelAudit() {
     setHotmartPending(pendingPurchases.length);
     setHotmartRefused(refusedPurchases.length);
     setHotmartRefunded(refundedPurchases.length);
-
-    // Reembolsos financeiros precisos (acumulado + hoje + taxa), atualiza em tempo real.
-    supabase.rpc("get_refunds_summary" as any).then(({ data: rs }) => {
-      if (rs) setRefundSummary(rs as any);
-    });
     
     const totalAttempts = approvedPurchases.length + pendingPurchases.length + refusedPurchases.length;
     setHotmartApprovalRate(totalAttempts > 0 ? (approvedPurchases.length / totalAttempts) * 100 : 0);
@@ -397,6 +394,20 @@ export default function AdminFunnelAudit() {
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [isLivePaused, notificationsEnabled, fetchData]);
+
+  // Card de Reembolsos: busca pelo período/data selecionado + atualiza em tempo real.
+  useEffect(() => {
+    let active = true;
+    const load = () => {
+      const args = refundDate ? { p_date: refundDate } : { p_days: refundDays };
+      supabase.rpc("get_refunds_summary" as any, args).then(({ data: rs }) => { if (active && rs) setRefundSummary(rs as any); });
+    };
+    load();
+    const ch = supabase.channel("refunds-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "purchase_tracking" }, () => load())
+      .subscribe();
+    return () => { active = false; supabase.removeChannel(ch); };
+  }, [refundDays, refundDate]);
 
   useEffect(() => { localStorage.setItem('live-sound-enabled', String(soundEnabled)); }, [soundEnabled]);
   useEffect(() => { localStorage.setItem('live-notifications-enabled', String(notificationsEnabled)); }, [notificationsEnabled]);
@@ -627,12 +638,43 @@ export default function AdminFunnelAudit() {
             subtitle={`${frontendICs} ICs | ${icToSalesRatio}`} icon={Target}
             trend={periodData && periodData.previous.ics > 0 ? getVariation(icToSalesRate, (periodData.previous.sales / periodData.previous.ics) * 100).trend : undefined}
             trendLabel={periodData && periodData.previous.ics > 0 ? `${getVariation(icToSalesRate, (periodData.previous.sales / periodData.previous.ics) * 100).pct} vs anterior` : undefined} />
-          <MetricCard title="Reembolsos"
-            value={`R$ ${(refundSummary?.refunds_valor ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-            icon={ArrowDownCircle}
-            subtitle={`${refundSummary?.refunds_qtd ?? 0} reemb. · taxa ${refundSummary?.rate_valor ?? 0}% · hoje ${refundSummary?.refunds_hoje_qtd ?? 0} (R$ ${(refundSummary?.refunds_hoje_valor ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`}
-            trend={(refundSummary?.rate_valor ?? 0) >= 15 ? "down" : "neutral"}
-            trendLabel={`${refundSummary?.rate_qtd ?? 0}% das vendas`} />
+          {/* Reembolsos — com mini filtro de período/data no próprio card */}
+          <div className="relative overflow-hidden rounded-2xl p-3 sm:p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] shadow-xl">
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/20 flex-shrink-0">
+                  <ArrowDownCircle className="w-3.5 h-3.5 text-red-400" />
+                </div>
+                <p className="text-[#888] text-xs font-medium truncate">Reembolsos</p>
+              </div>
+              <p className="text-xl sm:text-2xl font-bold text-white tracking-tight truncate tabular-nums">
+                R$ {(refundSummary?.refunds_valor ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+              <p className="text-[#666] text-[10px] sm:text-xs truncate">
+                {refundSummary?.refunds_qtd ?? 0} reemb. · {refundDate ? new Date(refundDate + 'T00:00').toLocaleDateString('pt-BR') : refundDays === 1 ? 'hoje' : `${refundDays} dias`}
+              </p>
+              <div className="flex items-center gap-1 text-[10px] sm:text-xs font-medium text-red-400">
+                <TrendingDown className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">taxa {refundSummary?.rate_valor ?? 0}% · {refundSummary?.rate_qtd ?? 0}% das vendas</span>
+              </div>
+            </div>
+            {/* mini filtro */}
+            <div className="flex items-center gap-1 mt-2 flex-wrap">
+              {[{ l: 'Hoje', d: 1 }, { l: '7d', d: 7 }, { l: '30d', d: 30 }].map(p => (
+                <button key={p.d} onClick={() => { setRefundDate(''); setRefundDays(p.d); }}
+                  className={cn("px-1.5 py-0.5 rounded text-[9px] border transition-colors",
+                    !refundDate && refundDays === p.d ? "bg-red-500/20 text-red-300 border-red-500/40 font-semibold" : "border-[#2a2a2a] text-[#888] hover:text-white")}>
+                  {p.l}
+                </button>
+              ))}
+              <input type="date" value={refundDate} max={new Date().toISOString().slice(0, 10)}
+                onChange={e => setRefundDate(e.target.value)}
+                className={cn("px-1 py-0.5 rounded text-[9px] bg-[#111] border text-[#aaa] outline-none", refundDate ? "border-red-500/40" : "border-[#2a2a2a]")} />
+              {refundDate && (
+                <button onClick={() => setRefundDate('')} className="px-1.5 py-0.5 rounded text-[9px] border border-[#2a2a2a] text-[#888] hover:text-white">limpar</button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* TAB SYSTEM */}
