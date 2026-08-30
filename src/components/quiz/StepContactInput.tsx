@@ -65,18 +65,64 @@ const texts = {
   },
 };
 
+// Países (DDI + bandeira). Brasil como padrão; ordem: BR/LatAm/Lusófonos/Europa/etc.
+interface Country { code: string; name: string; dial: string; flag: string; min: number; max: number; }
+const COUNTRIES: Country[] = [
+  { code: "BR", name: "Brasil", dial: "55", flag: "🇧🇷", min: 10, max: 11 },
+  { code: "PT", name: "Portugal", dial: "351", flag: "🇵🇹", min: 9, max: 9 },
+  { code: "US", name: "EUA", dial: "1", flag: "🇺🇸", min: 10, max: 10 },
+  { code: "AR", name: "Argentina", dial: "54", flag: "🇦🇷", min: 10, max: 11 },
+  { code: "PY", name: "Paraguai", dial: "595", flag: "🇵🇾", min: 9, max: 10 },
+  { code: "UY", name: "Uruguai", dial: "598", flag: "🇺🇾", min: 8, max: 9 },
+  { code: "CL", name: "Chile", dial: "56", flag: "🇨🇱", min: 9, max: 9 },
+  { code: "CO", name: "Colômbia", dial: "57", flag: "🇨🇴", min: 10, max: 10 },
+  { code: "PE", name: "Peru", dial: "51", flag: "🇵🇪", min: 9, max: 9 },
+  { code: "MX", name: "México", dial: "52", flag: "🇲🇽", min: 10, max: 10 },
+  { code: "BO", name: "Bolívia", dial: "591", flag: "🇧🇴", min: 8, max: 8 },
+  { code: "EC", name: "Equador", dial: "593", flag: "🇪🇨", min: 9, max: 9 },
+  { code: "VE", name: "Venezuela", dial: "58", flag: "🇻🇪", min: 10, max: 10 },
+  { code: "ES", name: "Espanha", dial: "34", flag: "🇪🇸", min: 9, max: 9 },
+  { code: "IT", name: "Itália", dial: "39", flag: "🇮🇹", min: 9, max: 11 },
+  { code: "FR", name: "França", dial: "33", flag: "🇫🇷", min: 9, max: 9 },
+  { code: "DE", name: "Alemanha", dial: "49", flag: "🇩🇪", min: 10, max: 11 },
+  { code: "GB", name: "Reino Unido", dial: "44", flag: "🇬🇧", min: 10, max: 10 },
+  { code: "CH", name: "Suíça", dial: "41", flag: "🇨🇭", min: 9, max: 9 },
+  { code: "IE", name: "Irlanda", dial: "353", flag: "🇮🇪", min: 9, max: 9 },
+  { code: "NL", name: "Holanda", dial: "31", flag: "🇳🇱", min: 9, max: 9 },
+  { code: "BE", name: "Bélgica", dial: "32", flag: "🇧🇪", min: 9, max: 9 },
+  { code: "AO", name: "Angola", dial: "244", flag: "🇦🇴", min: 9, max: 9 },
+  { code: "MZ", name: "Moçambique", dial: "258", flag: "🇲🇿", min: 9, max: 9 },
+  { code: "CV", name: "Cabo Verde", dial: "238", flag: "🇨🇻", min: 7, max: 7 },
+  { code: "CA", name: "Canadá", dial: "1", flag: "🇨🇦", min: 10, max: 10 },
+  { code: "JP", name: "Japão", dial: "81", flag: "🇯🇵", min: 10, max: 10 },
+  { code: "AU", name: "Austrália", dial: "61", flag: "🇦🇺", min: 9, max: 9 },
+];
+
+const formatBR = (digits: string) => {
+  const d = digits.slice(0, 11);
+  if (d.length <= 2) return d;
+  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
+
 const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) => {
   const { lang } = useLanguage();
   const t = texts[lang];
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState("");          // email
+  const [country, setCountry] = useState<Country>(COUNTRIES[0]); // padrão Brasil
+  const [digits, setDigits] = useState("");        // dígitos do telefone (DDD+número, sem DDI)
   const firstName = userName?.split(" ")[0] || "";
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [recentCount] = useState(() => Math.floor(Math.random() * 8) + 8);
   const isEmail = method === "email";
 
+  const phoneValid = digits.length >= country.min && digits.length <= country.max;
   const isValid = isEmail
     ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-    : value.replace(/\D/g, "").length >= 10;
+    : phoneValid;
+  // Número final em formato internacional (E.164): +DDI + dígitos.
+  const fullPhone = `+${country.dial}${digits}`;
 
   useEffect(() => {
     const interval = setInterval(() => { setTimeLeft((prev) => Math.max(0, prev - 1)); }, 1000);
@@ -89,12 +135,7 @@ const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) =
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  const formatPhone = (input: string) => {
-    const digits = input.replace(/\D/g, "").slice(0, 11);
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  };
+  const phoneDisplay = country.code === "BR" ? formatBR(digits) : digits;
 
   return (
     <StepContainer>
@@ -114,32 +155,72 @@ const StepContactInput = ({ method, userName, onNext }: StepContactInputProps) =
         <label className="text-[13px] text-muted-foreground font-medium mb-1.5 block">
           {isEmail ? t.labelEmail : t.labelWhatsapp}
         </label>
-        <input
-          type={isEmail ? "email" : "tel"}
-          placeholder={isEmail ? t.placeholderEmail : t.placeholderWhatsapp}
-          value={value}
-          onChange={(e) => setValue(isEmail ? e.target.value : formatPhone(e.target.value))}
-          maxLength={isEmail ? 255 : 15}
-          className="w-full px-4 py-3.5 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-          onKeyDown={(e) => { if (e.key === "Enter" && isValid) onNext(value.trim()); }}
-        />
+        {isEmail ? (
+          <input
+            type="email"
+            inputMode="email"
+            placeholder={t.placeholderEmail}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            maxLength={255}
+            className="w-full px-4 py-3.5 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+            onKeyDown={(e) => { if (e.key === "Enter" && isValid) onNext(value.trim()); }}
+          />
+        ) : (
+          <>
+            <div className="flex items-stretch gap-2">
+              {/* Seletor de país (bandeira + DDI) — padrão Brasil, alterável */}
+              <div className="relative shrink-0">
+                <select
+                  value={country.code}
+                  onChange={(e) => { const c = COUNTRIES.find(x => x.code === e.target.value); if (c) { setCountry(c); setDigits(""); } }}
+                  aria-label="País"
+                  className="h-full appearance-none pl-3 pr-7 py-3.5 rounded-2xl bg-secondary border border-border text-foreground text-base focus:outline-none focus:ring-2 focus:ring-primary/50"
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>{c.flag} +{c.dial}</option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">▾</span>
+              </div>
+              <input
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel-national"
+                placeholder={country.code === "BR" ? "(11) 99999-9999" : "número"}
+                value={phoneDisplay}
+                onChange={(e) => setDigits(e.target.value.replace(/\D/g, "").slice(0, country.max))}
+                className="flex-1 min-w-0 px-4 py-3.5 rounded-2xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                onKeyDown={(e) => { if (e.key === "Enter" && isValid) onNext(fullPhone); }}
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground/70 mt-1">
+              {country.code === "BR"
+                ? "Coloque DDD + número (com o 9). Ex.: (11) 99999-9999"
+                : `${country.flag} +${country.dial} — digite o número com DDD/área`}
+              {digits.length > 0 && !phoneValid && <span className="text-accent"> · número incompleto</span>}
+            </p>
+          </>
+        )}
       </div>
 
       <CTAButton onClick={() => {
-        const contactValue = value.trim();
+        const contactValue = isEmail ? value.trim() : fullPhone;
         const earlyUtm = (() => { try { return JSON.parse(localStorage.getItem('lead_utm') || '{}'); } catch { return {}; } })();
-        saveFunnelEvent("lead_captured", { 
+        saveFunnelEvent("lead_captured", {
           method, has_value: !!contactValue,
+          country: isEmail ? undefined : country.code,
+          ddi: isEmail ? undefined : country.dial,
           utm_campaign: earlyUtm.utm_campaign || null,
           utm_source: earlyUtm.utm_source || null,
           fbclid: earlyUtm.fbclid || null,
         });
-        // Save phone→session for webhook attribution
+        // Save phone→session for webhook attribution (E.164 completo: DDI+DDD+número)
         // IMPORTANT: Always use trackingData.session_id (sess_* format) — NOT funnel_session_id (session_* format)
         if (method === 'whatsapp' && contactValue) {
           const sessionId = window.trackingData?.session_id;
           if (sessionId) {
-            const cleanPhone = contactValue.replace(/\D/g, '');
+            const cleanPhone = fullPhone.replace(/\D/g, '');
             supabase.from("phone_session_map" as any).insert({ phone: cleanPhone, session_id: sessionId }).then(() => {});
             console.log(`📱 [Attribution] Phone mapped: ${cleanPhone.slice(-4)} → ${sessionId}`);
           }
