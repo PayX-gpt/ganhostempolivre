@@ -144,7 +144,7 @@ export default function AdminFunnelAudit() {
   const [icToSalesRatio, setIcToSalesRatio] = useState("0:0");
   const [hotmartApproved, setHotmartApproved] = useState(0);
   const [hotmartRefunded, setHotmartRefunded] = useState(0);
-  const [refundSummary, setRefundSummary] = useState<{ refunds_qtd: number; refunds_valor: number; sales_qtd: number; sales_valor: number; rate_qtd: number; rate_valor: number } | null>(null);
+  const [refundSummary, setRefundSummary] = useState<{ refunds_qtd: number; refunds_valor: number; chargebacks_qtd: number; chargebacks_valor: number; sales_qtd: number; sales_valor: number; refund_rate: number; cb_rate: number } | null>(null);
   const [refundDays, setRefundDays] = useState(7);   // padrão: últimos 7 dias
   const [refundDate, setRefundDate] = useState("");  // "" = período; "YYYY-MM-DD" = data específica
   const [hotmartPending, setHotmartPending] = useState(0);
@@ -619,7 +619,7 @@ export default function AdminFunnelAudit() {
         </header>
 
         {/* KPI Cards - ALWAYS VISIBLE */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
           <MetricCard title="Receita Hoje"
             value={`R$ ${totalRevenueToday.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             icon={DollarSign}
@@ -655,10 +655,10 @@ export default function AdminFunnelAudit() {
               </p>
               <div className="flex items-center gap-1 text-[10px] sm:text-xs font-medium text-red-400">
                 <TrendingDown className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate">taxa {refundSummary?.rate_valor ?? 0}% · {refundSummary?.rate_qtd ?? 0}% das vendas</span>
+                <span className="truncate">taxa {refundSummary?.refund_rate ?? 0}% das vendas</span>
               </div>
             </div>
-            {/* mini filtro */}
+            {/* mini filtro (controla reembolsos E chargebacks) */}
             <div className="flex items-center gap-1 mt-2 flex-wrap">
               {[{ l: 'Hoje', d: 1 }, { l: '7d', d: 7 }, { l: '30d', d: 30 }].map(p => (
                 <button key={p.d} onClick={() => { setRefundDate(''); setRefundDays(p.d); }}
@@ -674,6 +674,29 @@ export default function AdminFunnelAudit() {
                 <button onClick={() => setRefundDate('')} className="px-1.5 py-0.5 rounded text-[9px] border border-[#2a2a2a] text-[#888] hover:text-white">limpar</button>
               )}
             </div>
+          </div>
+
+          {/* Chargebacks — mesmo período do card de Reembolsos */}
+          <div className="relative overflow-hidden rounded-2xl p-3 sm:p-4 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#2a2a2a] shadow-xl">
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex-shrink-0">
+                  <ShieldCheck className="w-3.5 h-3.5 text-orange-400" />
+                </div>
+                <p className="text-[#888] text-xs font-medium truncate">Chargebacks</p>
+              </div>
+              <p className="text-xl sm:text-2xl font-bold text-white tracking-tight truncate tabular-nums">
+                R$ {(refundSummary?.chargebacks_valor ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+              <p className="text-[#666] text-[10px] sm:text-xs truncate">
+                {refundSummary?.chargebacks_qtd ?? 0} cb · {refundDate ? new Date(refundDate + 'T00:00').toLocaleDateString('pt-BR') : refundDays === 1 ? 'hoje' : `${refundDays} dias`}
+              </p>
+              <div className="flex items-center gap-1 text-[10px] sm:text-xs font-medium text-orange-400">
+                <TrendingDown className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">taxa {refundSummary?.cb_rate ?? 0}% das vendas</span>
+              </div>
+            </div>
+            <p className="text-[9px] text-[#555] mt-2">segue o filtro dos reembolsos</p>
           </div>
         </div>
 
