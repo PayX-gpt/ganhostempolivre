@@ -25,7 +25,7 @@ export interface ABConfig {
 }
 
 export const AB_DEFAULTS: ABConfig = {
-  variant_active_variants: ["A", "E"],
+  variant_active_variants: ["A", "C"],
   variant_winner: null,
   version_v2_split: 50,
   version_test_active: true,

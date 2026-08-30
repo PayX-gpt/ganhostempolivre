@@ -9,12 +9,12 @@ const ALL_VARIANTS: QuizVariant[] = ["A", "B", "C", "D", "E"];
 
 /**
  * Variantes ativas do teste — agora vêm do config SERVER-SIDE (painel /live),
- * valendo para TODOS os visitantes. Fallback para ["A","E"] se vier vazio.
+ * valendo para TODOS os visitantes. Fallback para ["A","C"] se vier vazio.
  */
 function getActiveVariants(): QuizVariant[] {
   const fromCfg = (getABConfig().variant_active_variants || [])
     .filter((v): v is QuizVariant => (ALL_VARIANTS as string[]).includes(v));
-  return fromCfg.length > 0 ? fromCfg : ["A", "E"];
+  return fromCfg.length > 0 ? fromCfg : ["A", "C"];
 }
 
 /**

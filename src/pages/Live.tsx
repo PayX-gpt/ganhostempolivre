@@ -13,7 +13,7 @@ import {
   XCircle, Database, Radio, Filter, Search,
   Bell, BellOff, Volume2, VolumeX,
   Globe, TrendingDown, LayoutDashboard, FlaskConical,
-  Megaphone, Palette, Receipt, ShieldCheck, Beaker, Trophy
+  Megaphone, Palette, Receipt, ShieldCheck, Beaker, Trophy, ArrowDownCircle
 } from "lucide-react";
 import LiveRevenueChart from "@/components/LiveRevenueChart";
 import LiveSalesWorldMap from "@/components/LiveSalesWorldMap";
@@ -144,6 +144,7 @@ export default function AdminFunnelAudit() {
   const [icToSalesRatio, setIcToSalesRatio] = useState("0:0");
   const [hotmartApproved, setHotmartApproved] = useState(0);
   const [hotmartRefunded, setHotmartRefunded] = useState(0);
+  const [refundSummary, setRefundSummary] = useState<{ refunds_qtd: number; refunds_valor: number; refunds_hoje_qtd: number; refunds_hoje_valor: number; rate_qtd: number; rate_valor: number } | null>(null);
   const [hotmartPending, setHotmartPending] = useState(0);
   const [hotmartRefused, setHotmartRefused] = useState(0);
   const [hotmartApprovalRate, setHotmartApprovalRate] = useState(0);
@@ -258,6 +259,11 @@ export default function AdminFunnelAudit() {
     setHotmartPending(pendingPurchases.length);
     setHotmartRefused(refusedPurchases.length);
     setHotmartRefunded(refundedPurchases.length);
+
+    // Reembolsos financeiros precisos (acumulado + hoje + taxa), atualiza em tempo real.
+    supabase.rpc("get_refunds_summary" as any).then(({ data: rs }) => {
+      if (rs) setRefundSummary(rs as any);
+    });
     
     const totalAttempts = approvedPurchases.length + pendingPurchases.length + refusedPurchases.length;
     setHotmartApprovalRate(totalAttempts > 0 ? (approvedPurchases.length / totalAttempts) * 100 : 0);
@@ -602,7 +608,7 @@ export default function AdminFunnelAudit() {
         </header>
 
         {/* KPI Cards - ALWAYS VISIBLE */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <MetricCard title="Receita Hoje"
             value={`R$ ${totalRevenueToday.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             icon={DollarSign}
@@ -621,6 +627,12 @@ export default function AdminFunnelAudit() {
             subtitle={`${frontendICs} ICs | ${icToSalesRatio}`} icon={Target}
             trend={periodData && periodData.previous.ics > 0 ? getVariation(icToSalesRate, (periodData.previous.sales / periodData.previous.ics) * 100).trend : undefined}
             trendLabel={periodData && periodData.previous.ics > 0 ? `${getVariation(icToSalesRate, (periodData.previous.sales / periodData.previous.ics) * 100).pct} vs anterior` : undefined} />
+          <MetricCard title="Reembolsos"
+            value={`R$ ${(refundSummary?.refunds_valor ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            icon={ArrowDownCircle}
+            subtitle={`${refundSummary?.refunds_qtd ?? 0} reemb. · taxa ${refundSummary?.rate_valor ?? 0}% · hoje ${refundSummary?.refunds_hoje_qtd ?? 0} (R$ ${(refundSummary?.refunds_hoje_valor ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`}
+            trend={(refundSummary?.rate_valor ?? 0) >= 15 ? "down" : "neutral"}
+            trendLabel={`${refundSummary?.rate_qtd ?? 0}% das vendas`} />
         </div>
 
         {/* TAB SYSTEM */}
