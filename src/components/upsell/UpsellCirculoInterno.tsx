@@ -38,7 +38,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
 
   // Kirvano variables handled by KirvanoOneClick component
 
-  const CHECKOUT_URL = "https://pay.kirvano.com/67e759ec-598c-43c6-890e-b993901712b7";
+  const CHECKOUT_URL = "https://pay.hub.la/eV4MZXM5DC9l1r97Fuk7/upsell";
 
   const handleBuy = () => {
     setLoading(true);
@@ -167,7 +167,7 @@ const UpsellCirculoInterno = ({ name, onNext, onDecline }: Props) => {
           <button
             onClick={handleBuy}
             disabled={loading}
-            className="kirvano-payment-trigger w-full mt-4 py-[16px] rounded-xl text-[15px] font-bold transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70"
+            className="w-full mt-4 py-[16px] rounded-xl text-[15px] font-bold transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70"
             style={{
               background: "linear-gradient(135deg, #FACC15, #D4A017)",
               color: "#020617",
