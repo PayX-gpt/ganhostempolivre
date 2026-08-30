@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import LiveRevenueChart from "@/components/LiveRevenueChart";
 import LiveSalesWorldMap from "@/components/LiveSalesWorldMap";
+import LiveTodaySales from "@/components/LiveTodaySales";
 import LiveUserPresence from "@/components/LiveUserPresence";
 import LiveIntelligence from "@/components/LiveIntelligence";
 import LiveFunnelAnalytics from "@/components/LiveFunnelAnalytics";
@@ -845,6 +846,7 @@ export default function AdminFunnelAudit() {
             <LiveBuyerProfile />
             <LiveAIAlerts />
             <LiveAISuggestions />
+            <LiveTodaySales />
             <LiveUserPresence onTotalChange={handlePresenceTotalChange} campaignFilter={campaignFilterState} />
             <LiveSalesWorldMap />
             <LiveRevenueChart usdToBrl={1} />
