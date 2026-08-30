@@ -192,7 +192,7 @@ const QuizFunnel = () => {
   useEffect(() => {
     if (isPreview) return;
     if (step === 1) {
-      void saveSessionAttribution(variant as string);
+      void saveSessionAttribution(variant as string, "A");
       void saveVariantToAttribution(variant);
       void saveQuizVersionToAttribution(quizVersion);
     }

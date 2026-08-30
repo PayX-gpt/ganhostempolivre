@@ -341,7 +341,7 @@ export const ensureUrlHasTrackingParams = (): void => {
  * Save session attribution to the database (once per session).
  * Called on funnel entry to create an independent source of truth.
  */
-export const saveSessionAttribution = async (quizVariant?: string): Promise<void> => {
+export const saveSessionAttribution = async (quizVariant?: string, quizEdition?: string): Promise<void> => {
   try {
     const data = getTrackingData();
     const sessionId = data.session_id;
@@ -356,6 +356,12 @@ export const saveSessionAttribution = async (quizVariant?: string): Promise<void
     // Get quiz version (V1/V2)
     const quizVersion = localStorage.getItem("quiz_version") || "V1";
 
+    // Edição do funil (A/B/C) — gravada JUNTO no insert (fonte confiável p/ o
+    // painel A/B/C). Antes vinha de um UPDATE separado que falhava (corrida/RLS).
+    const edition = (quizEdition && ["A", "B", "C"].includes(quizEdition))
+      ? quizEdition
+      : (localStorage.getItem("quiz_edition") || "A");
+
     // Also read early-captured UTMs as fallback
     const earlyUtm: Record<string, string> = (() => {
       try { return JSON.parse(localStorage.getItem('lead_utm') || '{}'); } catch { return {}; }
@@ -366,6 +372,7 @@ export const saveSessionAttribution = async (quizVariant?: string): Promise<void
       session_id: sessionId,
       quiz_variant: resolvedVariant,
       quiz_version: quizVersion,
+      quiz_edition: edition,
       utm_source: data.utm_source || earlyUtm.utm_source || null,
       utm_medium: data.utm_medium || earlyUtm.utm_medium || null,
       utm_campaign: data.utm_campaign || earlyUtm.utm_campaign || null,
@@ -388,6 +395,7 @@ export const saveSessionAttribution = async (quizVariant?: string): Promise<void
         session_id: sessionId,
         quiz_variant: resolvedVariant,
         quiz_version: quizVersion,
+        quiz_edition: edition,
         utm_source: data.utm_source || earlyUtm.utm_source || null,
         utm_medium: data.utm_medium || earlyUtm.utm_medium || null,
         utm_campaign: data.utm_campaign || earlyUtm.utm_campaign || null,
