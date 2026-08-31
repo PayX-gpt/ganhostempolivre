@@ -13,11 +13,12 @@ import {
   XCircle, Database, Radio, Filter, Search,
   Bell, BellOff, Volume2, VolumeX,
   Globe, TrendingDown, LayoutDashboard, FlaskConical,
-  Megaphone, Palette, Receipt, ShieldCheck, Beaker, Trophy, ArrowDownCircle
+  Megaphone, Palette, Receipt, ShieldCheck, Beaker, Trophy, ArrowDownCircle, Send
 } from "lucide-react";
 import LiveRevenueChart from "@/components/LiveRevenueChart";
 import LiveSalesWorldMap from "@/components/LiveSalesWorldMap";
 import LiveTodaySales from "@/components/LiveTodaySales";
+import LiveRemarketing from "@/components/LiveRemarketing";
 import LiveUserPresence from "@/components/LiveUserPresence";
 import LiveIntelligence from "@/components/LiveIntelligence";
 import LiveFunnelAnalytics from "@/components/LiveFunnelAnalytics";
@@ -738,6 +739,9 @@ export default function AdminFunnelAudit() {
               <TabsTrigger value="edicoes" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
                 <Trophy className="w-3.5 h-3.5 mr-1.5" />A/B/C
               </TabsTrigger>
+              <TabsTrigger value="remarketing" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400 rounded-lg text-[#888] px-3 whitespace-nowrap text-xs">
+                <Send className="w-3.5 h-3.5 mr-1.5" />Remarketing
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -980,6 +984,11 @@ export default function AdminFunnelAudit() {
           {/* TAB: COMPARACAO A/B/C (qual quiz vende mais) */}
           <TabsContent value="edicoes" className="space-y-4 mt-4">
             <LiveEditionAB />
+          </TabsContent>
+
+          {/* TAB: REMARKETING (audiencia segmentada whatsapp + email) */}
+          <TabsContent value="remarketing" className="space-y-4 mt-4">
+            <LiveRemarketing />
           </TabsContent>
         </Tabs>
       </div>
