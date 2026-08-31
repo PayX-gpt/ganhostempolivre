@@ -15,7 +15,7 @@ export const OFFER_V147 = {
   videoId: "fa8e8d92-ad93-4c46-b171-7b1e971e2b83",   // VSL R$147 (Panda)
   checkoutUrl: "https://pay.hub.la/oxsxH9492nd0rwyqIwUh", // checkout R$147 (Hubla)
   amount: 147,
-  aspect: "16:9" as const,                            // vídeo em paisagem (720x360)
+  aspect: "9:16" as const,                            // mesmo formato do VSL atual (pega a tela toda)
   unlockSeconds: 8 * 60 + 20,                         // 8:20 (ajustável se o pitch for outro tempo)
 };
 
