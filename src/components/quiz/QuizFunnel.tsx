@@ -365,6 +365,7 @@ const QuizFunnel = () => {
         if (offerV === "v147") {
           return <Step11SocialProof2 onNext={() => {}} userAge={answers.age}
             pandaVideoId={OFFER_V147.videoId}
+            videoAspectRatio={OFFER_V147.aspect}
             checkoutUrlOverride={OFFER_V147.checkoutUrl}
             offerAmountOverride={OFFER_V147.amount}
             unlockSecondsOverride={OFFER_V147.unlockSeconds} />;
