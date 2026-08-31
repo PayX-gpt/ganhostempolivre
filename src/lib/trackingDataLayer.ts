@@ -372,6 +372,9 @@ export const saveSessionAttribution = async (quizVariant?: string, quizEdition?:
     // Experimento de etapas (A/B nas etapas 9 e 11) — para o painel comparar.
     let stepExp: string | null = null;
     try { const { getStepExp } = await import("./stepExperiment"); stepExp = getStepExp(); } catch { /* ignore */ }
+    // Experimento de oferta (step-17: atual vs R$147) — para o painel comparar.
+    let offerExp: string | null = null;
+    try { const { getOfferVariant } = await import("./offerExperiment"); offerExp = getOfferVariant(); } catch { /* ignore */ }
 
     // Also read early-captured UTMs as fallback
     const earlyUtm: Record<string, string> = (() => {
@@ -387,6 +390,7 @@ export const saveSessionAttribution = async (quizVariant?: string, quizEdition?:
       geo_tz: geoTz,
       geo_lang: geoLang,
       step_exp: stepExp,
+      offer_exp: offerExp,
       utm_source: data.utm_source || earlyUtm.utm_source || null,
       utm_medium: data.utm_medium || earlyUtm.utm_medium || null,
       utm_campaign: data.utm_campaign || earlyUtm.utm_campaign || null,

@@ -23,6 +23,7 @@ import StepAccountBalance from "./StepAccountBalance";
 import Step9Availability from "./Step9Availability";
 import StepPlatformDemo from "./StepPlatformDemo";
 import { getStepExp } from "@/lib/stepExperiment";
+import { getOfferVariant, OFFER_V147 } from "@/lib/offerExperiment";
 import Step10Loading from "./Step10Loading";
 import Step11SocialProof2 from "./Step11SocialProof2";
 import StepWhatsAppProof from "./StepWhatsAppProof";
@@ -358,8 +359,18 @@ const QuizFunnel = () => {
         return <Step10Loading onNext={goNext} userAge={answers.age} userName={answers.name} />;
       case "step-16":
         return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} />;
-      case "step-17":
+      case "step-17": {
+        // Teste A/B da oferta (desligado por padrão): atual vs VSL R$147.
+        const offerV = getOfferVariant();
+        if (offerV === "v147") {
+          return <Step11SocialProof2 onNext={() => {}} userAge={answers.age}
+            pandaVideoId={OFFER_V147.videoId}
+            checkoutUrlOverride={OFFER_V147.checkoutUrl}
+            offerAmountOverride={OFFER_V147.amount}
+            unlockSecondsOverride={OFFER_V147.unlockSeconds} />;
+        }
         return <Step11SocialProof2 onNext={() => {}} userAge={answers.age} />;
+      }
       default:
         return null;
     }

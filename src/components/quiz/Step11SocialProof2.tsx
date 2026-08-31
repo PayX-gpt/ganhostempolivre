@@ -21,6 +21,10 @@ interface Step11Props {
   pandaVideoId?: string;
   pandaButtonId?: string;
   videoAspectRatio?: "9:16" | "16:9";
+  // Overrides p/ variação de oferta (ex.: VSL R$147). Sem eles = oferta atual.
+  checkoutUrlOverride?: string;
+  offerAmountOverride?: number;
+  unlockSecondsOverride?: number;
 }
 
 const texts = {
@@ -86,7 +90,7 @@ const texts = {
   },
 };
 
-const CUSTOM_CTA_UNLOCK_SECONDS = 8 * 60 + 20;
+const DEFAULT_UNLOCK_SECONDS = 8 * 60 + 20;
 const DEFAULT_PANDA_BUTTON_ID = "13bd9202-db00-4418-b590-7e294239fe77";
 
 interface PandaPlayerInstance {
@@ -179,7 +183,9 @@ const getCurrentOfferAmount = () => {
   }
 };
 
-const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: customButtonId, videoAspectRatio = "9:16" }: Step11Props) => {
+const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: customButtonId, videoAspectRatio = "9:16", checkoutUrlOverride, offerAmountOverride, unlockSecondsOverride }: Step11Props) => {
+  // Tempo de liberação do botão (override p/ variação de oferta, ex.: VSL R$147).
+  const CUSTOM_CTA_UNLOCK_SECONDS = unlockSecondsOverride ?? DEFAULT_UNLOCK_SECONDS;
   const { lang } = useLanguage();
   const t = texts[lang];
   const young = isYoungProfile(userAge);
@@ -195,7 +201,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
   // Marcos de minuto da VSL já registrados (para a curva de abandono no /live).
   const vslMilestonesRef = useRef<Set<number>>(new Set());
   const pageStartedAtRef = useRef(Date.now());
-  const offerAmount = getCurrentOfferAmount();
+  const offerAmount = offerAmountOverride ?? getCurrentOfferAmount();
 
   // Logs which path revealed the CTA + saves to /live dashboard
   const revealCustomCta = useCallback((source: "panda_button_shown" | "panda_api" | "panda_postmessage" | "panda_timeupdate" | "panda_poll" | "page_timer", videoSeconds?: number) => {
@@ -356,7 +362,7 @@ const Step11SocialProof2 = ({ onNext, userAge, pandaVideoId, pandaButtonId: cust
 
   const handleCustomCtaClick = () => {
     try {
-      const url = new URL("https://pay.hub.la/CZkoWE2anpZgpwJDs3rx");
+      const url = new URL(checkoutUrlOverride || "https://pay.hub.la/CZkoWE2anpZgpwJDs3rx");
       const trackingQs = buildTrackingQueryString();
       if (trackingQs) {
         const trackingParams = new URLSearchParams(trackingQs.slice(1));
