@@ -369,6 +369,10 @@ export const saveSessionAttribution = async (quizVariant?: string, quizEdition?:
     try { geoTz = Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch { /* ignore */ }
     try { geoLang = navigator.language || null; } catch { /* ignore */ }
 
+    // Experimento de etapas (A/B nas etapas 9 e 11) — para o painel comparar.
+    let stepExp: string | null = null;
+    try { const { getStepExp } = await import("./stepExperiment"); stepExp = getStepExp(); } catch { /* ignore */ }
+
     // Also read early-captured UTMs as fallback
     const earlyUtm: Record<string, string> = (() => {
       try { return JSON.parse(localStorage.getItem('lead_utm') || '{}'); } catch { return {}; }
@@ -382,6 +386,7 @@ export const saveSessionAttribution = async (quizVariant?: string, quizEdition?:
       quiz_edition: edition,
       geo_tz: geoTz,
       geo_lang: geoLang,
+      step_exp: stepExp,
       utm_source: data.utm_source || earlyUtm.utm_source || null,
       utm_medium: data.utm_medium || earlyUtm.utm_medium || null,
       utm_campaign: data.utm_campaign || earlyUtm.utm_campaign || null,

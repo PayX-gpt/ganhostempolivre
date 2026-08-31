@@ -9,6 +9,7 @@ import {
 interface StepPlatformDemoProps {
   onNext: () => void;
   userName?: string;
+  variant?: "A" | "B"; // A = original; B = mais rápida + promessa no topo + continuar cedo
 }
 
 /* ─── Platform color classes (pink/purple theme) ─── */
@@ -215,11 +216,11 @@ const GoalPopup = ({ onSubmit, userName }: { onSubmit: (goal: number, time: stri
 };
 
 /* ─── Analyzing Bar (fixed height, no layout shift) ─── */
-const AnalyzingBar = ({ onDone, paused }: { onDone: () => void; paused?: boolean }) => {
+const AnalyzingBar = ({ onDone, paused, fast }: { onDone: () => void; paused?: boolean; fast?: boolean }) => {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     if (paused) { setProgress(0); return; }
-    const duration = 1000 + Math.random() * 800;
+    const duration = fast ? (300 + Math.random() * 300) : (1000 + Math.random() * 800);
     const start = Date.now();
     const interval = setInterval(() => {
       const pct = Math.min(100, ((Date.now() - start) / duration) * 100);
@@ -264,8 +265,9 @@ const NotificationToast = ({ text, onDone }: { text: string; onDone: () => void 
 };
 
 /* ═══ MAIN ═══ */
-const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
+const StepPlatformDemo = ({ onNext, userName, variant = "A" }: StepPlatformDemoProps) => {
   const firstName = userName?.split(" ")[0] || "";
+  const fast = variant === "B";
 
   const [showPopup, setShowPopup] = useState(false);
   const [showGoalReached, setShowGoalReached] = useState(false);
@@ -291,7 +293,7 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
 
   const dismissNotification = useCallback(() => setNotification(null), []);
 
-  const GOAL_TIME_MS = 60_000; // 1 minute
+  const GOAL_TIME_MS = fast ? 16_000 : 60_000; // B: bate a meta em ~15s (front-load do clímax)
 
   const handleGoalSubmit = (goalValue: number, _time: string) => {
     setGoal(goalValue);
@@ -304,7 +306,8 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
   // Tutorial tips
   useEffect(() => {
     if (!isActive) return;
-    tipDelays.forEach((delay, index) => {
+    const delays = fast ? [1200, 3500, 6000, 9000, 12000] : tipDelays;
+    delays.forEach((delay, index) => {
       const timer = setTimeout(() => setCurrentTipIndex(index), delay);
       tipTimersRef.current.push(timer);
     });
@@ -356,7 +359,7 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
       return;
     }
 
-    const delay = 400 + Math.random() * 700; // faster cycles
+    const delay = fast ? (120 + Math.random() * 220) : (400 + Math.random() * 700);
     opTimerRef.current = setTimeout(runNextOperation, delay);
   }, [goal, runNextOperation]);
 
@@ -383,6 +386,14 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
             ? "Viu como é simples? Agora imagine isso caindo na sua conta todos os dias."
             : "A IA está operando em tempo real. Acompanhe:"}
       </StepSubtitle>
+
+      {fast && !goalReached && (
+        <div className="w-full funnel-card border-accent/40 bg-accent/10 text-center py-2 px-2.5">
+          <p className="text-[13px] sm:text-sm font-bold text-foreground leading-snug">
+            ⚡ Em segundos: veja a IA bater a <span className="text-gradient-green">meta que VOCÊ escolher</span> — na sua frente.
+          </p>
+        </div>
+      )}
 
       {/* ═══ PLATFORM SCREEN ═══ */}
       <div className={`w-full rounded-2xl overflow-hidden shadow-2xl ${plat.bg} ${plat.border} border`}>
@@ -466,7 +477,7 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
         </div>
 
         {/* Analyzing bar - always visible when active to prevent layout shift */}
-        {isActive && !goalReached && <AnalyzingBar key={isAnalyzing ? "analyzing" : "idle"} onDone={handleAnalysisDone} paused={!isAnalyzing} />}
+        {isActive && !goalReached && <AnalyzingBar key={isAnalyzing ? "analyzing" : "idle"} onDone={handleAnalysisDone} paused={!isAnalyzing} fast={fast} />}
 
         {/* Play button (before start) */}
         {!isActive && (
@@ -578,12 +589,22 @@ const StepPlatformDemo = ({ onNext, userName }: StepPlatformDemoProps) => {
       </div>
 
       {/* Skip / Continue button */}
-      <button
-        onClick={onNext}
-        className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4 cursor-pointer py-1"
-      >
-        Continuar sem testar →
-      </button>
+      {fast && isActive && !goalReached ? (
+        <button
+          onClick={onNext}
+          className="w-full py-3 rounded-xl font-bold text-sm text-black uppercase tracking-wide animate-fade-in"
+          style={{ background: "linear-gradient(135deg, #00E676 0%, #00C853 100%)", boxShadow: "0 4px 16px rgba(0,200,83,0.35)" }}
+        >
+          Já entendi — continuar →
+        </button>
+      ) : (
+        <button
+          onClick={onNext}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4 cursor-pointer py-1"
+        >
+          Continuar sem testar →
+        </button>
+      )}
 
       {showPopup && <GoalPopup onSubmit={handleGoalSubmit} userName={userName} />}
       {showGoalReached && <GoalReachedPopup goal={goal} profit={profit} onContinue={onNext} userName={userName} />}

@@ -7,7 +7,48 @@ interface StepAccountBalanceProps {
   onNext: (value: string) => void;
   userName?: string;
   userAge?: string;
+  variant?: "A" | "B"; // A = original; B = pergunta suavizada (intenção, não posse)
 }
+
+// Versão B (suave): foco em "com quanto QUER começar" + reforço de que não precisa ter muito.
+const bTexts = {
+  pt: {
+    title: (name?: string) => `${name ? `${name}, falta` : "Falta"} só isso pro seu plano:`,
+    subtitle: <>Não precisa ter muito guardado — <strong className="text-foreground">tem gente começando com R$50</strong>. Com quanto <strong className="text-foreground">você se sentiria confortável</strong> pra começar?</>,
+    opts: [
+      { label: "Quero começar pequeno", sublabel: "Até R$100 — perfeito pra testar" },
+      { label: "Um pouco mais tranquilo", sublabel: "R$100 a R$500" },
+      { label: "Dá pra acelerar", sublabel: "R$500 a R$2.000" },
+      { label: "Quero resultado rápido", sublabel: "R$2.000 a R$10.000" },
+      { label: "Vou com tudo", sublabel: "Mais de R$10.000 — potencial máximo" },
+    ],
+    footer: "🔒 Sem julgamento e 100% sigiloso — é só pra IA calibrar seu plano no seu ritmo.",
+  },
+  en: {
+    title: (name?: string) => `${name ? `${name}, just` : "Just"} this left for your plan:`,
+    subtitle: <>You don't need much saved — <strong className="text-foreground">many start with $50</strong>. How much would <strong className="text-foreground">you feel comfortable</strong> starting with?</>,
+    opts: [
+      { label: "Start small", sublabel: "Up to $100 — perfect to test" },
+      { label: "A bit more relaxed", sublabel: "$100 to $500" },
+      { label: "Ready to speed up", sublabel: "$500 to $2,000" },
+      { label: "Want fast results", sublabel: "$2,000 to $10,000" },
+      { label: "All in", sublabel: "Over $10,000 — max potential" },
+    ],
+    footer: "🔒 No judgment, 100% private — just for the AI to calibrate your plan.",
+  },
+  es: {
+    title: (name?: string) => `${name ? `${name}, falta` : "Falta"} solo esto para tu plan:`,
+    subtitle: <>No necesitás tener mucho — <strong className="text-foreground">hay gente empezando con $50</strong>. ¿Con cuánto <strong className="text-foreground">te sentirías cómodo</strong> para empezar?</>,
+    opts: [
+      { label: "Empezar de a poco", sublabel: "Hasta $100 — perfecto para probar" },
+      { label: "Un poco más tranquilo", sublabel: "$100 a $500" },
+      { label: "Puedo acelerar", sublabel: "$500 a $2.000" },
+      { label: "Quiero resultado rápido", sublabel: "$2.000 a $10.000" },
+      { label: "Voy con todo", sublabel: "Más de $10.000 — máximo potencial" },
+    ],
+    footer: "🔒 Sin juicios y 100% confidencial — solo para que la IA calibre tu plan.",
+  },
+};
 
 const texts = {
   pt: {
@@ -57,9 +98,9 @@ const icons = [
 ];
 const values = ["menos100", "100-500", "500-2000", "2000-10000", "10000+"];
 
-const StepAccountBalance = ({ onNext, userName }: StepAccountBalanceProps) => {
+const StepAccountBalance = ({ onNext, userName, variant = "A" }: StepAccountBalanceProps) => {
   const { lang } = useLanguage();
-  const t = texts[lang];
+  const t = (variant === "B" ? bTexts : texts)[lang];
   const firstName = userName?.split(" ")[0];
   const ttFired = useRef(false);
 

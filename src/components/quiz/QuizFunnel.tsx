@@ -22,6 +22,7 @@ import Step7MentorVideo from "./Step7MentorVideo";
 import StepAccountBalance from "./StepAccountBalance";
 import Step9Availability from "./Step9Availability";
 import StepPlatformDemo from "./StepPlatformDemo";
+import { getStepExp } from "@/lib/stepExperiment";
 import Step10Loading from "./Step10Loading";
 import Step11SocialProof2 from "./Step11SocialProof2";
 import StepWhatsAppProof from "./StepWhatsAppProof";
@@ -302,11 +303,11 @@ const QuizFunnel = () => {
       case "step-8":
         return <Step7MentorVideo onNext={goNext} userAge={answers.age} />;
       case "step-9":
-        return <StepAccountBalance onNext={(v) => updateAndNext("accountBalance", v)} userName={answers.name} userAge={answers.age} />;
+        return <StepAccountBalance onNext={(v) => updateAndNext("accountBalance", v)} userName={answers.name} userAge={answers.age} variant={getStepExp()} />;
       case "step-10":
         return <Step9Availability onNext={(v) => updateAndNext("availability", v)} userName={answers.name} userAge={answers.age} />;
       case "step-11":
-        return <StepPlatformDemo onNext={goNext} userName={answers.name} />;
+        return <StepPlatformDemo onNext={goNext} userName={answers.name} variant={getStepExp()} />;
       case "step-12":
         return <StepWhatsAppProof onNext={goNext} userAge={answers.age} />;
       case "step-13":
