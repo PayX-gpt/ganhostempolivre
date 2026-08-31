@@ -20,6 +20,11 @@ const EXPERIMENTS: Exp[] = [
       { key: "A", label: "Antiga", color: "text-sky-300", bar: "bg-sky-500/40" },
       { key: "B", label: "Nova", color: "text-emerald-300", bar: "bg-emerald-500/40" },
     ] },
+  { col: "quiz_variant", title: "Tela inicial — Variante A vs C", sub: "abertura do quiz (step-1). Use 'Hoje' p/ comparar limpo.",
+    variants: [
+      { key: "A", label: "Variante A", color: "text-sky-300", bar: "bg-sky-500/40" },
+      { key: "C", label: "Variante C", color: "text-emerald-300", bar: "bg-emerald-500/40" },
+    ] },
 ];
 
 const PERIODS = [{ label: "Hoje", d: 1 }, { label: "7 dias", d: 7 }, { label: "30 dias", d: 30 }];
