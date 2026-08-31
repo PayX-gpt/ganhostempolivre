@@ -23,7 +23,6 @@ import Step7MentorVideo from "./Step7MentorVideo";
 import StepAccountBalance from "./StepAccountBalance";
 import Step9Availability from "./Step9Availability";
 import StepPlatformDemo from "./StepPlatformDemo";
-import { getStepExp } from "@/lib/stepExperiment";
 import Step10Loading from "./Step10Loading";
 import Step11SocialProof2 from "./Step11SocialProof2";
 import StepWhatsAppProof from "./StepWhatsAppProof";
@@ -299,7 +298,7 @@ const QuizFunnelB = () => {
           subheadline="Assista até o fim — em 30 segundos você entende tudo."
           buttonText="Continuar →" onClick={goNext} />;
       case "step-9":
-        return <StepAccountBalance onNext={(v) => updateAndNext("accountBalance", v)} userName={answers.name} userAge={answers.age} variant={getStepExp()} />;
+        return <StepAccountBalance onNext={(v) => updateAndNext("accountBalance", v)} userName={answers.name} userAge={answers.age}/>;
       case "step-10":
         return <Step9Availability onNext={(v) => updateAndNext("availability", v)} userName={answers.name} userAge={answers.age} />;
       case "step-11":
@@ -310,7 +309,7 @@ const QuizFunnelB = () => {
           buttonText="Continuar →" onClick={goNext} />;
       case "step-12":
         // IA Liberada / Demo — "Parabéns, você foi aprovado" + operar e ganhar
-        return <StepPlatformDemo onNext={goNext} userName={answers.name} variant={getStepExp()} />;
+        return <StepPlatformDemo onNext={goNext} userName={answers.name}/>;
       case "step-13":
         // 🎥 VÍDEO 3 — Acessar, operar e sacar
         return <VturbVideoStep playerId="69b98793faf9397e233e1dd5" revealSeconds={54}
