@@ -60,7 +60,7 @@ export default function LiveOfferExperiment() {
         <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 text-amber-400 animate-spin" /></div>
       ) : !hasData ? (
         <div className="text-center py-8">
-          <p className="text-[12px] text-[#888]">Teste <b className="text-amber-300">desligado</b> (aguardando você ligar). Quando ativar, os visitantes entram na oferta atual ou na VSL de R$147 e os números aparecem aqui.</p>
+          <p className="text-[12px] text-[#888]">Aguardando os primeiros visitantes do teste (50/50). Conforme o pessoal passa pela oferta, os números de cada versão aparecem aqui.</p>
         </div>
       ) : (
         <>
