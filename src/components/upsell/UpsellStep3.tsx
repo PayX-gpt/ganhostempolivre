@@ -80,9 +80,20 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
   const [loading, setLoading] = useState<string | null>(null);
 
-  // Detecta a variação da oferta travada no navegador (persiste na página de upsell,
-  // mesma origem). Só 'v147' vê os preços maiores; qualquer outro caso = normal (seguro).
-  const isV147 = (() => { try { return localStorage.getItem("offer_exp") === "v147"; } catch { return false; } })();
+  // Mostra o upsell CARO (197/297/347) quando:
+  //  a) a URL tem ?oferta=147 (ou ?offer=v147) — link dedicado p/ colar no redirect
+  //     pós-compra do produto R$147 na Hubla (mais exato, não depende de localStorage), OU
+  //  b) a variação v147 está travada no navegador (veio pela oferta R$147 no quiz).
+  // Qualquer outro caso = preços normais (padrão seguro). O param também trava no
+  // localStorage p/ os próximos upsells manterem o contexto.
+  const isV147 = (() => {
+    try {
+      const u = new URLSearchParams(window.location.search);
+      const forced = u.get("oferta") === "147" || u.get("offer") === "v147";
+      if (forced) { try { localStorage.setItem("offer_exp", "v147"); } catch { /* ignore */ } return true; }
+      return localStorage.getItem("offer_exp") === "v147";
+    } catch { return false; }
+  })();
   const activePlans = isV147 ? plans.map(p => ({ ...p, ...(V147_OVERRIDE[p.id] || {}) })) : plans;
 
   const handleClick = (plan: typeof plans[0]) => {
