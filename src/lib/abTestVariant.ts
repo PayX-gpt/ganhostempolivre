@@ -14,7 +14,7 @@ const ALL_VARIANTS: QuizVariant[] = ["A", "B", "C", "D", "E"];
 function getActiveVariants(): QuizVariant[] {
   const fromCfg = (getABConfig().variant_active_variants || [])
     .filter((v): v is QuizVariant => (ALL_VARIANTS as string[]).includes(v));
-  return fromCfg.length > 0 ? fromCfg : ["A", "C"];
+  return fromCfg.length > 0 ? fromCfg : ["A"];
 }
 
 /**
