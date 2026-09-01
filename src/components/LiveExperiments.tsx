@@ -9,12 +9,9 @@ interface VarDef { key: string; label: string; color: string; bar: string; }
 interface Exp { col: string; title: string; sub: string; variants: VarDef[]; }
 
 // Registro de experimentos de ETAPA (A/B). Adicionar um novo aqui = aparece automático.
+// Obs: a Oferta (Atual vs R$147) saiu daqui e virou painel próprio (LiveOfferLedger),
+// que casa venda-a-venda com a Hubla (front define o braço, upsell herda por email).
 const EXPERIMENTS: Exp[] = [
-  { col: "offer_exp", title: "Oferta step-17 — Atual vs VSL R$147", sub: "vídeo/checkout da oferta final",
-    variants: [
-      { key: "current", label: "Atual", color: "text-sky-300", bar: "bg-sky-500/40" },
-      { key: "v147", label: "VSL R$147", color: "text-amber-300", bar: "bg-amber-500/40" },
-    ] },
   { col: "step_exp", title: "Etapas 9 + 11 — Antiga vs Nova", sub: "pergunta do saldo + demo",
     variants: [
       { key: "A", label: "Antiga", color: "text-sky-300", bar: "bg-sky-500/40" },

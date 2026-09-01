@@ -21,6 +21,7 @@ import LiveTodaySales from "@/components/LiveTodaySales";
 import LiveRemarketing from "@/components/LiveRemarketing";
 import LiveStepTracker from "@/components/LiveStepTracker";
 import LiveExperiments from "@/components/LiveExperiments";
+import LiveOfferLedger from "@/components/LiveOfferLedger";
 import LiveUserPresence from "@/components/LiveUserPresence";
 import LiveIntelligence from "@/components/LiveIntelligence";
 import LiveFunnelAnalytics from "@/components/LiveFunnelAnalytics";
@@ -749,6 +750,7 @@ export default function AdminFunnelAudit() {
 
           {/* TAB: DIAGNOSTICO DE DECISAO */}
           <TabsContent value="decisao" className="space-y-4 mt-4">
+            <LiveOfferLedger />
             <LiveExperiments />
             <LiveStepTracker />
             <LiveDecisionDiagnostics />
