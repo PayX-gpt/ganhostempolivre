@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Tag, RefreshCw, Loader2, Crown } from "lucide-react";
 
-interface V { exp: string; visitors: number; saw_offer: number; clicked: number; sales: number; revenue: number; conv: number; rpv: number; }
+interface V { exp: string; visitors: number; saw_offer: number; clicked: number; sales: number; upsell_sales: number; upsell_revenue: number; revenue: number; conv: number; rpv: number; }
 const PERIODS = [{ label: "Hoje", d: 1 }, { label: "7 dias", d: 7 }, { label: "30 dias", d: 30 }];
 const META: Record<string, { name: string; color: string }> = {
   current: { name: "Oferta ATUAL", color: "text-sky-300" },
@@ -24,7 +24,7 @@ export default function LiveOfferExperiment() {
   }, []);
   useEffect(() => { fetchData(days); }, [days, fetchData]);
 
-  const get = (e: string) => data.find(v => v.exp === e) || { exp: e, visitors: 0, saw_offer: 0, clicked: 0, sales: 0, revenue: 0, conv: 0, rpv: 0 } as V;
+  const get = (e: string) => data.find(v => v.exp === e) || { exp: e, visitors: 0, saw_offer: 0, clicked: 0, sales: 0, upsell_sales: 0, upsell_revenue: 0, revenue: 0, conv: 0, rpv: 0 } as V;
   const A = get("current"), B = get("v147");
   const hasData = A.visitors + B.visitors > 0;
   const enough = A.visitors >= 30 && B.visitors >= 30;
@@ -78,8 +78,10 @@ export default function LiveOfferExperiment() {
           <Row label="Visitantes" a={String(A.visitors)} b={String(B.visitors)} />
           <Row label="Viu a oferta (botão)" a={String(A.saw_offer)} b={String(B.saw_offer)} />
           <Row label="Clicou" a={String(A.clicked)} b={String(B.clicked)} />
-          <Row label="Vendas" a={String(A.sales)} b={String(B.sales)} />
-          <Row label="Receita" a={brl(A.revenue)} b={brl(B.revenue)} />
+          <Row label="Vendas (front)" a={String(A.sales)} b={String(B.sales)} />
+          <Row label="Upsells (qtd)" a={String(A.upsell_sales)} b={String(B.upsell_sales)} />
+          <Row label="Receita upsell" a={brl(A.upsell_revenue)} b={brl(B.upsell_revenue)} />
+          <Row label="Receita total" a={brl(A.revenue)} b={brl(B.revenue)} />
           <Row label="Conversão" a={`${A.conv}%`} b={`${B.conv}%`} />
           <Row label="RPV (receita/visitante)" a={brl(A.rpv)} b={brl(B.rpv)} />
           {!enough && <p className="text-[10px] text-[#666] mt-2">Amostra ainda pequena (mín. 30 visitantes por versão pra cravar vencedor).</p>}
