@@ -68,9 +68,22 @@ const plans = [
   },
 ];
 
+// Upsell1 MAIS CARO — SÓ para quem veio pela oferta R$147 (variação B / offer_exp='v147').
+// Sobrescreve apenas preço, parcelas e link de cada tier (ordem: Básico/Duplo/Máximo).
+const V147_OVERRIDE: Record<string, { price: number; installments: string; checkoutUrl: string }> = {
+  basico: { price: 197, installments: "12x de R$ 16,42", checkoutUrl: "https://pay.hub.la/VWl1fjDbG6ONhlKunD4S/upsell" },
+  duplo:  { price: 297, installments: "12x de R$ 24,75", checkoutUrl: "https://pay.hub.la/pYcsABZulGE2viELYvDK/upsell" },
+  maximo: { price: 347, installments: "12x de R$ 28,92", checkoutUrl: "https://pay.hub.la/Bc5NPZjzZbV2vHTAXEkv/upsell" },
+};
+
 const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
   const firstName = name !== "Visitante" ? name : "";
   const [loading, setLoading] = useState<string | null>(null);
+
+  // Detecta a variação da oferta travada no navegador (persiste na página de upsell,
+  // mesma origem). Só 'v147' vê os preços maiores; qualquer outro caso = normal (seguro).
+  const isV147 = (() => { try { return localStorage.getItem("offer_exp") === "v147"; } catch { return false; } })();
+  const activePlans = isV147 ? plans.map(p => ({ ...p, ...(V147_OVERRIDE[p.id] || {}) })) : plans;
 
   const handleClick = (plan: typeof plans[0]) => {
     setLoading(plan.id);
@@ -94,7 +107,7 @@ const UpsellStep3 = ({ name, onNext, onDecline }: Props) => {
         </p>
       </div>
 
-      {plans.map((plan, i) => (
+      {activePlans.map((plan, i) => (
         <motion.div
           key={plan.id}
           initial={{ opacity: 0, y: 20 }}
