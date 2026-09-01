@@ -1213,38 +1213,62 @@ const UpsellMultiplicador = ({ name: propName, onNext, onDecline }: Props) => {
           {/* ═══ STEP 17: Oferta final — Planos ═══ */}
           {step === 17 && (
             <div className="space-y-5">
+              {/* Headline + furo (personalizado: nome, meta e prazo real) */}
               <div className="text-center">
                 <h2 className="text-[22px] font-extrabold leading-tight" style={{ color: "#F8FAFC" }}>
-                  {userName}, escolha seu nível de multiplicação:
+                  {userName ? `${userName}, o seu` : "O seu"} sistema tá <span style={{ color: "#EF4444" }}>travado em R$25 por dia</span>.
                 </h2>
-                <p className="text-[13px] mt-2 leading-relaxed" style={{ color: "#94A3B8" }}>
-                  Quanto maior a velocidade dos juros compostos, maior o seu limite diário de ganhos.
-                  <strong style={{ color: "#FACC15" }}> Pagamento único, sem mensalidade.</strong>
+                <p className="text-[14px] mt-2 leading-relaxed" style={{ color: "#94A3B8" }}>
+                  Isso dá <strong style={{ color: "#F8FAFC" }}>R$750 no mês</strong>. Sua meta é <strong style={{ color: "#F8FAFC" }}>{getGoalAmountLabel()}</strong>. Nesse ritmo, são <strong style={{ color: "#EF4444" }}>{getTimeToGoalBasic()}</strong>.
                 </p>
               </div>
 
-              {/* Current limit warning */}
-              <div className="rounded-2xl overflow-hidden" style={{ border: "1.5px solid rgba(239,68,68,0.3)" }}>
-                <div className="px-4 py-3 flex items-center gap-2.5" style={{ background: "rgba(239,68,68,0.12)" }}>
-                  <AlertTriangle className="w-5 h-5 shrink-0" style={{ color: "#EF4444" }} />
-                  <span className="text-[13px] font-bold uppercase tracking-wide" style={{ color: "#EF4444" }}>
-                    Limite atual do seu sistema
-                  </span>
+              <div className="rounded-2xl p-4 text-center space-y-1.5" style={{ background: "rgba(239,68,68,0.06)", border: "1.5px solid rgba(239,68,68,0.28)" }}>
+                <p className="text-[15px] font-extrabold" style={{ color: "#F8FAFC" }}>
+                  Você não vai esperar {getTimeToGoalBasic()}.
+                </p>
+                <p className="text-[13px] leading-relaxed" style={{ color: "#94A3B8" }}>
+                  Em <strong style={{ color: "#F8FAFC" }}>um pagamento</strong>, a IA sobe o limite. <strong style={{ color: "#F8FAFC" }}>Você não opera — ela opera 24h.</strong> Relatório no WhatsApp.
+                </p>
+                <p className="text-[12px] font-semibold" style={{ color: "#22C55E" }}>Pagamento único · Sem mensalidade · Garantia 30 dias</p>
+              </div>
+
+              {/* Tabela comparativa (vende mais que texto) */}
+              <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[12px] border-collapse min-w-[420px]">
+                    <thead>
+                      <tr style={{ background: "#0B1220" }}>
+                        <th className="text-left py-2 px-2.5 font-medium" style={{ color: "#64748B" }}></th>
+                        <th className="py-2 px-1.5 font-bold text-center" style={{ color: "#94A3B8" }}>Hoje</th>
+                        <th className="py-2 px-1.5 font-bold text-center" style={{ color: "#CBD5E1" }}>5x</th>
+                        <th className="py-2 px-1.5 font-bold text-center" style={{ color: "#22C55E", background: "rgba(34,197,94,0.10)" }}>10x ★</th>
+                        <th className="py-2 px-1.5 font-bold text-center" style={{ color: "#60A5FA" }}>25x</th>
+                      </tr>
+                    </thead>
+                    <tbody style={{ color: "#E2E8F0" }}>
+                      {[
+                        { l: "Limite por dia", v: ["R$25", "R$125", "R$250", "R$625"] },
+                        { l: "No mês", v: ["R$750", "R$3.750", "R$7.500", "R$18.750"] },
+                        { l: "Pra chegar na sua meta", v: [getTimeToGoalBasic(), getTimeToGoalForPlan(125), getTimeToGoalForPlan(250), getTimeToGoalForPlan(625)] },
+                        { l: "Quem opera", v: ["Você, no básico", "IA 24h", "IA 24h", "IA 24h, sem teto"] },
+                        { l: "Você faz", v: ["—", "Nada", "Nada", "Nada"] },
+                        { l: "Paga uma vez", v: ["—", "R$47", "R$67", "R$97"] },
+                      ].map((row, ri) => (
+                        <tr key={ri} style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                          <td className="py-2 px-2.5 font-medium" style={{ color: "#94A3B8" }}>{row.l}</td>
+                          <td className="py-2 px-1.5 text-center" style={{ color: "#94A3B8" }}>{row.v[0]}</td>
+                          <td className="py-2 px-1.5 text-center">{row.v[1]}</td>
+                          <td className="py-2 px-1.5 text-center font-bold" style={{ color: "#22C55E", background: "rgba(34,197,94,0.06)" }}>{row.v[2]}</td>
+                          <td className="py-2 px-1.5 text-center" style={{ color: "#93C5FD" }}>{row.v[3]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="px-4 py-4 space-y-3" style={{ background: "rgba(239,68,68,0.04)" }}>
-                  <div className="flex items-center justify-center gap-3">
-                    <span className="text-[32px] font-extrabold" style={{ color: "#FCA5A5" }}>R$ 25</span>
-                    <span className="text-[14px] font-semibold" style={{ color: "#94A3B8" }}>por dia</span>
-                    <span className="text-[12px] font-medium px-2 py-0.5 rounded" style={{ color: "#94A3B8", background: "rgba(255,255,255,0.05)" }}>=</span>
-                    <span className="text-[18px] font-bold" style={{ color: "#FCA5A5" }}>R$ 750/mês</span>
-                  </div>
-                  <p className="text-[13px] leading-relaxed text-center" style={{ color: "#FCA5A5" }}>
-                    Sua meta é <strong style={{ color: "#F8FAFC" }}>{getGoalAmountLabel()}</strong>. No ritmo atual de <strong style={{ color: "#F8FAFC" }}>R$ 750/mês</strong>, levaria <strong style={{ color: "#EF4444" }}>{getTimeToGoalBasic()}</strong>.
-                  </p>
-                  <p className="text-[13px] leading-relaxed text-center font-bold" style={{ color: "#EF4444" }}>
-                    Está muito longe do que você precisa.
-                  </p>
-                </div>
+                <p className="text-[12px] leading-relaxed px-3 py-2.5" style={{ color: "#94A3B8", background: "#0B1220" }}>
+                  Hoje você ganha vinte e cinco. O <strong style={{ color: "#22C55E" }}>10x</strong> põe <strong style={{ color: "#F8FAFC" }}>duzentos e cinquenta</strong>. O <strong style={{ color: "#60A5FA" }}>25x</strong> põe <strong style={{ color: "#F8FAFC" }}>seiscentos e vinte e cinco</strong>. Todo dia. Sem você mexer.
+                </p>
               </div>
 
               {/* Plan cards — recommended first */}
