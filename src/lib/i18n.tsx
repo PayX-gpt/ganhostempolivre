@@ -39,15 +39,84 @@ export function useCurrency() {
   return { sym, toLocal, format, isBrl, locale };
 }
 
-function detectLanguage(): Language {
+/* ─────────────────────────────────────────────────────────────────────────
+   Detecção de idioma "à prova de erros" — padrão dos grandes sistemas.
+
+   Cascata de sinais (o primeiro que resolver, vence):
+     1. Parâmetro na URL (?lang= / ?lng= / ?locale= / ?hl=) — intenção explícita,
+        ideal pra campanhas ("anúncio EUA → link ?lang=en"). Fica travado (salvo).
+     2. Escolha manual salva (o usuário clicou numa bandeira antes).
+     3. Cache da geolocalização (detectada 1x) — abre INSTANTÂNEO nas próximas
+        visitas, sem nova requisição e sem piscar.
+     4. Idioma do navegador (lista completa e ordenada, ciente de região).
+     5. Inglês (fallback global — tráfego internacional).
+
+   Depois do primeiro paint, SÓ na 1ª visita e sem escolha manual, refina por IP
+   com timeout curto e provedores reserva (se um cair, tenta o próximo). Tudo
+   embrulhado em try/catch: nunca trava, nunca quebra a tela.
+   ───────────────────────────────────────────────────────────────────────── */
+
+const SUPPORTED: readonly Language[] = ["pt", "en", "es"];
+const isLang = (v: unknown): v is Language => typeof v === "string" && (SUPPORTED as readonly string[]).includes(v);
+
+const PT_COUNTRIES = new Set(["BR", "PT", "AO", "MZ", "CV", "GW", "TL", "ST"]);
+const ES_COUNTRIES = new Set(["ES", "MX", "AR", "CO", "CL", "PE", "VE", "EC", "GT", "CU", "BO", "DO", "HN", "PY", "SV", "NI", "CR", "PA", "UY", "GQ"]);
+// Qualquer outro país → inglês.
+
+function countryToLang(cc?: string | null): Language | null {
+  if (!cc) return null;
+  const c = String(cc).toUpperCase();
+  if (PT_COUNTRIES.has(c)) return "pt";
+  if (ES_COUNTRIES.has(c)) return "es";
+  return "en";
+}
+
+function langFromNavigator(): Language | null {
   try {
-    const stored = localStorage.getItem("app_lang");
-    if (stored && ["pt", "en", "es"].includes(stored)) return stored as Language;
-  } catch {}
-  const navLang = (navigator.language || navigator.languages?.[0] || "").toLowerCase();
-  if (navLang.startsWith("pt")) return "pt";
-  if (navLang.startsWith("es")) return "es";
-  return "en"; // Global fallback: English (for international ad campaigns)
+    const list = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language]).filter(Boolean);
+    for (const l of list) {
+      const s = String(l).toLowerCase();
+      if (s.startsWith("pt")) return "pt";
+      if (s.startsWith("es")) return "es";
+      if (s.startsWith("en")) return "en";
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+function urlLangParam(): Language | null {
+  try {
+    const u = new URLSearchParams(window.location.search);
+    const raw = (u.get("lang") || u.get("lng") || u.get("locale") || u.get("hl") || "").toLowerCase().slice(0, 2);
+    if (isLang(raw)) return raw;
+  } catch { /* ignore */ }
+  return null;
+}
+
+function detectLanguage(): Language {
+  const fromUrl = urlLangParam();
+  if (fromUrl) return fromUrl;
+  try { const s = localStorage.getItem("app_lang"); if (isLang(s)) return s; } catch { /* ignore */ }
+  try { const g = localStorage.getItem("app_lang_geo"); if (isLang(g)) return g; } catch { /* ignore */ }
+  const nav = langFromNavigator();
+  if (nav) return nav;
+  return "en";
+}
+
+/** Descobre o país por IP com timeout curto e provedores reserva. */
+async function detectCountryByIp(signal: AbortSignal): Promise<Language | null> {
+  const providers: Array<() => Promise<string | undefined | null>> = [
+    async () => { const r = await fetch("https://ipapi.co/json/", { signal }); const d = await r.json(); return d?.country_code; },
+    async () => { const r = await fetch("https://ipwho.is/", { signal }); const d = await r.json(); return d?.country_code; },
+    async () => { const r = await fetch("https://www.cloudflare.com/cdn-cgi/trace", { signal }); const t = await r.text(); return (t.match(/loc=([A-Z]{2})/) || [])[1]; },
+  ];
+  for (const p of providers) {
+    try {
+      const lg = countryToLang(await p());
+      if (lg) return lg;
+    } catch { /* tenta o próximo provedor */ }
+  }
+  return null;
 }
 
 const I18nContext = createContext<I18nContextType>({
@@ -60,29 +129,35 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Language>(() => detectLanguage());
 
   const setLang = useCallback((newLang: Language) => {
+    if (!isLang(newLang)) return;
     setLangState(newLang);
-    try { localStorage.setItem("app_lang", newLang); } catch {}
+    try { localStorage.setItem("app_lang", newLang); } catch { /* ignore */ }
   }, []);
 
-  // Non-blocking IP geolocation fallback (only on first visit)
   useEffect(() => {
+    // 1) Param na URL = intenção explícita → trava (salva) e não geolocaliza.
+    const fromUrl = urlLangParam();
+    if (fromUrl) { try { localStorage.setItem("app_lang", fromUrl); } catch { /* ignore */ } return; }
+    // 2) Escolha manual já existe → respeita.
     try { if (localStorage.getItem("app_lang")) return; } catch { return; }
+    // 3) Já geolocalizou uma vez → instantâneo, sem nova requisição nem flash.
+    try { if (localStorage.getItem("app_lang_geo")) return; } catch { return; }
+
+    // 4) Primeira visita sem escolha: refina por IP (não bloqueia a tela).
+    let cancelled = false;
     const controller = new AbortController();
-    fetch("https://ipapi.co/json/", { signal: controller.signal })
-      .then(r => r.json())
-      .then(data => {
-        const c = data?.country_code?.toUpperCase();
-        if (!c) return;
-        const pt = ["BR","PT","AO","MZ","CV","GW","TL","ST"];
-        const es = ["ES","MX","AR","CO","CL","PE","VE","EC","GT","CU","BO","DO","HN","PY","SV","NI","CR","PA","UY"];
-        const en = ["US","GB","AU","CA","NZ","IE","ZA","IN","PH","SG","MY","KE","NG","GH"];
-        if (pt.includes(c)) setLang("pt");
-        else if (es.includes(c)) setLang("es");
-        else setLang("en"); // All other countries default to English (international campaigns)
+    const timer = setTimeout(() => controller.abort(), 2500);
+    detectCountryByIp(controller.signal)
+      .then((geoLang) => {
+        if (cancelled || !geoLang) return;
+        try { localStorage.setItem("app_lang_geo", geoLang); } catch { /* ignore */ }
+        setLangState(geoLang); // geo NÃO marca como escolha manual (fica em app_lang_geo)
       })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [setLang]);
+      .catch(() => { /* silencioso — mantém o idioma do navegador */ })
+      .finally(() => clearTimeout(timer));
+
+    return () => { cancelled = true; clearTimeout(timer); controller.abort(); };
+  }, []);
 
   const value = useMemo(() => ({ lang, setLang, locale: LOCALE_MAP[lang] }), [lang, setLang]);
 
