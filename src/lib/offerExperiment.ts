@@ -50,10 +50,15 @@ export function getOfferVariant(): OfferVariant {
     const s = localStorage.getItem(KEY);
     if (s === "current" || s === "v147") return s;
   } catch { /* ignore */ }
+  // FIX (split justo): NÃO marca no escuro. Só sorteia/trava quando a config do
+  // teste REALMENTE carregou. Se ainda não carregou, devolve "atual" SEM travar,
+  // pra uma chamada posterior (com config carregada) fazer a atribuição correta.
+  // Isso impede que rede lenta/adblock jogue o visitante no "atual" por engano.
+  if (!isABConfigLoaded()) return "current";
   // Teste desligado ou sem split → oferta atual (comportamento de hoje).
   if (!cfg.offer147_active || cfg.offer147_split <= 0) return "current";
-  const r = Math.random() * 100;
-  const v: OfferVariant = r < cfg.offer147_split ? "v147" : "current";
+  // Sorteio determinístico e justo (hash estável), em vez de Math.random puro.
+  const v: OfferVariant = stableBucket() < cfg.offer147_split ? "v147" : "current";
   try { localStorage.setItem(KEY, v); } catch { /* ignore */ }
   return v;
 }
