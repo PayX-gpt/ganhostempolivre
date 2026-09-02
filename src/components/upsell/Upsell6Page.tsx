@@ -17,8 +17,8 @@ const Upsell6Page = () => {
 
   useEffect(() => {
     const qs = window.location.search;
-    window.history.pushState(null, "", `/upsell6${qs}`);
-    const onPop = () => window.history.pushState(null, "", `/upsell6${qs}`);
+    window.history.pushState(null, "", `${import.meta.env.BASE_URL}upsell6${qs}`);
+    const onPop = () => window.history.pushState(null, "", `${import.meta.env.BASE_URL}upsell6${qs}`);
     window.addEventListener("popstate", onPop);
     saveFunnelEvent("upsell_step_view", { page_id: "/upsell6", name });
     return () => window.removeEventListener("popstate", onPop);
