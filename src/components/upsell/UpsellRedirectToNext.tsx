@@ -3,11 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Check, ArrowRight } from "lucide-react";
 import { navigateToUpsell } from "@/lib/upsellData";
+import { useLanguage } from "@/lib/i18n";
+
+const TEXTS = {
+  pt: { title: (n: string) => (n ? `Perfeito, ${n}!` : "Perfeito!"), sub: "Estamos finalizando a configuração da sua conta. Aguarde...", calib: "Calibrando potencial de ganhos..." },
+  en: { title: (n: string) => (n ? `Perfect, ${n}!` : "Perfect!"), sub: "We're finishing setting up your account. One moment...", calib: "Calibrating your earnings potential..." },
+  es: { title: (n: string) => (n ? `¡Perfecto, ${n}!` : "¡Perfecto!"), sub: "Estamos terminando de configurar tu cuenta. Un momento...", calib: "Calibrando tu potencial de ganancias..." },
+};
 
 interface Props { name: string; }
 
 const UpsellRedirectToNext = ({ name }: Props) => {
   const navigate = useNavigate();
+  const { lang } = useLanguage();
+  const t = TEXTS[lang];
   const firstName = name !== "Visitante" ? name : "";
 
   useEffect(() => {
@@ -36,14 +45,14 @@ const UpsellRedirectToNext = ({ name }: Props) => {
         className="text-[22px] font-extrabold text-center leading-tight"
         style={{ color: "#F8FAFC" }}
       >
-        {firstName ? `Perfeito, ${firstName}!` : "Perfeito!"}
+        {t.title(firstName)}
       </h1>
 
       <p
         className="text-[14px] text-center leading-relaxed"
         style={{ color: "#94A3B8" }}
       >
-        Estamos finalizando a configuração da sua conta. Aguarde...
+        {t.sub}
       </p>
 
       <motion.div
@@ -54,7 +63,7 @@ const UpsellRedirectToNext = ({ name }: Props) => {
       >
         <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#22C55E" }} />
         <span className="text-[13px]" style={{ color: "#64748B" }}>
-          Calibrando potencial de ganhos...
+          {t.calib}
         </span>
       </motion.div>
     </div>
