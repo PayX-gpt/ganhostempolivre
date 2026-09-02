@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { StepContainer } from "./QuizUI";
+import { useLanguage } from "@/lib/i18n";
 import { buildTrackingQueryString } from "@/lib/trackingDataLayer";
+
+const WAIT_VIDEO = { pt: "Aguarde o vídeo…", en: "Wait for the video…", es: "Espera el video…" };
 import { saveFunnelEventReliable } from "@/lib/metricsClient";
 import { sendCAPIInitiateCheckout } from "@/lib/facebookCAPI";
 import { trackTikTokInitiateCheckout } from "@/lib/tiktokPixel";
@@ -39,6 +42,7 @@ const isPreview = () => {
 };
 
 export default function VturbVideoStep({ playerId, headline, subheadline, buttonText, revealSeconds, onClick, checkoutUrl, amount = 47, eventContext = "b_video_cta", note }: Props) {
+  const { lang } = useLanguage();
   const [revealed, setRevealed] = useState(false);
   const mountedAt = useRef(Date.now());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -115,7 +119,7 @@ export default function VturbVideoStep({ playerId, headline, subheadline, button
         </button>
       ) : (
         <div className="w-full max-w-md mx-auto py-4 px-6 rounded-xl bg-secondary/40 text-center text-muted-foreground text-sm font-semibold animate-pulse">
-          Aguarde o vídeo…
+          {WAIT_VIDEO[lang]}
         </div>
       )}
       {note && <p className="text-center text-[11px] text-muted-foreground">{note}</p>}
