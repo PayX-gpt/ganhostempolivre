@@ -5,10 +5,32 @@
  * R$147 quando o painel ligar (offer147_active=true e split>0), ou quando você mandar.
  * Isolado no Quiz A.
  */
-import { getABConfig } from "./abConfigServer";
+import { getABConfig, isABConfigLoaded } from "./abConfigServer";
 
 export type OfferVariant = "current" | "v147";
 const KEY = "offer_exp";
+const SEED_KEY = "offer_seed";
+
+/**
+ * Bucket estável 0–99 por navegador (determinístico, à prova de falha).
+ * Substitui o Math.random puro: o mesmo visitante sempre cai no mesmo lado,
+ * e a distribuição é justa (hash mod 100). Se o localStorage falhar, cai num
+ * aleatório — nunca quebra.
+ */
+function stableBucket(): number {
+  try {
+    let seed = localStorage.getItem(SEED_KEY);
+    if (!seed) {
+      seed = `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`;
+      try { localStorage.setItem(SEED_KEY, seed); } catch { /* ignore */ }
+    }
+    let h = 5381;
+    for (let i = 0; i < seed.length; i++) h = ((h << 5) + h + seed.charCodeAt(i)) >>> 0;
+    return h % 100;
+  } catch {
+    return Math.floor(Math.random() * 100);
+  }
+}
 
 // Variação R$147 (VSL + checkout próprios).
 export const OFFER_V147 = {
