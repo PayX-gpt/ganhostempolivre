@@ -109,6 +109,19 @@ export async function loadABConfig(): Promise<ABConfig> {
   return cache;
 }
 
+let inflight: Promise<ABConfig> | null = null;
+/**
+ * Garante que a config A/B foi carregada antes de atribuir um visitante a um
+ * teste — evita marcar no escuro (rede lenta/adblock). À prova de falha: nunca
+ * lança, e após `timeoutMs` segue mesmo sem resposta (cai no cache/DEFAULTS).
+ */
+export function ensureABConfig(timeoutMs = 1500): Promise<void> {
+  if (loaded) return Promise.resolve();
+  try { if (!inflight) inflight = loadABConfig(); } catch { return Promise.resolve(); }
+  const timeout = new Promise<void>((r) => setTimeout(r, Math.max(0, timeoutMs)));
+  return Promise.race([(inflight as Promise<ABConfig>).then(() => undefined).catch(() => undefined), timeout]);
+}
+
 /** Escreve (painel). Atualiza o servidor + cache local. Retorna sucesso. */
 export async function saveABConfig(patch: Partial<ABConfig>): Promise<boolean> {
   const next = { ...cache, ...patch };

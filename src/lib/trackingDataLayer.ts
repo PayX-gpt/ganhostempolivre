@@ -373,8 +373,15 @@ export const saveSessionAttribution = async (quizVariant?: string, quizEdition?:
     let stepExp: string | null = null;
     try { const { getStepExp } = await import("./stepExperiment"); stepExp = getStepExp(); } catch { /* ignore */ }
     // Experimento de oferta (step-17: atual vs R$147) — para o painel comparar.
+    // Espera a config A/B carregar ANTES de marcar (senão o visitante cairia no
+    // "atual" por padrão em rede lenta/adblock). Fire-and-forget: não trava a tela.
     let offerExp: string | null = null;
-    try { const { getOfferVariant } = await import("./offerExperiment"); offerExp = getOfferVariant(); } catch { /* ignore */ }
+    try {
+      const { ensureABConfig } = await import("./abConfigServer");
+      await ensureABConfig(2000);
+      const { getOfferVariant } = await import("./offerExperiment");
+      offerExp = getOfferVariant();
+    } catch { /* ignore */ }
 
     // Also read early-captured UTMs as fallback
     const earlyUtm: Record<string, string> = (() => {
