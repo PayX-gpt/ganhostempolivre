@@ -44,13 +44,31 @@ export default function LiveOfferLedger() {
   const [led, setLed] = useState<Ledger | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = useCallback(async (d: number) => {
-    setLoading(true);
-    const { data } = await supabase.rpc("get_sales_ledger" as any, { p_days: d });
-    setLed((data as any) || null);
-    setLoading(false);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // `silent` = atualização automática (não mostra o spinner, evita piscar).
+  const fetchData = useCallback(async (d: number, silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("get_sales_ledger" as any, { p_days: d });
+      if (!error && data) { setLed(data as any); setLastUpdate(new Date()); }
+    } catch { /* mantém os dados atuais — nunca quebra */ }
+    if (!silent) setLoading(false);
   }, []);
-  useEffect(() => { fetchData(days); }, [days, fetchData]);
+
+  // Carrega ao abrir/trocar período + AUTO-ATUALIZA em tempo real (a cada 15s),
+  // e assim que a aba volta ao foco. À prova de falha: erro não derruba o painel.
+  useEffect(() => {
+    fetchData(days);
+    const iv = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return; // não gasta requisição com a aba escondida
+      fetchData(days, true);
+    }, 15000);
+    const onFocus = () => fetchData(days, true);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => { clearInterval(iv); window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onFocus); };
+  }, [days, fetchData]);
 
   const sum = (k: string): ArmSummary => (led?.summary?.[k] as ArmSummary) || EMPTY;
   const A = sum("current"), B = sum("v147");
@@ -74,8 +92,17 @@ export default function LiveOfferLedger() {
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25"><Receipt className="w-4 h-4 text-emerald-400" /></div>
           <div>
-            <h3 className="text-sm font-bold text-white">Vendas da Oferta — venda por venda (bate com a Hubla)</h3>
-            <p className="text-[10px] text-[#666]">front define o braço · upsell herda por email · valor cheio (c/ parcelamento)</p>
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              Vendas da Oferta — venda por venda (bate com a Hubla)
+              <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-400">
+                <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" /><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" /></span>
+                AO VIVO
+              </span>
+            </h3>
+            <p className="text-[10px] text-[#666]">
+              front define o braço · upsell herda por email · valor cheio
+              {lastUpdate && <span className="text-[#555]"> · atualizado {lastUpdate.toLocaleTimeString("pt-BR")}</span>}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
