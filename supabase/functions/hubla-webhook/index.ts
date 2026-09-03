@@ -623,6 +623,63 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ====== UTMify — envia TODA venda com líquido + moeda + campanha ======
+    // Exato: usa o líquido real (receivers seller). Token vem de env (não hardcoded).
+    // Em try/catch: se a UTMify falhar, a venda JÁ está registrada — nunca quebra o fluxo.
+    try {
+      const UTMIFY_TOKEN = Deno.env.get("UTMIFY_API_TOKEN");
+      if (UTMIFY_TOKEN && transactionId) {
+        const _totalCents = grossCents ?? (amount != null ? Math.round(amount * 100) : 0);
+        const _sellerCents = netCents ?? _totalCents;                 // líquido do produtor
+        const _feeCents = gatewayFeeCents ?? 0;                       // taxa Hubla (bruto - líquido)
+        const _utmifyStatus = normalizedStatus === "approved" ? "paid"
+          : normalizedStatus === "refunded" ? "refunded" : "waiting_payment";
+        const _pm = (paymentMethod || "").toLowerCase();
+        const _utmifyPM = _pm.includes("pix") ? "pix" : _pm.includes("bol") ? "boleto" : "credit_card";
+        const _nowUtc = new Date().toISOString().slice(0, 19).replace("T", " ");
+        const _country = (phone || "").startsWith("+1") ? "US" : (phone || "").startsWith("+55") ? "BR" : null;
+        const _utmifyPayload = {
+          orderId: transactionId,
+          platform: "Hubla",
+          paymentMethod: _utmifyPM,
+          status: _utmifyStatus,
+          createdAt: _nowUtc,
+          approvedDate: _utmifyStatus === "paid" ? _nowUtc : null,
+          refundedAt: _utmifyStatus === "refunded" ? _nowUtc : null,
+          customer: {
+            name: buyerName || "Cliente",
+            email: normalizedEmail || email || "sememail@utmify.local",
+            phone: phone || null, document: null,
+            country: _country, ip: clientIp || "0.0.0.0",
+          },
+          products: [{
+            id: funnelStep, name: productName || funnelStep,
+            planId: offerId || null, planName: offerName || null,
+            quantity: 1, priceInCents: _totalCents,
+          }],
+          trackingParameters: {
+            src: sessionId || src || null, sck: sck || null,
+            utm_source: resolvedUtmSource || null, utm_campaign: resolvedUtmCampaign || null,
+            utm_medium: resolvedUtmMedium || null, utm_content: resolvedUtmContent || null,
+            utm_term: resolvedUtmTerm || null,
+          },
+          commission: {
+            totalPriceInCents: _totalCents, gatewayFeeInCents: _feeCents,
+            userCommissionInCents: _sellerCents, currency: currency || "BRL",
+          },
+          isTest: false,
+        };
+        const _uResp = await fetch("https://api.utmify.com.br/api-credentials/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-api-token": UTMIFY_TOKEN },
+          body: JSON.stringify(_utmifyPayload),
+        });
+        console.log(`[Hub.la UTMify] ${transactionId} ${currency} total=${_totalCents}c net=${_sellerCents}c fee=${_feeCents}c status=${_utmifyStatus} -> ${_uResp.status}`);
+      }
+    } catch (e) {
+      console.error("[Hub.la UTMify] send failed:", e);
+    }
+
     // ====== FACEBOOK CAPI — PURCHASE EVENT ======
     let capiSent = false;
     if (normalizedStatus === "approved" && !alreadySentCAPI) {
