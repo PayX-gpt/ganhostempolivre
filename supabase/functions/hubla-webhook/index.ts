@@ -295,6 +295,20 @@ Deno.serve(async (req) => {
     const ttp = trackingData.ttp || sessionCookies.ttp || body.cookies?.ttp || null;
     const clientIp = body.ip || body.data?.ip || firstPaymentSession.ip || null;
 
+    // ====== LÍQUIDO / TAXA / PARCELAS (Hub.la manda em CENTS) ======
+    // O webhook traz o líquido real do produtor em receivers[role=seller].totalCents,
+    // a taxa de parcelamento em amount.installmentFeeCents e o nº de parcelas.
+    // Usado pra mandar o valor certo (líquido) e a moeda pra UTMify.
+    const _invAmount = (invoiceData && (invoiceData as any).amount) || {};
+    const _receivers = Array.isArray((invoiceData as any)?.receivers) ? (invoiceData as any).receivers : [];
+    const _seller = _receivers.find((r: any) => r && r.role === "seller") || null;
+    const grossCents = typeof _invAmount.totalCents === "number" ? _invAmount.totalCents
+      : (amount != null ? Math.round(amount * 100) : null);
+    const netCents = _seller && typeof _seller.totalCents === "number" ? _seller.totalCents : null;
+    const installmentFeeCents = typeof _invAmount.installmentFeeCents === "number" ? _invAmount.installmentFeeCents : null;
+    const installmentsCount = typeof (invoiceData as any)?.installments === "number" ? (invoiceData as any).installments : null;
+    const gatewayFeeCents = (grossCents != null && netCents != null) ? Math.max(0, grossCents - netCents) : null;
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -546,6 +560,8 @@ Deno.serve(async (req) => {
         product_id: productId, currency,
         sck, src, raw_status: rawStatus,
         hubla_event_id: body.id,
+        net_cents: netCents, gross_cents: grossCents,
+        installment_fee_cents: installmentFeeCents, installments: installmentsCount,
         received_at: new Date().toISOString(),
       };
       insertData.event_id = JSON.stringify(extraMeta);
