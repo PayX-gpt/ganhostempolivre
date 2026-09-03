@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acelerador · GUARDIÃO</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://connect.facebook.net" crossorigin="">
+<!-- Meta Pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+try{fbq('init','944728965282814');fbq('init','1015829760982575');fbq('track','PageView');}catch(e){}
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=944728965282814&ev=PageView&noscript=1"/></noscript>
+<!-- Utmify -->
+<script src="https://cdn.utmify.com.br/scripts/utms/latest.js" data-utmify-prevent-xcod-sck="" data-utmify-prevent-subids="" async defer></script>
+<style>
+:root{
+  --bg:#0a0a0a; --card:#141414; --card2:#1c1c1c;
+  --gold:#FFD700; --gold-dim:#c9a300; --green:#00d96d; --green-deep:#00b85a;
+  --text:#f3f3f3; --dim:#9a9a9a; --border:#2a2a2a; --red:#ff3b3b;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;
+  background:var(--bg); color:var(--text); line-height:1.6;
+}
+.container{width:100%;max-width:680px;margin:0 auto;padding:0 20px;}
+.container.narrow{max-width:520px;}
+.hidden{display:none !important;}
+
+/* progress */
+.progress{position:fixed;top:0;left:0;right:0;height:4px;background:#1a1a1a;z-index:50;}
+.progress-bar{height:100%;width:35%;background:linear-gradient(90deg,var(--green),var(--gold));transition:width 1.2s ease;}
+
+/* topbar */
+.topbar{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  padding:16px;border-bottom:1px solid var(--border);font-weight:800;letter-spacing:2px;font-size:15px;
+}
+.topbar-logo{width:26px;height:26px;}
+.topbar-accent{color:var(--gold);}
+
+/* stages */
+.stage{padding:44px 0 70px;}
+
+/* stage 1 */
+.success-check{
+  width:74px;height:74px;border-radius:50%;background:rgba(0,217,109,0.12);
+  color:var(--green);font-size:38px;display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;border:2px solid rgba(0,217,109,0.3);
+}
+.confirmed{text-align:center;color:var(--green);font-weight:600;margin-bottom:10px;}
+h1{text-align:center;font-size:clamp(30px,6vw,44px);font-weight:800;margin-bottom:18px;letter-spacing:-0.02em;}
+.lead-text{text-align:center;color:var(--dim);font-size:16px;margin-bottom:28px;}
+.lead-text strong{color:var(--gold);}
+
+.warn-box{
+  background:rgba(255,215,0,0.05);border:1px solid rgba(255,215,0,0.3);
+  border-radius:12px;padding:20px 22px;margin-bottom:16px;
+}
+.warn-title{color:var(--gold);font-weight:700;font-size:14px;letter-spacing:1px;margin-bottom:10px;}
+.warn-box p{font-size:15px;color:#d8d8d8;margin-bottom:8px;}
+.warn-box p:last-child{margin-bottom:0;}
+.warn-box strong{color:var(--gold);}
+
+.soft-box{
+  background:var(--card);border-radius:12px;padding:18px 22px;margin-bottom:22px;
+  font-size:15px;color:#d8d8d8;
+}
+.soft-box strong{color:var(--text);}
+
+.mini-seals{display:flex;gap:22px;justify-content:center;color:var(--dim);font-size:14px;margin-bottom:24px;}
+
+.cta-big{
+  display:block;width:100%;border:none;cursor:pointer;
+  background:linear-gradient(180deg,#00f57a,#00b85a);color:#001a08;
+  padding:20px;border-radius:12px;font-weight:900;font-size:17px;
+  letter-spacing:0.3px;box-shadow:0 8px 24px rgba(0,217,109,0.35);
+  animation:pulse 2s infinite;transition:transform .15s;
+}
+.cta-big:hover{transform:translateY(-2px);}
+@keyframes pulse{0%,100%{box-shadow:0 8px 24px rgba(0,217,109,0.35);}50%{box-shadow:0 8px 24px rgba(0,217,109,0.7);}}
+.cta-note{text-align:center;color:var(--dim);font-size:13px;margin-top:12px;}
+
+/* stage 2 — análise */
+.spark{text-align:center;font-size:40px;margin-bottom:6px;}
+.stage-2 h2{text-align:center;font-size:24px;margin-bottom:26px;}
+.analyze{list-style:none;}
+.analyze li{
+  background:var(--card);border-radius:10px;padding:15px 18px;margin-bottom:10px;
+  color:var(--dim);font-size:15px;position:relative;padding-left:46px;opacity:0.4;
+  transition:opacity .3s;
+}
+.analyze li::before{
+  content:"";position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--gold);
+  border-radius:50%;animation:spin .8s linear infinite;
+}
+.analyze li.done{opacity:1;color:var(--text);}
+.analyze li.done::before{
+  content:"✓";border:none;color:var(--green);font-weight:700;font-size:18px;animation:none;
+  display:flex;align-items:center;justify-content:center;
+}
+@keyframes spin{to{transform:translateY(-50%) rotate(360deg);}}
+
+/* stage 3 — planos */
+.planos-title{text-align:center;font-size:clamp(26px,5vw,36px);font-weight:800;margin-bottom:10px;}
+.planos-sub{text-align:center;color:var(--dim);font-size:15px;margin-bottom:34px;}
+
+.plan{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:26px 24px;margin-bottom:20px;
+}
+.plan-name{font-size:23px;font-weight:800;margin-bottom:4px;}
+.plan-speed{color:var(--green);font-weight:600;font-size:15px;margin-bottom:12px;}
+.plan-speed.gold{color:var(--gold);}
+.plan-desc{color:var(--dim);font-size:15px;margin-bottom:16px;}
+
+.potential{
+  background:rgba(0,217,109,0.07);border-radius:10px;padding:12px 16px;margin-bottom:16px;
+  display:flex;flex-direction:column;gap:2px;
+}
+.potential.gold-pot{background:rgba(255,215,0,0.08);}
+.potential-lbl{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--green);}
+.gold-pot .potential-lbl{color:var(--gold);}
+.potential-val{font-size:18px;}
+.potential-val strong{color:var(--green);font-size:22px;}
+.gold-pot .potential-val strong{color:var(--gold);}
+
+.feat{list-style:none;margin-bottom:20px;}
+.feat li{padding:8px 0 8px 26px;position:relative;font-size:14.5px;color:#d8d8d8;border-bottom:1px solid rgba(255,255,255,0.04);}
+.feat li:last-child{border-bottom:none;}
+.feat li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:700;}
+.feat li strong{color:var(--text);}
+
+.price{font-size:38px;font-weight:800;margin-bottom:16px;}
+.price-sub{display:block;font-size:13px;font-weight:400;color:var(--dim);margin-top:2px;}
+
+.plan-btn{display:block;text-align:center;padding:16px;border-radius:10px;font-weight:800;font-size:16px;text-decoration:none;letter-spacing:0.3px;transition:transform .15s;}
+.plan-btn:hover{transform:translateY(-2px);}
+.plan-btn.outline{border:1.5px solid var(--green);color:var(--green);background:transparent;}
+.plan-btn.solid{background:linear-gradient(180deg,#00f57a,#00b85a);color:#001a08;}
+
+/* MAX destacado */
+.plan-max{
+  border:2px solid var(--gold);
+  background:linear-gradient(180deg,rgba(255,215,0,0.06),var(--card));
+  position:relative;box-shadow:0 0 40px rgba(255,215,0,0.1);
+}
+.plan-badge{
+  position:absolute;top:-14px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  background:linear-gradient(90deg,var(--gold),var(--gold-dim));color:#1a1400;
+  padding:6px 18px;border-radius:20px;font-weight:800;font-size:13px;letter-spacing:0.3px;
+}
+.gold-btn{background:linear-gradient(180deg,#ffe14d,#e0b500);color:#1a1400;box-shadow:0 8px 24px rgba(255,215,0,0.3);animation:pulseGold 2s infinite;}
+@keyframes pulseGold{0%,100%{box-shadow:0 8px 24px rgba(255,215,0,0.3);}50%{box-shadow:0 8px 24px rgba(255,215,0,0.6);}}
+
+.live-box{
+  background:rgba(255,59,59,0.06);border:1px solid rgba(255,215,0,0.25);
+  border-radius:10px;padding:14px 16px;margin-bottom:16px;
+}
+.live-tag{color:var(--red);font-weight:700;font-size:12px;letter-spacing:1px;margin-bottom:4px;}
+.live-when{color:var(--gold);font-weight:800;font-size:17px;margin-bottom:6px;}
+.live-box p{font-size:13.5px;color:#d8d8d8;}
+
+/* prova social */
+.proof-box{background:var(--card);border-radius:14px;padding:24px;margin:30px 0 24px;}
+.proof-title{font-weight:700;letter-spacing:1px;font-size:13px;color:var(--dim);margin-bottom:18px;}
+.proof-item{display:flex;gap:14px;align-items:flex-start;font-size:14px;margin-bottom:18px;color:#d8d8d8;}
+.proof-item:last-child{margin-bottom:0;}
+.proof-face{width:54px;height:54px;border-radius:50%;object-fit:cover;flex:0 0 auto;border:2px solid rgba(255,215,0,0.35);}
+.proof-text{line-height:1.55;}
+.proof-item strong{color:var(--text);}
+.proof-item em{color:var(--dim);font-style:italic;}
+
+.decline{display:block;text-align:center;color:var(--dim);font-size:14px;text-decoration:underline;padding:10px;}
+.decline:hover{color:#bbb;}
+
+@media(max-width:600px){
+  .stage{padding:32px 0 50px;}
+  .price{font-size:32px;}
+}
+</style>
+</head>
+<body>
+  <!-- barra de progresso topo -->
+  <div class="progress"><div class="progress-bar" id="progress-bar" style="width: 35%;"></div></div>
+
+  <header class="topbar">
+    <img src="https://vsl.blackboxmembers.com.br/assets/logo-guardiao.png" alt="" class="topbar-logo">
+    <span>GUARDIÃO <span class="topbar-accent">PRO</span></span>
+  </header>
+
+  <!-- ============================================
+       STAGE 1 — confirmação + medo + micro-compromisso
+       ============================================ -->
+  <section class="stage stage-1" id="stage-1">
+    <div class="container">
+      <div class="success-check">✓</div>
+      <p class="confirmed">Pagamento confirmado com sucesso</p>
+      <h1>Você está dentro.</h1>
+      <p class="lead-text">
+        Seu GUARDIÃO já está sendo conectado à sua conta agora mesmo.<br>
+        Mas antes de liberar tudo, eu preciso te mostrar uma coisa que vai definir a <strong>velocidade</strong> dos seus resultados.
+      </p>
+
+      <div class="warn-box">
+        <div class="warn-title">⚠ ATENÇÃO</div>
+        <p>No <strong>modo padrão</strong>, o GUARDIÃO opera de forma conservadora — ele protege seu capital acima de tudo. É seguro, mas constrói resultado de forma <strong>gradual</strong>.</p>
+        <p>A maioria que fica só no modo padrão desanima antes de ver o resultado realmente expressivo aparecer.</p>
+      </div>
+
+      <div class="soft-box">
+        Você não ativou o GUARDIÃO pra ganhar pouco e devagar. Por isso, eu quero te dar a chance de <strong>acelerar agora</strong> — sem abrir mão da proteção.
+      </div>
+
+      <div class="mini-seals">
+        <span>🛡 Garantia 30 dias</span>
+        <span>⏱ Leva 30 segundos</span>
+      </div>
+
+      <button class="cta-big" id="btn-reveal">ENTENDI — QUAL MODO VOCÊS RECOMENDAM?</button>
+      <p class="cta-note">Sem compromisso. Você decide se faz sentido.</p>
+    </div>
+  </section>
+
+  <!-- ============================================
+       STAGE 2 — análise simulada
+       ============================================ -->
+  <section class="stage stage-2 hidden" id="stage-2">
+    <div class="container narrow">
+      <div class="spark">✨</div>
+      <h2>Analisando seu perfil...</h2>
+      <ul class="analyze">
+        <li data-step="1">Verificando seu capital inicial...</li>
+        <li data-step="2">Calculando a velocidade ideal de operação...</li>
+        <li data-step="3">Identificando o modo recomendado...</li>
+        <li data-step="4">Gerando recomendação personalizada...</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================
+       STAGE 3 — os 3 planos + prova + recusa
+       ============================================ -->
+  <section class="stage stage-3 hidden" id="stage-3">
+    <div class="container">
+      <h2 class="planos-title">Qual velocidade você quer?</h2>
+      <p class="planos-sub">Cada modo faz o GUARDIÃO trabalhar mais por você — sem aumentar o risco. Escolha o que faz sentido pro seu momento agora.</p>
+
+      <!-- PLANO 1 — ESSENCIAL -->
+      <div class="plan">
+        <h3 class="plan-name">PRO Essencial</h3>
+        <p class="plan-speed">⚡ Acelera já nessa primeira semana</p>
+        <p class="plan-desc">Pra fazer o GUARDIÃO operar mais ativo desde o primeiro dia.</p>
+        <div class="potential">
+          <span class="potential-lbl">POTENCIAL DE GANHO</span>
+          <span class="potential-val">até <strong>R$ 310</strong> por dia</span>
+        </div>
+        <ul class="feat">
+          <li>Modo de operação mais ativo (mais microoperações por dia que o padrão)</li>
+          <li>GUARDIÃO otimizado pra Forex</li>
+          <li>Garantia de 30 dias incondicional</li>
+        </ul>
+        <div class="price">R$ 197<span class="price-sub">ou 12x de R$ 19,90</span></div>
+        <a href="https://pay.hub.la/0Q0sJiaw24VHo5JzX2om/upsell" class="plan-btn outline" data-plan="essencial">ATIVAR ESSENCIAL</a>
+      </div>
+
+      <!-- PLANO 2 — AVANÇADO (decoy) -->
+      <div class="plan">
+        <h3 class="plan-name">PRO Avançado</h3>
+        <p class="plan-speed">🚀 Opera 24 horas por dia, todos os dias</p>
+        <p class="plan-desc">Tudo do Essencial, e o GUARDIÃO passa a trabalhar enquanto você dorme, no fim de semana, em qualquer hora.</p>
+        <div class="potential">
+          <span class="potential-lbl">POTENCIAL DE GANHO</span>
+          <span class="potential-val">até <strong>R$ 700</strong> por dia</span>
+        </div>
+        <ul class="feat">
+          <li>Tudo do PRO Essencial</li>
+          <li><strong>Cripto 24/7</strong> — opera fim de semana e feriado (quando o Forex fecha)</li>
+          <li><strong>Análise de notícias em tempo real</strong> — captura eventos que o modo padrão ignora</li>
+          <li>Grupo VIP no WhatsApp dos usuários acelerados</li>
+          <li>Garantia de 30 dias incondicional</li>
+        </ul>
+        <div class="price">R$ 297<span class="price-sub">ou 12x de R$ 29,70</span></div>
+        <a href="https://pay.hub.la/WM335591gfmehhF8A8pZ/upsell" class="plan-btn solid" data-plan="avancado">ATIVAR AVANÇADO</a>
+      </div>
+
+      <!-- PLANO 3 — MAX (destacado, tática do copo) -->
+      <div class="plan plan-max">
+        <div class="plan-badge">⭐ MELHOR ESCOLHA — só R$ 50 a mais</div>
+        <h3 class="plan-name">PRO MAX</h3>
+        <p class="plan-speed gold">🔥 Resultado máximo, com o meu time configurando pra você</p>
+
+        <div class="live-box">
+          <div class="live-tag">● AO VIVO · LIVE OURO EXCLUSIVA MAX</div>
+          <div class="live-when">AMANHÃ · 20H · comigo ao vivo</div>
+          <p>Fechada só pra quem ativar o MAX hoje. Eu mostro ao vivo como deixar o GUARDIÃO no ponto máximo + respondo suas dúvidas.</p>
+        </div>
+
+        <p class="plan-desc">O nível máximo. Tudo do Avançado + o meu time configurando seu GUARDIÃO no ponto turbo, no seu primeiro dia.</p>
+        <div class="potential gold-pot">
+          <span class="potential-lbl">POTENCIAL DE GANHO</span>
+          <span class="potential-val">usuários MAX fazem <strong>~R$ 1.200</strong> por dia</span>
+        </div>
+        <ul class="feat">
+          <li>Tudo do PRO Avançado</li>
+          <li><strong>Múltiplos cérebros operando em paralelo</strong> — Forex + Cripto + Índices ao mesmo tempo</li>
+          <li><strong>Configuração TURBO feita pelo meu time no seu 1º dia</strong> — a gente ativa tudo pra você, você não mexe em nada</li>
+          <li><strong>LIVE OURO exclusiva</strong> — acompanhamento ao vivo comigo</li>
+          <li><strong>Suporte prioritário 24h</strong> — resposta em minutos, não em dias</li>
+          <li><strong>Consultoria 1 a 1 de 30 minutos</strong> pra otimizar a sua conta</li>
+          <li><strong>+ US$ 100 adicionais de saldo</strong> na corretora (além dos US$ 100 do seu acesso)</li>
+          <li><strong>Acesso vitalício às próximas versões</strong> do GUARDIÃO, antes de todo mundo</li>
+          <li>Garantia de 30 dias incondicional</li>
+        </ul>
+        <div class="price">R$ 347<span class="price-sub">ou 12x de R$ 34,70 · só R$ 50 a mais que o Avançado</span></div>
+        <a href="https://pay.hub.la/C9uGXNAz6K9yCHNN8EnK/upsell" class="plan-btn gold-btn" data-plan="max">ATIVAR PRO MAX</a>
+      </div>
+
+      <!-- PROVA SOCIAL -->
+      <div class="proof-box">
+        <div class="proof-title">QUEM JÁ ACELEROU COM O PRO:</div>
+        <div class="proof-item">
+          <img class="proof-face" src="https://vsl.blackboxmembers.com.br/assets/c-ricardo.webp" alt="Ricardo">
+          <div class="proof-text">
+            <strong>Ricardo, 32</strong> · operava no padrão há 2 semanas<br>
+            <em>"Ativei o MAX. O time configurou tudo pra mim no mesmo dia. O que eu ia demorar pra ver, veio numa semana. Já paguei de volta."</em>
+          </div>
+        </div>
+        <div class="proof-item">
+          <img class="proof-face" src="https://vsl.blackboxmembers.com.br/assets/c-paulo.webp" alt="Paulo">
+          <div class="proof-text">
+            <strong>Paulo, 39</strong> · não queria mexer em nada<br>
+            <em>"Peguei o MAX justamente porque eu não queria configurar nada sozinho. O time fez tudo por mim pelo WhatsApp no primeiro dia. Hoje é só acompanhar."</em>
+          </div>
+        </div>
+        <div class="proof-item">
+          <img class="proof-face" src="https://vsl.blackboxmembers.com.br/assets/c-diego.webp" alt="Diego">
+          <div class="proof-text">
+            <strong>Diego, 28</strong> · começou com pouco<br>
+            <em>"O Avançado já dobrou meus mercados com a cripto no fim de semana. Em vez de ficar parado sábado e domingo, o GUARDIÃO trabalha."</em>
+          </div>
+        </div>
+      </div>
+
+      <a href="https://vsl.blackboxmembers.com.br/down1" class="decline" id="btn-decline">Não, prefiro deixar no modo conservador e construir mais devagar.</a>
+    </div>
+  </section>
+
+  <script>
+  (function () {
+    'use strict';
+    // ============================================================
+    // LINKS — os 3 checkouts (idênticos ao up1) + recusa (downsell)
+    // ============================================================
+    var URLS = {
+      essencial: 'https://pay.hub.la/0Q0sJiaw24VHo5JzX2om/upsell',   // PRO Essencial R$197
+      avancado:  'https://pay.hub.la/WM335591gfmehhF8A8pZ/upsell',   // PRO Avançado R$297
+      max:       'https://pay.hub.la/C9uGXNAz6K9yCHNN8EnK/upsell',   // PRO MAX R$347
+      decline:   'https://vsl.blackboxmembers.com.br/down1'          // downsell 1
+    };
+
+    var $ = function (sel) { return document.querySelector(sel); };
+
+    // aplica URLs nos botões (à prova de erro: só troca se for link válido)
+    document.querySelectorAll('.plan-btn').forEach(function (btn) {
+      var plan = btn.getAttribute('data-plan');
+      if (URLS[plan] && URLS[plan].indexOf('http') === 0) btn.setAttribute('href', URLS[plan]);
+    });
+    var decline = $('#btn-decline');
+    if (decline && URLS.decline.indexOf('http') === 0) decline.setAttribute('href', URLS.decline);
+
+    setTimeout(function () { var p=$('#progress-bar'); if(p) p.style.width = '35%'; }, 200);
+
+    // STAGE 1 → STAGE 2 (análise) → STAGE 3 (planos)
+    $('#btn-reveal').addEventListener('click', function () {
+      $('#stage-1').classList.add('hidden');
+      $('#stage-2').classList.remove('hidden');
+      $('#progress-bar').style.width = '65%';
+      window.scrollTo(0, 0);
+      runAnalysis();
+    });
+
+    function runAnalysis() {
+      var steps = document.querySelectorAll('.analyze li');
+      var delays = [600, 1300, 2100, 3000];
+      steps.forEach(function (li, i) {
+        setTimeout(function () { li.classList.add('done'); }, delays[i]);
+      });
+      setTimeout(function () {
+        $('#stage-2').classList.add('hidden');
+        $('#stage-3').classList.remove('hidden');
+        $('#progress-bar').style.width = '100%';
+        window.scrollTo(0, 0);
+        window.dispatchEvent(new CustomEvent('guardiao:up1_planos'));
+        if (typeof fbq === 'function') {
+          try { fbq('track', 'ViewContent', { content_name: 'UP1_GUARDIAO_PRO' }); } catch (e) {}
+        }
+      }, 3800);
+    }
+
+    // backdoor de teste — pula direto pros planos
+    window.__up1Planos = function () {
+      $('#stage-1').classList.add('hidden');
+      $('#stage-2').classList.add('hidden');
+      $('#stage-3').classList.remove('hidden');
+      $('#progress-bar').style.width = '100%';
+    };
+  })();
+  </script>
+</body></html>
