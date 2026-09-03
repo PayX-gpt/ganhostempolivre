@@ -50,7 +50,12 @@ export default function LiveOfferLedger() {
   const fetchData = useCallback(async (d: number, silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const { data, error } = await supabase.rpc("get_sales_ledger" as any, { p_days: d });
+      // RPC com AUTO-CURA (reconcilia pending->approved provado + limpa duplicatas,
+      // tudo isolado no servidor). Se falhar, cai no ledger original — nunca fica sem dado.
+      let { data, error } = await supabase.rpc("get_sales_ledger_live" as any, { p_days: d });
+      if (error || !data) {
+        ({ data, error } = await supabase.rpc("get_sales_ledger" as any, { p_days: d }));
+      }
       if (!error && data) { setLed(data as any); setLastUpdate(new Date()); }
     } catch { /* mantém os dados atuais — nunca quebra */ }
     if (!silent) setLoading(false);
