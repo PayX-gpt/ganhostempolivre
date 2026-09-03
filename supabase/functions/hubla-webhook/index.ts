@@ -674,6 +674,13 @@ Deno.serve(async (req) => {
           headers: { "Content-Type": "application/json", "x-api-token": UTMIFY_TOKEN },
           body: JSON.stringify(_utmifyPayload),
         });
+        // Marca como enviada SÓ quando a UTMify confirma (200). Se falhar, fica
+        // sem marca -> a rede de segurança (cron) reenvia até entrar.
+        if (_uResp.ok && recordId) {
+          await supabase.from("purchase_tracking")
+            .update({ utmify_sent_at: new Date().toISOString(), utmify_status: normalizedStatus })
+            .eq("id", recordId);
+        }
         console.log(`[Hub.la UTMify] ${transactionId} ${currency} total=${_totalCents}c net=${_sellerCents}c fee=${_feeCents}c status=${_utmifyStatus} -> ${_uResp.status}`);
       }
     } catch (e) {
