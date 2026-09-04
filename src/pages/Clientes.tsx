@@ -2,22 +2,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /* ─────────────────────────────────────────────────────────────
-   CRM de Atendimento — Guardião
-   Painel mobile-first pra dar boas-vindas aos compradores no WhatsApp.
-   Puxa todo o histórico de vendas (agrupado por cliente), mostra
-   nome/região/produtos/valor, botão de 1 clique -> WhatsApp com
-   mensagem pronta de gerente, e marca quem já foi contatado (salvo).
-   Protegido por senha (no nível do banco). Abastece automático.
+   CRM de Atendimento — Guardião  (sem senha, mobile-first)
+   Puxa todo o histórico de vendas (Hubla) agrupado por cliente,
+   com filtro de data, botão WhatsApp com mensagem pronta e
+   marcação de "já contatei". Abastece automático a cada venda.
    ───────────────────────────────────────────────────────────── */
 
 type Client = {
-  key: string; name: string; phone: string | null; email: string | null;
+  key: string; name: string; wa: string | null; email: string | null;
   currency: string; total: number; products: string[]; region: string;
   contacted: boolean; contacted_at: string | null; last_at: string; n: number;
 };
-type Stats = { total_clients?: number; contacted?: number; pending?: number; revenue_brl?: number; exterior?: number; locked?: boolean };
-
-const TOKEN_KEY = "crm_token";
+type Stats = { total_clients?: number; contacted?: number; pending?: number; revenue_brl?: number; exterior?: number };
 
 const CUR_SYM: Record<string, string> = { BRL: "R$", EUR: "€", USD: "$" };
 function money(total: number, cur: string) {
@@ -26,21 +22,31 @@ function money(total: number, cur: string) {
 }
 function firstName(name: string) { return (name || "").trim().split(/\s+/)[0] || ""; }
 
-/** Mensagem de gerente de investimentos dando boas-vindas ao Guardião. */
+/** Mensagem curta e humana de boas-vindas (gerente do Guardião). */
 function waMessage(name: string) {
   const f = firstName(name);
-  const ola = f ? `Olá ${f}` : "Olá";
-  return (
-`${ola}! 👋 Aqui é o seu gerente do *Guardião* — o nosso sistema de inteligência artificial que opera no mercado financeiro por você. 🎉
-
-Parabéns por ativar! Eu vou te acompanhar de perto nos seus primeiros passos pra você já começar a ver resultado o quanto antes.
-
-Posso te explicar em 2 minutinhos como fazer o seu primeiro depósito e destravar o Guardião? Qualquer dúvida é só me chamar por aqui. Tô à disposição. 😊`
-  );
+  const ola = f ? `Oi ${f}, tudo bem?` : "Oi, tudo bem?";
+  return `${ola} 😊 Aqui é o seu gerente do Guardião. Vi que você acabou de entrar e queria te dar as boas-vindas! Já conseguiu ativar tudo certinho? Se quiser, te ajudo a dar o primeiro passo agora. 🤝`;
 }
-function waLink(client: Client) {
-  const digits = (client.key || "").replace(/\D/g, "");
-  return `https://wa.me/${digits}?text=${encodeURIComponent(waMessage(client.name))}`;
+function waLink(c: Client) {
+  const digits = (c.wa || "").replace(/\D/g, "");
+  return `https://wa.me/${digits}?text=${encodeURIComponent(waMessage(c.name))}`;
+}
+
+// filtros de data
+const PERIODS = [
+  { k: "tudo", label: "Tudo" },
+  { k: "hoje", label: "Hoje" },
+  { k: "7d", label: "7 dias" },
+  { k: "30d", label: "30 dias" },
+] as const;
+type Period = typeof PERIODS[number]["k"];
+function periodFrom(p: Period): string | null {
+  const now = Date.now();
+  if (p === "hoje") { const d = new Date(); d.setHours(0, 0, 0, 0); return d.toISOString(); }
+  if (p === "7d") return new Date(now - 7 * 864e5).toISOString();
+  if (p === "30d") return new Date(now - 30 * 864e5).toISOString();
+  return null; // tudo
 }
 
 const C = {
@@ -49,69 +55,59 @@ const C = {
 };
 
 export default function Clientes() {
-  const [token, setToken] = useState<string>(() => { try { return localStorage.getItem(TOKEN_KEY) || ""; } catch { return ""; } });
-  const [pass, setPass] = useState("");
-  const [locked, setLocked] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [stats, setStats] = useState<Stats>({});
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [period, setPeriod] = useState<Period>("tudo");
+  const [customFrom, setCustomFrom] = useState<string>(""); // yyyy-mm-dd
   const [filter, setFilter] = useState<"todos" | "pendentes" | "contatados" | "exterior">("todos");
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const searchTimer = useRef<number | null>(null);
 
-  const fetchData = useCallback(async (tok: string, q: string, silent = false) => {
-    if (!tok) return;
+  const fromISO = useMemo(() => {
+    if (customFrom) { const d = new Date(customFrom + "T00:00:00"); return isNaN(+d) ? null : d.toISOString(); }
+    return periodFrom(period);
+  }, [period, customFrom]);
+
+  const fetchData = useCallback(async (q: string, from: string | null, silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const { data, error } = await supabase.rpc("crm_clients" as any, { p_token: tok, p_search: q || null, p_limit: 600 });
+      const { data, error } = await supabase.rpc("get_clients_crm" as any, { p_search: q || null, p_from: from, p_limit: 800 });
       if (!error && data) {
         const d = data as any;
-        if (d?.stats?.locked) { setLocked(true); setClients([]); setStats({ locked: true }); }
-        else { setLocked(false); setClients((d.clients || []) as Client[]); setStats((d.stats || {}) as Stats); setLastUpdate(new Date()); }
+        setClients((d.clients || []) as Client[]);
+        setStats((d.stats || {}) as Stats);
+        setLastUpdate(new Date());
       }
     } catch { /* mantém dados */ }
     if (!silent) setLoading(false);
   }, []);
 
-  // primeira carga + auto-refresh (a cada 25s, e ao voltar o foco)
+  // carga + auto-refresh (25s e ao voltar o foco)
   useEffect(() => {
-    if (!token) return;
-    fetchData(token, search);
-    const iv = window.setInterval(() => {
-      if (document.visibilityState === "hidden") return;
-      fetchData(token, search, true);
-    }, 25000);
-    const onFocus = () => fetchData(token, search, true);
+    fetchData(search, fromISO);
+    const iv = window.setInterval(() => { if (document.visibilityState !== "hidden") fetchData(search, fromISO, true); }, 25000);
+    const onFocus = () => fetchData(search, fromISO, true);
     window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onFocus);
-    return () => { clearInterval(iv); window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onFocus); };
-  }, [token]); // eslint-disable-line
+    return () => { clearInterval(iv); window.removeEventListener("focus", onFocus); };
+  }, [fromISO]); // eslint-disable-line
 
   // busca com debounce
   useEffect(() => {
-    if (!token) return;
     if (searchTimer.current) window.clearTimeout(searchTimer.current);
-    searchTimer.current = window.setTimeout(() => fetchData(token, search, true), 350);
+    searchTimer.current = window.setTimeout(() => fetchData(search, fromISO, true), 350);
     return () => { if (searchTimer.current) window.clearTimeout(searchTimer.current); };
   }, [search]); // eslint-disable-line
 
-  const entrar = () => {
-    const t = pass.trim();
-    if (!t) return;
-    try { localStorage.setItem(TOKEN_KEY, t); } catch { /* ignore */ }
-    setToken(t);
-  };
-
   const toggleContacted = useCallback(async (client: Client, value: boolean) => {
-    // otimista
     setClients((prev) => prev.map((c) => c.key === client.key ? { ...c, contacted: value, contacted_at: value ? new Date().toISOString() : null } : c));
     setStats((s) => ({ ...s, contacted: (s.contacted || 0) + (value ? 1 : -1), pending: (s.pending || 0) + (value ? -1 : 1) }));
-    try { await supabase.rpc("crm_set_contacted" as any, { p_token: token, p_key: client.key, p_contacted: value }); } catch { /* ignore */ }
-  }, [token]);
+    try { await supabase.rpc("set_client_contacted" as any, { p_key: client.key, p_contacted: value }); } catch { /* ignore */ }
+  }, []);
 
   const openWhats = useCallback((client: Client) => {
-    window.open(waLink(client), "_blank");
+    if (client.wa) window.open(waLink(client), "_blank");
     if (!client.contacted) toggleContacted(client, true);
   }, [toggleContacted]);
 
@@ -123,33 +119,20 @@ export default function Clientes() {
     return list;
   }, [clients, filter]);
 
-  /* ── Tela de senha ── */
-  if (!token) {
-    return (
-      <div style={{ minHeight: "100vh", background: C.bg, color: C.text, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "system-ui,-apple-system,sans-serif" }}>
-        <div style={{ width: "100%", maxWidth: 340, background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 26 }}>
-          <div style={{ fontSize: 26, fontWeight: 900, textAlign: "center", marginBottom: 4 }}>🛡️ CRM Guardião</div>
-          <div style={{ fontSize: 13, color: C.dim, textAlign: "center", marginBottom: 20 }}>Atendimento aos clientes</div>
-          <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} onKeyDown={(e) => e.key === "Enter" && entrar()}
-            placeholder="Senha de acesso" autoFocus
-            style={{ width: "100%", padding: "13px 14px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.card2, color: C.text, fontSize: 15, marginBottom: 12, boxSizing: "border-box" }} />
-          <button onClick={entrar} style={{ width: "100%", padding: 14, borderRadius: 10, border: "none", background: `linear-gradient(180deg,#2ee06a,#16a34a)`, color: "#04210f", fontWeight: 900, fontSize: 15, cursor: "pointer" }}>Entrar</button>
-          {locked && <div style={{ color: "#ff6b6b", fontSize: 13, textAlign: "center", marginTop: 12 }}>Senha incorreta.</div>}
-        </div>
-      </div>
-    );
-  }
-
   const stat = (label: string, val: string | number, color = C.text) => (
     <div style={{ flex: "1 1 30%", minWidth: 90, background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "11px 12px" }}>
       <div style={{ fontSize: 19, fontWeight: 900, color }}>{val}</div>
       <div style={{ fontSize: 11, color: C.dim, marginTop: 2 }}>{label}</div>
     </div>
   );
+  const chip = (active: boolean) => ({
+    whiteSpace: "nowrap" as const, padding: "8px 13px", borderRadius: 20,
+    border: `1px solid ${active ? C.green : C.border}`, background: active ? "rgba(34,197,94,.15)" : C.card,
+    color: active ? C.green : C.dim, fontSize: 13, fontWeight: 700, cursor: "pointer",
+  });
 
   return (
     <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "system-ui,-apple-system,sans-serif", paddingBottom: 40 }}>
-      {/* Topo */}
       <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(10,10,10,.96)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${C.border}`, padding: "13px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ fontSize: 17, fontWeight: 900 }}>🛡️ CRM Guardião</div>
@@ -161,7 +144,6 @@ export default function Clientes() {
       </div>
 
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "14px 14px 0" }}>
-        {/* Stats */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
           {stat("Clientes", (stats.total_clients ?? 0).toLocaleString("pt-BR"))}
           {stat("Já contatei", (stats.contacted ?? 0).toLocaleString("pt-BR"), C.green)}
@@ -170,24 +152,30 @@ export default function Clientes() {
           {stat("Exterior 🌎", (stats.exterior ?? 0).toLocaleString("pt-BR"), C.blue)}
         </div>
 
-        {/* Busca */}
+        {/* Período (data) */}
+        <div style={{ display: "flex", gap: 7, marginBottom: 10, overflowX: "auto", alignItems: "center" }}>
+          <span style={{ fontSize: 12, color: C.dim, whiteSpace: "nowrap" }}>📅</span>
+          {PERIODS.map((p) => (
+            <button key={p.k} onClick={() => { setPeriod(p.k); setCustomFrom(""); }} style={chip(!customFrom && period === p.k)}>{p.label}</button>
+          ))}
+          <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)}
+            title="A partir de uma data"
+            style={{ padding: "7px 10px", borderRadius: 20, border: `1px solid ${customFrom ? C.green : C.border}`, background: C.card, color: customFrom ? C.green : C.dim, fontSize: 12.5 }} />
+        </div>
+
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome, telefone ou região…"
           style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.card, color: C.text, fontSize: 14, marginBottom: 10, boxSizing: "border-box" }} />
 
-        {/* Filtros */}
+        {/* Status */}
         <div style={{ display: "flex", gap: 7, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
           {([["todos", "Todos"], ["pendentes", "Faltam falar"], ["contatados", "Já falei"], ["exterior", "Exterior"]] as const).map(([k, label]) => (
-            <button key={k} onClick={() => setFilter(k)}
-              style={{ whiteSpace: "nowrap", padding: "8px 13px", borderRadius: 20, border: `1px solid ${filter === k ? C.green : C.border}`, background: filter === k ? "rgba(34,197,94,.15)" : C.card, color: filter === k ? C.green : C.dim, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-              {label}
-            </button>
+            <button key={k} onClick={() => setFilter(k)} style={chip(filter === k)}>{label}</button>
           ))}
         </div>
 
         {loading && clients.length === 0 && <div style={{ color: C.dim, textAlign: "center", padding: 30 }}>Carregando clientes…</div>}
-        {!loading && view.length === 0 && <div style={{ color: C.dim, textAlign: "center", padding: 30 }}>Nenhum cliente aqui.</div>}
+        {!loading && view.length === 0 && <div style={{ color: C.dim, textAlign: "center", padding: 30 }}>Nenhum cliente nesse período.</div>}
 
-        {/* Lista de clientes */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {view.map((c) => {
             const exterior = c.region.length > 2;
@@ -208,10 +196,10 @@ export default function Clientes() {
                     <span style={{ fontSize: 9, color: c.contacted ? C.green : C.dim }}>{c.contacted ? "feito" : "marcar"}</span>
                   </label>
                 </div>
-                <button onClick={() => openWhats(c)}
-                  style={{ width: "100%", marginTop: 12, padding: "12px", borderRadius: 10, border: "none", background: c.contacted ? C.card2 : "linear-gradient(180deg,#2ee06a,#16a34a)", color: c.contacted ? C.text : "#04210f", fontWeight: 900, fontSize: 14.5, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <button onClick={() => openWhats(c)} disabled={!c.wa}
+                  style={{ width: "100%", marginTop: 12, padding: "12px", borderRadius: 10, border: "none", background: !c.wa ? C.card2 : c.contacted ? C.card2 : "linear-gradient(180deg,#2ee06a,#16a34a)", color: !c.wa ? C.dim : c.contacted ? C.text : "#04210f", fontWeight: 900, fontSize: 14.5, cursor: c.wa ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.3A7.85 7.85 0 0 0 12 4a7.94 7.94 0 0 0-6.9 11.9L4 20l4.2-1.1A7.9 7.9 0 0 0 12 20a7.94 7.94 0 0 0 5.6-13.7ZM12 18.5a6.6 6.6 0 0 1-3.4-.9l-.24-.15-2.5.66.67-2.43-.16-.25A6.56 6.56 0 1 1 12 18.5Zm3.6-4.9c-.2-.1-1.17-.58-1.35-.64s-.31-.1-.44.1-.5.63-.62.76-.23.15-.43.05a5.4 5.4 0 0 1-2.7-2.35c-.2-.35.2-.32.58-1.07a.36.36 0 0 0 0-.34c0-.1-.44-1.06-.6-1.45s-.32-.33-.44-.34h-.38a.72.72 0 0 0-.52.24 2.18 2.18 0 0 0-.68 1.62 3.8 3.8 0 0 0 .8 2 8.7 8.7 0 0 0 3.33 2.94c1.87.72 1.87.48 2.2.45a1.86 1.86 0 0 0 1.24-.87 1.53 1.53 0 0 0 .1-.87c-.05-.08-.18-.13-.38-.23Z"/></svg>
-                  {c.contacted ? "Falar de novo" : "Falar no WhatsApp"}
+                  {!c.wa ? "Sem telefone" : c.contacted ? "Falar de novo" : "Falar no WhatsApp"}
                 </button>
               </div>
             );
