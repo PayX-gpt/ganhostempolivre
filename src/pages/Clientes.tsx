@@ -22,11 +22,13 @@ function money(total: number, cur: string) {
 }
 function firstName(name: string) { return (name || "").trim().split(/\s+/)[0] || ""; }
 
-/** Mensagem curta e humana de boas-vindas (gerente do Guardião). */
+/** Mensagem curta, humana e irresistível (gerente do Guardião).
+    Serve pra cliente novo OU antigo (não assume que "acabou de entrar").
+    Gancho: a "dica" puxa a resposta; a pergunta do depósito é fácil de responder. */
 function waMessage(name: string) {
   const f = firstName(name);
   const ola = f ? `Oi ${f}, tudo bem?` : "Oi, tudo bem?";
-  return `${ola} 😊 Aqui é o seu gerente do Guardião. Vi que você acabou de entrar e queria te dar as boas-vindas! Já conseguiu ativar tudo certinho? Se quiser, te ajudo a dar o primeiro passo agora. 🤝`;
+  return `${ola} 😊 Aqui é o seu gerente do Guardião. Tenho uma dica rápida que ajuda muito a acelerar seus primeiros resultados — mas antes me diz: você já fez seu primeiro depósito ou ainda tá começando? 👀`;
 }
 function waLink(c: Client) {
   const digits = (c.wa || "").replace(/\D/g, "");
