@@ -36,7 +36,7 @@ function waMessage(name: string, kind: WaKind) {
   if (kind === "duvidas") {
     return `${ola} 😊 Aqui é o seu gerente do Guardião e fiquei responsável por te acompanhar de perto. Me conta uma coisa: o que você mais quer entender sobre a plataforma agora? Assim eu já te explico certinho e a gente avança juntos. 🚀`;
   }
-  return `${ola} 😊 Aqui é o seu gerente do Guardião. Passei aqui pra te dar as boas vindas e saber como você está se sentindo com a plataforma. Já conseguiu entender como funciona ou ainda ficou com alguma dúvida? Estou por aqui pra te ajudar no que precisar. 🤝`;
+  return `${ola} 😊 Aqui é o seu gerente do Guardião. Passei aqui pra te dar as boas vindas e já deixar seu acesso à mão. É neste link que você entra nas suas aulas e no Guardião: ${MEMBERS_LINK} . Já conseguiu entrar e entender como funciona, ou ainda ficou com alguma dúvida? Estou por aqui pra te ajudar no que precisar. 🤝`;
 }
 function waLink(c: Client, kind: WaKind) {
   const digits = (c.wa || "").replace(/\D/g, "");
