@@ -22,17 +22,25 @@ function money(total: number, cur: string) {
 }
 function firstName(name: string) { return (name || "").trim().split(/\s+/)[0] || ""; }
 
-/** Mensagem curta, humana e irresistível (gerente do Guardião).
-    Serve pra cliente novo OU antigo (não assume que "acabou de entrar").
-    Gancho: a "dica" puxa a resposta; a pergunta do depósito é fácil de responder. */
-function waMessage(name: string) {
+type WaKind = "boasvindas" | "duvidas" | "acesso";
+const MEMBERS_LINK = "https://guardiao.blackboxmembers.com.br/login";
+
+/** Mensagens humanizadas por situação (SEM travessão). Gerente do Guardião.
+    Servem pra cliente novo OU antigo. Não fala de depósito de cara: abre conversa. */
+function waMessage(name: string, kind: WaKind) {
   const f = firstName(name);
   const ola = f ? `Oi ${f}, tudo bem?` : "Oi, tudo bem?";
-  return `${ola} 😊 Aqui é o seu gerente do Guardião — tô aqui pra te acompanhar de perto. Rapidinho: você já entendeu certinho como o Guardião funciona, ou ficou com alguma dúvida que eu possa te ajudar? 👀`;
+  if (kind === "acesso") {
+    return `${ola} 😊 Aqui é o seu gerente do Guardião. Passando pra garantir que você já está com tudo em mãos. É neste link que você acessa suas aulas e o Guardião: ${MEMBERS_LINK} . Consegue entrar e me dizer se apareceu tudo certinho? Qualquer coisa eu te ajudo na hora. 🤝`;
+  }
+  if (kind === "duvidas") {
+    return `${ola} 😊 Aqui é o seu gerente do Guardião e fiquei responsável por te acompanhar de perto. Me conta uma coisa: o que você mais quer entender sobre a plataforma agora? Assim eu já te explico certinho e a gente avança juntos. 🚀`;
+  }
+  return `${ola} 😊 Aqui é o seu gerente do Guardião. Passei aqui pra te dar as boas vindas e saber como você está se sentindo com a plataforma. Já conseguiu entender como funciona ou ainda ficou com alguma dúvida? Estou por aqui pra te ajudar no que precisar. 🤝`;
 }
-function waLink(c: Client) {
+function waLink(c: Client, kind: WaKind) {
   const digits = (c.wa || "").replace(/\D/g, "");
-  return `https://wa.me/${digits}?text=${encodeURIComponent(waMessage(c.name))}`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(waMessage(c.name, kind))}`;
 }
 
 // filtros de data
@@ -116,8 +124,8 @@ export default function Clientes() {
     try { await supabase.rpc("set_client_contacted" as any, { p_key: client.key, p_contacted: value }); } catch { /* ignore */ }
   }, []);
 
-  const openWhats = useCallback((client: Client) => {
-    if (client.wa) window.open(waLink(client), "_blank");
+  const openWhats = useCallback((client: Client, kind: WaKind = "boasvindas") => {
+    if (client.wa) window.open(waLink(client, kind), "_blank");
     if (!client.contacted) toggleContacted(client, true);
   }, [toggleContacted]);
 
@@ -206,11 +214,26 @@ export default function Clientes() {
                     <span style={{ fontSize: 9, color: c.contacted ? C.green : C.dim }}>{c.contacted ? "feito" : "marcar"}</span>
                   </label>
                 </div>
-                <button onClick={() => openWhats(c)} disabled={!c.wa}
-                  style={{ width: "100%", marginTop: 12, padding: "12px", borderRadius: 10, border: "none", background: !c.wa ? C.card2 : c.contacted ? C.card2 : "linear-gradient(180deg,#2ee06a,#16a34a)", color: !c.wa ? C.dim : c.contacted ? C.text : "#04210f", fontWeight: 900, fontSize: 14.5, cursor: c.wa ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.3A7.85 7.85 0 0 0 12 4a7.94 7.94 0 0 0-6.9 11.9L4 20l4.2-1.1A7.9 7.9 0 0 0 12 20a7.94 7.94 0 0 0 5.6-13.7ZM12 18.5a6.6 6.6 0 0 1-3.4-.9l-.24-.15-2.5.66.67-2.43-.16-.25A6.56 6.56 0 1 1 12 18.5Zm3.6-4.9c-.2-.1-1.17-.58-1.35-.64s-.31-.1-.44.1-.5.63-.62.76-.23.15-.43.05a5.4 5.4 0 0 1-2.7-2.35c-.2-.35.2-.32.58-1.07a.36.36 0 0 0 0-.34c0-.1-.44-1.06-.6-1.45s-.32-.33-.44-.34h-.38a.72.72 0 0 0-.52.24 2.18 2.18 0 0 0-.68 1.62 3.8 3.8 0 0 0 .8 2 8.7 8.7 0 0 0 3.33 2.94c1.87.72 1.87.48 2.2.45a1.86 1.86 0 0 0 1.24-.87 1.53 1.53 0 0 0 .1-.87c-.05-.08-.18-.13-.38-.23Z"/></svg>
-                  {!c.wa ? "Sem telefone" : c.contacted ? "Falar de novo" : "Falar no WhatsApp"}
-                </button>
+                {!c.wa ? (
+                  <div style={{ width: "100%", marginTop: 12, padding: "12px", borderRadius: 10, background: C.card2, color: C.dim, fontWeight: 800, fontSize: 13.5, textAlign: "center" }}>Sem telefone</div>
+                ) : (
+                  <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
+                    {([
+                      { k: "boasvindas" as const, label: "👋 Boas-vindas", primary: true },
+                      { k: "duvidas" as const,    label: "💬 Dúvidas",     primary: false },
+                      { k: "acesso" as const,     label: "🔑 Acesso",      primary: false },
+                    ]).map((b) => (
+                      <button key={b.k} onClick={() => openWhats(c, b.k)}
+                        style={{ flex: 1, padding: "11px 4px", borderRadius: 10,
+                          border: b.primary ? "none" : `1px solid ${C.border}`,
+                          background: b.primary ? (c.contacted ? C.card2 : "linear-gradient(180deg,#2ee06a,#16a34a)") : C.card2,
+                          color: b.primary ? (c.contacted ? C.text : "#04210f") : C.text,
+                          fontWeight: 800, fontSize: 12.5, lineHeight: 1.15, cursor: "pointer" }}>
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
