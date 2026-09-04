@@ -144,8 +144,8 @@ function detectLanguage(): Language {
   return "en";
 }
 
-/** Descobre o país por IP com timeout curto e provedores reserva. */
-async function detectCountryByIp(signal: AbortSignal): Promise<Language | null> {
+/** Descobre o CÓDIGO DO PAÍS por IP (timeout curto + provedores reserva). */
+async function detectCountryByIp(signal: AbortSignal): Promise<string | null> {
   const providers: Array<() => Promise<string | undefined | null>> = [
     async () => { const r = await fetch("https://ipapi.co/json/", { signal }); const d = await r.json(); return d?.country_code; },
     async () => { const r = await fetch("https://ipwho.is/", { signal }); const d = await r.json(); return d?.country_code; },
@@ -153,21 +153,33 @@ async function detectCountryByIp(signal: AbortSignal): Promise<Language | null> 
   ];
   for (const p of providers) {
     try {
-      const lg = countryToLang(await p());
-      if (lg) return lg;
+      const cc = await p();
+      if (cc) return String(cc).toUpperCase();
     } catch { /* tenta o próximo provedor */ }
   }
   return null;
+}
+
+function safeGet(k: string): string | null { try { return localStorage.getItem(k); } catch { return null; } }
+
+/** Moeda inicial (síncrona): escolha salva → geo em cache → BRL.
+    Fail-safe: nunca mostra $/€ pra brasileiro antes do IP resolver. */
+function detectCurrency(): Currency {
+  const s = safeGet("app_currency"); if (isCur(s)) return s;
+  const g = safeGet("app_currency_geo"); if (isCur(g)) return g;
+  return "BRL";
 }
 
 const I18nContext = createContext<I18nContextType>({
   lang: "pt",
   setLang: () => {},
   locale: "pt-BR",
+  currency: "BRL",
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Language>(() => detectLanguage());
+  const [currency, setCurrencyState] = useState<Currency>(() => detectCurrency());
 
   const setLang = useCallback((newLang: Language) => {
     if (!isLang(newLang)) return;
@@ -176,31 +188,37 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // 1) Param na URL = intenção explícita → trava (salva) e não geolocaliza.
+    // Param na URL = intenção explícita de idioma → trava (salva).
     const fromUrl = urlLangParam();
-    if (fromUrl) { try { localStorage.setItem("app_lang", fromUrl); } catch { /* ignore */ } return; }
-    // 2) Escolha manual já existe → respeita.
-    try { if (localStorage.getItem("app_lang")) return; } catch { return; }
-    // 3) Já geolocalizou uma vez → instantâneo, sem nova requisição nem flash.
-    try { if (localStorage.getItem("app_lang_geo")) return; } catch { return; }
+    if (fromUrl) { try { localStorage.setItem("app_lang", fromUrl); } catch { /* ignore */ } }
 
-    // 4) Primeira visita sem escolha: refina por IP (não bloqueia a tela).
+    const haveLang = !!fromUrl || !!safeGet("app_lang") || !!safeGet("app_lang_geo");
+    const haveCur = !!safeGet("app_currency") || !!safeGet("app_currency_geo");
+    if (haveLang && haveCur) return; // já temos idioma e moeda → nada a geolocalizar
+
+    // Primeira visita (falta idioma e/ou moeda): refina por IP (não bloqueia a tela).
     let cancelled = false;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 2500);
     detectCountryByIp(controller.signal)
-      .then((geoLang) => {
-        if (cancelled || !geoLang) return;
-        try { localStorage.setItem("app_lang_geo", geoLang); } catch { /* ignore */ }
-        setLangState(geoLang); // geo NÃO marca como escolha manual (fica em app_lang_geo)
+      .then((cc) => {
+        if (cancelled || !cc) return;
+        const geoLang = countryToLang(cc);
+        const geoCur = countryToCurrency(cc);
+        try {
+          if (!haveLang && geoLang) localStorage.setItem("app_lang_geo", geoLang);
+          if (!haveCur && geoCur) localStorage.setItem("app_currency_geo", geoCur);
+        } catch { /* ignore */ }
+        if (!haveLang && geoLang) setLangState(geoLang); // geo não marca escolha manual
+        if (!haveCur && geoCur) setCurrencyState(geoCur);
       })
-      .catch(() => { /* silencioso — mantém o idioma do navegador */ })
+      .catch(() => { /* silencioso — mantém idioma do navegador e BRL */ })
       .finally(() => clearTimeout(timer));
 
     return () => { cancelled = true; clearTimeout(timer); controller.abort(); };
   }, []);
 
-  const value = useMemo(() => ({ lang, setLang, locale: LOCALE_MAP[lang] }), [lang, setLang]);
+  const value = useMemo(() => ({ lang, setLang, locale: LOCALE_MAP[lang], currency }), [lang, setLang, currency]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
