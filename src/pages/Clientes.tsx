@@ -86,19 +86,27 @@ export default function Clientes() {
     if (!silent) setLoading(false);
   }, []);
 
-  // carga + auto-refresh (25s e ao voltar o foco)
+  // refs pra o polling SEMPRE usar os valores atuais (à prova de closure velha)
+  const searchRef = useRef(search); searchRef.current = search;
+  const fromRef = useRef(fromISO); fromRef.current = fromISO;
+
+  // AUTO-REFRESH em tempo real: a cada 8s + ao voltar o foco/aba. Roda 1x, refs
+  // garantem período/busca atuais. À prova de erro (fetchData nunca lança).
   useEffect(() => {
-    fetchData(search, fromISO);
-    const iv = window.setInterval(() => { if (document.visibilityState !== "hidden") fetchData(search, fromISO, true); }, 25000);
-    const onFocus = () => fetchData(search, fromISO, true);
-    window.addEventListener("focus", onFocus);
-    return () => { clearInterval(iv); window.removeEventListener("focus", onFocus); };
-  }, [fromISO]); // eslint-disable-line
+    const pull = () => { if (document.visibilityState !== "hidden") fetchData(searchRef.current, fromRef.current, true); };
+    const iv = window.setInterval(pull, 8000);
+    window.addEventListener("focus", pull);
+    document.addEventListener("visibilitychange", pull);
+    return () => { clearInterval(iv); window.removeEventListener("focus", pull); document.removeEventListener("visibilitychange", pull); };
+  }, []); // eslint-disable-line
+
+  // carga inicial + refetch imediato ao trocar o período
+  useEffect(() => { fetchData(searchRef.current, fromISO, false); }, [fromISO]); // eslint-disable-line
 
   // busca com debounce
   useEffect(() => {
     if (searchTimer.current) window.clearTimeout(searchTimer.current);
-    searchTimer.current = window.setTimeout(() => fetchData(search, fromISO, true), 350);
+    searchTimer.current = window.setTimeout(() => fetchData(search, fromRef.current, true), 350);
     return () => { if (searchTimer.current) window.clearTimeout(searchTimer.current); };
   }, [search]); // eslint-disable-line
 
