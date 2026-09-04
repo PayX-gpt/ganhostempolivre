@@ -46,6 +46,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/live" element={<Suspense fallback={LazyFallback}><Live /></Suspense>} />
+            <Route path="/clientes" element={<Suspense fallback={LazyFallback}><Clientes /></Suspense>} />
             <Route path="/live-demo" element={<Suspense fallback={LazyFallback}><LiveDemo /></Suspense>} />
             <Route path="/studio" element={<Suspense fallback={LazyFallback}><Studio /></Suspense>} />
             <Route path="/oferta-antiga" element={<Suspense fallback={LazyFallback}><PreviewOfertaAntiga /></Suspense>} />
