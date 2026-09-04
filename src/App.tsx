@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/lib/i18n";
 import Index from "./pages/Index";
 const Live = lazy(() => import("./pages/Live"));
+const Clientes = lazy(() => import("./pages/Clientes"));
 const LiveDemo = lazy(() => import("./pages/LiveDemo"));
 const Studio = lazy(() => import("./pages/Studio"));
 const PreviewOfertaAntiga = lazy(() => import("./pages/PreviewOfertaAntiga"));
