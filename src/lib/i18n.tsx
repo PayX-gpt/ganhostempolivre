@@ -101,6 +101,17 @@ function countryToLang(cc?: string | null): Language | null {
   return "en";
 }
 
+// Moeda por país: Brasil=BRL, zona do euro=EUR, resto do mundo=USD.
+const EUROZONE = new Set(["PT","ES","FR","DE","IT","IE","NL","BE","AT","FI","GR","LU","SK","SI","EE","LV","LT","CY","MT","HR","AD","MC","SM","VA"]);
+const isCur = (v: unknown): v is Currency => v === "BRL" || v === "EUR" || v === "USD";
+function countryToCurrency(cc?: string | null): Currency | null {
+  if (!cc) return null;
+  const c = String(cc).toUpperCase();
+  if (c === "BR") return "BRL";
+  if (EUROZONE.has(c)) return "EUR";
+  return "USD";
+}
+
 function langFromNavigator(): Language | null {
   try {
     const list = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language]).filter(Boolean);
