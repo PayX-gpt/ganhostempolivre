@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 
 export type Language = "pt" | "en" | "es";
+export type Currency = "BRL" | "EUR" | "USD";
 
 interface I18nContextType {
   lang: Language;
   setLang: (lang: Language) => void;
   locale: string;
+  currency: Currency;
 }
 
 const LOCALE_MAP: Record<Language, string> = {
@@ -37,6 +39,34 @@ export function useCurrency() {
   };
 
   return { sym, toLocal, format, isBrl, locale };
+}
+
+/* ─── Moeda local por REGIÃO (BRL/EUR/USD) — preço adaptado, fail-safe p/ BRL ───
+   Regra do preço estrangeiro: usa cotação ABAIXO da real da Hubla, então o número
+   na página fica um pouco ACIMA do que a Hubla cobra no checkout (o cliente vê
+   menor no checkout = sensação de vantagem). Arredonda pra .90. BRL = intacto. */
+const FX_RATE: Record<Currency, number> = { BRL: 1, USD: 5.0, EUR: 5.5 };
+const CUR_SYMBOL: Record<Currency, string> = { BRL: "R$", USD: "$", EUR: "€" };
+
+/** Converte um valor base em R$ para a moeda local (número). */
+export function toLocalPrice(brl: number, currency: Currency): number {
+  if (currency === "BRL" || !isFinite(brl)) return brl;
+  const raw = brl / (FX_RATE[currency] || 1);
+  return Math.floor(raw) + 0.90; // ex.: 197/5 = 39,4 -> 39,90
+}
+
+/** Hook: moeda local por região + formatador de preço (base sempre em R$). */
+export function useLocalMoney() {
+  const { currency } = useLanguage();
+  const sym = CUR_SYMBOL[currency] || "R$";
+  const isBrl = currency === "BRL";
+  /** Preço formatado na moeda local (só use quando isForeign; no BRL mantenha o markup original). */
+  const price = (brl: number): string => {
+    if (isBrl) return `R$${(Math.round(brl * 100) / 100).toLocaleString("pt-BR")}`;
+    return `${sym}${toLocalPrice(brl, currency).toFixed(2)}`;
+  };
+  const value = (brl: number): number => toLocalPrice(brl, currency);
+  return { currency, sym, isBrl, isForeign: !isBrl, price, value };
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
