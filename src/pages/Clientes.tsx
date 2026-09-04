@@ -28,7 +28,7 @@ function firstName(name: string) { return (name || "").trim().split(/\s+/)[0] ||
 function waMessage(name: string) {
   const f = firstName(name);
   const ola = f ? `Oi ${f}, tudo bem?` : "Oi, tudo bem?";
-  return `${ola} 😊 Aqui é o seu gerente do Guardião. Tenho uma dica rápida que ajuda muito a acelerar seus primeiros resultados — mas antes me diz: você já fez seu primeiro depósito ou ainda tá começando? 👀`;
+  return `${ola} 😊 Aqui é o seu gerente do Guardião — tô aqui pra te acompanhar de perto. Rapidinho: você já entendeu certinho como o Guardião funciona, ou ficou com alguma dúvida que eu possa te ajudar? 👀`;
 }
 function waLink(c: Client) {
   const digits = (c.wa || "").replace(/\D/g, "");
