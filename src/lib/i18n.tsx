@@ -69,6 +69,58 @@ export function useLocalMoney() {
   return { currency, sym, isBrl, isForeign: !isBrl, price, value };
 }
 
+/* ─── Conversor automático de preços na tela (para copy com R$ embutido) ───
+   Monte dentro do container das páginas (ex.: upsells). Para BRL é NO-OP TOTAL
+   (não toca em nada → português intacto). Para EUR/USD, troca os "R$ X" do DOM
+   pela moeda local (valor um pouco acima do checkout = vantagem). À prova de erro. */
+export function AutoLocalizePrices() {
+  const { currency } = useLanguage();
+  useEffect(() => {
+    if (currency === "BRL") return; // brasileiro: não faz nada
+    const sym = CUR_SYMBOL[currency] || "R$";
+    const RX = /R\$\s?(\d{1,3}(?:\.\d{3})*(?:,\d{2})?|\d+(?:,\d{2})?)/g;
+    const fmt = (brl: number) => `${sym}${toLocalPrice(brl, currency).toFixed(2).replace(".", ",")}`;
+    let raf = 0; let running = false;
+    const convert = () => {
+      try {
+        running = true;
+        const walk = (node: Node) => {
+          const kids = node.childNodes;
+          for (let i = 0; i < kids.length; i++) {
+            const c = kids[i];
+            if (c.nodeType === 3) {
+              const t = c.nodeValue || "";
+              if (t.indexOf("R$") >= 0) {
+                const nt = t.replace(RX, (_m, num) => {
+                  const v = parseFloat(String(num).replace(/\./g, "").replace(",", "."));
+                  return isFinite(v) ? fmt(v) : _m;
+                });
+                if (nt !== t) c.nodeValue = nt;
+              }
+            } else if (c.nodeType === 1) {
+              const tag = (c as Element).tagName;
+              if (tag !== "SCRIPT" && tag !== "STYLE" && tag !== "INPUT" && tag !== "TEXTAREA") walk(c);
+            }
+          }
+        };
+        walk(document.body);
+      } catch { /* qualquer erro -> mantém R$ */ } finally { running = false; }
+    };
+    const schedule = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; convert(); }); };
+    convert();
+    let obs: MutationObserver | null = null;
+    try {
+      obs = new MutationObserver((muts) => {
+        if (running) return;
+        for (const m of muts) { if (m.type === "childList" || m.type === "characterData") { schedule(); break; } }
+      });
+      obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+    } catch { /* sem observer: converte 1x */ }
+    return () => { try { obs?.disconnect(); } catch { /* ignore */ } if (raf) cancelAnimationFrame(raf); };
+  }, [currency]);
+  return null;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    Detecção de idioma "à prova de erros" — padrão dos grandes sistemas.
 
