@@ -40,9 +40,10 @@ function uidFor(email: string | null): string | null {
 
 /** Mensagens humanizadas por situação (SEM travessão). Gerente do Guardião.
     Servem pra cliente novo OU antigo. Não fala de depósito de cara: abre conversa. */
-function waMessage(name: string, kind: WaKind) {
+function waMessage(name: string, kind: WaKind, uid?: string | null) {
   const f = firstName(name);
   const ola = f ? `Oi ${f}, tudo bem?` : "Oi, tudo bem?";
+  const qu = uid ? `&u=${uid}` : "";
   if (kind === "acesso") {
     return `${ola} 😊 Aqui é o seu gerente do Guardião. Passando pra garantir que você já está com tudo em mãos. É neste link que você acessa suas aulas e o Guardião: ${MEMBERS_LINK} . Consegue entrar e me dizer se apareceu tudo certinho? Qualquer coisa eu te ajudo na hora. 🤝`;
   }
@@ -54,22 +55,22 @@ function waMessage(name: string, kind: WaKind) {
 Pra começar com calma e no seu ritmo, preparei um passo a passo bem simples. É só tocar em cada link, na ordem:
 
 *1) Boas-vindas (comece por aqui)*
-${GUIA}/?aula=boas-vindas
+${GUIA}/?aula=boas-vindas${qu}
 
 *2) Abrir sua conta*
-${GUIA}/?aula=abrir-conta
+${GUIA}/?aula=abrir-conta${qu}
 
 *3) Fazer seu primeiro depósito*
-${GUIA}/?aula=deposito
+${GUIA}/?aula=deposito${qu}
 
 *4) Ativar o Guardião*
-${GUIA}/?aula=ativar
+${GUIA}/?aula=ativar${qu}
 
 *5) Como sacar seu dinheiro*
-${GUIA}/?aula=saque
+${GUIA}/?aula=saque${qu}
 
 *6) Suporte e Comunidade*
-${GUIA}/?aula=suporte
+${GUIA}/?aula=suporte${qu}
 
 *Sua área de membros completa*
 Depois dos primeiros passos, é muito importante você entrar aqui, onde ficam todas as suas aulas:
@@ -79,7 +80,7 @@ Qualquer dúvida, é só me responder por aqui. Vou te acompanhar em cada etapa.
 }
 function waLink(c: Client, kind: WaKind) {
   const digits = (c.wa || "").replace(/\D/g, "");
-  return `https://wa.me/${digits}?text=${encodeURIComponent(waMessage(c.name, kind))}`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(waMessage(c.name, kind, uidFor(c.email)))}`;
 }
 
 // filtros de data
@@ -112,6 +113,7 @@ export default function Clientes() {
   const [customFrom, setCustomFrom] = useState<string>(""); // yyyy-mm-dd
   const [filter, setFilter] = useState<"todos" | "pendentes" | "contatados" | "exterior">("todos");
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [progress, setProgress] = useState<Record<string, { done: string[]; last: string | null }>>({});
   const searchTimer = useRef<number | null>(null);
 
   const fromISO = useMemo(() => {
