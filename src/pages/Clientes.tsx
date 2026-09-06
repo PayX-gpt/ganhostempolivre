@@ -37,7 +37,33 @@ function waMessage(name: string, kind: WaKind) {
   if (kind === "duvidas") {
     return `${ola} 😊 Aqui é o seu gerente do Guardião e fiquei responsável por te acompanhar de perto. Me conta uma coisa: o que você mais quer entender sobre a plataforma agora? Assim eu já te explico certinho e a gente avança juntos. 🚀`;
   }
-  return `${ola} 😊 Aqui é o seu gerente do Guardião. Passei aqui pra te dar as boas vindas e já deixar seu acesso à mão. É neste link que você entra nas suas aulas e no Guardião: ${MEMBERS_LINK} . Já conseguiu entrar e entender como funciona, ou ainda ficou com alguma dúvida? Estou por aqui pra te ajudar no que precisar. 🤝`;
+  return `${ola} 😊 Aqui é o seu gerente do Guardião. Que bom ter você com a gente!
+
+Pra começar com calma e no seu ritmo, preparei um passo a passo bem simples. É só tocar em cada link, na ordem:
+
+*1) Boas-vindas (comece por aqui)*
+${GUIA}/?aula=boas-vindas
+
+*2) Abrir sua conta*
+${GUIA}/?aula=abrir-conta
+
+*3) Fazer seu primeiro depósito*
+${GUIA}/?aula=deposito
+
+*4) Ativar o Guardião*
+${GUIA}/?aula=ativar
+
+*5) Como sacar seu dinheiro*
+${GUIA}/?aula=saque
+
+*6) Suporte e Comunidade*
+${GUIA}/?aula=suporte
+
+*Sua área de membros completa*
+Depois dos primeiros passos, é muito importante você entrar aqui, onde ficam todas as suas aulas:
+${MEMBERS_LINK}
+
+Qualquer dúvida, é só me responder por aqui. Vou te acompanhar em cada etapa. 🤝`;
 }
 function waLink(c: Client, kind: WaKind) {
   const digits = (c.wa || "").replace(/\D/g, "");
