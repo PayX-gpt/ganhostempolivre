@@ -24,6 +24,7 @@ function firstName(name: string) { return (name || "").trim().split(/\s+/)[0] ||
 
 type WaKind = "boasvindas" | "duvidas" | "acesso";
 const MEMBERS_LINK = "https://guardiao.blackboxmembers.com.br/login";
+const GUIA = "https://payx-gpt.github.io/guia";
 
 /** Mensagens humanizadas por situação (SEM travessão). Gerente do Guardião.
     Servem pra cliente novo OU antigo. Não fala de depósito de cara: abre conversa. */
