@@ -127,9 +127,18 @@ export default function Clientes() {
       const { data, error } = await supabase.rpc("get_clients_crm" as any, { p_search: q || null, p_from: from, p_limit: 800 });
       if (!error && data) {
         const d = data as any;
-        setClients((d.clients || []) as Client[]);
+        const cl = (d.clients || []) as Client[];
+        setClients(cl);
         setStats((d.stats || {}) as Stats);
         setLastUpdate(new Date());
+        // progresso do guia (por cliente) — casa pelo código derivado do e-mail
+        const uids = Array.from(new Set(cl.map((c) => uidFor(c.email)).filter(Boolean))) as string[];
+        if (uids.length) {
+          supabase.rpc("guia_get_many" as any, { p_uids: uids })
+            .then(({ data: pd }: any) => {
+              if (pd) { const m: Record<string, { done: string[]; last: string | null }> = {}; (pd as any[]).forEach((r) => { m[r.uid] = { done: r.done || [], last: r.last || null }; }); setProgress(m); }
+            }).catch(() => {});
+        }
       }
     } catch { /* mantém dados */ }
     if (!silent) setLoading(false);
@@ -238,6 +247,9 @@ export default function Clientes() {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {view.map((c) => {
             const exterior = c.region.length > 2;
+            const _uid = uidFor(c.email); const _pg = _uid ? progress[_uid] : null;
+            const _done = _pg ? GUIA_STEPS.filter(([k]) => _pg.done.includes(k)).length : 0;
+            const _last = _pg && _pg.last ? (GUIA_STEPS.find(([k]) => k === _pg.last) || [null, null])[1] : null;
             return (
               <div key={c.key} style={{ background: C.card, border: `1px solid ${c.contacted ? "rgba(34,197,94,.35)" : C.border}`, borderRadius: 14, padding: "13px 14px", opacity: c.contacted ? 0.72 : 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
