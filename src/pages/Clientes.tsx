@@ -261,6 +261,14 @@ export default function Clientes() {
                       {c.n > 1 && <span style={{ fontSize: 11, color: C.dim }}>· {c.n} compras</span>}
                     </div>
                     <div style={{ fontSize: 12, color: C.dim, marginTop: 6, lineHeight: 1.45 }}>{(c.products || []).join(" · ")}</div>
+                    {_pg && (_done > 0 || _last) && (
+                      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginTop: 7, fontSize: 11.5 }}>
+                        <span style={{ fontWeight: 800, padding: "2px 8px", borderRadius: 20, background: _done >= 6 ? "rgba(34,197,94,.16)" : "rgba(245,197,66,.14)", color: _done >= 6 ? C.green : C.gold }}>📚 Guia {_done}/6</span>
+                        {_done >= 6
+                          ? <span style={{ color: C.dim }}>concluiu tudo 🎉</span>
+                          : _last && <span style={{ color: C.dim }}>parou em: {_last}</span>}
+                      </div>
+                    )}
                   </div>
                   <label title="Marcar como já contatado" style={{ flex: "0 0 auto", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
                     <input type="checkbox" checked={c.contacted} onChange={(e) => toggleContacted(c, e.target.checked)} style={{ width: 22, height: 22, accentColor: C.green, cursor: "pointer" }} />
