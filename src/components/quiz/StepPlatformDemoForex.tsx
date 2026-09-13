@@ -1,349 +1,530 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { StepContainer, StepTitle, StepSubtitle, CTAButton } from "./QuizUI";
+import { StepContainer, StepTitle, StepSubtitle } from "./QuizUI";
 import { useLanguage, type Language } from "@/lib/i18n";
-import { ShieldCheck, Users, Activity, TrendingUp, ArrowUpRight, ArrowDownRight, CheckCircle2, Lock, Zap } from "lucide-react";
+import {
+  Play, Power, Bot, TrendingUp, Banknote, Bell,
+  Lock, Loader2, Target, Clock, Trophy, Sparkles,
+  ArrowRight, Wallet, Eye, MousePointer, Users, Zap,
+} from "lucide-react";
 
 /**
- * QUIZ B — Demo "Sala de Operações ao Vivo do Guardião" (copy trade / Forex).
- * Substitui a demo gamificada do Quiz A APENAS no Quiz B. Mostra o Guardião
- * operando vários mercados (ouro, prata, EUR/USD...), abrindo e fechando entradas
- * sozinho, e milhares de pessoas copiando a MESMA operação e lucrando em tempo real.
- * A pessoa não lê gráfico, não precisa de experiência — o Guardião faz tudo.
- * Tudo é simulação client-side (setInterval), sem rede.
+ * QUIZ B — Demo do Guardião no formato VALIDADO do Quiz A (plataforma gamificada:
+ * clica → operações rápidas entrando/saindo, saldo subindo, notificações, meta batida).
+ * Só re-tematizado: "Robô" → "Guardião", mercados de câmbio/Forex (Ouro, Prata, pares),
+ * e um toque de copy trade ("N pessoas copiando agora / pegaram esta operação").
+ * O Quiz A segue usando StepPlatformDemo.tsx (intocado). Tudo client-side, sem rede.
  */
 
 interface Props { onNext: () => void; userName?: string; }
 
-const CUR: Record<Language, { sym: string; scale: number }> = {
-  pt: { sym: "R$", scale: 1 },
-  en: { sym: "$", scale: 0.2 },
-  es: { sym: "$", scale: 0.2 },
+const plat = {
+  bg: "bg-[hsl(260,30%,8%)]", card: "bg-[hsl(260,25%,12%)]", border: "border-[hsl(270,30%,22%)]",
+  accent: "text-[hsl(280,70%,65%)]", tabActive: "bg-[hsl(220,70%,45%)]", tabBorder: "border-[hsl(220,70%,45%)]",
+  headerBg: "bg-[hsl(260,28%,10%)]", secondary: "bg-[hsl(260,22%,15%)]",
+  green: "text-[hsl(152,60%,42%)]", red: "text-[hsl(0,72%,55%)]",
 };
 
-const texts = {
+// Só câmbio/Forex + metais (ouro, prata) — nada de cripto, pra ficar no mecanismo real.
+const pares = ["XAU/USD","XAG/USD","EUR/USD","GBP/USD","USD/JPY","AUD/USD","USD/CAD","USD/CHF","EUR/GBP","GBP/JPY","NZD/USD","EUR/JPY"];
+const precos = ["2,385.40","29.87","1.08432","1.26781","149.320","0.65123","1.36540","0.87654","0.85612","188.410","0.61234","162.240"];
+const tipDelays = [1200, 3500, 6000, 9000, 12000];
+const TIP_ICONS = [Eye, Zap, TrendingUp, Users, MousePointer];
+
+const TX = {
   pt: {
-    title1: (n: string) => (n ? `${n}, o ` : "O "),
-    titleHL: "Guardião",
-    title2: " está operando agora — ao vivo",
-    subIdle: "Ative o Guardião e veja, em tempo real, ele entrando e saindo sozinho em vários mercados. Você não precisa ler gráfico nem ter experiência.",
-    subActive: "O Guardião está operando sozinho. As mesmas entradas caem pra todo mundo ao mesmo tempo — inclusive pra você.",
-    activate: "ATIVAR O GUARDIÃO",
-    live: "AO VIVO",
-    copying: "pessoas copiando agora",
-    profitToday: "Lucro de hoje",
-    focalNote: "O Guardião entra e sai sozinho. Você só acompanha.",
-    aiControl: "IA no controle",
-    entry: "ENTRADA",
-    exit: "SAÍDA",
-    buy: "compra",
-    sell: "venda",
-    peopleWon: (c: string) => `${c} pessoas pegaram esta operação`,
-    ifInside: "Se você estivesse dentro AGORA, teria pego exatamente estas mesmas entradas — e lucrado junto, no mesmo instante.",
-    badges: ["Sem ler gráfico", "Sem experiência", "O Guardião faz tudo"],
-    feedTitle: "Operações ao vivo",
-    cta: "QUERO O GUARDIÃO OPERANDO PRA MIM →",
-    skip: "Já entendi. Continuar →",
-    marketsLbl: "Operando em vários mercados ao mesmo tempo",
+    goalSym: "R$",
+    titleA: (n: string) => (n ? `${n}, essa` : "Essa"), titleMid: " é a plataforma do ", titleBold: "Guardião", titleEnd: " — operando no câmbio",
+    subIdle: "Basta apertar em Iniciar Guardião, que ele começa a operar no câmbio (Forex) e gerar lucros pra você automático.",
+    subDone: "Viu como é simples? Agora imagine isso caindo na sua conta todos os dias.",
+    subActive: "O Guardião está operando no câmbio em tempo real. As mesmas entradas caem pra todo mundo — inclusive pra você.",
+    fastBannerA: "⚡ Em segundos: veja o Guardião bater a ", fastBannerBold: "meta que VOCÊ escolher", fastBannerC: " — na sua frente.",
+    platform: "GUARDIÃO", platformSuf: "CÂMBIO • FOREX", demoAccount: "Conta Demo", balance: "Saldo", pl: "Lucro/Prejuízo",
+    marketsLine: "Operando: Ouro • Prata • EUR/USD • GBP/USD • USD/JPY",
+    copyingNow: "copiando agora",
+    botStopped: "Guardião parado", botRunning: "Guardião operando", goalReached: "META BATIDA!", metaLbl: "Meta:",
+    startBot: "Iniciar Guardião", selectBot: "Selecionar mercado", tabTable: "Tabela", tabChart: "Gráfico", history: "Histórico", noOps: "Nenhuma operação ainda",
+    thHora: "Hora", thPar: "Par", thPreco: "Preço", thLucro: "Lucro",
+    trustBold: "100% automático", trustA: "O Guardião opera ", trustC: ". Basta ativar e acompanhar no celular.",
+    estTimeLbl: "Tempo estimado", estTimeA: "Aguarde cerca de ", estTimeBold: "1 minuto", estTimeC: ". O Guardião está operando sozinho — você não precisa fazer nada.",
+    continueFast: "Já entendi — continuar →", continueSkip: "Continuar sem testar →",
+    step: "Passo", of: "de",
+    coach1: 'Toque no botão verde "Iniciar Guardião" para ativar a inteligência artificial.',
+    coach2: "Digite quanto quer ganhar por dia. Pode ser qualquer valor acima de R$10.",
+    coach3a: "Agora escolha quanto tempo você tem disponível.", coach3b: 'Tudo pronto! Toque em "Iniciar Guardião" abaixo.',
+    tips: [
+      "O Guardião identificou uma oportunidade no câmbio e entrou sozinho. Você não fez nada!",
+      "Cada operação dura segundos. Na conta real, o lucro já estaria disponível para saque.",
+      "Olha o saldo subindo! As mesmas entradas caem pra todo mundo ao mesmo tempo.",
+      "Milhares de pessoas estão copiando estas mesmas operações agora, em tempo real.",
+      "Perceba: zero cliques. O Guardião opera o câmbio sozinho o dia inteiro.",
+    ],
+    gpTitle: (n: string) => (n ? `${n}, configure sua meta` : "Configure sua meta"), gpSub: "O Guardião vai operar no câmbio até bater automaticamente",
+    gpGoalLbl: "Meta de ganho", gpGoalPh: "Ex: R$ 500", gpMin: "Mínimo R$10", gpTimeLbl: "Tempo disponível",
+    gpTimes: [{ label: "30 minutos", value: "30min" }, { label: "1 hora", value: "1h" }, { label: "2 horas", value: "2h" }, { label: "Tempo livre", value: "livre" }],
+    gpStart: "INICIAR GUARDIÃO",
+    grTitle: "META BATIDA!", grSubA: (n: string) => (n ? `${n}, o Guardião bateu sua meta de ` : "O Guardião bateu sua meta de "), grSubC: " em apenas 1 minuto.",
+    grIfReal: "Se estivesse na conta real, você teria ganho:", grWithdraw: "E poderia sacar agora mesmo",
+    grDemoBold: "Isso foi só uma demonstração.", grDemoA: " Na conta real, o dinheiro cai direto na sua conta. Nossos alunos fazem isso ", grDemoBold2: "todos os dias", grDemoC: ".",
+    grWithRealTitle: "Com acesso real, você teria:", grItems: ["Saques ilimitados para qualquer banco", "Guardião operando 24h no câmbio", "Suporte exclusivo no WhatsApp", "As mesmas entradas caindo pra você"],
+    grCta: "QUERO A CONTA REAL AGORA", grWaiting: "Enquanto você espera, outros já estão lucrando.",
+    notifDone: "Operação concluída", notifWin: (amt: string, par: string, c: string) => `+R$${amt} em ${par} · ${c} copiaram`,
+    anWaiting: "Aguardando próxima operação...", anAnalyzing: "Analisando o câmbio...",
   },
   en: {
-    title1: (n: string) => (n ? `${n}, the ` : "The "),
-    titleHL: "Guardian",
-    title2: " is trading right now — live",
-    subIdle: "Activate the Guardian and watch it enter and exit on its own across several markets, in real time. No chart reading, no experience needed.",
-    subActive: "The Guardian is trading on its own. The same entries hit everyone at once — including you.",
-    activate: "ACTIVATE THE GUARDIAN",
-    live: "LIVE",
-    copying: "people copying right now",
-    profitToday: "Today's profit",
-    focalNote: "The Guardian enters and exits on its own. You just watch.",
-    aiControl: "AI in control",
-    entry: "ENTRY",
-    exit: "EXIT",
-    buy: "buy",
-    sell: "sell",
-    peopleWon: (c: string) => `${c} people took this trade`,
-    ifInside: "If you were inside RIGHT NOW, you'd have taken these exact entries — and profited too, at the same instant.",
-    badges: ["No chart reading", "No experience", "The Guardian does it all"],
-    feedTitle: "Live trades",
-    cta: "I WANT THE GUARDIAN TRADING FOR ME →",
-    skip: "Got it. Continue →",
-    marketsLbl: "Trading several markets at the same time",
+    goalSym: "$",
+    titleA: (n: string) => (n ? `${n}, this` : "This"), titleMid: " is the ", titleBold: "Guardian", titleEnd: " platform — trading currencies",
+    subIdle: "Just tap Start Guardian and it begins trading currencies (Forex) and generating profit for you automatically.",
+    subDone: "See how simple it is? Now picture this landing in your account every day.",
+    subActive: "The Guardian is trading currencies in real time. The same entries hit everyone — including you.",
+    fastBannerA: "⚡ In seconds: watch the Guardian hit the ", fastBannerBold: "goal YOU choose", fastBannerC: " — right in front of you.",
+    platform: "GUARDIAN", platformSuf: "CURRENCIES • FOREX", demoAccount: "Demo Account", balance: "Balance", pl: "Profit/Loss",
+    marketsLine: "Trading: Gold • Silver • EUR/USD • GBP/USD • USD/JPY",
+    copyingNow: "copying now",
+    botStopped: "Guardian stopped", botRunning: "Guardian trading", goalReached: "GOAL REACHED!", metaLbl: "Goal:",
+    startBot: "Start Guardian", selectBot: "Select market", tabTable: "Table", tabChart: "Chart", history: "History", noOps: "No trades yet",
+    thHora: "Time", thPar: "Pair", thPreco: "Price", thLucro: "Profit",
+    trustBold: "100% automatic", trustA: "The Guardian trades ", trustC: ". Just turn it on and watch on your phone.",
+    estTimeLbl: "Estimated time", estTimeA: "Wait about ", estTimeBold: "1 minute", estTimeC: ". The Guardian is trading on its own — you don't have to do a thing.",
+    continueFast: "Got it — continue →", continueSkip: "Continue without testing →",
+    step: "Step", of: "of",
+    coach1: 'Tap the green "Start Guardian" button to activate the AI.',
+    coach2: "Type how much you want to earn per day. Any amount above $10.",
+    coach3a: "Now choose how much time you have available.", coach3b: 'All set! Tap "Start Guardian" below.',
+    tips: [
+      "The Guardian spotted an opportunity in the currency market and entered on its own. You did nothing!",
+      "Each trade lasts seconds. On a real account, the profit would already be available to withdraw.",
+      "Watch the balance climb! The same entries hit everyone at the same time.",
+      "Thousands of people are copying these exact trades right now, in real time.",
+      "Notice: zero clicks. The Guardian trades currencies on its own, all day.",
+    ],
+    gpTitle: (n: string) => (n ? `${n}, set your goal` : "Set your goal"), gpSub: "The Guardian will trade currencies until it hits it automatically",
+    gpGoalLbl: "Earnings goal", gpGoalPh: "e.g. $100", gpMin: "Minimum $10", gpTimeLbl: "Time available",
+    gpTimes: [{ label: "30 minutes", value: "30min" }, { label: "1 hour", value: "1h" }, { label: "2 hours", value: "2h" }, { label: "Free time", value: "livre" }],
+    gpStart: "START GUARDIAN",
+    grTitle: "GOAL REACHED!", grSubA: (n: string) => (n ? `${n}, the Guardian hit your goal of ` : "The Guardian hit your goal of "), grSubC: " in just 1 minute.",
+    grIfReal: "On a real account, you would have earned:", grWithdraw: "And you could withdraw right now",
+    grDemoBold: "This was just a demo.", grDemoA: " On a real account, the money goes straight to your account. Our members do this ", grDemoBold2: "every day", grDemoC: ".",
+    grWithRealTitle: "With real access, you'd have:", grItems: ["Unlimited withdrawals to any bank", "Guardian trading currencies 24/7", "Exclusive WhatsApp support", "The same entries landing for you"],
+    grCta: "I WANT THE REAL ACCOUNT NOW", grWaiting: "While you wait, others are already profiting.",
+    notifDone: "Trade complete", notifWin: (amt: string, par: string, c: string) => `+$${amt} on ${par} · ${c} copied`,
+    anWaiting: "Waiting for the next trade...", anAnalyzing: "Analyzing the currency market...",
   },
   es: {
-    title1: (n: string) => (n ? `${n}, el ` : "El "),
-    titleHL: "Guardián",
-    title2: " está operando ahora — en vivo",
-    subIdle: "Activá el Guardián y velo entrar y salir solo en varios mercados, en tiempo real. Sin leer gráficos ni experiencia.",
-    subActive: "El Guardián está operando solo. Las mismas entradas les llegan a todos a la vez — incluido vos.",
-    activate: "ACTIVAR EL GUARDIÁN",
-    live: "EN VIVO",
-    copying: "personas copiando ahora",
-    profitToday: "Ganancia de hoy",
-    focalNote: "El Guardián entra y sale solo. Vos solo acompañás.",
-    aiControl: "IA en control",
-    entry: "ENTRADA",
-    exit: "SALIDA",
-    buy: "compra",
-    sell: "venta",
-    peopleWon: (c: string) => `${c} personas tomaron esta operación`,
-    ifInside: "Si estuvieras adentro AHORA, habrías tomado exactamente estas entradas — y ganado también, en el mismo instante.",
-    badges: ["Sin leer gráficos", "Sin experiencia", "El Guardián hace todo"],
-    feedTitle: "Operaciones en vivo",
-    cta: "QUIERO EL GUARDIÁN OPERANDO PARA MÍ →",
-    skip: "Ya entendí. Continuar →",
-    marketsLbl: "Operando varios mercados al mismo tiempo",
+    goalSym: "$",
+    titleA: (n: string) => (n ? `${n}, esta` : "Esta"), titleMid: " es la plataforma del ", titleBold: "Guardián", titleEnd: " — operando divisas",
+    subIdle: "Solo aprieta Iniciar Guardián y empieza a operar en el mercado de cambios (Forex) y generar ganancias para ti automáticamente.",
+    subDone: "¿Viste qué simple es? Ahora imagina esto cayendo en tu cuenta todos los días.",
+    subActive: "El Guardián está operando divisas en tiempo real. Las mismas entradas les llegan a todos — incluido tú.",
+    fastBannerA: "⚡ En segundos: mira al Guardián alcanzar la ", fastBannerBold: "meta que TÚ elijas", fastBannerC: " — frente a ti.",
+    platform: "GUARDIÁN", platformSuf: "DIVISAS • FOREX", demoAccount: "Cuenta Demo", balance: "Saldo", pl: "Ganancia/Pérdida",
+    marketsLine: "Operando: Oro • Plata • EUR/USD • GBP/USD • USD/JPY",
+    copyingNow: "copiando ahora",
+    botStopped: "Guardián detenido", botRunning: "Guardián operando", goalReached: "¡META ALCANZADA!", metaLbl: "Meta:",
+    startBot: "Iniciar Guardián", selectBot: "Seleccionar mercado", tabTable: "Tabla", tabChart: "Gráfico", history: "Historial", noOps: "Aún no hay operaciones",
+    thHora: "Hora", thPar: "Par", thPreco: "Precio", thLucro: "Ganancia",
+    trustBold: "100% automático", trustA: "El Guardián opera ", trustC: ". Solo actívalo y acompaña desde el celular.",
+    estTimeLbl: "Tiempo estimado", estTimeA: "Espera cerca de ", estTimeBold: "1 minuto", estTimeC: ". El Guardián está operando solo — no tienes que hacer nada.",
+    continueFast: "Ya entendí — continuar →", continueSkip: "Continuar sin probar →",
+    step: "Paso", of: "de",
+    coach1: 'Toca el botón verde "Iniciar Guardián" para activar la inteligencia artificial.',
+    coach2: "Escribe cuánto quieres ganar por día. Cualquier monto arriba de $10.",
+    coach3a: "Ahora elige cuánto tiempo tienes disponible.", coach3b: '¡Todo listo! Toca "Iniciar Guardián" abajo.',
+    tips: [
+      "El Guardián identificó una oportunidad en las divisas y entró solo. ¡Tú no hiciste nada!",
+      "Cada operación dura segundos. En cuenta real, la ganancia ya estaría disponible para retirar.",
+      "¡Mira el saldo subiendo! Las mismas entradas les llegan a todos al mismo tiempo.",
+      "Miles de personas están copiando estas mismas operaciones ahora, en tiempo real.",
+      "Fíjate: cero clics. El Guardián opera las divisas solo todo el día.",
+    ],
+    gpTitle: (n: string) => (n ? `${n}, configura tu meta` : "Configura tu meta"), gpSub: "El Guardián operará divisas hasta alcanzarla automáticamente",
+    gpGoalLbl: "Meta de ganancia", gpGoalPh: "Ej: $100", gpMin: "Mínimo $10", gpTimeLbl: "Tiempo disponible",
+    gpTimes: [{ label: "30 minutos", value: "30min" }, { label: "1 hora", value: "1h" }, { label: "2 horas", value: "2h" }, { label: "Tiempo libre", value: "livre" }],
+    gpStart: "INICIAR GUARDIÁN",
+    grTitle: "¡META ALCANZADA!", grSubA: (n: string) => (n ? `${n}, el Guardián alcanzó tu meta de ` : "El Guardián alcanzó tu meta de "), grSubC: " en apenas 1 minuto.",
+    grIfReal: "En cuenta real, habrías ganado:", grWithdraw: "Y podrías retirar ahora mismo",
+    grDemoBold: "Esto fue solo una demostración.", grDemoA: " En cuenta real, el dinero cae directo en tu cuenta. Nuestros miembros hacen esto ", grDemoBold2: "todos los días", grDemoC: ".",
+    grWithRealTitle: "Con acceso real, tendrías:", grItems: ["Retiros ilimitados a cualquier banco", "Guardián operando divisas 24h", "Soporte exclusivo en WhatsApp", "Las mismas entradas cayendo para ti"],
+    grCta: "QUIERO LA CUENTA REAL AHORA", grWaiting: "Mientras esperas, otros ya están ganando.",
+    notifDone: "Operación completada", notifWin: (amt: string, par: string, c: string) => `+$${amt} en ${par} · ${c} copiaron`,
+    anWaiting: "Esperando la próxima operación...", anAnalyzing: "Analizando el mercado de divisas...",
   },
-} as const;
+};
+type Tx = typeof TX.pt;
 
-// Mercados mostrados (ouro, prata, pares de moeda).
-const MARKETS = [
-  { key: "XAUUSD", pair: "XAU/USD", name: { pt: "Ouro", en: "Gold", es: "Oro" }, base: 2385, color: "#F5B942" },
-  { key: "XAGUSD", pair: "XAG/USD", name: { pt: "Prata", en: "Silver", es: "Plata" }, base: 29.8, color: "#B8C0C8" },
-  { key: "EURUSD", pair: "EUR/USD", name: { pt: "Euro", en: "Euro", es: "Euro" }, base: 1.086, color: "#4C8DFF" },
-  { key: "GBPUSD", pair: "GBP/USD", name: { pt: "Libra", en: "Pound", es: "Libra" }, base: 1.271, color: "#8B5CF6" },
-  { key: "USDJPY", pair: "USD/JPY", name: { pt: "Iene", en: "Yen", es: "Yen" }, base: 156.4, color: "#22C55E" },
-] as const;
+const CoachBubble = ({ step, total, text, position = "bottom", t }: { step: number; total: number; text: string; position?: "top" | "bottom"; t: Tx }) => (
+  <div className="animate-fade-in">
+    <div className="relative bg-foreground text-background rounded-xl px-3 py-2.5 shadow-lg">
+      {position === "top" && <div className="absolute -bottom-1.5 left-6 w-3 h-3 bg-foreground rotate-45 rounded-sm" />}
+      {position === "bottom" && <div className="absolute -top-1.5 left-6 w-3 h-3 bg-foreground rotate-45 rounded-sm" />}
+      <div className="flex items-start gap-2.5 relative z-10">
+        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0 mt-0.5"><span className="text-[10px] font-bold text-primary-foreground">{step}</span></div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] text-background/60 font-medium">{t.step} {step} {t.of} {total}</p>
+          <p className="text-[11px] font-semibold leading-snug mt-0.5">{text}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
-type Op = { id: number; mkt: number; side: "buy" | "sell"; status: "open" | "closed"; pnl: number; copiers: number };
+const TutorialTip = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
+  <div className="w-full animate-fade-in">
+    <div className={`${plat.card} ${plat.border} border rounded-lg px-2.5 py-2 flex items-start gap-2`}>
+      <div className="w-6 h-6 rounded-md bg-[hsl(280,70%,65%,0.15)] flex items-center justify-center shrink-0 mt-0.5"><Icon className="w-3 h-3 text-[hsl(280,70%,65%)]" /></div>
+      <p className="text-[11px] text-[hsl(45,90%,65%)] font-semibold leading-snug flex-1">{text}</p>
+    </div>
+  </div>
+);
 
-const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+const GoalReachedPopup = ({ goal, profit, onContinue, userName, t, locale }: { goal: number; profit: number; onContinue: () => void; userName?: string; t: Tx; locale: string }) => {
+  const firstName = userName?.split(" ")[0] || "";
+  const displayProfit = Math.max(profit, goal);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[hsl(260,30%,4%,0.9)] backdrop-blur-sm animate-fade-in px-4">
+      <div className={`w-full max-w-sm ${plat.card} ${plat.border} border rounded-2xl shadow-2xl overflow-hidden animate-scale-in max-h-[90vh] overflow-y-auto`}>
+        <div className="bg-[hsl(280,70%,65%,0.1)] border-b border-[hsl(270,30%,22%)] px-4 py-5 text-center">
+          <div className="w-14 h-14 rounded-full bg-[hsl(280,70%,65%,0.2)] border-2 border-[hsl(280,70%,65%,0.4)] flex items-center justify-center mx-auto mb-3 animate-bounce-subtle"><Trophy className="w-7 h-7 text-[hsl(280,70%,65%)]" /></div>
+          <h3 className="font-display font-bold text-lg text-foreground">{t.grTitle}</h3>
+          <p className="text-sm text-[hsl(260,15%,65%)] mt-1.5 leading-relaxed">{t.grSubA(firstName)}<span className="font-bold text-foreground">{t.goalSym}{goal.toLocaleString(locale)}</span>{t.grSubC}</p>
+        </div>
+        <div className="px-4 py-4 space-y-3">
+          <div className={`${plat.bg} rounded-xl p-3 text-center border border-[hsl(280,70%,65%,0.3)]`}>
+            <p className="text-[11px] text-[hsl(260,15%,55%)] mb-1">{t.grIfReal}</p>
+            <p className="text-2xl font-display font-bold text-foreground mt-1">{t.goalSym} <span className="text-[hsl(280,70%,65%)]">{displayProfit.toLocaleString(locale, { minimumFractionDigits: 2 })}</span></p>
+            <p className="text-[11px] text-[hsl(280,70%,65%)] mt-1.5 font-medium">{t.grWithdraw}</p>
+          </div>
+          <div className="bg-[hsl(280,70%,65%,0.08)] rounded-xl p-2.5 border border-[hsl(280,70%,65%,0.2)]">
+            <p className="text-[11px] text-foreground leading-relaxed text-center"><span className="font-bold">{t.grDemoBold}</span>{t.grDemoA}<span className="font-bold text-[hsl(280,70%,65%)]">{t.grDemoBold2}</span>{t.grDemoC}</p>
+          </div>
+          <div className={`${plat.bg} rounded-xl p-2.5 border ${plat.border} space-y-1.5`}>
+            <p className="text-[11px] font-bold text-foreground text-center">{t.grWithRealTitle}</p>
+            {t.grItems.map((item, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                <div className="w-3.5 h-3.5 rounded-full bg-[hsl(280,70%,65%,0.2)] flex items-center justify-center shrink-0"><ArrowRight className="w-2 h-2 text-[hsl(280,70%,65%)]" /></div>
+                <span className="text-[10px] text-[hsl(260,15%,65%)]">{item}</span>
+              </div>
+            ))}
+          </div>
+          <button onClick={onContinue} className="w-full py-3.5 rounded-2xl font-extrabold text-sm tracking-wide text-white cursor-pointer hover:brightness-110 active:scale-[0.98] transition-all duration-300 bg-gradient-to-r from-[hsl(280,70%,55%)] to-[hsl(260,60%,55%)]" style={{ boxShadow: `0 0 25px hsl(280 70% 65% / 0.3), 0 0 50px hsl(280 70% 65% / 0.15)` }}>
+            <span className="flex items-center justify-center gap-2"><Sparkles className="w-4 h-4" /> {t.grCta}</span>
+          </button>
+          <p className="text-[10px] text-[hsl(260,15%,45%)] text-center">{t.grWaiting}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const GoalPopup = ({ onSubmit, userName, t, locale }: { onSubmit: (goal: number, time: string) => void; userName?: string; t: Tx; locale: string }) => {
+  const [goal, setGoal] = useState("");
+  const [time, setTime] = useState("");
+  const firstName = userName?.split(" ")[0] || "";
+  const goalNum = parseFloat(goal.replace(/\D/g, "")) || 0;
+  const canSubmit = goalNum >= 10 && time !== "";
+  const formatGoal = (val: string) => { const nums = val.replace(/\D/g, ""); if (!nums) return ""; return `${t.goalSym} ${parseInt(nums).toLocaleString(locale)}`; };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[hsl(260,30%,4%,0.9)] backdrop-blur-sm animate-fade-in px-4">
+      <div className={`w-full max-w-sm ${plat.card} ${plat.border} border rounded-2xl shadow-2xl overflow-hidden animate-scale-in`}>
+        <div className="bg-[hsl(280,70%,65%,0.1)] border-b border-[hsl(270,30%,22%)] px-4 py-3.5 text-center">
+          <div className="w-11 h-11 rounded-full bg-[hsl(280,70%,65%,0.2)] border border-[hsl(280,70%,65%,0.3)] flex items-center justify-center mx-auto mb-2"><Target className="w-5 h-5 text-[hsl(280,70%,65%)]" /></div>
+          <h3 className="font-display font-bold text-base text-foreground">{t.gpTitle(firstName)}</h3>
+          <p className="text-[11px] text-[hsl(260,15%,55%)] mt-1">{t.gpSub}</p>
+        </div>
+        <CoachBubble step={2} total={3} text={t.coach2} position="top" t={t} />
+        <div className="px-4 py-4 space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-foreground flex items-center gap-1.5"><Banknote className="w-3.5 h-3.5 text-[hsl(280,70%,65%)]" /> {t.gpGoalLbl}</label>
+            <input type="text" inputMode="numeric" placeholder={t.gpGoalPh} value={goal} onChange={(e) => setGoal(formatGoal(e.target.value))}
+              className="w-full bg-[hsl(260,22%,15%)] border border-[hsl(270,30%,22%)] rounded-xl px-3 py-2.5 text-foreground text-lg font-bold placeholder:text-[hsl(260,15%,40%)] focus:outline-none focus:ring-2 focus:ring-[hsl(280,70%,65%,0.5)] transition-all" />
+            <p className="text-[10px] text-[hsl(260,15%,55%)]">{t.gpMin}</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-foreground flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[hsl(280,70%,65%)]" /> {t.gpTimeLbl}</label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {t.gpTimes.map((opt) => (
+                <button key={opt.value} onClick={() => setTime(opt.value)} className={`py-2 px-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${time === opt.value ? "border-[hsl(280,70%,65%)] bg-[hsl(280,70%,65%,0.15)] text-[hsl(280,70%,65%)]" : "border-[hsl(270,30%,22%)] bg-[hsl(260,22%,15%)] text-[hsl(260,15%,55%)]"}`}>{opt.label}</button>
+              ))}
+            </div>
+          </div>
+          {goalNum >= 10 && !time && <CoachBubble step={3} total={3} text={t.coach3a} position="top" t={t} />}
+          {goalNum >= 10 && time && <CoachBubble step={3} total={3} text={t.coach3b} position="top" t={t} />}
+          <button onClick={() => canSubmit && onSubmit(goalNum, time)} disabled={!canSubmit}
+            className={`w-full py-3.5 rounded-2xl font-extrabold text-sm tracking-wide transition-all duration-300 ${canSubmit ? "text-white cursor-pointer hover:brightness-110 active:scale-[0.98] bg-gradient-to-r from-[hsl(280,70%,55%)] to-[hsl(260,60%,55%)]" : "bg-[hsl(260,22%,18%)] text-[hsl(260,15%,40%)] cursor-not-allowed"}`}
+            style={canSubmit ? { boxShadow: `0 0 25px hsl(280 70% 65% / 0.3)` } : {}}>
+            <span className="flex items-center justify-center gap-2"><Play className="w-4 h-4" fill="currentColor" /> {t.gpStart}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AnalyzingBar = ({ onDone, paused, t }: { onDone: () => void; paused?: boolean; t: Tx }) => {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    if (paused) { setProgress(0); return; }
+    const duration = 300 + Math.random() * 300;
+    const start = Date.now();
+    const interval = setInterval(() => { const pct = Math.min(100, ((Date.now() - start) / duration) * 100); setProgress(pct); if (pct >= 100) { clearInterval(interval); setTimeout(onDone, 150); } }, 30);
+    return () => clearInterval(interval);
+  }, [onDone, paused]);
+  return (
+    <div className="w-full py-2 px-3">
+      <div className="flex items-center gap-2 mb-1.5">
+        <Loader2 className={`w-3 h-3 text-[hsl(280,70%,65%)] ${paused ? '' : 'animate-spin'}`} />
+        <span className="text-[11px] font-semibold text-[hsl(280,70%,65%)]">{paused ? t.anWaiting : t.anAnalyzing}</span>
+      </div>
+      <div className="w-full h-1.5 bg-[hsl(260,22%,15%)] rounded-full overflow-hidden"><div className="h-full rounded-full transition-all duration-75 bg-gradient-to-r from-[hsl(280,70%,55%)] to-[hsl(260,70%,60%)]" style={{ width: `${progress}%` }} /></div>
+    </div>
+  );
+};
+
+const NotificationToast = ({ text, onDone, t }: { text: string; onDone: () => void; t: Tx }) => {
+  useEffect(() => { const to = setTimeout(onDone, 3000); return () => clearTimeout(to); }, [onDone]);
+  return (
+    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-xs z-50 animate-slide-up">
+      <div className={`${plat.card} border border-[hsl(280,70%,65%,0.3)] rounded-xl px-3 py-2.5 shadow-2xl flex items-center gap-2.5`}>
+        <div className="w-7 h-7 rounded-full bg-[hsl(280,70%,65%,0.2)] flex items-center justify-center shrink-0"><Banknote className="w-3.5 h-3.5 text-[hsl(280,70%,65%)]" /></div>
+        <div className="flex-1 min-w-0"><p className="text-[11px] font-bold text-[hsl(280,70%,65%)]">{t.notifDone}</p><p className="text-[11px] text-foreground">{text}</p></div>
+      </div>
+    </div>
+  );
+};
 
 const StepPlatformDemoForex = ({ onNext, userName }: Props) => {
   const { lang, locale } = useLanguage();
-  const t = texts[lang];
-  const cur = CUR[lang];
+  const t = TX[lang];
   const firstName = userName?.split(" ")[0] || "";
+  const fast = true; // Quiz B: sempre ritmo rápido (dinheiro entrando/saindo veloz).
 
-  const [running, setRunning] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showGoalReached, setShowGoalReached] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [goal, setGoal] = useState(0);
+  const [balance, setBalance] = useState(362.72);
   const [profit, setProfit] = useState(0);
+  const [wins, setWins] = useState(0);
+  const [losses, setLosses] = useState(0);
   const [copiers, setCopiers] = useState(5782);
-  const [ops, setOps] = useState<Op[]>([]);
-  const [showCTA, setShowCTA] = useState(false);
-  const [focal, setFocal] = useState(0); // índice do mercado no gráfico principal
-  const [chart, setChart] = useState<number[]>(() => Array.from({ length: 34 }, (_, i) => 50 + Math.sin(i / 3) * 6));
-  const [entryAt, setEntryAt] = useState<number | null>(null); // posição aberta no gráfico
-  const [lastExit, setLastExit] = useState<{ x: number; y: number; pnl: number } | null>(null);
-  const [tickers, setTickers] = useState(() => MARKETS.map((m) => ({ price: m.base, up: true, spark: Array.from({ length: 12 }, () => rnd(40, 60)) })));
+  const [history, setHistory] = useState<Array<{ hora: string; par: string; preco: string; lucro: number; tipo: "win" | "loss"; }>>([]);
+  const [notification, setNotification] = useState<string | null>(null);
+  const [currentTipIndex, setCurrentTipIndex] = useState(-1);
 
-  const opId = useRef(1);
-  const tickN = useRef(0);
-  const posTicks = useRef(0);
+  const historyRef = useRef<HTMLDivElement>(null);
+  const opTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tipTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const totalOpsRef = useRef(0);
+  const accumulatedRef = useRef(0);
+  const startTimeRef = useRef(0);
 
-  const money = useCallback((n: number) => `${cur.sym}${n.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, [cur.sym, locale]);
-  const intCount = useCallback((n: number) => Math.round(n).toLocaleString(locale), [locale]);
+  const dismissNotification = useCallback(() => setNotification(null), []);
+  const GOAL_TIME_MS = 16_000;
 
-  const start = () => {
-    if (running) return;
-    setRunning(true);
-  };
+  const handleGoalSubmit = (goalValue: number, _time: string) => { setGoal(goalValue); setShowPopup(false); setIsActive(true); setIsAnalyzing(true); startTimeRef.current = Date.now(); };
 
-  // Loop principal de simulação
   useEffect(() => {
-    if (!running) return;
-    const iv = window.setInterval(() => {
-      tickN.current += 1;
+    if (!isActive) return;
+    const delays = [1200, 3500, 6000, 9000, 12000];
+    delays.forEach((delay, index) => { const timer = setTimeout(() => setCurrentTipIndex(index), delay); tipTimersRef.current.push(timer); });
+    return () => tipTimersRef.current.forEach(tm => clearTimeout(tm));
+  }, [isActive]);
 
-      // Contador de "pessoas copiando" — sobe com leve oscilação
-      setCopiers((c) => Math.max(5200, c + Math.round(rnd(-6, 22))));
-
-      // Tickers dos mercados (preços + sparkline)
-      setTickers((prev) => prev.map((tk, i) => {
-        const drift = rnd(-1, 1.25) * (MARKETS[i].base * 0.0006);
-        const price = Math.max(0.0001, tk.price + drift);
-        const spark = [...tk.spark.slice(1), Math.max(20, Math.min(80, tk.spark[tk.spark.length - 1] + rnd(-9, 10)))];
-        return { price, up: drift >= 0, spark };
-      }));
-
-      // Gráfico principal: anda pra frente; se tem posição aberta, viés de alta
-      setChart((prev) => {
-        const last = prev[prev.length - 1];
-        const bias = entryAt !== null ? rnd(0.4, 2.6) : rnd(-1.4, 1.6);
-        const next = Math.max(18, Math.min(82, last + bias));
-        return [...prev.slice(1), next];
-      });
-
-      // Abertura/fechamento de operações (copy trade)
-      setOps((prev) => {
-        const open = prev.find((o) => o.status === "open");
-        // Fecha a posição aberta depois de 3-4 ticks (sempre no positivo — copy trade vencedor)
-        if (open && posTicks.current >= 3) {
-          posTicks.current = 0;
-          const pnl = +(rnd(6, 34) * cur.scale).toFixed(2);
-          const gained = prev.map((o) => (o.id === open.id ? { ...o, status: "closed" as const, pnl } : o));
-          setProfit((p) => +(p + pnl).toFixed(2));
-          setLastExit({ x: 33, y: chartRef.current, pnl });
-          setEntryAt(null);
-          return gained.slice(-6);
-        }
-        if (open) { posTicks.current += 1; return prev; }
-        // Abre nova operação
-        const mkt = Math.floor(rnd(0, MARKETS.length));
-        setFocal(mkt);
-        setEntryAt(33);
-        posTicks.current = 0;
-        const op: Op = { id: opId.current++, mkt, side: Math.random() > 0.35 ? "buy" : "sell", status: "open", pnl: 0, copiers: Math.round(rnd(3800, 6400)) };
-        return [...prev, op].slice(-6);
-      });
-    }, 950);
-    return () => window.clearInterval(iv);
-  }, [running, entryAt, cur.scale]);
-
-  // ref pra pegar o último y do gráfico dentro do setOps sem recriar o loop
-  const chartRef = useRef(50);
-  useEffect(() => { chartRef.current = chart[chart.length - 1]; }, [chart]);
-
-  // Revela o CTA após alguns segundos operando
+  // Contador "copiando agora" — sobe enquanto o Guardião opera (copy trade).
   useEffect(() => {
-    if (!running) return;
-    const to = window.setTimeout(() => setShowCTA(true), 9000);
-    return () => window.clearTimeout(to);
-  }, [running]);
+    if (!isActive || showGoalReached) return;
+    const iv = setInterval(() => setCopiers((c) => c + Math.round(1 + Math.random() * 18)), 1100);
+    return () => clearInterval(iv);
+  }, [isActive, showGoalReached]);
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, []);
+  const runNextOperation = useCallback(() => { if (accumulatedRef.current >= goal && goal > 0) { setShowGoalReached(true); return; } setIsAnalyzing(true); }, [goal]);
 
-  // Polyline do gráfico principal
-  const W = 320, H = 120;
-  const chartPts = chart.map((y, i) => `${(i / (chart.length - 1)) * W},${H - (y / 100) * H}`).join(" ");
-  const areaPts = `0,${H} ${chartPts} ${W},${H}`;
-  const focalMkt = MARKETS[focal];
-  const entryX = entryAt !== null ? (entryAt / (chart.length - 1)) * W : null;
-  const entryY = entryAt !== null ? H - (chart[entryAt] / 100) * H : null;
+  const handleAnalysisDone = useCallback(() => {
+    setIsAnalyzing(false);
+    const elapsed = Date.now() - startTimeRef.current;
+    const remaining = goal - accumulatedRef.current;
+    const timeLeft = Math.max(1, GOAL_TIME_MS - elapsed);
+    const estOpsLeft = Math.max(1, Math.floor(timeLeft / 2000));
+    const isWin = Math.random() < 0.88;
+    let lucro: number;
+    if (isWin) {
+      const base = remaining / estOpsLeft;
+      const variance = base * (0.5 + Math.random() * 1.0);
+      lucro = Math.max(3, Math.min(remaining * 0.3, variance));
+      if (timeLeft < 10000 && remaining > 0) lucro = Math.max(lucro, remaining * 0.5);
+      lucro = parseFloat(lucro.toFixed(2));
+    } else { lucro = -parseFloat((Math.random() * 8 + 1).toFixed(2)); }
+    const parIndex = Math.floor(Math.random() * pares.length);
+    const hora = new Date().toLocaleTimeString(locale).slice(0, 8);
+    totalOpsRef.current++;
+    accumulatedRef.current += lucro;
+    setHistory(prev => [...prev, { hora, par: pares[parIndex], preco: precos[parIndex], lucro, tipo: isWin ? "win" : "loss" }]);
+    setProfit(prev => parseFloat((prev + lucro).toFixed(2)));
+    setBalance(prev => parseFloat((prev + lucro).toFixed(2)));
+    if (isWin) setWins(prev => prev + 1); else setLosses(prev => prev + 1);
+    if (isWin) { const took = Math.round(3800 + Math.random() * 2600).toLocaleString(locale); setNotification(t.notifWin(lucro.toFixed(2), pares[parIndex], took)); }
+    if (accumulatedRef.current >= goal) { setTimeout(() => setShowGoalReached(true), 800); return; }
+    const delay = 120 + Math.random() * 220;
+    opTimerRef.current = setTimeout(runNextOperation, delay);
+  }, [goal, runNextOperation, t, locale]);
+
+  useEffect(() => { if (historyRef.current) historyRef.current.scrollTop = historyRef.current.scrollHeight; }, [history]);
+  useEffect(() => () => { if (opTimerRef.current) clearTimeout(opTimerRef.current); }, []);
+
+  const goalReached = showGoalReached;
+  const progressPct = goal > 0 ? Math.min(100, Math.round((Math.max(0, profit) / goal) * 100)) : 0;
 
   return (
     <StepContainer>
-      <StepTitle>
-        {t.title1(firstName)}<span className="text-gradient-green">{t.titleHL}</span>{t.title2}
-      </StepTitle>
-      <StepSubtitle>{running ? t.subActive : t.subIdle}</StepSubtitle>
+      <StepTitle>{t.titleA(firstName)}{t.titleMid}<span className="text-gradient-green">{t.titleBold}</span>{t.titleEnd}</StepTitle>
+      <StepSubtitle>{!isActive ? t.subIdle : goalReached ? t.subDone : t.subActive}</StepSubtitle>
 
-      {/* Barra de status ao vivo */}
-      <div className="w-full flex items-center justify-between gap-2 mt-1">
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/30">
-          <span className="relative flex h-2 w-2">
-            <span className={`absolute inline-flex h-full w-full rounded-full bg-red-500 ${running ? "animate-ping opacity-75" : "opacity-0"}`} />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-          </span>
-          <span className="text-[11px] font-bold text-red-500 tracking-wide">{t.live}</span>
+      {!goalReached && (
+        <div className="w-full funnel-card border-accent/40 bg-accent/10 text-center py-2 px-2.5">
+          <p className="text-[13px] sm:text-sm font-bold text-foreground leading-snug">{t.fastBannerA}<span className="text-gradient-green">{t.fastBannerBold}</span>{t.fastBannerC}</p>
         </div>
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Users className="w-3.5 h-3.5 text-primary" />
-          <span className="text-[12px] sm:text-sm"><strong className="text-foreground tabular-nums">{intCount(copiers)}</strong> {t.copying}</span>
-        </div>
-      </div>
+      )}
 
-      {/* Ticker de vários mercados */}
-      <div className="w-full">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 flex items-center gap-1"><Activity className="w-3 h-3 text-primary" />{t.marketsLbl}</p>
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-          {MARKETS.map((m, i) => {
-            const tk = tickers[i];
-            const spk = tk.spark.map((y, j) => `${(j / (tk.spark.length - 1)) * 44},${20 - (y / 100) * 20}`).join(" ");
-            return (
-              <div key={m.key} className={`shrink-0 w-[104px] rounded-xl border p-2 bg-card/60 ${i === focal && running ? "border-primary/60" : "border-border"}`}>
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold" style={{ color: m.color }}>{m.pair}</span>
-                  {tk.up ? <ArrowUpRight className="w-3 h-3 text-green-500" /> : <ArrowDownRight className="w-3 h-3 text-red-400" />}
-                </div>
-                <div className="text-[11px] font-semibold text-foreground tabular-nums">{tk.price.toLocaleString(locale, { maximumFractionDigits: m.base < 10 ? 4 : 2 })}</div>
-                <svg viewBox="0 0 44 20" className="w-full h-4 mt-0.5" preserveAspectRatio="none">
-                  <polyline points={spk} fill="none" stroke={tk.up ? "#22C55E" : "#F87171"} strokeWidth="1.5" />
-                </svg>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {!running ? (
-        <div className="w-full mt-1">
-          <CTAButton onClick={start} className="animate-bounce-subtle">
-            <span className="flex items-center justify-center gap-2"><Zap className="w-5 h-5" />{t.activate}</span>
-          </CTAButton>
-        </div>
-      ) : (
-        <>
-          {/* Lucro de hoje */}
-          <div className="w-full funnel-card border-primary/30 bg-primary/5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-primary" /></div>
-              <span className="text-sm text-muted-foreground">{t.profitToday}</span>
-            </div>
-            <span className="text-2xl font-extrabold text-primary tabular-nums">{money(profit)}</span>
+      <div className={`w-full rounded-2xl overflow-hidden shadow-2xl ${plat.bg} ${plat.border} border`}>
+        <div className={`${plat.headerBg} px-2.5 py-2 flex items-center justify-between ${plat.border} border-b`}>
+          <div className="flex items-center gap-1.5">
+            <Play className="w-3 h-3 text-[hsl(280,70%,65%)]" fill="currentColor" />
+            <span className="text-[11px] font-bold text-foreground tracking-wide"><span className={plat.accent}>{t.platform}</span> {t.platformSuf}</span>
           </div>
-
-          {/* Gráfico principal do mercado em foco */}
-          <div className="w-full rounded-2xl border border-border bg-card/60 p-3 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[12px] font-bold" style={{ color: focalMkt.color }}>{focalMkt.pair} · {focalMkt.name[lang]}</span>
-              <span className="flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full"><Lock className="w-3 h-3" />{t.aiControl}</span>
-            </div>
-            <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[120px]" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="fx-area" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#22C55E" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#22C55E" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <polygon points={areaPts} fill="url(#fx-area)" />
-              <polyline points={chartPts} fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-              {entryX !== null && entryY !== null && (
-                <>
-                  <line x1={entryX} y1={0} x2={entryX} y2={H} stroke="#22C55E" strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
-                  <circle cx={entryX} cy={entryY} r="4" fill="#22C55E" stroke="#fff" strokeWidth="1.5" />
-                </>
-              )}
-            </svg>
-            <p className="text-[11px] text-muted-foreground text-center mt-1 flex items-center justify-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-primary" />{t.focalNote}</p>
+          <div className="flex items-center gap-1.5">
+            <div className={`w-6 h-6 rounded-full ${plat.secondary} ${plat.border} border flex items-center justify-center`}><span className="text-[9px]">{lang === "pt" ? "🇧🇷" : "🌎"}</span></div>
+            <div className="w-6 h-6 rounded-full bg-[hsl(280,60%,50%)] flex items-center justify-center"><Bell className="w-3 h-3 text-white" /></div>
           </div>
+        </div>
 
-          {/* Feed de operações ao vivo (copy trade) */}
-          <div className="w-full">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">{t.feedTitle}</p>
-            <div className="w-full space-y-1.5">
-              {[...ops].reverse().map((o) => {
-                const m = MARKETS[o.mkt];
-                const closed = o.status === "closed";
-                return (
-                  <div key={o.id} className={`flex items-center justify-between rounded-xl border px-3 py-2 animate-fade-in ${closed ? "border-primary/30 bg-primary/5" : "border-border bg-card/60"}`}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      {closed ? <CheckCircle2 className="w-4 h-4 text-primary shrink-0" /> : <span className="relative flex h-2.5 w-2.5 shrink-0"><span className="absolute inline-flex h-full w-full rounded-full bg-green-500 animate-ping opacity-75" /><span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" /></span>}
-                      <div className="min-w-0">
-                        <p className="text-[12px] font-semibold text-foreground truncate">
-                          <span style={{ color: m.color }}>{m.pair}</span> · {o.side === "buy" ? t.buy : t.sell}
-                          <span className={`ml-1.5 text-[10px] font-bold ${closed ? "text-primary" : "text-green-500"}`}>{closed ? t.exit : t.entry}</span>
-                        </p>
-                        <p className="text-[10px] text-muted-foreground truncate">{t.peopleWon(intCount(o.copiers))}</p>
-                      </div>
-                    </div>
-                    {closed && <span className="text-[13px] font-extrabold text-primary tabular-nums shrink-0">+{money(o.pnl)}</span>}
+        {/* Faixa de mercados + copiando agora */}
+        <div className={`px-2.5 py-1.5 flex items-center justify-between gap-2 ${plat.border} border-b ${plat.secondary}`}>
+          <div className="flex items-center gap-1 min-w-0">
+            <TrendingUp className="w-3 h-3 text-[hsl(280,70%,65%)] shrink-0" />
+            <span className="text-[9px] text-[hsl(260,15%,60%)] truncate">{t.marketsLine}</span>
+          </div>
+          {isActive && !goalReached && (
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full rounded-full bg-[hsl(152,60%,42%)] animate-ping opacity-75" /><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[hsl(152,60%,42%)]" /></span>
+              <span className="text-[9px] font-bold text-[hsl(152,60%,42%)] tabular-nums">{copiers.toLocaleString(locale)}</span>
+              <span className="text-[9px] text-[hsl(260,15%,60%)]">{t.copyingNow}</span>
+            </div>
+          )}
+        </div>
+
+        <div className={`${plat.card} mx-2.5 mt-2 rounded-lg p-2 flex items-center gap-2.5 ${plat.border} border`}>
+          <div className={`w-8 h-8 rounded-md flex items-center justify-center border ${isActive ? "bg-[hsl(152,60%,42%,0.15)] border-[hsl(152,60%,42%,0.3)]" : "bg-[hsl(0,72%,55%,0.15)] border-[hsl(0,72%,55%,0.3)]"}`}>
+            <Power className={`w-4 h-4 ${isActive ? plat.green : plat.red}`} />
+          </div>
+          <div><p className="text-xs font-bold text-foreground leading-tight">{t.demoAccount}</p><p className="text-[9px] text-[hsl(260,15%,55%)]">DM7829401 - USD</p></div>
+        </div>
+
+        <div className="px-2.5 py-2 flex gap-1.5">
+          <div className={`flex-1 ${plat.card} rounded-lg p-2 ${plat.border} border`}>
+            <p className="text-[9px] text-[hsl(260,15%,55%)]">{t.balance}</p>
+            <p className="text-base font-bold text-foreground font-display leading-tight mt-0.5">$ {balance.toLocaleString(locale, { minimumFractionDigits: 2 })}</p>
+          </div>
+          <div className={`flex-1 ${plat.card} rounded-lg p-2 ${plat.border} border`}>
+            <p className="text-[9px] text-[hsl(260,15%,55%)]">{t.pl}</p>
+            <p className={`text-base font-bold font-display leading-tight mt-0.5 ${profit > 0 ? plat.green : profit < 0 ? plat.red : "text-foreground"}`}>{profit >= 0 ? "+" : ""}$ {profit.toLocaleString(locale, { minimumFractionDigits: 2 })}</p>
+          </div>
+        </div>
+
+        <div className={`px-2.5 py-3 text-center ${plat.border} border-t border-b`}>
+          <div className="flex items-center justify-center gap-1.5 mb-1"><Bot className="w-3.5 h-3.5 text-[hsl(260,15%,55%)]" /><span className="text-[11px] font-bold text-foreground tracking-wide">GUARDIÃO 2.0</span></div>
+          {!isActive ? (<p className="text-xs text-[hsl(260,15%,55%)]">{t.botStopped}</p>)
+            : goalReached ? (<p className={`text-xs font-bold ${plat.accent} animate-pulse`}>{t.goalReached}</p>)
+            : (
+              <div className="space-y-1.5">
+                <p className={`text-xs ${plat.accent} font-semibold`}>{t.botRunning}</p>
+                {goal > 0 && (
+                  <div className="w-full max-w-[200px] mx-auto">
+                    <div className="flex justify-between text-[9px] text-[hsl(260,15%,55%)] mb-0.5"><span>{t.metaLbl} {t.goalSym}{goal.toLocaleString(locale)}</span><span className={`${plat.accent} font-medium`}>{progressPct}%</span></div>
+                    <div className="w-full h-1 bg-[hsl(260,22%,15%)] rounded-full overflow-hidden"><div className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-[hsl(280,70%,55%)] to-[hsl(260,70%,60%)]" style={{ width: `${progressPct}%` }} /></div>
                   </div>
-                );
-              })}
+                )}
+              </div>
+            )}
+        </div>
+
+        {isActive && !goalReached && <AnalyzingBar key={isAnalyzing ? "analyzing" : "idle"} onDone={handleAnalysisDone} paused={!isAnalyzing} t={t} />}
+
+        {!isActive && (
+          <div className="px-2.5 pt-2 pb-3 relative">
+            <div className="flex gap-1.5">
+              <button onClick={() => setShowPopup(true)} className="flex-1 py-2.5 rounded-xl border-2 border-[hsl(152,60%,42%,0.6)] bg-[hsl(152,60%,42%,0.15)] text-[hsl(152,60%,42%)] font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-125 active:scale-[0.98] transition-all relative overflow-hidden">
+                <span className="absolute inset-0 rounded-xl animate-ping bg-[hsl(152,60%,42%,0.1)]" style={{ animationDuration: '2s' }} />
+                <Play className="w-3.5 h-3.5 relative z-10" fill="currentColor" /><span className="relative z-10">{t.startBot}</span>
+              </button>
+              <button className={`flex-1 py-2.5 rounded-xl ${plat.border} border ${plat.secondary} text-[hsl(260,15%,55%)] font-semibold text-xs flex items-center justify-center gap-1.5 cursor-default`}><Bot className="w-3.5 h-3.5" /> {t.selectBot}</button>
             </div>
+            <div className="mt-2"><CoachBubble step={1} total={3} text={t.coach1} t={t} /></div>
           </div>
+        )}
 
-          {/* "Se você estivesse dentro agora" */}
-          <div className="w-full funnel-card border-primary/20 bg-primary/5">
-            <p className="text-[13px] sm:text-sm text-foreground/90 text-center leading-relaxed">
-              <strong className="text-primary">{t.ifInside}</strong>
-            </p>
+        <div className={`${plat.border} border-t`}>
+          <div className={`flex ${plat.border} border-b`}>
+            <div className={`flex-1 py-2 text-center text-[11px] font-bold text-white ${plat.tabActive} border-b-2 ${plat.tabBorder}`}>{t.tabTable}</div>
+            <div className="flex-1 py-2 text-center text-[11px] font-medium text-[hsl(260,15%,55%)] cursor-default">{t.tabChart}</div>
           </div>
-
-          {/* Reforço: zero experiência */}
-          <div className="w-full flex flex-wrap gap-2 justify-center">
-            {t.badges.map((b) => (
-              <span key={b} className="flex items-center gap-1 text-[11px] font-semibold text-foreground/80 bg-muted/60 border border-border rounded-full px-2.5 py-1">
-                <CheckCircle2 className="w-3 h-3 text-primary" />{b}
-              </span>
+          <div className={`px-2.5 py-2 flex items-center justify-between ${plat.border} border-b`}>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[11px] font-bold text-foreground">{t.history}</p>
+              <span className="text-[11px]"><span className={plat.green + " font-bold"}>{wins}</span><span className="text-[hsl(260,15%,55%)]">/</span><span className={plat.red + " font-bold"}>{losses}</span></span>
+            </div>
+            <div className="flex items-center gap-1"><Bell className="w-3 h-3 text-[hsl(260,15%,55%)]" /><span className="text-[9px] text-[hsl(260,15%,55%)]">{history.length}</span></div>
+          </div>
+          <div className={`px-2.5 py-1.5 grid grid-cols-4 gap-1 ${plat.border} border-b ${plat.secondary}`}>
+            <span className="text-[9px] font-semibold text-[hsl(260,15%,55%)]">{t.thHora}</span>
+            <span className="text-[9px] font-semibold text-[hsl(260,15%,55%)]">{t.thPar}</span>
+            <span className="text-[9px] font-semibold text-[hsl(260,15%,55%)] text-right">{t.thPreco}</span>
+            <span className="text-[9px] font-semibold text-[hsl(260,15%,55%)] text-right">{t.thLucro}</span>
+          </div>
+          <div ref={historyRef} className="max-h-[140px] sm:max-h-[200px] overflow-y-auto" style={{ scrollBehavior: "smooth" }}>
+            {history.length === 0 && (<div className="py-6 text-center"><p className="text-[11px] text-[hsl(260,15%,55%)]">{t.noOps}</p></div>)}
+            {history.map((op, i) => (
+              <div key={i} className={`px-2.5 py-1.5 grid grid-cols-4 gap-1 ${plat.border} border-b border-opacity-20 animate-fade-in`}>
+                <span className="text-[9px] text-[hsl(260,15%,55%)] font-mono">{op.hora}</span>
+                <span className="text-[9px] font-semibold text-foreground">{op.par}</span>
+                <span className="text-[9px] text-[hsl(260,15%,55%)] text-right font-mono">{op.preco}</span>
+                <span className={`text-[9px] font-bold text-right ${op.tipo === "win" ? plat.green : plat.red}`}>{op.lucro >= 0 ? "+" : ""}${op.lucro.toFixed(2)}</span>
+              </div>
             ))}
           </div>
+        </div>
+      </div>
 
-          <div className={`w-full ${showCTA ? "animate-fade-in" : "opacity-0 pointer-events-none"}`}>
-            <CTAButton onClick={onNext}>{t.cta}</CTAButton>
-            <button onClick={onNext} className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4 cursor-pointer py-2 mt-1">{t.skip}</button>
+      {isActive && !goalReached && (
+        <div className="w-full space-y-2">
+          <div className="animate-fade-in">
+            <div className="relative bg-foreground text-background rounded-xl px-3 py-2.5 shadow-lg">
+              <div className="absolute -top-1.5 left-6 w-3 h-3 bg-foreground rotate-45 rounded-sm" />
+              <div className="flex items-start gap-2.5 relative z-10">
+                <div className="w-6 h-6 rounded-full bg-[hsl(280,70%,65%)] flex items-center justify-center shrink-0 mt-0.5"><Clock className="w-3 h-3 text-white" /></div>
+                <div className="flex-1 min-w-0"><p className="text-[10px] text-background/60 font-medium">{t.estTimeLbl}</p><p className="text-[11px] font-semibold leading-snug mt-0.5">{t.estTimeA}<span className="text-primary font-bold">{t.estTimeBold}</span>{t.estTimeC}</p></div>
+              </div>
+            </div>
           </div>
-        </>
+          {currentTipIndex >= 0 && <TutorialTip key={currentTipIndex} icon={TIP_ICONS[currentTipIndex]} text={t.tips[currentTipIndex]} />}
+        </div>
       )}
+
+      <div className="w-full funnel-card border-accent/20 bg-accent/5 text-center p-2.5">
+        <div className="flex items-center justify-center gap-1.5">
+          <Lock className="w-3.5 h-3.5 text-primary shrink-0" />
+          <p className="text-[11px] text-foreground font-medium leading-snug">{t.trustA}<strong>{t.trustBold}</strong>{t.trustC}</p>
+        </div>
+      </div>
+
+      {isActive && !goalReached ? (
+        <button onClick={onNext} className="w-full py-3 rounded-xl font-bold text-sm text-black uppercase tracking-wide animate-fade-in" style={{ background: "linear-gradient(135deg, #00E676 0%, #00C853 100%)", boxShadow: "0 4px 16px rgba(0,200,83,0.35)" }}>{t.continueFast}</button>
+      ) : (
+        <button onClick={onNext} className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4 cursor-pointer py-1">{t.continueSkip}</button>
+      )}
+
+      {showPopup && <GoalPopup onSubmit={handleGoalSubmit} userName={userName} t={t} locale={locale} />}
+      {showGoalReached && <GoalReachedPopup goal={goal} profit={profit} onContinue={onNext} userName={userName} t={t} locale={locale} />}
+      {notification && <NotificationToast text={notification} onDone={dismissNotification} t={t} />}
     </StepContainer>
   );
 };
