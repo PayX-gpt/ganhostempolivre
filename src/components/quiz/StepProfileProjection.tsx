@@ -17,7 +17,7 @@ import avatarLucia from "@/assets/avatar-lucia.jpg";
 import avatarRegina from "@/assets/avatar-regina.jpg";
 import avatarCarlos from "@/assets/avatar-carlos.jpg";
 
-interface Props { onNext: () => void; userName?: string; answers?: QuizAnswers; isTiktok?: boolean; }
+interface Props { onNext: () => void; userName?: string; answers?: QuizAnswers; isTiktok?: boolean; forexSeed?: boolean; }
 
 // Moeda coerente: PT em R$ (meta 75-600/dia); EN/ES em US$ (÷5, 15-120/dia).
 const CUR: Record<Language, { sym: string; goalDaily: Record<string, number> }> = {

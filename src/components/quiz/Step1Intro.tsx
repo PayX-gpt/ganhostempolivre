@@ -75,9 +75,9 @@ const forexOverlay: Record<Language, Partial<typeof texts.pt>> = {
   es: { powered: "Powered by ChatGPT — la IA opera el mercado más grande del mundo por vos" },
 };
 
-const Step1Intro = ({ onNext }: Step1Props) => {
+const Step1Intro = ({ onNext, forexSeed }: Step1Props) => {
   const { lang, locale } = useLanguage();
-  const t = texts[lang];
+  const t = forexSeed ? { ...texts[lang], ...forexOverlay[lang] } : texts[lang];
   const [counter, setCounter] = useState(36847);
 
   useEffect(() => {
