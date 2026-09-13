@@ -128,9 +128,16 @@ const getCompatibilityScore = (answers?: QuizAnswers) => {
   return Math.min(score, 99);
 };
 
-const StepProfileProjection = ({ onNext, userName, answers, isTiktok }: Props) => {
+// Quiz B — overlay câmbio/Forex: nomeia a fonte dos dados (o "reason why" antes da oferta).
+const forexProjOverlay: Record<Language, Record<string, string>> = {
+  pt: { crossedC: " para criar uma estratégia sob medida no mercado de câmbio (Forex)." },
+  en: { crossedC: " to build a strategy just for you in the currency market (Forex)." },
+  es: { crossedC: " para crear una estrategia a tu medida en el mercado de cambios (Forex)." },
+};
+
+const StepProfileProjection = ({ onNext, userName, answers, isTiktok, forexSeed }: Props) => {
   const { lang, locale } = useLanguage();
-  const t = T[lang];
+  const t = forexSeed ? { ...T[lang], ...forexProjOverlay[lang] } : T[lang];
   const cur = CUR[lang];
   const money = (n: number) => `${cur.sym}${n.toLocaleString(locale)}`;
   const firstName = userName?.split(" ")[0] || "";
