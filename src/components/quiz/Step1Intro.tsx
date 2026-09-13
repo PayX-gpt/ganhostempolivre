@@ -70,9 +70,9 @@ const texts = {
 // Quiz B — semente subliminar: mantém o gancho intacto, só planta "maior mercado do mundo"
 // no subheader (sem a palavra Forex ainda, pra não criar fricção no topo).
 const forexOverlay: Record<Language, Partial<typeof texts.pt>> = {
-  pt: { powered: "Powered by ChatGPT — a IA opera o maior mercado do mundo por você" },
-  en: { powered: "Powered by ChatGPT — the AI works the biggest market in the world for you" },
-  es: { powered: "Powered by ChatGPT — la IA opera el mercado más grande del mundo por vos" },
+  pt: { powered: "Powered by ChatGPT — o Guardião opera o maior mercado do mundo por você" },
+  en: { powered: "Powered by ChatGPT — the Guardian works the biggest market in the world for you" },
+  es: { powered: "Powered by ChatGPT — el Guardián opera el mercado más grande del mundo por vos" },
 };
 
 const Step1Intro = ({ onNext, forexSeed }: Step1Props) => {

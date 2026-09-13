@@ -53,7 +53,7 @@ const TX = {
     coach3a: "Agora escolha quanto tempo você tem disponível.", coach3b: 'Tudo pronto! Toque em "Iniciar Guardião" abaixo.',
     tips: [
       "O Guardião identificou uma oportunidade no câmbio e entrou sozinho. Você não fez nada!",
-      "Cada operação dura segundos. Na conta real, o lucro já estaria disponível para saque.",
+      "O Guardião entra e sai na hora certa. Na conta real, o lucro já estaria disponível para saque.",
       "Olha o saldo subindo! As mesmas entradas caem pra todo mundo ao mesmo tempo.",
       "Milhares de pessoas estão copiando estas mesmas operações agora, em tempo real.",
       "Perceba: zero cliques. O Guardião opera o câmbio sozinho o dia inteiro.",
@@ -92,7 +92,7 @@ const TX = {
     coach3a: "Now choose how much time you have available.", coach3b: 'All set! Tap "Start Guardian" below.',
     tips: [
       "The Guardian spotted an opportunity in the currency market and entered on its own. You did nothing!",
-      "Each trade lasts seconds. On a real account, the profit would already be available to withdraw.",
+      "The Guardian enters and exits at the right moment. On a real account, the profit would already be available to withdraw.",
       "Watch the balance climb! The same entries hit everyone at the same time.",
       "Thousands of people are copying these exact trades right now, in real time.",
       "Notice: zero clicks. The Guardian trades currencies on its own, all day.",
@@ -131,7 +131,7 @@ const TX = {
     coach3a: "Ahora elige cuánto tiempo tienes disponible.", coach3b: '¡Todo listo! Toca "Iniciar Guardián" abajo.',
     tips: [
       "El Guardián identificó una oportunidad en las divisas y entró solo. ¡Tú no hiciste nada!",
-      "Cada operación dura segundos. En cuenta real, la ganancia ya estaría disponible para retirar.",
+      "El Guardián entra y sale en el momento justo. En cuenta real, la ganancia ya estaría disponible para retirar.",
       "¡Mira el saldo subiendo! Las mismas entradas les llegan a todos al mismo tiempo.",
       "Miles de personas están copiando estas mismas operaciones ahora, en tiempo real.",
       "Fíjate: cero clics. El Guardián opera las divisas solo todo el día.",
