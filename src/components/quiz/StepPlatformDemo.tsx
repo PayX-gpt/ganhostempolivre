@@ -276,25 +276,9 @@ const NotificationToast = ({ text, onDone, t }: { text: string; onDone: () => vo
   );
 };
 
-// Quiz B — overlay câmbio/Forex: nomeia o mercado durante a demo (semente que a pessoa VÊ).
-const forexDemoOverlay: Record<Language, Partial<typeof TX.pt>> = {
-  pt: {
-    subIdle: "Basta apertar em Iniciar Robô, que a IA começa a operar no câmbio (Forex) e gerar lucros pra você automático.",
-    subActive: "A IA está operando no câmbio (Forex) em tempo real. Acompanhe:",
-  },
-  en: {
-    subIdle: "Just tap the Start Bot button and the AI starts trading Forex and generating profit for you automatically.",
-    subActive: "The AI is trading the currency market (Forex) in real time. Follow along:",
-  },
-  es: {
-    subIdle: "Solo aprieta el botón Iniciar Robot y la IA empieza a operar en el mercado de cambios (Forex) y generar ganancias para ti automáticamente.",
-    subActive: "La IA está operando en el mercado de cambios (Forex) en tiempo real. Acompaña:",
-  },
-};
-
-const StepPlatformDemo = ({ onNext, userName, variant = "A", forexSeed }: StepPlatformDemoProps) => {
+const StepPlatformDemo = ({ onNext, userName, variant = "A" }: StepPlatformDemoProps) => {
   const { lang, locale } = useLanguage();
-  const t = forexSeed ? { ...TX[lang], ...forexDemoOverlay[lang] } : TX[lang];
+  const t = TX[lang];
   const firstName = userName?.split(" ")[0] || "";
   const fast = variant === "B";
 
