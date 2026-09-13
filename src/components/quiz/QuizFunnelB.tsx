@@ -23,6 +23,8 @@ import Step7MentorVideo from "./Step7MentorVideo";
 import StepAccountBalance from "./StepAccountBalance";
 import Step9Availability from "./Step9Availability";
 import StepPlatformDemo from "./StepPlatformDemo";
+import { getStepExp } from "@/lib/stepExperiment";
+import { getOfferVariant, OFFER_V147 } from "@/lib/offerExperiment";
 import Step10Loading from "./Step10Loading";
 import Step11SocialProof2 from "./Step11SocialProof2";
 import StepWhatsAppProof from "./StepWhatsAppProof";
@@ -30,7 +32,14 @@ import StepContactMethod from "./StepContactMethod";
 import StepContactInput from "./StepContactInput";
 import Step13Offer from "./Step13Offer";
 import StepProfileProjection from "./StepProfileProjection";
-import VturbVideoStep from "./VturbVideoStep";
+
+/**
+ * QUIZ B — clone EXATO do Quiz A (mesmas 17 etapas, mesmas perguntas, mesmo preço).
+ * A ÚNICA diferença é a semente câmbio/Forex (prop forexSeed) nos 5 steps de crença:
+ * Step1 (semente subliminar), Step4 (ceticismo), Step7 (mentor nomeia o mercado),
+ * StepPlatformDemo (demo mostra o câmbio), StepProfileProjection (fonte dos dados).
+ * Recebe tráfego só via edition_b_split > 0 no painel (ou ?edition=B). Default 0% = ninguém vê.
+ */
 
 const footerTexts: Record<Language, string> = {
   pt: "© 2026 — Plataforma de Ganhos com Tempo Livre • Todos os direitos reservados",
@@ -44,44 +53,58 @@ const stepBadgeTexts: Record<Language, string> = {
   es: "Paso",
 };
 
-// QUIZ B — 19 etapas (modelo "IA PRO" adaptado ao nosso contexto: 50+, segurança).
 const STEP_SLUGS = [
-  "step-1",   // 1: Intro / Hook
-  "step-2",   // 2: Idade
-  "step-3",   // 3: Nome
-  "step-4",   // 4: Prova social (depoimentos)
-  "step-5",   // 5: Tentou online
-  "step-6",   // 6: Meta de renda
-  "step-7",   // 7: Obstáculo
-  "step-8",   // 8: 🎥 VÍDEO 1 — Como funciona (vturb)
-  "step-9",   // 9: Saldo na conta
-  "step-10",  // 10: Disponibilidade
-  "step-11",  // 11: 🎥 VÍDEO 2 — 15 a 30 min bastam (vturb)
-  "step-12",  // 12: IA Liberada / Demo (aprovado + operar e ganhar)
-  "step-13",  // 13: 🎥 VÍDEO 3 — Acessar, operar e sacar (vturb)
-  "step-14",  // 14: Prova social 2 (WhatsApp)
-  "step-15",  // 15: Método de contato
-  "step-16",  // 16: Input de contato
-  "step-17",  // 17: Analisando (loading)
-  "step-18",  // 18: 🎥 VÍDEO 4 — PITCH + APROVAÇÃO → botão vai DIRETO pro checkout (etapa final do Quiz B)
+  "step-1",  // 1: Intro
+  "step-2",  // 2: Idade
+  "step-3",  // 3: Nome
+  "step-4",  // 4: Prova social (vídeo depoimento)
+  "step-5",  // 5: Tentou online
+  "step-6",  // 6: Meta de renda
+  "step-7",  // 7: Obstáculo
+  "step-8",  // 8: Vídeo mentor
+  "step-9",  // 9: Saldo na conta (preço dinâmico)
+  "step-10", // 10: Disponibilidade (binário)
+  "step-11", // 11: Demo plataforma
+  "step-12", // 12: WhatsApp proof
+  "step-13", // 13: Método contato
+  "step-14", // 14: Input contato
+  "step-15", // 15: Loading (análise)
+  "step-16", // 16: Projeção de perfil e lucro
+  "step-17", // 17: Prova social 2 + vídeo venda (OFERTA FINAL via CTA do player Panda)
 ] as const;
 
 const TOTAL_STEPS = STEP_SLUGS.length;
 
 const STEP_NAMES: Record<string, string> = {
-  "step-1": "b_intro", "step-2": "b_idade", "step-3": "b_nome", "step-4": "b_prova_social",
-  "step-5": "b_tentou_online", "step-6": "b_meta_renda", "step-7": "b_obstaculo",
-  "step-8": "b_video1_como_funciona", "step-9": "b_saldo", "step-10": "b_disponibilidade",
-  "step-11": "b_video2_tempo", "step-12": "b_ia_liberada", "step-13": "b_video3_saque",
-  "step-14": "b_prova_social2", "step-15": "b_metodo_contato", "step-16": "b_input_contato",
-  "step-17": "b_loading", "step-18": "b_video4_pitch",
+  "step-1": "intro", "step-2": "idade", "step-3": "nome", "step-4": "prova_social",
+  "step-5": "tentou_online", "step-6": "meta_renda", "step-7": "obstaculo",
+  "step-8": "video_mentor", "step-9": "saldo_conta", "step-10": "disponibilidade",
+  "step-11": "demo_plataforma", "step-12": "whatsapp_proof", "step-13": "metodo_contato",
+  "step-14": "input_contato", "step-15": "loading", "step-16": "projecao_perfil",
+  "step-17": "oferta_vturb",
 };
 
 const STEP_ALIASES: Record<string, (typeof STEP_SLUGS)[number]> = {
-  step1: "step-1", step2: "step-2", step3: "step-3", step4: "step-4", step5: "step-5",
-  step6: "step-6", step7: "step-7", step8: "step-8", step9: "step-9", step10: "step-10",
-  step11: "step-11", step12: "step-12", step13: "step-13", step14: "step-14", step15: "step-15",
-  step16: "step-16", step17: "step-17", step18: "step-18",
+  step1: "step-1",
+  step2: "step-2",
+  step3: "step-3",
+  step4: "step-4",
+  step5: "step-5",
+  step6: "step-6",
+  step7: "step-7",
+  step8: "step-8",
+  step9: "step-9",
+  step10: "step-10",
+  step11: "step-11",
+  step12: "step-12",
+  step13: "step-13",
+  step14: "step-14",
+  step15: "step-15",
+  step16: "step-16",
+  step17: "step-17",
+  // Legacy: redirect step-18 to step-17 (offer is now on the Panda player CTA)
+  "step-18": "step-17",
+  step18: "step-17",
 };
 
 const normalizeSlug = (slug?: string) => {
@@ -92,11 +115,6 @@ const normalizeSlug = (slug?: string) => {
   return STEP_ALIASES[lower] ?? lower;
 };
 
-// ─────────────────────────────────────────────────────────────────────────
-// QUIZ B — Edição paralela (teste A/B de funil completo).
-// Começa como cópia EXATA do Quiz A. As mudanças que você pedir (etapas extras,
-// remover etapas, trocar vídeos, copy) são feitas AQUI — o Quiz A não é tocado.
-// ─────────────────────────────────────────────────────────────────────────
 const QuizFunnelB = () => {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
@@ -181,7 +199,7 @@ const QuizFunnelB = () => {
     }
   }, []);
 
-  // Save attribution on funnel entry (step 1)
+  // Save attribution on funnel entry (step 1) — edição B
   useEffect(() => {
     if (isPreview) return;
     if (step === 1) {
@@ -223,10 +241,14 @@ const QuizFunnelB = () => {
     });
   }, [currentSlug, step, quizVersion]);
 
-  // Quiz B tem fluxo próprio — segue sequencial, sem o "pular etapas" do teste V1/V2.
+  // Find the next valid step, skipping V2-removed steps
   const findNextStep = useCallback((fromStep: number): number => {
-    return Math.min(fromStep + 1, TOTAL_STEPS);
-  }, []);
+    let next = Math.min(fromStep + 1, TOTAL_STEPS);
+    while (next <= TOTAL_STEPS && shouldSkipStep(STEP_SLUGS[next - 1], quizVersion)) {
+      next++;
+    }
+    return Math.min(next, TOTAL_STEPS);
+  }, [quizVersion]);
 
   const goNext = useCallback(() => {
     if (isNavigatingRef.current) return;
@@ -277,7 +299,7 @@ const QuizFunnelB = () => {
           case "C": return <Step1VariantC onNext={goNext} />;
           case "D": return <Step1VariantD onNext={goNext} />;
           case "E": return <Step1VariantE onNext={goNext} />;
-          default: return <Step1Intro onNext={goNext} />;
+          default: return <Step1Intro onNext={goNext} forexSeed />;
         }
       case "step-2":
         return <Step2Age onNext={(v) => updateAndNext("age", v)} />;
@@ -286,41 +308,24 @@ const QuizFunnelB = () => {
       case "step-4":
         return <Step3SocialProof onNext={goNext} userAge={answers.age} />;
       case "step-5":
-        return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} userName={answers.name} userAge={answers.age} quizVersion={quizVersion} />;
+        return <Step4TriedOnline onNext={(v) => updateAndNext("triedOnline", v)} userName={answers.name} userAge={answers.age} quizVersion={quizVersion} forexSeed />;
       case "step-6":
         return <Step5IncomeGoal onNext={(v) => updateAndNext("incomeGoal", v)} userName={answers.name} userAge={answers.age} />;
       case "step-7":
         return <Step6Obstacle onNext={(v) => updateAndNext("obstacle", v)} userName={answers.name} userAge={answers.age} quizVersion={quizVersion} />;
       case "step-8":
-        // 🎥 VÍDEO 1 — Como funciona
-        return <VturbVideoStep playerId="69b9877521afa4b7be25e6a7" revealSeconds={30}
-          headline={<>Veja como funciona <span className="text-gradient-green">essa oportunidade</span></>}
-          subheadline="Assista até o fim — em 30 segundos você entende tudo."
-          buttonText="Continuar →" onClick={goNext} />;
+        return <Step7MentorVideo onNext={goNext} userAge={answers.age} forexSeed />;
       case "step-9":
-        return <StepAccountBalance onNext={(v) => updateAndNext("accountBalance", v)} userName={answers.name} userAge={answers.age}/>;
+        return <StepAccountBalance onNext={(v) => updateAndNext("accountBalance", v)} userName={answers.name} userAge={answers.age} variant={getStepExp()} />;
       case "step-10":
         return <Step9Availability onNext={(v) => updateAndNext("availability", v)} userName={answers.name} userAge={answers.age} />;
       case "step-11":
-        // 🎥 VÍDEO 2 — 15 a 30 min bastam
-        return <VturbVideoStep playerId="69b9877fa10d9a398ac7bc42" revealSeconds={115}
-          headline={<>Só com <span className="text-gradient-green">15 a 30 minutos por dia</span></>}
-          subheadline="A parte mais tranquila: pouco tempo, sem pressão."
-          buttonText="Continuar →" onClick={goNext} />;
+        return <StepPlatformDemo onNext={goNext} userName={answers.name} variant={getStepExp()} forexSeed />;
       case "step-12":
-        // IA Liberada / Demo — "Parabéns, você foi aprovado" + operar e ganhar
-        return <StepPlatformDemo onNext={goNext} userName={answers.name}/>;
-      case "step-13":
-        // 🎥 VÍDEO 3 — Acessar, operar e sacar
-        return <VturbVideoStep playerId="69b98793faf9397e233e1dd5" revealSeconds={54}
-          headline={<>Como acessar, operar e <span className="text-gradient-green">fazer seu saque</span></>}
-          subheadline="Veja como o dinheiro entra e sai — de forma simples e segura."
-          buttonText="Continuar →" onClick={goNext} />;
-      case "step-14":
         return <StepWhatsAppProof onNext={goNext} userAge={answers.age} />;
-      case "step-15":
+      case "step-13":
         return <StepContactMethod userName={answers.name} onNext={(v) => updateAndNext("contactMethod", v)} />;
-      case "step-16":
+      case "step-14":
         return (
           <StepContactInput
             method={answers.contactMethod || "email"}
@@ -362,20 +367,23 @@ const QuizFunnelB = () => {
             }}
           />
         );
-      case "step-17":
+      case "step-15":
         return <Step10Loading onNext={goNext} userAge={answers.age} userName={answers.name} />;
-      case "step-18":
-        // 🎥 VÍDEO 4 — PITCH + APROVAÇÃO disfarçado. O botão vai DIRETO pro checkout,
-        // aparecendo aos 366s (= 40s antes do fim do vídeo de ~406s). NÃO passa pela
-        // oferta antiga do "senhor".
-        return <VturbVideoStep playerId="6a07a12e86b03df313b90694" revealSeconds={366}
-          headline={<>Você foi <span className="text-gradient-green">APROVADO</span>. Assista até o fim e destrave sua renda de <span className="text-gradient-green">R$50 a R$300 por dia</span>.</>}
-          subheadline="Nos próximos minutos você vê, passo a passo, como pessoas comuns (até 60, 70 anos) já estão pagando as contas com tranquilidade — e como garantir o SEU acesso hoje, antes de fechar."
-          buttonText="GARANTIR MEU ACESSO AGORA →"
-          checkoutUrl="https://pay.kirvano.com/4630333d-d5d1-4591-b767-2151f77c6b13"
-          amount={47}
-          eventContext="b_video4_pitch_checkout"
-          onClick={goNext} />;
+      case "step-16":
+        return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} forexSeed />;
+      case "step-17": {
+        // Teste A/B da oferta (desligado por padrão): atual vs VSL R$147.
+        const offerV = getOfferVariant();
+        if (offerV === "v147") {
+          return <Step11SocialProof2 onNext={() => {}} userAge={answers.age}
+            pandaVideoId={OFFER_V147.videoId}
+            videoAspectRatio={OFFER_V147.aspect}
+            checkoutUrlOverride={OFFER_V147.checkoutUrl}
+            offerAmountOverride={OFFER_V147.amount}
+            unlockSecondsOverride={OFFER_V147.unlockSeconds} />;
+        }
+        return <Step11SocialProof2 onNext={() => {}} userAge={answers.age} />;
+      }
       default:
         return null;
     }
