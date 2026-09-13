@@ -291,6 +291,55 @@ const NotificationToast = ({ text, onDone, t }: { text: string; onDone: () => vo
   );
 };
 
+// Ticker rolando de cotações (estilo plataforma de trader) — câmbio + metais.
+const TICKER_MKTS: { sym: string; label?: Record<Language, string>; base: number; dec: number }[] = [
+  { sym: "XAU/USD", label: { pt: "Ouro", en: "Gold", es: "Oro" }, base: 2385.40, dec: 2 },
+  { sym: "XAG/USD", label: { pt: "Prata", en: "Silver", es: "Plata" }, base: 29.87, dec: 2 },
+  { sym: "EUR/USD", base: 1.08432, dec: 5 },
+  { sym: "GBP/USD", base: 1.26781, dec: 5 },
+  { sym: "USD/JPY", base: 149.320, dec: 3 },
+  { sym: "USD/CAD", base: 1.36540, dec: 4 },
+  { sym: "AUD/USD", base: 0.65123, dec: 5 },
+  { sym: "USD/CHF", base: 0.87654, dec: 4 },
+  { sym: "EUR/GBP", base: 0.85612, dec: 5 },
+];
+
+const MarketTicker = ({ lang, locale }: { lang: Language; locale: string }) => {
+  const [quotes, setQuotes] = useState(() => TICKER_MKTS.map(() => ({ price: 0, pct: Math.random() * 2 - 1 })));
+  useEffect(() => {
+    setQuotes(TICKER_MKTS.map((m) => ({ price: m.base, pct: Math.random() * 1.6 - 0.8 })));
+    const iv = setInterval(() => {
+      setQuotes((prev) => prev.map((it, i) => {
+        const m = TICKER_MKTS[i];
+        const base = it.price || m.base;
+        const np = base * (1 + (Math.random() * 2 - 1) * 0.0013);
+        return { price: np, pct: ((np - m.base) / m.base) * 100 };
+      }));
+    }, 1300);
+    return () => clearInterval(iv);
+  }, []);
+  const row = TICKER_MKTS.map((m, i) => {
+    const it = quotes[i]; const up = it.pct >= 0;
+    return (
+      <span key={m.sym} className="inline-flex items-center gap-1.5 px-3 border-r border-[hsl(270,30%,20%)]">
+        {m.label && <span className="text-[9px] text-[hsl(45,90%,60%)] font-semibold">{m.label[lang]}</span>}
+        <span className="text-[10px] font-bold text-foreground">{m.sym}</span>
+        <span className="text-[10px] font-mono text-[hsl(260,15%,72%)] tabular-nums">{(it.price || m.base).toLocaleString(locale, { minimumFractionDigits: m.dec, maximumFractionDigits: m.dec })}</span>
+        <span className={`text-[9px] font-bold tabular-nums ${up ? "text-[hsl(152,60%,48%)]" : "text-[hsl(0,72%,60%)]"}`}>{up ? "▲" : "▼"}{Math.abs(it.pct).toFixed(2)}%</span>
+      </span>
+    );
+  });
+  return (
+    <div className={`relative overflow-hidden ${plat.border} border-b ${plat.secondary} py-1.5`}>
+      <div className="flex w-max whitespace-nowrap" style={{ animation: "gtl-ticker 30s linear infinite" }}>
+        <div className="flex">{row}</div>
+        <div className="flex" aria-hidden>{row}</div>
+      </div>
+      <style>{`@keyframes gtl-ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}`}</style>
+    </div>
+  );
+};
+
 const StepPlatformDemoForex = ({ onNext, userName }: Props) => {
   const { lang, locale } = useLanguage();
   const t = TX[lang];
@@ -397,20 +446,8 @@ const StepPlatformDemoForex = ({ onNext, userName }: Props) => {
           </div>
         </div>
 
-        {/* Faixa de mercados + copiando agora */}
-        <div className={`px-2.5 py-1.5 flex items-center justify-between gap-2 ${plat.border} border-b ${plat.secondary}`}>
-          <div className="flex items-center gap-1 min-w-0">
-            <TrendingUp className="w-3 h-3 text-[hsl(280,70%,65%)] shrink-0" />
-            <span className="text-[9px] text-[hsl(260,15%,60%)] truncate">{t.marketsLine}</span>
-          </div>
-          {isActive && !goalReached && (
-            <div className="flex items-center gap-1 shrink-0">
-              <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full rounded-full bg-[hsl(152,60%,42%)] animate-ping opacity-75" /><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[hsl(152,60%,42%)]" /></span>
-              <span className="text-[9px] font-bold text-[hsl(152,60%,42%)] tabular-nums">{copiers.toLocaleString(locale)}</span>
-              <span className="text-[9px] text-[hsl(260,15%,60%)]">{t.copyingNow}</span>
-            </div>
-          )}
-        </div>
+        {/* Ticker de cotações rolando (estilo plataforma de trader) */}
+        <MarketTicker lang={lang} locale={locale} />
 
         <div className={`${plat.card} mx-2.5 mt-2 rounded-lg p-2 flex items-center gap-2.5 ${plat.border} border`}>
           <div className={`w-8 h-8 rounded-md flex items-center justify-center border ${isActive ? "bg-[hsl(152,60%,42%,0.15)] border-[hsl(152,60%,42%,0.3)]" : "bg-[hsl(0,72%,55%,0.15)] border-[hsl(0,72%,55%,0.3)]"}`}>
@@ -437,6 +474,11 @@ const StepPlatformDemoForex = ({ onNext, userName }: Props) => {
             : (
               <div className="space-y-1.5">
                 <p className={`text-xs ${plat.accent} font-semibold`}>{t.botRunning}</p>
+                <div className="flex items-center justify-center gap-1">
+                  <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full rounded-full bg-[hsl(152,60%,42%)] animate-ping opacity-75" /><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[hsl(152,60%,42%)]" /></span>
+                  <span className="text-[10px] font-bold text-[hsl(152,60%,42%)] tabular-nums">{copiers.toLocaleString(locale)}</span>
+                  <span className="text-[10px] text-[hsl(260,15%,55%)]">{t.copyingNow}</span>
+                </div>
                 {goal > 0 && (
                   <div className="w-full max-w-[200px] mx-auto">
                     <div className="flex justify-between text-[9px] text-[hsl(260,15%,55%)] mb-0.5"><span>{t.metaLbl} {t.goalSym}{goal.toLocaleString(locale)}</span><span className={`${plat.accent} font-medium`}>{progressPct}%</span></div>
