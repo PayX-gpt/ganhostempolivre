@@ -9,6 +9,8 @@ interface Step4Props {
   userName?: string;
   userAge?: string;
   quizVersion?: string;
+  /** Quiz B (edição câmbio/Forex): semeia o mecanismo real. Sem a flag = idêntico ao Quiz A. */
+  forexSeed?: boolean;
 }
 
 const texts = {
@@ -95,9 +97,29 @@ const texts = {
   },
 } as const;
 
-const Step4TriedOnline = ({ onNext, userName, userAge, quizVersion }: Step4Props) => {
+// Quiz B — overlay câmbio/Forex: troca só os textos de feedback (o "reason why").
+// Mantém títulos/opções iguais. Aplicado apenas quando forexSeed=true.
+const forexOverlay: Record<Language, Partial<typeof texts.pt>> = {
+  pt: {
+    feedbackBodyYoung: "O que vou te mostrar agora é diferente. É uma IA que opera no câmbio — o maior mercado do mundo, onde os bancos ganham todo dia — e faz o trabalho pesado por você. Sem complicação.",
+    feedbackBodyMature: "Se não deu certo antes, o problema não foi você. Dessa vez é diferente: existe um mercado real por trás, o câmbio (Forex), onde o dinheiro de verdade circula todo dia. A IA opera nele por você. Você só acompanha.",
+    feedbackBodyGolpe: "Milhares de pessoas passaram pela mesma situação. A diferença aqui é que existe um mercado real por trás — o câmbio (Forex), onde bancos e fundos operam — e a IA trabalha nele por você. Sem promessa vazia, sem guru, sem depender de sorte.",
+  },
+  en: {
+    feedbackBodyYoung: "What I'm about to show you is different. It's an AI that operates in the currency market — the biggest market in the world, where the banks earn every day — and does the heavy lifting for you. No complications.",
+    feedbackBodyMature: "If it didn't work before, the problem wasn't you. This time is different: there's a real market behind it, the currency market (Forex), where real money moves every day. The AI operates in it for you. You just follow along.",
+    feedbackBodyGolpe: "Thousands have been through the same. The difference here is that there's a real market behind it — the currency market (Forex), where banks and funds operate — and the AI works in it for you. No empty promises, no guru, no luck needed.",
+  },
+  es: {
+    feedbackBodyYoung: "Lo que te voy a mostrar ahora es diferente. Es una IA que opera en el mercado de cambios — el mercado más grande del mundo, donde los bancos ganan todos los días — y hace el trabajo pesado por vos. Sin complicaciones.",
+    feedbackBodyMature: "Si no funcionó antes, el problema no fuiste vos. Esta vez es diferente: hay un mercado real detrás, el mercado de cambios (Forex), donde el dinero de verdad circula todos los días. La IA opera en él por vos. Vos solo acompañás.",
+    feedbackBodyGolpe: "Miles de personas pasaron por lo mismo. La diferencia acá es que hay un mercado real detrás — el mercado de cambios (Forex), donde bancos y fondos operan — y la IA trabaja en él por vos. Sin promesas vacías, sin gurú, sin depender de suerte.",
+  },
+};
+
+const Step4TriedOnline = ({ onNext, userName, userAge, quizVersion, forexSeed }: Step4Props) => {
   const { lang } = useLanguage();
-  const t = texts[lang];
+  const t = forexSeed ? { ...texts[lang], ...forexOverlay[lang] } : texts[lang];
   const [selected, setSelected] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const young = isYoungProfile(userAge);

@@ -13,6 +13,8 @@ interface Step7Props {
   videoId?: string;
   mentorName?: string;
   mentorPhotoSrc?: string;
+  /** Quiz B (edição câmbio/Forex): o mentor nomeia o mercado. Sem a flag = idêntico ao Quiz A. */
+  forexSeed?: boolean;
 }
 
 const DEFAULT_VIDEO_ID = "c43f8946-fd30-48f5-9d97-bdd7a0e2f4d8";
