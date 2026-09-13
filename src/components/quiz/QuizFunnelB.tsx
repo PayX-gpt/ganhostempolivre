@@ -24,7 +24,6 @@ import StepAccountBalance from "./StepAccountBalance";
 import Step9Availability from "./Step9Availability";
 import StepPlatformDemoForex from "./StepPlatformDemoForex";
 import { getStepExp } from "@/lib/stepExperiment";
-import { getOfferVariant, OFFER_V147 } from "@/lib/offerExperiment";
 import Step10Loading from "./Step10Loading";
 import Step11SocialProof2 from "./Step11SocialProof2";
 import StepWhatsAppProof from "./StepWhatsAppProof";
@@ -74,6 +73,15 @@ const STEP_SLUGS = [
 ] as const;
 
 const TOTAL_STEPS = STEP_SLUGS.length;
+
+// Quiz B — VSL da OFERTA (etapa 17) focado no câmbio/Forex.
+// Quando gravar o novo vídeo do mentor (mais consciente do mercado) e subir no Panda,
+// cole aqui o ID do Panda + o segundo em que o botão de compra deve liberar (o momento
+// do CTA no pitch). Enquanto não trocar, aponta pro VSL atual = idêntico ao Quiz A.
+const OFFER_B_VSL = {
+  videoId: "daa037ca-64f0-4637-97dc-c0278d1f6df6", // TODO: trocar pelo ID do novo VSL (câmbio/Forex)
+  unlockSeconds: 8 * 60 + 20,                       // TODO: ajustar p/ o momento do CTA no novo vídeo (hoje 8:20)
+};
 
 const STEP_NAMES: Record<string, string> = {
   "step-1": "intro", "step-2": "idade", "step-3": "nome", "step-4": "prova_social",
@@ -371,19 +379,11 @@ const QuizFunnelB = () => {
         return <Step10Loading onNext={goNext} userAge={answers.age} userName={answers.name} />;
       case "step-16":
         return <StepProfileProjection onNext={goNext} userName={answers.name} answers={answers} forexSeed />;
-      case "step-17": {
-        // Teste A/B da oferta (desligado por padrão): atual vs VSL R$147.
-        const offerV = getOfferVariant();
-        if (offerV === "v147") {
-          return <Step11SocialProof2 onNext={() => {}} userAge={answers.age}
-            pandaVideoId={OFFER_V147.videoId}
-            videoAspectRatio={OFFER_V147.aspect}
-            checkoutUrlOverride={OFFER_V147.checkoutUrl}
-            offerAmountOverride={OFFER_V147.amount}
-            unlockSecondsOverride={OFFER_V147.unlockSeconds} />;
-        }
-        return <Step11SocialProof2 onNext={() => {}} userAge={answers.age} />;
-      }
+      case "step-17":
+        // Quiz B: VSL da oferta focado no câmbio/Forex (mesmo preço/checkout do A).
+        return <Step11SocialProof2 onNext={() => {}} userAge={answers.age}
+          pandaVideoId={OFFER_B_VSL.videoId}
+          unlockSecondsOverride={OFFER_B_VSL.unlockSeconds} />;
       default:
         return null;
     }
