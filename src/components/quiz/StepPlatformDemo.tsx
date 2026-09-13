@@ -7,7 +7,7 @@ import {
   ArrowRight, Wallet, Zap, Eye, MousePointer,
 } from "lucide-react";
 
-interface StepPlatformDemoProps { onNext: () => void; userName?: string; variant?: "A" | "B"; forexSeed?: boolean; }
+interface StepPlatformDemoProps { onNext: () => void; userName?: string; variant?: "A" | "B"; }
 
 const plat = {
   bg: "bg-[hsl(260,30%,8%)]", card: "bg-[hsl(260,25%,12%)]", border: "border-[hsl(270,30%,22%)]",

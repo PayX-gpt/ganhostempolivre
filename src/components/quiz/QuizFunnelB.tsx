@@ -22,7 +22,7 @@ import Step6Obstacle from "./Step6Obstacle";
 import Step7MentorVideo from "./Step7MentorVideo";
 import StepAccountBalance from "./StepAccountBalance";
 import Step9Availability from "./Step9Availability";
-import StepPlatformDemo from "./StepPlatformDemo";
+import StepPlatformDemoForex from "./StepPlatformDemoForex";
 import { getStepExp } from "@/lib/stepExperiment";
 import { getOfferVariant, OFFER_V147 } from "@/lib/offerExperiment";
 import Step10Loading from "./Step10Loading";
@@ -320,7 +320,7 @@ const QuizFunnelB = () => {
       case "step-10":
         return <Step9Availability onNext={(v) => updateAndNext("availability", v)} userName={answers.name} userAge={answers.age} />;
       case "step-11":
-        return <StepPlatformDemo onNext={goNext} userName={answers.name} variant={getStepExp()} forexSeed />;
+        return <StepPlatformDemoForex onNext={goNext} userName={answers.name} />;
       case "step-12":
         return <StepWhatsAppProof onNext={goNext} userAge={answers.age} />;
       case "step-13":
