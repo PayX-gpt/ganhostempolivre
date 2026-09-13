@@ -61,9 +61,28 @@ const texts = {
   },
 } as const;
 
-const Step7MentorVideo = ({ onNext, userAge, videoId, mentorName, mentorPhotoSrc }: Step7Props) => {
+// Quiz B — overlay câmbio/Forex: o mentor nomeia o mercado (autoridade dá lastro).
+const forexOverlay: Record<Language, Partial<typeof texts.pt>> = {
+  pt: {
+    mentorRole: "Criador do Método Tempo Livre — opera no câmbio (Forex) há +12 anos",
+    quoteYoung: '"Já orientei pessoas de 20 a 65 anos no câmbio (Forex). A idade não importa — o que importa é deixar a IA operar por você. 10 minutos por dia. Não é promessa, é método."',
+    quoteMature: '"A maioria dos meus melhores alunos tem mais de 50 anos e nunca tinham ouvido falar em câmbio. Eu opero no Forex há anos — hoje quem faz o trabalho pesado é a IA. Se eles conseguiram, você também consegue."',
+  },
+  en: {
+    mentorRole: "Creator of the Free Time Method — 12+ years trading Forex",
+    quoteYoung: '"I\'ve mentored people from 20 to 65 in the currency market (Forex). Age doesn\'t matter — what matters is letting the AI operate for you. 10 minutes a day. It\'s not a promise, it\'s a method."',
+    quoteMature: '"Most of my best students are over 50 and had never heard of Forex. I\'ve traded currencies for years — today the AI does the heavy lifting. If they made it, so can you."',
+  },
+  es: {
+    mentorRole: "Creador del Método Tiempo Libre — opera en Forex hace +12 años",
+    quoteYoung: '"Ya orienté a personas de 20 a 65 años en el mercado de cambios (Forex). La edad no importa — lo que importa es dejar que la IA opere por vos. 10 minutos por día. No es promesa, es método."',
+    quoteMature: '"La mayoría de mis mejores alumnos tienen más de 50 años y nunca habían oído hablar de Forex. Yo opero divisas hace años — hoy la IA hace el trabajo pesado. Si ellos pudieron, vos también podés."',
+  },
+};
+
+const Step7MentorVideo = ({ onNext, userAge, videoId, mentorName, mentorPhotoSrc, forexSeed }: Step7Props) => {
   const { lang } = useLanguage();
-  const t = texts[lang];
+  const t = forexSeed ? { ...texts[lang], ...forexOverlay[lang] } : texts[lang];
   const [showCTA, setShowCTA] = useState(false);
   const videoRef = useRef<HTMLDivElement>(null);
   const young = isYoungProfile(userAge);

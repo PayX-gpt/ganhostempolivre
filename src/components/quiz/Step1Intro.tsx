@@ -6,6 +6,8 @@ import { useLanguage, type Language } from "@/lib/i18n";
 
 interface Step1Props {
   onNext: () => void;
+  /** Quiz B (edição câmbio/Forex): semente subliminar no subheader. Sem a flag = idêntico ao Quiz A. */
+  forexSeed?: boolean;
 }
 
 const texts = {
@@ -64,6 +66,14 @@ const texts = {
     trust: "Test gratuito • Resultado inmediato • Sin trampa",
   },
 } as const;
+
+// Quiz B — semente subliminar: mantém o gancho intacto, só planta "maior mercado do mundo"
+// no subheader (sem a palavra Forex ainda, pra não criar fricção no topo).
+const forexOverlay: Record<Language, Partial<typeof texts.pt>> = {
+  pt: { powered: "Powered by ChatGPT — a IA opera o maior mercado do mundo por você" },
+  en: { powered: "Powered by ChatGPT — the AI works the biggest market in the world for you" },
+  es: { powered: "Powered by ChatGPT — la IA opera el mercado más grande del mundo por vos" },
+};
 
 const Step1Intro = ({ onNext }: Step1Props) => {
   const { lang, locale } = useLanguage();
