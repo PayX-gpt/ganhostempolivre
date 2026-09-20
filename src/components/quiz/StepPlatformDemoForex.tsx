@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { StepContainer, StepTitle, StepSubtitle } from "./QuizUI";
 import { useLanguage, type Language } from "@/lib/i18n";
 import {
-  Loader2, Trophy, Sparkles, ArrowRight, CheckCircle2,
+  Loader2, Trophy, Sparkles, CheckCircle2,
   Users, Bookmark, Share2, ShieldCheck, TrendingUp, Lock,
 } from "lucide-react";
 
@@ -193,10 +193,9 @@ const GuardiaoProfileCard = ({ lang, locale, onInvestir, investidores, ranking, 
 };
 
 // Popup "meta batida" — no padrão claro do card.
-const GoalReachedPopup = ({ goal, profit, onContinue, userName, t, locale }: { goal: number; profit: number; onContinue: () => void; userName?: string; t: Tx; locale: string }) => {
+const GoalReachedPopup = ({ goal, profit, onContinue, userName, t, locale, sym }: { goal: number; profit: number; onContinue: () => void; userName?: string; t: Tx; locale: string; sym: string }) => {
   const firstName = userName?.split(" ")[0] || "";
   const disp = Math.max(profit, goal);
-  const sym = CUR[locale as Language]?.sym || "R$";
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in px-4">
       <div className="w-full max-w-sm bg-white rounded-[26px] shadow-2xl overflow-hidden animate-scale-in max-h-[92vh] overflow-y-auto">
@@ -402,7 +401,7 @@ const StepPlatformDemoForex = ({ onNext, userName }: Props) => {
         <button onClick={onNext} className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4 cursor-pointer py-1">{t.continueSkip}</button>
       )}
 
-      {showGoalReached && <GoalReachedPopup goal={goal} profit={profit} onContinue={onNext} userName={userName} t={t} locale={locale} />}
+      {showGoalReached && <GoalReachedPopup goal={goal} profit={profit} onContinue={onNext} userName={userName} t={t} locale={locale} sym={cur.sym} />}
       {notification && (
         <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-xs z-50 animate-slide-up">
           <div className="bg-white border rounded-xl px-3 py-2.5 shadow-2xl flex items-center gap-2.5" style={{ borderColor: "rgba(18,165,148,0.3)" }}>
