@@ -26,6 +26,18 @@ const GoCheckout = lazy(() => import("./pages/GoCheckout"));
 
 const LazyFallback = <div className="min-h-screen bg-background" />;
 
+// Entrada dedicada da VARIAÇÃO B do quiz (edição câmbio/Forex: demo do Guardião +
+// copys ajustadas). Trava a edição B e manda pro step-1 preservando UTMs/query.
+const QuizBEntry = () => {
+  useEffect(() => {
+    try { localStorage.setItem("quiz_edition", "B"); } catch { /* ignore */ }
+    const p = new URLSearchParams(window.location.search);
+    p.set("edition", "B");
+    window.location.replace(`${import.meta.env.BASE_URL}step-1?${p.toString()}`);
+  }, []);
+  return LazyFallback;
+};
+
 const queryClient = new QueryClient();
 
 // Match Vite's base so the app routes correctly when served from a subpath
@@ -62,6 +74,7 @@ const App = () => {
             <Route path="/upsell4" element={<Suspense fallback={LazyFallback}><Upsell4Page /></Suspense>} />
             <Route path="/upsell5" element={<Suspense fallback={LazyFallback}><Upsell5Page /></Suspense>} />
             <Route path="/upsell6" element={<Suspense fallback={LazyFallback}><Upsell6Page /></Suspense>} />
+            <Route path="/b" element={<QuizBEntry />} />
             <Route path="/:slug" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<Suspense fallback={LazyFallback}><NotFound /></Suspense>} />
