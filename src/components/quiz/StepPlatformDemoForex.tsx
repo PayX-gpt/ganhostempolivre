@@ -341,6 +341,80 @@ const MarketTicker = ({ lang, locale }: { lang: Language; locale: string }) => {
   );
 };
 
+// Textos do card de perfil (Tela 1 — estilo plataforma de copy trade).
+const PC = {
+  pt: { title: "O Guardião", live: "AO VIVO • operando agora", retVar: "Retorno (variação)", retVarDate: "de 2026.08.16", retTotal: "Retorno (total)", saqueMax: "Saque máximo", saldo: "Saldo", patrimonio: "Patrimônio", taxa: "Taxa de desempenho", investidores: "Investidores", investir: "Investir", sub: "Este é o Guardião operando no câmbio agora. Toque em Investir pra ativar e ver os resultados caindo pra você em tempo real." },
+  en: { title: "The Guardian", live: "LIVE • trading now", retVar: "Return (variation)", retVarDate: "since 2026.08.16", retTotal: "Return (total)", saqueMax: "Max drawdown", saldo: "Balance", patrimonio: "Equity", taxa: "Performance fee", investidores: "Investors", investir: "Invest", sub: "This is the Guardian trading currencies right now. Tap Invest to activate and watch the results land for you in real time." },
+  es: { title: "El Guardián", live: "EN VIVO • operando ahora", retVar: "Retorno (variación)", retVarDate: "desde 2026.08.16", retTotal: "Retorno (total)", saqueMax: "Retiro máximo", saldo: "Saldo", patrimonio: "Patrimonio", taxa: "Tasa de desempeño", investidores: "Inversores", investir: "Invertir", sub: "Este es el Guardián operando divisas ahora. Toca Invertir para activar y ver los resultados caer para ti en tiempo real." },
+};
+
+// TELA 1 — Card de perfil do Guardião (visual de plataforma de trader real), com
+// gráfico de performance + stats + investidores/ranking subindo ao vivo + botão Investir.
+const GuardiaoProfileCard = ({ lang, locale, onInvestir, investidores, ranking, chart }: {
+  lang: Language; locale: string; onInvestir: () => void; investidores: number; ranking: number; chart: number[];
+}) => {
+  const p = PC[lang];
+  const W = 320, H = 96;
+  const pts = chart.map((y, i) => `${(i / (chart.length - 1)) * W},${H - (y / 100) * H}`).join(" ");
+  const area = `0,${H} ${pts} ${W},${H}`;
+  const lastX = W, lastY = H - (chart[chart.length - 1] / 100) * H;
+  const Stat = ({ label, value, sub }: { label: string; value: string; sub?: string }) => (
+    <div>
+      <p className="text-[11px] text-neutral-400 leading-tight">{label}</p>
+      <p className="text-[17px] font-bold text-neutral-800 leading-tight mt-0.5">{value}</p>
+      {sub && <p className="text-[10px] text-neutral-400 mt-0.5">{sub}</p>}
+    </div>
+  );
+  return (
+    <div className="w-full rounded-[26px] bg-white text-neutral-900 shadow-2xl overflow-hidden border border-black/5">
+      <div className="px-4 pt-4 pb-1 flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-14 h-14 rounded-2xl bg-black flex items-center justify-center">
+              <ShieldCheck className="w-8 h-8" style={{ color: "#E8863B" }} />
+            </div>
+            <span className="absolute -top-1.5 -left-1.5 text-[15px] leading-none">🇧🇷</span>
+            <span className="absolute -bottom-2 left-1 text-[10px] font-bold bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded-full shadow-sm">#{ranking}</span>
+          </div>
+          <div>
+            <p className="text-[19px] font-semibold text-neutral-800 leading-tight">{p.title}</p>
+            <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-red-500">
+              <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full rounded-full bg-red-500 animate-ping opacity-75" /><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" /></span>
+              {p.live}
+            </span>
+          </div>
+        </div>
+        <div className="w-9 h-9 rounded-xl border border-neutral-200 flex items-center justify-center"><Bookmark className="w-5 h-5 text-[#C9A24B]" /></div>
+      </div>
+
+      <div className="px-1 pt-2 bg-gradient-to-b from-neutral-50 to-white">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[96px]" preserveAspectRatio="none">
+          <defs><linearGradient id="pc-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3FA9A0" stopOpacity="0.18" /><stop offset="100%" stopColor="#3FA9A0" stopOpacity="0" /></linearGradient></defs>
+          <polygon points={area} fill="url(#pc-area)" />
+          <polyline points={pts} fill="none" stroke="#3FA9A0" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          <circle cx={lastX} cy={lastY} r="3" fill="#3FA9A0"><animate attributeName="r" values="3;5;3" dur="1.1s" repeatCount="indefinite" /></circle>
+        </svg>
+      </div>
+
+      <div className="px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-3">
+        <Stat label={p.retVar} value="69.2%" sub={p.retVarDate} />
+        <Stat label={p.retTotal} value="57.68%" />
+        <Stat label={p.saqueMax} value="88.72%" />
+        <Stat label={p.saldo} value="US$ 802,24" />
+        <Stat label={p.patrimonio} value="US$ 802,24" />
+        <Stat label={p.taxa} value="10%" />
+        <Stat label={p.investidores} value={investidores.toLocaleString(locale)} />
+      </div>
+
+      <div className="px-4 pb-4 flex items-center gap-2">
+        <div className="w-11 h-11 rounded-xl border border-neutral-200 flex items-center justify-center shrink-0"><Bookmark className="w-5 h-5 text-[#C9A24B]" /></div>
+        <div className="w-11 h-11 rounded-xl border border-neutral-200 flex items-center justify-center shrink-0"><Share2 className="w-5 h-5 text-[#E8552E]" /></div>
+        <button onClick={onInvestir} className="flex-1 py-3 rounded-2xl bg-[#E8552E] text-white font-bold text-base cursor-pointer hover:brightness-105 active:scale-[0.98] transition-all shadow-lg" style={{ boxShadow: "0 8px 20px rgba(232,85,46,0.35)" }}>{p.investir}</button>
+      </div>
+    </div>
+  );
+};
+
 const StepPlatformDemoForex = ({ onNext, userName }: Props) => {
   const { lang, locale } = useLanguage();
   const t = TX[lang];
@@ -357,6 +431,11 @@ const StepPlatformDemoForex = ({ onNext, userName }: Props) => {
   const [wins, setWins] = useState(0);
   const [losses, setLosses] = useState(0);
   const [copiers, setCopiers] = useState(5782);
+  // Tela 1 (perfil): números "vivos" — investidores e ranking sobem, gráfico anda.
+  const [investidores, setInvestidores] = useState(168);
+  const [ranking, setRanking] = useState(46);
+  const [profChart, setProfChart] = useState<number[]>(() =>
+    Array.from({ length: 46 }, (_, i) => 48 + Math.sin(i / 3.5) * 6 + (i > 34 ? (Math.random() - 0.5) * 26 : (Math.random() - 0.5) * 6)));
   const [history, setHistory] = useState<Array<{ hora: string; par: string; preco: string; lucro: number; tipo: "win" | "loss"; }>>([]);
   const [notification, setNotification] = useState<string | null>(null);
   const [currentTipIndex, setCurrentTipIndex] = useState(-1);
@@ -386,6 +465,21 @@ const StepPlatformDemoForex = ({ onNext, userName }: Props) => {
     const iv = setInterval(() => setCopiers((c) => c + Math.round(1 + Math.random() * 18)), 1100);
     return () => clearInterval(iv);
   }, [isActive, showGoalReached]);
+
+  // Tela 1 (perfil) viva: investidores sobem, ranking melhora, gráfico se estende.
+  useEffect(() => {
+    if (isActive) return;
+    const iv = setInterval(() => {
+      setInvestidores((v) => v + (Math.random() < 0.55 ? 1 : 0) + (Math.random() < 0.15 ? 1 : 0));
+      setRanking((r) => (Math.random() < 0.14 && r > 11 ? r - 1 : r));
+      setProfChart((prev) => {
+        const last = prev[prev.length - 1];
+        const next = Math.max(16, Math.min(90, last + (Math.random() - 0.42) * 16));
+        return [...prev.slice(1), next];
+      });
+    }, 1100);
+    return () => clearInterval(iv);
+  }, [isActive]);
 
   const runNextOperation = useCallback(() => { if (accumulatedRef.current >= goal && goal > 0) { setShowGoalReached(true); return; } setIsAnalyzing(true); }, [goal]);
 
