@@ -75,6 +75,12 @@ const STEP_SLUGS = [
 
 const TOTAL_STEPS = STEP_SLUGS.length;
 
+// Quiz B: etapas removidas (vídeo depoimento + prova WhatsApp). A numeração/progresso
+// conta só as etapas reais do B (em ordem), mesmo os slugs internos pulando 4 e 12.
+const REMOVED_B = new Set(["step-4", "step-12"]);
+const B_SLUGS = STEP_SLUGS.filter((s) => !REMOVED_B.has(s));
+const B_TOTAL = B_SLUGS.length;
+
 // Quiz B — VSL da OFERTA (etapa 17) focado no câmbio/Forex.
 // Quando gravar o novo vídeo do mentor (mais consciente do mercado) e subir no Panda,
 // cole aqui o ID do Panda + o segundo em que o botão de compra deve liberar (o momento
@@ -183,11 +189,13 @@ const QuizFunnelB = () => {
 
   const stepIndex = STEP_SLUGS.indexOf(currentSlug as any);
   const step = stepIndex >= 0 ? stepIndex + 1 : 1;
+  // Passo "em ordem" do Quiz B (1..B_TOTAL), ignorando as etapas removidas.
+  const bStep = Math.max(1, B_SLUGS.indexOf(currentSlug as any) + 1);
   const stepEnteredAt = useRef<number>(Date.now());
   const isNavigatingRef = useRef(false);
 
   useEffect(() => {
-    document.title = `GTL • ${stepBadgeTexts[lang]} ${step}/${TOTAL_STEPS}`;
+    document.title = `Guardião • ${stepBadgeTexts[lang]} ${bStep}/${B_TOTAL}`;
   }, [lang, step]);
 
   usePagePresence(`/${currentSlug}`, !isPreview);
