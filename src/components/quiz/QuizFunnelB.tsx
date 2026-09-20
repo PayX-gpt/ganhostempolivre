@@ -160,6 +160,12 @@ const QuizFunnelB = () => {
       return;
     }
 
+    // Quiz B: etapa 12 (prova WhatsApp) removida — se cair nela (link/reload), avança.
+    if (currentSlug === "step-12") {
+      navigate(`/step-13${window.location.search}${window.location.hash}`, { replace: true });
+      return;
+    }
+
     if (currentSlug !== slug && STEP_SLUGS.includes(currentSlug as any)) {
       navigate(`/${currentSlug}${window.location.search}${window.location.hash}`, { replace: true });
       return;
@@ -252,7 +258,8 @@ const QuizFunnelB = () => {
   // Find the next valid step, skipping V2-removed steps
   const findNextStep = useCallback((fromStep: number): number => {
     let next = Math.min(fromStep + 1, TOTAL_STEPS);
-    while (next <= TOTAL_STEPS && shouldSkipStep(STEP_SLUGS[next - 1], quizVersion)) {
+    // Quiz B: etapa 12 (prova social WhatsApp) removida.
+    while (next <= TOTAL_STEPS && (STEP_SLUGS[next - 1] === "step-12" || shouldSkipStep(STEP_SLUGS[next - 1], quizVersion))) {
       next++;
     }
     return Math.min(next, TOTAL_STEPS);
