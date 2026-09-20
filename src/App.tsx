@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { LanguageProvider } from "@/lib/i18n";
 import Index from "./pages/Index";
 const Live = lazy(() => import("./pages/Live"));
@@ -29,12 +29,15 @@ const LazyFallback = <div className="min-h-screen bg-background" />;
 // Entrada dedicada da VARIAÇÃO B do quiz (edição câmbio/Forex: demo do Guardião +
 // copys ajustadas). Trava a edição B e manda pro step-1 preservando UTMs/query.
 const QuizBEntry = () => {
+  const navigate = useNavigate();
   useEffect(() => {
     try { localStorage.setItem("quiz_edition", "B"); } catch { /* ignore */ }
     const p = new URLSearchParams(window.location.search);
     p.set("edition", "B");
-    window.location.replace(`${import.meta.env.BASE_URL}step-1?${p.toString()}`);
-  }, []);
+    p.delete("cb"); p.delete("x");
+    // Redirect CLIENT-SIDE (sem recarregar a página) — evita o 2º boot/redirect lento.
+    navigate(`/step-1?${p.toString()}`, { replace: true });
+  }, [navigate]);
   return LazyFallback;
 };
 
