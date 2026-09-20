@@ -403,7 +403,7 @@ const QuizFunnelB = () => {
   const progressTotal = TOTAL_STEPS - 2;
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col">
+    <div className="guardiao-theme min-h-[100dvh] bg-background flex flex-col">
       <header className="w-full bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-lg mx-auto px-3 py-2 sm:py-3 flex items-center justify-between gap-2">
           <div className="min-w-0">

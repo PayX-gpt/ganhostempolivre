@@ -150,6 +150,27 @@
     background-clip: text;
   }
 
+  /* ── Tema GUARDIÃO (Quiz B) — marca DOURADO/ÂMBAR no lugar do verde ──
+     Escopado no root do QuizFunnelB, não afeta Quiz A. Flipa o --primary
+     (verde 152) p/ dourado; os CTAs já eram âmbar (accent). */
+  .guardiao-theme {
+    --primary: 40 96% 52%;              /* âmbar-dourado — marca Guardião */
+    --primary-foreground: 30 40% 8%;
+    --ring: 40 96% 52%;
+    --funnel-success: 40 96% 52%;
+    --funnel-glow: 40 96% 52% / 0.25;
+    --progress-gradient-from: 45 100% 55%;
+    --progress-gradient-to: 33 95% 52%;
+    --sidebar-primary: 40 96% 52%;
+    --sidebar-ring: 40 96% 52%;
+  }
+  .guardiao-theme .text-gradient-green {
+    background: linear-gradient(135deg, hsl(45 100% 56%), hsl(33 95% 50%)); /* highlight dourado */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   .text-trust {
     color: hsl(var(--funnel-trust));
   }
