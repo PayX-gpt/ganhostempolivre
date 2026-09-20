@@ -412,8 +412,8 @@ const QuizFunnelB = () => {
   if (!isValidQuizSlug || isNonQuizRoute) return null;
 
   // Progress bar: start at 15% offset
-  const progressCurrent = step - 1;
-  const progressTotal = TOTAL_STEPS - 2;
+  const progressCurrent = bStep - 1;
+  const progressTotal = B_TOTAL - 2;
 
   return (
     <div className="guardiao-theme min-h-[100dvh] bg-background flex flex-col">
@@ -436,7 +436,7 @@ const QuizFunnelB = () => {
           </div>
           <LanguageSelector />
         </div>
-        {step > 1 && step < TOTAL_STEPS && <ProgressBar current={progressCurrent} total={progressTotal} />}
+        {bStep > 1 && bStep < B_TOTAL && <ProgressBar current={progressCurrent} total={progressTotal} />}
       </header>
 
       <main className="flex-1 flex items-start justify-center pt-2" key={step}>
