@@ -5,6 +5,7 @@ import {
   Play, Power, Bot, TrendingUp, Banknote, Bell,
   Lock, Loader2, Target, Clock, Trophy, Sparkles,
   ArrowRight, Wallet, Eye, MousePointer, Users, Zap,
+  Bookmark, Share2, ShieldCheck,
 } from "lucide-react";
 
 /**
