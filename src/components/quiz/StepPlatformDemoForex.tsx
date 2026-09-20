@@ -521,14 +521,20 @@ const StepPlatformDemoForex = ({ onNext, userName }: Props) => {
   return (
     <StepContainer>
       <StepTitle>{t.titleA(firstName)}{t.titleMid}<span className="text-gradient-green">{t.titleBold}</span>{t.titleEnd}</StepTitle>
-      <StepSubtitle>{!isActive ? t.subIdle : goalReached ? t.subDone : t.subActive}</StepSubtitle>
+      <StepSubtitle>{!isActive ? PC[lang].sub : goalReached ? t.subDone : t.subActive}</StepSubtitle>
 
-      {!goalReached && (
+      {!isActive && (
+        <GuardiaoProfileCard lang={lang} locale={locale} onInvestir={() => setShowPopup(true)}
+          investidores={investidores} ranking={ranking} chart={profChart} />
+      )}
+
+      {isActive && !goalReached && (
         <div className="w-full funnel-card border-accent/40 bg-accent/10 text-center py-2 px-2.5">
           <p className="text-[13px] sm:text-sm font-bold text-foreground leading-snug">{t.fastBannerA}<span className="text-gradient-green">{t.fastBannerBold}</span>{t.fastBannerC}</p>
         </div>
       )}
 
+      {isActive && (
       <div className={`w-full rounded-2xl overflow-hidden shadow-2xl ${plat.bg} ${plat.border} border`}>
         <div className={`${plat.headerBg} px-2.5 py-2 flex items-center justify-between ${plat.border} border-b`}>
           <div className="flex items-center gap-1.5">
@@ -630,6 +636,7 @@ const StepPlatformDemoForex = ({ onNext, userName }: Props) => {
           </div>
         </div>
       </div>
+      )}
 
       {isActive && !goalReached && (
         <div className="w-full space-y-2">
