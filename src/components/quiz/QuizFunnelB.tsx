@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ProgressBar, type QuizAnswers } from "./QuizUI";
+import { ShieldCheck } from "lucide-react";
 import { usePagePresence } from "@/hooks/usePagePresence";
 import { saveFunnelEvent } from "@/lib/metricsClient";
 import { saveSessionAttribution } from "@/lib/trackingDataLayer";
@@ -407,14 +408,19 @@ const QuizFunnelB = () => {
       <header className="w-full bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-lg mx-auto px-3 py-2 sm:py-3 flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <h1 className="font-bold text-foreground tracking-tight whitespace-nowrap text-sm sm:text-lg">
-              <span className="text-gradient-green font-extrabold">
-                {lang === "pt" ? "GTL" : lang === "en" ? "FTE" : "GTL"}
-              </span>
-              <span className="text-foreground/80 font-semibold ml-1.5 text-[11px] sm:text-sm uppercase tracking-wider">
-                {lang === "pt" ? "Ganhos com Tempo Livre" : lang === "en" ? "Free Time Earnings" : "Ganancias Tiempo Libre"}
-              </span>
-            </h1>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-black flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: "#E8863B" }} />
+              </div>
+              <div className="min-w-0 leading-none">
+                <p className="font-extrabold tracking-tight text-base sm:text-xl text-gradient-green">
+                  {lang === "en" ? "Guardian" : lang === "es" ? "Guardián" : "Guardião"}
+                </p>
+                <p className="text-[9px] sm:text-[11px] text-foreground/60 uppercase tracking-wider mt-0.5">
+                  {lang === "en" ? "Free Time Platform" : lang === "es" ? "Plataforma de Tiempo Libre" : "Plataforma de Tempo Livre"}
+                </p>
+              </div>
+            </div>
           </div>
           <LanguageSelector />
         </div>
