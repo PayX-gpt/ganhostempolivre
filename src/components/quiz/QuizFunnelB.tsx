@@ -86,8 +86,8 @@ const B_TOTAL = B_SLUGS.length;
 // cole aqui o ID do Panda + o segundo em que o botão de compra deve liberar (o momento
 // do CTA no pitch). Enquanto não trocar, aponta pro VSL atual = idêntico ao Quiz A.
 const OFFER_B_VSL = {
-  videoId: "daa037ca-64f0-4637-97dc-c0278d1f6df6", // TODO: trocar pelo ID do novo VSL (câmbio/Forex)
-  unlockSeconds: 8 * 60 + 20,                       // TODO: ajustar p/ o momento do CTA no novo vídeo (hoje 8:20)
+  videoId: "2fdf2311-a12d-46ec-b52b-83a89b96d21e", // VSL da oferta do Quiz B (Panda)
+  unlockSeconds: 4 * 60 + 10,                       // botão "Quero" aparece em 4:10 (250s) — igual mecanismo do Quiz A
 };
 
 const STEP_NAMES: Record<string, string> = {
